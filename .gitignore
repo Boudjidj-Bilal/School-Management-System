@@ -1,0 +1,44 @@
+# Fichier .gitignore pour un projet Django sur macOS
+
+# ----------------- Fichiers générés par Django ------------------
+*.log
+*.sqlite3
+db.sqlite3
+/media/
+/static/
+
+# Fichiers de cache de Django
+__pycache__/
+*.pyc
+*.pyd
+*.pyo
+
+# ------------------ Fichiers système de l'OS (macOS) ------------------
+.DS_Store
+.vscode/
+
+# ------------------ Fichiers Python et dépendances ------------------
+venv/
+env/
+.env
+pip-log.txt
+dist/
+build/
+*.egg-info/
+
+# Fichiers de mot de passe et clés secrètes
+.env
+local_settings.py
+settings_secret.py
+secret.txt
+
+# ---------------- Autres fichiers ------------------
+# Si vous utilisez un IDE spécifique comme PyCharm
+.idea/
+
+# Fichiers de test coverage
+.coverage
+.tox/
+
+# Fichiers de base de données temporaires
+*.db

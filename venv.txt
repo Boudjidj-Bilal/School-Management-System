@@ -1,0 +1,17 @@
+/Users/youcef/Documents/Bilal/venv/venvProjectSchool/bin
+
+
+python3 -m pip3 show django
+
+
+
+python3 manage.py makemigrations attendance
+python3 manage.py makemigrations classes
+python3 manage.py makemigrations communications 
+python3 manage.py makemigrations documents
+python3 manage.py makemigrations grades
+python3 manage.py makemigrations notifications
+python3 manage.py makemigrations scheduling
+python3 manage.py makemigrations schools 
+python3 manage.py makemigrations subjects
+python3 manage.py makemigrations users
