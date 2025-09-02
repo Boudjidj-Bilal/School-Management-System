@@ -17,15 +17,15 @@ from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
 from django.db.models import Q
 
 """
-=========================
-GESTION DES UTILISATEUR :
-=========================
-"""
-
-"""
 - Ce fichier contient des fonctions utilitaires de haut niveau pour les opérations de l'application `users`.
 - Elles utilisent les gestionnaires de modèles (managers) pour interagir avec la base de données, permettant une séparation claire de la logique métier et de la persistance des données.
 - Cela rend le code plus propre et plus facile à maintenir.
+"""
+
+"""
+=========================
+GESTION DES UTILISATEUR :
+=========================
 """
 
 def create_user(**kwargs):
