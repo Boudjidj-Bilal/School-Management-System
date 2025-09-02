@@ -1,5 +1,6 @@
 # ProjectSchool/ProjectSchool/settings.py
 from pathlib import Path
+import os
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -42,6 +43,35 @@ INSTALLED_APPS = [
 
 SITE_ID = 1
 AUTH_USER_MODEL = "users.User"
+
+
+# Définit la durée de vie maximale d'une session utilisateur à 10 minutes sans activité (600 secondes)
+SESSION_COOKIE_AGE = 600
+
+# Prolonge la session à chaque requête de l'utilisateur,
+# ce qui gère la déconnexion après inactivité.
+SESSION_SAVE_EVERY_REQUEST = True
+
+# Paramètres du backend d'envoi d'emails
+# Utilisez le backend SMTP de Django
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+
+# Le serveur SMTP de Gmail
+EMAIL_HOST = 'smtp.gmail.com'
+
+# Le port TLS/STARTTLS de Gmail
+EMAIL_PORT = 587
+
+# Nécessaire pour les connexions sécurisées avec TLS
+EMAIL_USE_TLS = True
+
+# Votre adresse email Gmail (expéditeur)
+# Les valeurs sont lues depuis le fichier .env
+EMAIL_HOST_USER = os.environ.get('EMAIL_HOST_USER')
+
+# Votre mot de passe d'application Gmail ou mot de passe standard
+# Les valeurs sont lues depuis le fichier .env
+EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD')
 
 AUTHENTICATION_BACKENDS = (
     "django.contrib.auth.backends.ModelBackend",

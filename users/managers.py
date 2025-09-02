@@ -6,7 +6,7 @@ from django.contrib.auth.models import BaseUserManager
 # Ce manager remplace le gestionnaire par défaut de Django pour permettre l'utilisation
 # de l'email comme identifiant unique, au lieu du nom d'utilisateur.
 class CustomUserManager(BaseUserManager):
-    def create_user(self, email, password=None, **extra_fields):
+    def create_user(self, username, password=None, **extra_fields):
         """
         Crée et sauvegarde un utilisateur avec l'email et le mot de passe donnés.
         
@@ -22,14 +22,12 @@ class CustomUserManager(BaseUserManager):
             User: L'instance de l'utilisateur nouvellement créé.
         """
         # Vérifie que l'email est présent.
-        if not email:
-            raise ValueError("L'adresse e-mail doit être définie.")
-        
-        # Normalise l'email (met en minuscule le domaine, etc.).
-        email = self.normalize_email(email)
+        if not username:
+            raise ValueError("Le nom d'utilisateur doit être définie.")
         
         # Crée une instance du modèle utilisateur (sans la sauvegarder).
-        user = self.model(email=email, **extra_fields)
+        user = self.model(username=username, **extra_fields)
+
         
         # Hache et définit le mot de passe.
         user.set_password(password)
@@ -39,7 +37,7 @@ class CustomUserManager(BaseUserManager):
         
         return user
 
-    def create_superuser(self, email, password=None, **extra_fields):
+    def create_superuser(self, username, password=None, **extra_fields):
         """
         Crée et sauvegarde un super-utilisateur avec tous les privilèges.
         
@@ -66,4 +64,4 @@ class CustomUserManager(BaseUserManager):
             raise ValueError("Le super-utilisateur doit avoir is_superuser=True.")
 
         # Appelle la méthode 'create_user' pour créer l'utilisateur avec les permissions de super-utilisateur.
-        return self.create_user(email, password, **extra_fields)
+        return self.create_user(username, password, **extra_fields)
