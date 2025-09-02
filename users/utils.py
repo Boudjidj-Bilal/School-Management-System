@@ -808,6 +808,31 @@ def activate_parent(parent_id):
     except Exception as e:
         return f"Erreur lors de l'activation du parent : {str(e)}", False
 
+def update_profile_parent_or_student(user_id, **kwargs):
+    """
+    Met à jour le profil d'un utilisateur (parent ou élève).
+    Args:
+        user_id (int): L'ID de l'utilisateur dont le profil doit être mis à jour.
+        kwargs (dict): Les champs à mettre à jour pour le profil.
+    Returns:
+        tuple: (object, str) - L'objet mis à jour (Parent ou Student) ou un message d'erreur.
+    """
+    try:
+        # Tente de récupérer le profil Parent lié à l'utilisateur
+        profile = Parent.objects.get(user__id=user_id)
+        return update_parent(profile.id, **kwargs)
+    except Parent.DoesNotExist:
+        try:
+            # Si ce n'est pas un Parent, tente de récupérer le profil Student
+            profile = Student.objects.get(user__id=user_id)
+            return update_student(profile.id, **kwargs)
+        except Student.DoesNotExist:
+            return "Profil non trouvé pour cet utilisateur.", False
+        except Exception as e:
+            return f"Erreur lors de la mise à jour du profil de l'élève : {str(e)}", False
+    except Exception as e:
+        return f"Erreur lors de la mise à jour du profil du parent : {str(e)}", False
+
 """
 =======================
 GESTION DES ENFANT :
