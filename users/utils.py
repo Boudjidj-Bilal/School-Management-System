@@ -814,8 +814,6 @@ GESTION DES ENFANT :
 =======================
 """
 
-
-
 # --- Fonctions CRUD pour la classe Child ---
 def create_child(student_id, parent_id):
     """
