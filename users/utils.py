@@ -1,4 +1,4 @@
-from .models import User, SuperAdministrator, Staff, Student, Parent, StaffType
+from .models import User, SuperAdministrator, Staff, Student, Parent, StaffType, Child
 from django.core.exceptions import ObjectDoesNotExist
 from django.db import IntegrityError
 from django.contrib.auth import authenticate, login, logout, update_session_auth_hash
@@ -486,6 +486,17 @@ def get_staff_by_gender_and_type_school(school_id, gender, staff_type_id):
     """
     return Staff.objects.filter(school__id=school_id, gender=gender, staff_type__id=staff_type_id)
 
+def get_staff_by_gender_and_school(school_id, gender):
+    """
+    Récupère les membres du personnel d'une école en fonction du genre.
+    Args:
+        school_id (int): L'ID de l'école.
+        gender (str): Le genre du personnel ('M' ou 'F').
+    Returns:
+        QuerySet: Un QuerySet des objets Staff correspondants.
+    """
+    return Staff.objects.filter(school__id=school_id, gender=gender)
+
 """
 =======================
 GESTION DES ETUDIANTS :
@@ -617,15 +628,291 @@ def get_student_by_birth_year_school(school_id, year):
     """
     return Student.objects.filter(school__id=school_id,birth_date__year=year)
 
+def deactivate_student(student_id):
+    """
+    Désactive un élève en désactivant son compte utilisateur.
+    Args:
+        student_id (int): L'ID de l'objet Student.
+    Returns:
+        tuple: (Student, bool) - L'objet Student désactivé et un booléen de réussite.
+    """
+    try:
+        student = Student.objects.get(id=student_id)
+        student.user.is_active = False
+        student.user.save()
+        return student, True
+    except Student.DoesNotExist:
+        return "Élève non trouvé.", False
+    except Exception as e:
+        return f"Erreur lors de la désactivation de l'élève : {str(e)}", False
+
+def activate_student(student_id):
+    """
+    Active un élève en activant son compte utilisateur.
+    Args:
+        student_id (int): L'ID de l'objet Student.
+    Returns:
+        tuple: (Student, bool) - L'objet Student activé et un booléen de réussite.
+    """
+    try:
+        student = Student.objects.get(id=student_id)
+        student.user.is_active = True
+        student.user.save()
+        return student, True
+    except Student.DoesNotExist:
+        return "Élève non trouvé.", False
+    except Exception as e:
+        return f"Erreur lors de l'activation de l'élève : {str(e)}", False
+
+
 """
 =======================
 GESTION DES PARENT :
 =======================
 """
-### code
+
+def create_parent(user_id, school_id, gender, parent_type, birth_date=None):
+    """
+    Crée un nouvel objet Parent lié à un utilisateur existant.
+    Args:
+        user_id (int): L'ID de l'utilisateur à lier.
+        school_id (int): L'ID de l'école de rattachement.
+        gender (str): Le genre du parent.
+        parent_type (str): Le type de parent ('MOTHER' ou 'FATHER').
+        birth_date (date, optional): La date de naissance du parent.
+    Returns:
+        tuple: (Parent, str) - L'objet Parent créé ou un message d'erreur.
+    """
+    try:
+        user = User.objects.get(id=user_id)
+        # Import local pour éviter les dépendances circulaires
+        from schools.models import School
+        school = School.objects.get(id=school_id)
+        if Parent.objects.filter(user=user).exists():
+            return None, "Cet utilisateur est déjà lié à un parent."
+        parent = Parent.objects.create(
+            user=user,
+            school=school,
+            gender=gender,
+            parent_type=parent_type,
+            birth_date=birth_date
+        )
+        return parent, None
+    except User.DoesNotExist:
+        return None, "Utilisateur non trouvé."
+    except ObjectDoesNotExist:
+        return None, "École non trouvée."
+    except Exception as e:
+        return None, str(e)
+
+def get_parent_by_id(parent_id):
+    """
+    Récupère un objet Parent par son ID.
+    Args:
+        parent_id (int): L'ID de l'objet Parent.
+    Returns:
+        Parent: L'objet Parent ou None s'il n'existe pas.
+    """
+    try:
+        return Parent.objects.get(id=parent_id)
+    except Parent.DoesNotExist:
+        return None
+
+def update_parent(parent_id, **kwargs):
+    """
+    Met à jour les informations d'un parent.
+    Args:
+        parent_id (int): L'ID de l'objet Parent à mettre à jour.
+        kwargs (dict): Les champs à mettre à jour.
+    Returns:
+        tuple: (Parent, str) - L'objet Parent mis à jour ou un message d'erreur.
+    """
+    try:
+        parent = Parent.objects.get(id=parent_id)
+        for key, value in kwargs.items():
+            setattr(parent, key, value)
+        parent.save()
+        return parent, None
+    except Parent.DoesNotExist:
+        return None, "Parent non trouvé."
+    except Exception as e:
+        return None, str(e)
+
+def delete_parent(parent_id):
+    """
+    Supprime un objet Parent.
+    Args:
+        parent_id (int): L'ID de l'objet Parent à supprimer.
+    Returns:
+        bool: True si la suppression est réussie, False sinon.
+    """
+    try:
+        parent = Parent.objects.get(id=parent_id)
+        parent.delete()
+        return True
+    except Parent.DoesNotExist:
+        return False
+
+def get_all_parents():
+    """
+    Récupère tous les objets Parent.
+    Returns:
+        QuerySet: Un QuerySet de tous les objets Parent.
+    """
+    return Parent.objects.all()
+
+def get_all_parents_school(school_id):
+    """
+    Récupère tous les parents d'une école donnée.
+    Args:
+        school_id (int): L'ID de l'école.
+    Returns:
+        QuerySet: Un QuerySet des objets Parent de l'école.
+    """
+    return Parent.objects.filter(school__id=school_id)
+
+def deactivate_parent(parent_id):
+    """
+    Désactive un parent en désactivant son compte utilisateur.
+    Args:
+        parent_id (int): L'ID de l'objet Parent.
+    Returns:
+        tuple: (Parent, bool) - L'objet Parent désactivé et un booléen de réussite.
+    """
+    try:
+        parent = Parent.objects.get(id=parent_id)
+        parent.user.is_active = False
+        parent.user.save()
+        return parent, True
+    except Parent.DoesNotExist:
+        return "Parent non trouvé.", False
+    except Exception as e:
+        return f"Erreur lors de la désactivation du parent : {str(e)}", False
+
+
+def activate_parent(parent_id):
+    """
+    Active un parent en activant son compte utilisateur.
+    Args:
+        parent_id (int): L'ID de l'objet Parent.
+    Returns:
+        tuple: (Parent, bool) - L'objet Parent activé et un booléen de réussite.
+    """
+    try:
+        parent = Parent.objects.get(id=parent_id)
+        parent.user.is_active = True
+        parent.user.save()
+        return parent, True
+    except Parent.DoesNotExist:
+        return "Parent non trouvé.", False
+    except Exception as e:
+        return f"Erreur lors de l'activation du parent : {str(e)}", False
+
 """
 =======================
 GESTION DES ENFANT :
 =======================
 """
-### code
+
+
+
+# --- Fonctions CRUD pour la classe Child ---
+def create_child(student_id, parent_id):
+    """
+    Crée un nouvel objet Child liant un élève à un parent.
+    Args:
+        student_id (int): L'ID de l'élève.
+        parent_id (int): L'ID du parent.
+    Returns:
+        tuple: (Child, str) - L'objet Child créé ou un message d'erreur.
+    """
+    try:
+        student = Student.objects.get(id=student_id)
+        parent = Parent.objects.get(id=parent_id)
+        if Child.objects.filter(student=student, parent=parent).exists():
+            return None, "Le lien entre cet élève et ce parent existe déjà."
+        child = Child.objects.create(student=student, parent=parent)
+        return child, None
+    except Student.DoesNotExist:
+        return None, "Élève non trouvé."
+    except Parent.DoesNotExist:
+        return None, "Parent non trouvé."
+    except Exception as e:
+        return None, str(e)
+
+def get_child_by_id(child_id):
+    """
+    Récupère un objet Child par son ID.
+    Args:
+        child_id (int): L'ID de l'objet Child.
+    Returns:
+        Child: L'objet Child ou None s'il n'existe pas.
+    """
+    try:
+        return Child.objects.get(id=child_id)
+    except Child.DoesNotExist:
+        return None
+
+def update_child(child_id, new_student_id=None, new_parent_id=None):
+    """
+    Met à jour les liens d'un enfant vers un nouvel élève ou parent.
+    Args:
+        child_id (int): L'ID de l'objet Child à mettre à jour.
+        new_student_id (int, optional): Le nouvel ID de l'élève.
+        new_parent_id (int, optional): Le nouvel ID du parent.
+    Returns:
+        tuple: (Child, str) - L'objet Child mis à jour ou un message d'erreur.
+    """
+    try:
+        child = Child.objects.get(id=child_id)
+        if new_student_id:
+            student = Student.objects.get(id=new_student_id)
+            child.student = student
+        if new_parent_id:
+            parent = Parent.objects.get(id=new_parent_id)
+            child.parent = parent
+        child.save()
+        return child, None
+    except Child.DoesNotExist:
+        return None, "Lien enfant/parent non trouvé."
+    except Student.DoesNotExist:
+        return None, "Nouvel élève non trouvé."
+    except Parent.DoesNotExist:
+        return None, "Nouveau parent non trouvé."
+    except Exception as e:
+        return None, str(e)
+
+def delete_child(child_id):
+    """
+    Supprime un objet Child.
+    Args:
+        child_id (int): L'ID de l'objet Child à supprimer.
+    Returns:
+        bool: True si la suppression est réussie, False sinon.
+    """
+    try:
+        child = Child.objects.get(id=child_id)
+        child.delete()
+        return True
+    except Child.DoesNotExist:
+        return False
+
+def get_children_by_parent(parent_id):
+    """
+    Récupère tous les élèves liés à un parent donné.
+    Args:
+        parent_id (int): L'ID du parent.
+    Returns:
+        QuerySet: Un QuerySet des objets Child correspondant aux élèves.
+    """
+    return Child.objects.filter(parent__id=parent_id)
+
+def get_parents_by_student(student_id):
+    """
+    Récupère tous les parents liés à un élève donné.
+    Args:
+        student_id (int): L'ID de l'élève.
+    Returns:
+        QuerySet: Un QuerySet des objets Child correspondant aux parents.
+    """
+    return Child.objects.filter(student__id=student_id)

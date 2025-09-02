@@ -132,3 +132,6 @@ class Child(models.Model):
     def __str__(self):
         return f"{self.student} child of {self.parent}"
 
+
+
+
