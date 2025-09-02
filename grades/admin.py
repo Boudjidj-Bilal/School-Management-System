@@ -1,3 +1,7 @@
 from django.contrib import admin
+from .models import Grade, Appreciation, Mention
 
-# Register your models here.
+admin.site.register(Grade)
+admin.site.register(Appreciation)
+admin.site.register(Mention)
+

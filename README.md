@@ -35,3 +35,6 @@ Gestion de l'héritage des utilisateurs avec la classe abstract user qui gèrent
 Utilisation du managers.py dans la app users pour créer des utilisateurs (super user / user)
 
 Environnement de travail : vscode, macos, python3, django, etc.
+
+Pour faire l'uml j'ai utiliser db diagrame
+

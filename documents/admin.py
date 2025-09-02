@@ -1,3 +1,6 @@
 from django.contrib import admin
+from .models import StudentDocument, StaffDocument
 
-# Register your models here.
+admin.site.register(StudentDocument)
+admin.site.register(StaffDocument)
+

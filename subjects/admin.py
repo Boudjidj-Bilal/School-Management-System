@@ -1,3 +1,6 @@
 from django.contrib import admin
+from .models import TeacherSubject, Subject
 
-# Register your models here.
+admin.site.register(Subject)
+admin.site.register(TeacherSubject)
+
