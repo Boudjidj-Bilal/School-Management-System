@@ -28,33 +28,47 @@ class School(models.Model):
     def __str__(self):
         return self.name
 
+TERM_TYPE_CHOICES = [
+    ("TRIMESTRE", "Trimestre"),
+    ("SEMESTRE", "Semestre"),
+]
 
 # --> Représente une année scolaire liée à une école
 class Year(models.Model):
-    name = models.CharField(max_length=100)                       # nom de l'année (ex: 2024-2025)
-    start_date = models.DateTimeField()                           # date de début de l'année
-    end_date = models.DateTimeField()                             # date de fin de l'année
-    min_time = models.TimeField()                                 # horaire minimum de la journée
-    max_time = models.TimeField()                                 # horaire maximum de la journée
-    creation = models.BooleanField(default=False)                 # état : création et validation
-    registration = models.BooleanField(default=False)             # état : enregistrement
-    running = models.BooleanField(default=False)                  # état : déroulement en cours
-    end_year = models.BooleanField(default=False)                 # état : fin d'année
-    finished = models.BooleanField(default=False)                 # état : année terminée
+    
+    name = models.CharField(max_length=100)        # nom de l'année (ex: 2024-2025)
+    start_date = models.DateTimeField()            # date de début de l'année
+    end_date = models.DateTimeField()              # date de fin de l'année
+    min_time = models.TimeField()                  # horaire minimum de la journée
+    max_time = models.TimeField()                  # horaire maximum de la journée
+    
+    # États de l'année
+    creation = models.BooleanField(default=True)   # état : création et validation
+    registration = models.BooleanField(default=False) 
+    running = models.BooleanField(default=False)   # état : déroulement en cours
+    end_year = models.BooleanField(default=False)  
+    finished = models.BooleanField(default=False)  
+
     school = models.ForeignKey(
-        School, on_delete=models.CASCADE, related_name="years"
-    )  # relation Many-to-One avec School
-    current = models.BooleanField(default=False)                  # indique si l'année est actuelle
+        "schools.School", on_delete=models.CASCADE, related_name="years"
+    )
+    current = models.BooleanField(default=False)   # indique si l'année est actuelle
+
+    # Ajout du type de découpage
+    term_type = models.CharField(
+        max_length=10,
+        choices=TERM_TYPE_CHOICES,
+        default="TRIMESTRE"
+    )
 
     def __str__(self):
         return f"{self.name} - {self.school.name}"
-
 
 # --> Représente une exception dans le calendrier scolaire (vacances, jours fériés…)
 class ExceptionDay(models.Model):
     start_date = models.DateField()                               # date de début de l'exception
     end_date = models.DateField()                                 # date de fin de l'exception
-    type = models.CharField(max_length=100)                       # type (vacances, jour férié…)
+    type = models.CharField(max_length=200)                       # type (vacances, jour férié…)
     year = models.ForeignKey(
         Year, on_delete=models.CASCADE, related_name="exception_days"
     )  # relation Many-to-One avec Year
@@ -73,12 +87,15 @@ class ExceptionTime(models.Model):
 
     def __str__(self):
         return f"{self.start_time} - {self.end_time} ({self.year.name})"
-
-
+    
 # --> Définit un trimestre ou un semestre
 class TermType(models.Model):
-    counter = models.IntegerField()                               # compteur (numéro du trimestre/semestre)
-    type = models.CharField(max_length=50)                        # type : trimestre ou semestre
+
+    counter = models.IntegerField()  # numéro du trimestre/semestre (ex: 1, 2, 3)
+    type = models.CharField(
+        max_length=10,
+        choices=TERM_TYPE_CHOICES
+    )  # limité à trimestre ou semestre
 
     def __str__(self):
         return f"{self.type} {self.counter}"
@@ -92,9 +109,9 @@ class TermYear(models.Model):
     year = models.ForeignKey(
         Year, on_delete=models.CASCADE, related_name="term_years"
     )  # relation Many-to-One avec Year
-    start_date = models.DateField()                               # date de début
-    end_date = models.DateField()                                 # date de fin
-    finished = models.BooleanField(default=False)                 # état : terminé
+    start_date = models.DateField(null=True)       # date de début
+    end_date = models.DateField(null=True)         # date de fin
+    finished = models.BooleanField(default=False)  # état : terminé
 
     def __str__(self):
         return f"{self.term} - {self.year.name}"
