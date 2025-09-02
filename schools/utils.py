@@ -165,7 +165,7 @@ GESTION DES ANNEES :
 ====================
 """
 
-def create_year(name, start_date, end_date, min_time, max_time, school_id, **kwargs):
+def create_year(name, start_date, end_date, min_time, max_time, school_id, term_type, **kwargs):
     """
     Crée et enregistre une nouvelle année scolaire.
     Args:
@@ -175,6 +175,7 @@ def create_year(name, start_date, end_date, min_time, max_time, school_id, **kwa
         min_time (time): L'horaire minimum de la journée.
         max_time (time): L'horaire maximum de la journée.
         school_id (int): L'ID de l'école.
+        term_type (str): Le type de découpage (ex: 'TRIMESTRE').
         **kwargs: Champs supplémentaires pour l'année.
     Returns:
         tuple: (Year, str) - L'objet Year créé ou un message d'erreur.
@@ -193,6 +194,7 @@ def create_year(name, start_date, end_date, min_time, max_time, school_id, **kwa
             min_time=min_time,
             max_time=max_time,
             school=school,
+            term_type=term_type,
             **kwargs
         )
         return year, None
@@ -200,6 +202,7 @@ def create_year(name, start_date, end_date, min_time, max_time, school_id, **kwa
         return None, f"Erreur de données : {str(e)}"
     except Exception as e:
         return None, f"Erreur lors de la création de l'année : {str(e)}"
+
 
 def get_year_by_id(year_id):
     """
@@ -459,23 +462,27 @@ def delete_exception_time(exception_time_id):
 GESTION DES TRIMESTRE :
 ===============================
 """
-
-def create_term_year(term_id, year_id, start_date, end_date):
+def create_term_year(counter, year_id, start_date=None, end_date=None):
     """
     Crée et enregistre un nouveau trimestre/semestre pour une année scolaire.
     Args:
-        term_id (int): L'ID du TermType (trimestre/semestre).
+        counter (int): Le numéro du trimestre/semestre (1, 2 ou 3).
         year_id (int): L'ID de l'année scolaire.
-        start_date (date): La date de début.
-        end_date (date): La date de fin.
+        start_date (date, optional): La date de début.
+        end_date (date, optional): La date de fin.
     Returns:
         tuple: (TermYear, str) - L'objet TermYear créé ou un message d'erreur.
     """
     try:
-        term = TermType.objects.get(id=term_id)
         year = Year.objects.get(id=year_id)
+        if counter not in [1, 2, 3]:
+            return None, "Le numéro du trimestre/semestre doit être 1, 2 ou 3."
+        
+        # Marque le trimestre/semestre précédent comme terminé
+        TermYear.objects.filter(year=year, finished=False).update(finished=True)
+
         term_year = TermYear.objects.create(
-            term=term,
+            counter=counter,
             year=year,
             start_date=start_date,
             end_date=end_date,
@@ -485,6 +492,7 @@ def create_term_year(term_id, year_id, start_date, end_date):
         return None, f"Erreur de données : {str(e)}"
     except Exception as e:
         return None, f"Erreur lors de la création du trimestre/semestre : {str(e)}"
+
         
 def get_term_year_by_id(term_year_id):
     """
@@ -504,13 +512,15 @@ def update_term_year(term_year_id, **kwargs):
     Met à jour les informations d'un trimestre/semestre.
     Args:
         term_year_id (int): L'ID du trimestre/semestre à mettre à jour.
-        kwargs (dict): Les champs à mettre à jour.
+        kwargs (dict): Les champs à mettre à jour (ex: counter, start_date, etc.).
     Returns:
         tuple: (TermYear, str) - L'objet TermYear mis à jour ou un message d'erreur.
     """
     try:
         term_year = TermYear.objects.get(id=term_year_id)
         for key, value in kwargs.items():
+            if key == 'counter' and value not in [1, 2, 3]:
+                return None, "Le numéro du trimestre/semestre doit être 1, 2 ou 3."
             setattr(term_year, key, value)
         term_year.save()
         return term_year, None
@@ -552,3 +562,89 @@ def finish_term_year(term_year_id):
     except Exception as e:
         return None, f"Erreur lors du marquage du trimestre/semestre comme terminé : {str(e)}"
 
+
+
+
+
+
+
+# +++++++++++++++++++++++
+    
+
+
+
+
+
+def finish_year(year_id):
+    """
+    Marque une année comme terminée en définissant son statut 'finished' sur True.
+    Args:
+        year_id (int): L'ID de l'année à marquer comme terminée.
+    Returns:
+        tuple: (Year, str) - L'objet année mis à jour ou un message d'erreur.
+    """
+    try:
+        year = Year.objects.get(id=year_id)
+        year.finished = True
+        # Met à jour les autres champs d'état pour la fin de l'année
+        year.running = False
+        year.end_year = True
+        year.save()
+        # Marque tous les trimestres/semestres de cette année comme terminés
+        TermYear.objects.filter(year=year).update(finished=True)
+        return year, None
+    except Year.DoesNotExist:
+        return None, "Année non trouvée."
+    except Exception as e:
+        return None, f"Erreur lors du marquage de l'année comme terminée : {str(e)}"
+
+
+
+def advance_year_stage(year_id):
+    """
+    Fait avancer l'année scolaire d'une étape à la suivante (séquentielle).
+    S'assure qu'un seul champ d'état (creation, registration, etc.) est True à la fois.
+    Args:
+        year_id (int): L'ID de l'année à faire avancer.
+    Returns:
+        tuple: (Year, str) - L'objet année mis à jour ou un message d'erreur.
+    """
+    try:
+        year = Year.objects.get(id=year_id)
+        
+        # Sauvegarde de l'état original pour détecter les transitions
+        original_running_state = year.running
+        original_end_year_state = year.end_year
+        
+        if year.creation:
+            year.creation = False
+            year.registration = True
+        elif year.registration:
+            year.registration = False
+            year.running = True
+        elif year.running:
+            year.running = False
+            year.end_year = True
+        elif year.end_year:
+            year.end_year = False
+            year.finished = True
+        else:
+            return None, "L'année est déjà terminée ou dans un état invalide."
+            
+        year.save()
+
+        # Nouvelle logique pour la création de TermYear
+        if not original_running_state and year.running:
+            # L'année vient de passer à l'état "running", créons le premier trimestre/semestre
+            TermYear.objects.create(counter=1, year=year, finished=False)
+        
+        # Nouvelle logique pour la fin de l'année
+        if not original_end_year_state and year.end_year:
+            # L'année vient de passer à l'état "end_year", marquer tous les termes comme terminés
+            TermYear.objects.filter(year=year).update(finished=True)
+            
+        return year, None
+    except Year.DoesNotExist:
+        return None, "Année non trouvée."
+    except Exception as e:
+        return None, f"Erreur lors de l'avancement de l'étape de l'année : {str(e)}"

@@ -88,24 +88,15 @@ class ExceptionTime(models.Model):
     def __str__(self):
         return f"{self.start_time} - {self.end_time} ({self.year.name})"
     
-# --> Définit un trimestre ou un semestre
-class TermType(models.Model):
-
-    counter = models.IntegerField()  # numéro du trimestre/semestre (ex: 1, 2, 3)
-    type = models.CharField(
-        max_length=10,
-        choices=TERM_TYPE_CHOICES
-    )  # limité à trimestre ou semestre
-
-    def __str__(self):
-        return f"{self.type} {self.counter}"
-
 
 # --> Associe un trimestre/semestre à une année scolaire
 class TermYear(models.Model):
-    term = models.ForeignKey(
-        TermType, on_delete=models.CASCADE, related_name="term_years"
-    )  # relation Many-to-One avec TermType
+    COUNTER_CHOICES = [
+        (1, "1"),
+        (2, "2"),
+        (3, "3"),
+    ]
+    counter = models.IntegerField(choices=COUNTER_CHOICES)  # numéro limité : 1, 2 ou 3
     year = models.ForeignKey(
         Year, on_delete=models.CASCADE, related_name="term_years"
     )  # relation Many-to-One avec Year
@@ -114,4 +105,4 @@ class TermYear(models.Model):
     finished = models.BooleanField(default=False)  # état : terminé
 
     def __str__(self):
-        return f"{self.term} - {self.year.name}"
+        return f"{self.counter} - {self.year.name}"
