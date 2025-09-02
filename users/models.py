@@ -2,23 +2,6 @@ from django.db import models
 from django.contrib.auth.models import AbstractBaseUser, PermissionsMixin
 from .managers import CustomUserManager
 
-"""
-class User(AbstractBaseUser):
-    
-    # Utilisateur central du projet
-    # - gère login, mot de passe, email, first_name, last_name, is_active, etc.
-    
-    # Champs globaux :
-    username = models.CharField(max_length=150, unique=True, blank=True, null=True)  # Nom d'utilisateur
-    phone_number = models.CharField(max_length=20, blank=True, null=True) # Numéro de téléphone
-
-    # Associe le modèle au gestionnaire d'utilisateurs personnalisé.
-    objects = CustomUserManager()
-
-    def __str__(self):
-        return self.get_full_name() or self.username
-"""
-
 class User(AbstractBaseUser, PermissionsMixin):
     """ 
     Utilisateur central du projet
@@ -26,6 +9,7 @@ class User(AbstractBaseUser, PermissionsMixin):
     """
     username = models.CharField(max_length=150, unique=True, blank=True, null=True)
     phone_number = models.CharField(max_length=20, blank=True, null=True)
+    email = models.EmailField(unique=True, blank=True, null=True)
 
     # Permissions / statut
     is_active = models.BooleanField(default=True)
@@ -38,8 +22,7 @@ class User(AbstractBaseUser, PermissionsMixin):
     USERNAME_FIELD = "username"
 
     def __str__(self):
-        return self.username or self.email
-
+        return self.username
 
 
 # Gère le modèle pour le super administrateur de la plateforme.
@@ -82,7 +65,6 @@ class Staff(models.Model):
 
     staff_type = models.ForeignKey(StaffType, on_delete=models.CASCADE,
     related_name="staff_members")  # Type de personnel (professeur, CPE, etc.)
-    email = models.EmailField(unique=True, null=False, default="email.manquant")  # obligatoire pour login
 
     school = models.ForeignKey("schools.School", 
     on_delete=models.CASCADE, related_name="staff_members_school")  # École à laquelle le personnel appartient
@@ -149,3 +131,4 @@ class Child(models.Model):
 
     def __str__(self):
         return f"{self.student} child of {self.parent}"
+

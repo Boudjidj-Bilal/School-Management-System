@@ -4,71 +4,80 @@ from classes.models import Classroom, Class
 from subjects.models import TeacherSubject
 
 
-# --> Représente un planning hebdomadaire (cycle de semaines : 1, 2, 3 ou 4)
-class WeeklyPlanning(models.Model):
-    CYCLE_CHOICES = [
-        (1, "Week Cycle 1"),
-        (2, "Week Cycle 2"),
-        (3, "Week Cycle 3"),
-        (4, "Week Cycle 4"),
-    ]  # choix possibles pour le cycle de semaine
-
-    cycle_week = models.IntegerField(choices=CYCLE_CHOICES, default=1)  # cycle de semaine (par défaut 1)
-    start_date = models.DateField()  # date de début
-    end_date = models.DateField()    # date de fin
-    year = models.ForeignKey(
-        Year, on_delete=models.CASCADE, related_name="weekly_plannings"
+class WeeklyScheduleTemplate(models.Model):
+    name = models.CharField(max_length=150, default = "Semaine 1") # Nom du modèle (ex: "Planning-Type-1", "Semaine-Examen")
+    description = models.TextField()                     # description du modèle
+    year = models.ForeignKey( 
+        Year, on_delete=models.CASCADE, related_name="weekly_template_annee"
     )  # relation Many-to-One avec Year
 
     def __str__(self):
-        return f"Week {self.cycle_week} ({self.start_date} - {self.end_date})"
+        return f"Week ({self.name} - {self.year})"
+
+
+# --> Représente une instance précise de planning hebdomadaire
+class WeeklyScheduleInstance(models.Model):
+    start_date = models.DateField()  # date de début
+    end_date = models.DateField()    # date de fin
+
+    schedule_template = models.ForeignKey( 
+        WeeklyScheduleTemplate, on_delete=models.CASCADE, related_name="weekly_template"
+    )  # relation Many-to-One avec Year
+
+    def __str__(self):
+        return f"Week ({self.start_date} - {self.end_date} - template : {self.schedule_template.name})"
+    
 
 # --> Représente un cours planifié (jour, horaires, salle, professeur, matière…)
 class Course(models.Model):
-    day = models.DateField()                     # jour du cours (date)
+    day_of_week = models.IntegerField(
+        choices=[(1, 'Lundi'), (2, 'Mardi'), (3, 'Mercredi'), (4, 'Jeudi'), (5, 'Vendredi'), (6, 'Samedi'), (7, 'Dimanche')],
+        default = 1
+    )           
     start_time = models.TimeField()              # horaire de début
     end_time = models.TimeField()                # horaire de fin
     classroom = models.ForeignKey(
-        Classroom, on_delete=models.CASCADE, related_name="courses"
+        Classroom, on_delete=models.CASCADE, related_name="courses_classroom"
     )  # relation Many-to-One avec Classroom
     student_class = models.ForeignKey(
-        Class, on_delete=models.CASCADE, related_name="courses"
+        Class, on_delete=models.CASCADE, related_name="courses_student_class"
     )  # relation Many-to-One avec Class
     teacher_subject = models.ForeignKey(
-        TeacherSubject, on_delete=models.CASCADE, related_name="courses"
+        TeacherSubject, on_delete=models.CASCADE, related_name="courses_teacher_subject"
     )  # relation Many-to-One avec TeacherSubject
     is_deleted = models.BooleanField(default=False)  # cours supprimé
     is_inactive = models.BooleanField(default=False)  # cours inactif
-    weekly_planning = models.ForeignKey(
-        WeeklyPlanning, on_delete=models.CASCADE, related_name="courses"
-    )  # relation Many-to-One avec WeeklyPlanning
+    weekly_planning_template = models.ForeignKey(
+        WeeklyScheduleTemplate, on_delete=models.CASCADE, 
+        related_name="courses_weekly_planning_template", default=1
+    )  # relation Many-to-One avec WeeklyScheduleTemplate
 
     class Meta:
         constraints = [
             # 1️ Un professeur ne peut avoir qu’un seul cours (classe + salle) pour un même créneau et jour dans la même semaine
             models.UniqueConstraint(
-                fields=["day", "start_time", "end_time", "teacher_subject", "weekly_planning"],
+                fields=["day_of_week", "start_time", "end_time", "teacher_subject", "weekly_planning_template"],
                 name="unique_teacher_course_per_week"
             ),
 
             # 2️ Une classe ne peut avoir qu’un seul cours pour un même créneau et jour dans la même semaine
             models.UniqueConstraint(
-                fields=["day", "start_time", "end_time", "student_class", "weekly_planning"],
+                fields=["day_of_week", "start_time", "end_time", "student_class", "weekly_planning_template"],
                 name="unique_class_course_per_week"
             ),
 
             # 3️ Une salle ne peut être utilisée qu’une seule fois pour un même créneau et jour dans la même semaine
             models.UniqueConstraint(
-                fields=["day", "start_time", "end_time", "classroom", "weekly_planning"],
+                fields=["day_of_week", "start_time", "end_time", "classroom", "weekly_planning_template"],
                 name="unique_classroom_course_per_week"
             ),
 
             # 4️ Sécurité supplémentaire : empêcher doublon strict sur tous les champs clés dans la même semaine
             models.UniqueConstraint(
-                fields=["day", "start_time", "end_time", "teacher_subject", "student_class", "classroom", "weekly_planning"],
+                fields=["day_of_week", "start_time", "end_time", "teacher_subject", "student_class", "classroom", "weekly_planning_template"],
                 name="unique_classroom_course_per_week_all"
             ),
         ]
 
     def __str__(self):
-        return f"{self.teacher_subject} - {self.student_class} on {self.day} ({self.start_time}-{self.end_time})"
+        return f"{self.teacher_subject} - {self.student_class} on {self.day_of_week} ({self.start_time}-{self.end_time})"
