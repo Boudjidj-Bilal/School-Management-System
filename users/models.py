@@ -2,14 +2,15 @@ from django.db import models
 from django.contrib.auth.models import AbstractBaseUser, PermissionsMixin
 from .managers import CustomUserManager
 
+
 class User(AbstractBaseUser, PermissionsMixin):
-    """ 
+    """
     Utilisateur central du projet
     - gère login, mot de passe, email, first_name, last_name, is_active, etc.
     """
     username = models.CharField(max_length=150, unique=True, blank=True, null=True)
+    email = models.EmailField(unique=True)  # obligatoire pour login
     phone_number = models.CharField(max_length=20, blank=True, null=True)
-    email = models.EmailField(unique=True, blank=True, null=True)
 
     # Permissions / statut
     is_active = models.BooleanField(default=True)
@@ -22,7 +23,7 @@ class User(AbstractBaseUser, PermissionsMixin):
     USERNAME_FIELD = "username"
 
     def __str__(self):
-        return self.username
+        return self.username or self.email
 
 
 # Gère le modèle pour le super administrateur de la plateforme.
@@ -36,8 +37,8 @@ class SuperAdministrator(models.Model):
     # (par ex. droits spéciaux, zone de gestion, etc.)
 
     def __str__(self):
-        return f"SuperAdmin: {self.user.username}"
- 
+        return f"SuperAdmin: {self.user.get_full_name()}"
+
 
 # --> Gère le modèle pour le type de personnel (Proviseur, Professeur, CPE, Administrateur…)
 class StaffType(models.Model):
@@ -73,7 +74,7 @@ class Staff(models.Model):
     birth_date = models.DateField(blank=True, null=True)  # Date de naissance (optionnelle)
 
     def __str__(self):
-        return f"{self.user.username} ({self.staff_type})"
+        return f"{self.user.get_full_name()} ({self.staff_type})"
 
 
 # --> Élèves inscrits dans une école
@@ -92,8 +93,7 @@ class Student(models.Model):
     birth_date = models.DateField(blank=True,null=True)  # Date de naissance (optionnelle)
 
     def __str__(self):
-        return f"Élève: {self.user.username} - {self.school.name}"
-
+        return f"Élève: {self.user.get_full_name()} - {self.school.name}"
 
 
 # --> Parents liés à une école et à un ou plusieurs enfants
@@ -114,7 +114,7 @@ class Parent(models.Model):
     birth_date = models.DateField(blank=True,null=True)  # Date de naissance (optionnelle)
 
     def __str__(self):
-        return f"{self.parent_type} - {self.user.username}"
+        return f"{self.parent_type} - {self.user.get_full_name()}"
 
 
 # --> Table d'association entre Parent et Student (Many-to-Many)
@@ -131,7 +131,3 @@ class Child(models.Model):
 
     def __str__(self):
         return f"{self.student} child of {self.parent}"
-
-
-
-
