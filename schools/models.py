@@ -1,7 +1,5 @@
 # school/models.py
 from django.db import models
-from users.models import SuperAdministrator
-
 
 class TypeSchool(models.Model):
     name = models.CharField(max_length=200)           # type d'école (ex: lycée, collège…)
@@ -28,11 +26,6 @@ class School(models.Model):
     def __str__(self):
         return self.name
 
-TERM_TYPE_CHOICES = [
-    ("TRIMESTRE", "Trimestre"),
-    ("SEMESTRE", "Semestre"),
-]
-
 # --> Représente une année scolaire liée à une école
 class Year(models.Model):
     
@@ -50,16 +43,9 @@ class Year(models.Model):
     finished = models.BooleanField(default=False)  
 
     school = models.ForeignKey(
-        "schools.School", on_delete=models.CASCADE, related_name="years"
+        School, on_delete=models.CASCADE, related_name="years"
     )
     current = models.BooleanField(default=False)   # indique si l'année est actuelle
-
-    # Ajout du type de découpage
-    term_type = models.CharField(
-        max_length=10,
-        choices=TERM_TYPE_CHOICES,
-        default="TRIMESTRE"
-    )
 
     def __str__(self):
         return f"{self.name} - {self.school.name}"
@@ -90,7 +76,7 @@ class ExceptionTime(models.Model):
     
 
 # --> Associe un trimestre/semestre à une année scolaire
-class TermYear(models.Model):
+class TermYearLevel(models.Model):
     COUNTER_CHOICES = [
         (1, "1"),
         (2, "2"),
@@ -99,6 +85,9 @@ class TermYear(models.Model):
     counter = models.IntegerField(choices=COUNTER_CHOICES)  # numéro limité : 1, 2 ou 3
     year = models.ForeignKey(
         Year, on_delete=models.CASCADE, related_name="term_years"
+    )  # relation Many-to-One avec Year
+    level = models.ForeignKey(
+        "classes.Level", on_delete=models.CASCADE, related_name="term_levels"
     )  # relation Many-to-One avec Year
     start_date = models.DateField(null=True)       # date de début
     end_date = models.DateField(null=True)         # date de fin

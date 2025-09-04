@@ -5,9 +5,19 @@ from subjects.models import TeacherSubject
 
 # --> Représente un niveau scolaire (ex: 6e, 5e, Terminale...)
 class Level(models.Model):
+    TERM_TYPE_CHOICES = [
+    ("TRIMESTRE", "Trimestre"),
+    ("SEMESTRE", "Semestre"),
+    ]
+
     level = models.IntegerField()  # niveau numérique (ex: 6, 5, 12...)
+    term_type = models.CharField(
+        max_length=10,
+        choices=TERM_TYPE_CHOICES,
+        default="TRIMESTRE"
+    )
     school = models.ForeignKey(
-        School, on_delete=models.CASCADE, related_name="levels"
+        "schools.School", on_delete=models.CASCADE, related_name="levels"
     )  # relation Many-to-One avec School
 
     def __str__(self):
@@ -20,7 +30,7 @@ class Classroom(models.Model):
     type = models.CharField(max_length=100)        # type de salle (ex: laboratoire, salle normale...)
     is_active = models.BooleanField(default=True)  # salle active ou non
     school = models.ForeignKey(
-        School, on_delete=models.CASCADE, related_name="classrooms"
+        "schools.School", on_delete=models.CASCADE, related_name="classrooms"
     )  # relation Many-to-One avec School
 
     def __str__(self):
@@ -45,10 +55,10 @@ class ClassStudentYear(models.Model):
         Class, on_delete=models.CASCADE, related_name="student_years"
     )  # relation Many-to-One avec Class
     student = models.ForeignKey(
-        Student, on_delete=models.CASCADE, related_name="class_years"
+        "users.Student", on_delete=models.CASCADE, related_name="class_years"
     )  # relation Many-to-One avec Student
     year = models.ForeignKey(
-        Year, on_delete=models.CASCADE, related_name="student_classes"
+        "schools.Year", on_delete=models.CASCADE, related_name="student_classes"
     )  # relation Many-to-One avec Year
     is_active = models.BooleanField(default=True)   # inscription active
     is_delegate = models.BooleanField(default=False)  # élève délégué ou non
@@ -66,10 +76,10 @@ class ClassTeacherYear(models.Model):
         Class, on_delete=models.CASCADE, related_name="teacher_years"
     )  # relation Many-to-One avec Class
     teacher = models.ForeignKey(
-        TeacherSubject, on_delete=models.CASCADE, related_name="class_years"
+        "subjects.TeacherSubject", on_delete=models.CASCADE, related_name="class_years"
     )  # relation Many-to-One avec TeacherSubject
     year = models.ForeignKey(
-        Year, on_delete=models.CASCADE, related_name="teacher_classes"
+        "schools.Year", on_delete=models.CASCADE, related_name="teacher_classes"
     )  # relation Many-to-One avec Year
     is_active = models.BooleanField(default=True)       # affectation active
     is_main_teacher = models.BooleanField(default=False)  # professeur principal ou non

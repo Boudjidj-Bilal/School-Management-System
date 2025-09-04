@@ -1,5 +1,5 @@
 from django.db import models
-from schools.models import TermYear
+from schools.models import TermYearLevel
 from users.models import Student
 from scheduling.models import Course
 
@@ -14,7 +14,7 @@ class Attendance(models.Model):
     type = models.CharField(max_length=40, choices=ATTENDANCE_CHOICES)  # couleur associée
     justified = models.BooleanField(default=True)         # Absence ou retard justifié ou non
     term_year = models.ForeignKey(
-        TermYear, on_delete=models.CASCADE, related_name="term_year_attendance"
+        TermYearLevel, on_delete=models.CASCADE, related_name="term_year_attendance"
     )  # lien vers le trimestre/semestre/année
     student = models.ForeignKey(
         Student, on_delete=models.CASCADE, related_name="student_attendance"

@@ -1,5 +1,5 @@
 from django.db import models
-from schools.models import TermYear
+from schools.models import TermYearLevel
 from subjects.models import TeacherSubject
 from users.models import Student
 from scheduling.models import Course
@@ -10,7 +10,7 @@ class Grade(models.Model):
     name = models.CharField(max_length=100)  # nom du contrôle (ex: "Devoir maison 1")
     coefficient = models.FloatField(default=1.0)  # coefficient de la note
     term_year = models.ForeignKey(
-        TermYear, on_delete=models.CASCADE, related_name="grades"
+        TermYearLevel, on_delete=models.CASCADE, related_name="grades"
     )  # lien vers le trimestre/semestre/année
     student = models.ForeignKey(
         Student, on_delete=models.CASCADE, related_name="grades"
@@ -30,7 +30,7 @@ class Appreciation(models.Model):
         Student, on_delete=models.CASCADE, related_name="appreciations"
     )  # élève concerné
     term_year = models.ForeignKey(
-        TermYear, on_delete=models.CASCADE, related_name="appreciations"
+        TermYearLevel, on_delete=models.CASCADE, related_name="appreciations"
     )  # période concernée (trimestre/semestre/année)
     teacher_subject = models.ForeignKey(
         TeacherSubject, on_delete=models.CASCADE, related_name="appreciations",
@@ -57,7 +57,7 @@ class Mention(models.Model):
         Student, on_delete=models.CASCADE, related_name="mentions"
     )  # élève concerné
     term_year = models.ForeignKey(
-        TermYear, on_delete=models.CASCADE, related_name="mentions"
+        TermYearLevel, on_delete=models.CASCADE, related_name="mentions"
     )  # période concernée
 
     class Meta:
