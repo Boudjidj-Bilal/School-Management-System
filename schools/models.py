@@ -37,10 +37,10 @@ class Year(models.Model):
     
     # États de l'année
     creation = models.BooleanField(default=True)   # état : création et validation
-    registration = models.BooleanField(default=False) 
+    registration = models.BooleanField(default=False) # état : enregistrement
     running = models.BooleanField(default=False)   # état : déroulement en cours
-    end_year = models.BooleanField(default=False)  
-    finished = models.BooleanField(default=False)  
+    end_year = models.BooleanField(default=False)  # état : fin de l'année
+    finished = models.BooleanField(default=False)  # état : année terminé
 
     school = models.ForeignKey(
         School, on_delete=models.CASCADE, related_name="years"

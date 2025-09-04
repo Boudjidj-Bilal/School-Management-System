@@ -1,8 +1,9 @@
 from django.core.exceptions import ObjectDoesNotExist
 
 # Import des modèles locaux et liés
-from .models import School, TypeSchool, Year, ExceptionDay, ExceptionTime
+from .models import School, TypeSchool, Year, ExceptionDay, ExceptionTime, TermYearLevel
 from users.models import SuperAdministrator
+from classes.models import Level
 
 """
     Ce fichier centralise les fonctions utilitaires de l'application 'schools'.
@@ -270,6 +271,13 @@ def advance_year_stage(year_id):
         elif year.registration:
             year.registration = False
             year.running = True
+            
+            # Lorsque l'année se lance on créer tous les 1er trimesre ou semestre pour tout les niveaux
+            levels = Level.objects.filter(school=year.school)
+            for level in levels:
+                # On créer tous les premiers trimestre ou semestre de l'année :
+                create_term_year_level(1, year.id, level.id, start_date=None, end_date=None)
+
         elif year.running:
             year.running = False
             year.end_year = True
@@ -456,3 +464,170 @@ def delete_exception_time(exception_time_id):
         return True
     except ExceptionTime.DoesNotExist:
         return False
+
+
+def create_term_year_level(counter, year_id, level_id, start_date=None, end_date=None):
+    """
+    Crée et enregistre un nouveau trimestre/semestre pour une année et un niveau donnés.
+    Args:
+        counter (int): Le numéro du trimestre/semestre (1, 2 ou 3).
+        year_id (int): L'ID de l'année scolaire.
+        level_id (int): L'ID du niveau scolaire.
+        start_date (date, optional): La date de début.
+        end_date (date, optional): La date de fin.
+    Returns:
+        tuple: (TermYearLevel, str) - L'objet créé ou un message d'erreur.
+    """
+    try:
+        year = Year.objects.get(id=year_id)
+        level = Level.objects.get(id=level_id)
+        
+        # Marque le trimestre/semestre précédent comme terminé, si un existe
+        # et s'il est pour la même année et le même niveau.
+        TermYearLevel.objects.filter(
+            year=year,
+            level=level,
+            finished=False
+        ).update(finished=True)
+
+        term_year_level = TermYearLevel.objects.create(
+            counter=counter,
+            year=year,
+            level=level,
+            start_date=start_date,
+            end_date=end_date,
+            finished=False
+        )
+        return term_year_level, None
+    except ObjectDoesNotExist as e:
+        return None, f"Erreur de données : {str(e)}"
+    except Exception as e:
+        return None, f"Erreur lors de la création du trimestre/semestre : {str(e)}"
+
+
+def get_term_year_level_by_id(term_id):
+    """
+    Récupère un trimestre/semestre par son ID.
+    Args:
+        term_id (int): L'ID du trimestre/semestre.
+    Returns:
+        TermYearLevel: L'objet ou None si non trouvé.
+    """
+    try:
+        return TermYearLevel.objects.get(id=term_id)
+    except TermYearLevel.DoesNotExist:
+        return None
+
+
+def update_term_year_level(term_id, **kwargs):
+    """
+    Met à jour les informations d'un trimestre/semestre.
+    Args:
+        term_id (int): L'ID du trimestre/semestre à mettre à jour.
+        kwargs (dict): Les champs à mettre à jour.
+    Returns:
+        tuple: (TermYearLevel, str) - L'objet mis à jour ou un message d'erreur.
+    """
+    try:
+        term = TermYearLevel.objects.get(id=term_id)
+        for key, value in kwargs.items():
+            setattr(term, key, value)
+        term.save()
+        return term, None
+    except TermYearLevel.DoesNotExist:
+        return None, "Trimestre/semestre non trouvé."
+    except Exception as e:
+        return None, f"Erreur lors de la mise à jour : {str(e)}"
+
+
+def delete_term_year_level(term_id):
+    """
+    Supprime un objet TermYearLevel.
+    Args:
+        term_id (int): L'ID du trimestre/semestre à supprimer.
+    Returns:
+        bool: True si la suppression est réussie, False sinon.
+    """
+    try:
+        term = TermYearLevel.objects.get(id=term_id)
+        term.delete()
+        return True
+    except TermYearLevel.DoesNotExist:
+        return False
+
+
+def get_current_term_for_level(year_id, level_id):
+    """
+    Récupère le trimestre/semestre en cours (finished=False) pour un niveau et une année donnés.
+    Args:
+        year_id (int): L'ID de l'année scolaire.
+        level_id (int): L'ID du niveau scolaire.
+    Returns:
+        TermYearLevel: L'objet en cours ou None si non trouvé.
+    """
+    try:
+        return TermYearLevel.objects.get(year_id=year_id, level_id=level_id, finished=False)
+    except TermYearLevel.DoesNotExist:
+        return None
+
+
+
+def finish_all_terms_for_level(year_id, level_id):
+    """
+    Marque tous les trimestres/semestres d'un niveau donné pour une année comme terminés.
+    Args:
+        year_id (int): L'ID de l'année scolaire.
+        level_id (int): L'ID du niveau scolaire.
+    Returns:
+        tuple: (int, str) - Le nombre de termes mis à jour ou un message d'erreur.
+    """
+    try:
+        # Utilise filter().update() pour une mise à jour efficace de la base de données
+        updated_count = TermYearLevel.objects.filter(
+            year_id=year_id,
+            level_id=level_id,
+            finished=False
+        ).update(finished=True)
+        
+        return updated_count, None
+    except Exception as e:
+        return 0, f"Erreur lors de la mise à jour des termes : {str(e)}"
+
+
+def advance_term_for_level(year_id, level_id, start_date=None, end_date=None):
+    """
+    Avance au trimestre/semestre suivant pour un niveau donné.
+    Marque le terme actuel comme terminé et crée le suivant.
+    Crée une exception horaire si les heures de début et de fin sont fournies.
+    Args:
+        year_id (int): L'ID de l'année scolaire.
+        level_id (int): L'ID du niveau scolaire.
+    Returns:
+        tuple: (TermYearLevel, str) - Le nouveau terme ou un message d'erreur.
+    """
+    try:
+        current_term = get_current_term_for_level(year_id, level_id)
+        
+        level = Level.objects.get(id=level_id)
+        term_type = level.term_type
+        
+        max_counter = 3 if term_type == "TRIMESTRE" else 2
+        next_counter = current_term.counter + 1 if current_term else 1
+        
+        # Vérifie si la création d'un nouveau trimestre/semestre est possible
+        if next_counter > max_counter:
+            # Mettre à fini le dernier trimestre/semestre
+            finish_all_terms_for_level(year_id, level_id)
+            return None, f"Le nombre maximum de {term_type.lower()}s a été atteint pour le niveau : "+level.level
+            
+        new_term, error = create_term_year_level(next_counter, year_id, level_id, start_date, end_date)
+        
+        if error:
+            return None, error
+        
+        return new_term, None
+    except Level.DoesNotExist:
+        return None, "Niveau non trouvé."
+    except Exception as e:
+        return None, f"Erreur lors du passage au trimestre/semestre suivant : {str(e)}"
+
