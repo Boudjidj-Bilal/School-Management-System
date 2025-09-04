@@ -1,7 +1,4 @@
 from django.db import models
-from schools.models import School, Year
-from users.models import Student
-from subjects.models import TeacherSubject
 
 # --> Représente un niveau scolaire (ex: 6e, 5e, Terminale...)
 class Level(models.Model):
@@ -10,7 +7,7 @@ class Level(models.Model):
     ("SEMESTRE", "Semestre"),
     ]
 
-    level = models.IntegerField()  # niveau numérique (ex: 6, 5, 12...)
+    level = models.IntegerField()  # niveau numérique (ex: 6, 5, 1, 2...)
     term_type = models.CharField(
         max_length=10,
         choices=TERM_TYPE_CHOICES,
@@ -41,9 +38,15 @@ class Classroom(models.Model):
 class Class(models.Model):
     name = models.CharField(max_length=100)  # nom de la classe (ex: 6A, Terminale S1...)
     level = models.ForeignKey(
-        Level, on_delete=models.CASCADE, related_name="classes"
+        Level, on_delete=models.CASCADE, related_name="classes_level"
     )  # relation Many-to-One avec Level
     is_valid = models.BooleanField(default=True)  # classe validée pour enregistrement
+
+
+    main_teacher = models.ForeignKey(
+        "users.Staff", on_delete=models.SET_NULL, related_name="classes_main_teacher" # Professeur principal
+    )  # relation Many-to-One avec Level
+    # on_delete=models.SET_NULL => si le professeur est supprimé on passe le champs main_teacher à null
 
     def __str__(self):
         return f"{self.name} - {self.level}"
