@@ -42,12 +42,6 @@ class Class(models.Model):
     )  # relation Many-to-One avec Level
     is_valid = models.BooleanField(default=True)  # classe validée pour enregistrement
 
-
-    main_teacher = models.ForeignKey(
-        "users.Staff", on_delete=models.SET_NULL, related_name="classes_main_teacher" # Professeur principal
-    )  # relation Many-to-One avec Level
-    # on_delete=models.SET_NULL => si le professeur est supprimé on passe le champs main_teacher à null
-
     def __str__(self):
         return f"{self.name} - {self.level}"
 

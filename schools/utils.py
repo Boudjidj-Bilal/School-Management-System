@@ -4,6 +4,7 @@ from django.core.exceptions import ObjectDoesNotExist
 from .models import School, TypeSchool, Year, ExceptionDay, ExceptionTime, TermYearLevel
 from users.models import SuperAdministrator
 from classes.models import Level
+from classes.utils import deactivate_all_classes_for_year
 
 """
     Ce fichier centralise les fonctions utilitaires de l'application 'schools'.
@@ -270,14 +271,12 @@ def advance_year_stage(year_id):
             year.registration = True
         elif year.registration:
             year.registration = False
-            year.running = True
-            
+            year.running = True 
             # Lorsque l'année se lance on créer tous les 1er trimesre ou semestre pour tout les niveaux
             levels = Level.objects.filter(school=year.school)
             for level in levels:
                 # On créer tous les premiers trimestre ou semestre de l'année :
-                create_term_year_level(1, year.id, level.id, start_date=None, end_date=None)
-
+                create_term_year_level(1, year_id, level.id, start_date=None, end_date=None)
         elif year.running:
             year.running = False
             year.end_year = True
