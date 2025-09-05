@@ -1,7 +1,8 @@
 from django.db import models
-from users.models import Staff, Student, Parent
+from users.models import Staff, Parent
 from schools.models import School
-
+from django.contrib.contenttypes.fields import GenericForeignKey
+from django.contrib.contenttypes.models import ContentType
 
 # --> Représente une annonce (devoir, contrôle, cours ou message) envoyée dans l'école
 class Announcement(models.Model):
@@ -28,28 +29,17 @@ class Announcement(models.Model):
     def __str__(self):
         return f"{self.type} - {self.sender}"
 
-
-# --> Représente un destinataire de type personnel pour une annonce
-class StaffRecipient(models.Model):
-    recipient = models.ForeignKey(
-        Staff, on_delete=models.CASCADE, related_name="received_announcements"
-    )  # personnel destinataire
+class Recipient(models.Model):
+    """
+    Représente un destinataire unique pour une annonce, qu'il soit un membre du personnel
+    ou un élève, en utilisant une clé étrangère générique.
+    """
+    content_type = models.ForeignKey(ContentType, on_delete=models.CASCADE) # Le type de model : Staff ou Student
+    object_id = models.PositiveIntegerField() # L'id de l'étudiant ou du membre du personnel
+    recipient = GenericForeignKey('content_type', 'object_id') # Stock les deux informations dans un champs
     announcement = models.ForeignKey(
-        Announcement, on_delete=models.CASCADE, related_name="staff_recipients"
-    )  # annonce concernée
-
-    def __str__(self):
-        return f"{self.recipient} -> {self.announcement}"
-
-
-# --> Représente un destinataire de type élève pour une annonce
-class StudentRecipient(models.Model):
-    recipient = models.ForeignKey(
-        Student, on_delete=models.CASCADE, related_name="received_announcements"
-    )  # élève destinataire
-    announcement = models.ForeignKey(
-        Announcement, on_delete=models.CASCADE, related_name="student_recipients"
-    )  # annonce concernée
+        Announcement, on_delete=models.CASCADE, related_name="recipients"
+    )
 
     def __str__(self):
         return f"{self.recipient} -> {self.announcement}"
