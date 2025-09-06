@@ -1,6 +1,6 @@
 
 from django.core.exceptions import ObjectDoesNotExist
-from django.db.models import QuerySet
+from django.db.models import QuerySet, F, Sum, ExpressionWrapper, DecimalField
 from .models import Grade, Appreciation, Mention
 from users.models import Student
 from schools.models import TermYearLevel
@@ -386,5 +386,136 @@ def delete_mention(mention_id: int) -> bool:
         return False
 
 
+"""
+================================
+GESTION DES MOYENNES GENERALES :
+================================
+"""
+
+"""
+    Cette partie contient des fonctions utilitaires pour gérer les calculs de moyenne des élèves.
+"""
+
+# => Moyenne d'un élève en fonction d'une matière et d'un trimestre
+def get_general_average_subject(student_id: int, term_year_id: int, teacher_subject_id: int) -> tuple:
+    """
+    Calcule la moyenne générale d'un élève pour une matière, un professeur et un trimestre/une année spécifiques.
+
+    Args:
+        student_id (int): L'ID de l'élève.
+        term_year_id (int): L'ID du trimestre/de l'année.
+        teacher_subject_id (int): L'ID de l'objet TeacherSubject.
+
+    Returns:
+        tuple: (float, str) - La moyenne calculée ou (None, message d'erreur).
+    """
+    try:
+        # 1. Valide l'existence de l'étudiant, du trimestre et du professeur
+        student = Student.objects.get(id=student_id)
+        term_year = TermYearLevel.objects.get(id=term_year_id)
+        teacher_subject = TeacherSubject.objects.get(id=teacher_subject_id)
+
+        # 2. Récupère tous les cours pour la matière et le professeur donnés
+        # On utilise le lien Year > WeeklyScheduleTemplate pour trouver les cours.
+        # Le modèle TermYearLevel a une relation avec le modèle Year.
+        courses = Course.objects.filter(
+            teacher_subject=teacher_subject,
+            weekly_planning_template__year=term_year.year
+        )
+        course_ids = [course.id for course in courses]
+        if not course_ids:
+            return None, "Aucun cours trouvé pour cette matière et ce professeur dans le trimestre/l'année donné."
+
+        # 3. Récupère les notes de l'étudiant pour ces cours
+        grades = Grade.objects.filter(
+            student=student,
+            term_year=term_year,
+            course__in=course_ids,
+            is_absent=False
+        )
+
+        if not grades:
+            return None, "Aucune note trouvée pour cet élève dans cette matière et ce trimestre."
+
+        # 4. Calcule le total des points pondérés et le total des coefficients
+        # On utilise ExpressionWrapper pour garantir un type de champ Decimal pour la précision
+        total_weighted_grades = grades.annotate(
+            weighted_grade=ExpressionWrapper(
+                F('grade_value') * F('coefficient'),
+                output_field=DecimalField()
+            )
+        ).aggregate(total_points=Sum('weighted_grade'))['total_points']
+
+        total_coefficients = grades.aggregate(
+            total_coeff=Sum('coefficient')
+        )['total_coeff']
+
+        # 5. Calcule la moyenne
+        if total_coefficients > 0:
+            average = total_weighted_grades / total_coefficients
+            return round(average, 2), None
+        else:
+            return None, "Le total des coefficients est zéro, impossible de calculer la moyenne."
+
+    except Student.DoesNotExist:
+        return None, "L'élève n'a pas été trouvé."
+    except TermYearLevel.DoesNotExist:
+        return None, "Le trimestre/l'année n'a pas été trouvé."
+    except TeacherSubject.DoesNotExist:
+        return None, "La matière ou le professeur n'a pas été trouvé."
+    except Exception as e:
+        return None, f"Une erreur inattendue est survenue : {str(e)}"
+
+# => Moyenne général d'un élève en fonction d'un trimestre
+def get_overall_average_term(student_id: int, term_year_id: int) -> tuple:
+    """
+    Calcule la moyenne générale totale d'un élève pour un trimestre et une année donnée,
+    en moyennant les notes obtenues dans chaque matière.
+
+    Args:
+        student_id (int): L'ID de l'élève.
+        term_year_id (int): L'ID du trimestre/de l'année.
+
+    Returns:
+        tuple: (float, str) - La moyenne générale totale ou (None, message d'erreur).
+    """
+    try:
+        # Récupère toutes les matières pour lesquelles l'élève a des notes dans ce trimestre
+        teacher_subjects_with_grades = Grade.objects.filter(
+            student__id=student_id,
+            term_year__id=term_year_id,
+            is_absent=False
+        ).values_list('course__teacher_subject__id', flat=True).distinct()
+
+        if not teacher_subjects_with_grades:
+            return None, "Aucune note trouvée pour cet élève dans ce trimestre."
+
+        total_average = 0
+        subject_count = 0
+
+        # Boucle sur chaque matière pour calculer la moyenne de la matière
+        for ts_id in teacher_subjects_with_grades:
+            # Appel de la fonction pour la moyenne par matière
+            subject_average, error = get_general_average_subject(student_id, term_year_id, ts_id)
+            if subject_average is not None:
+                total_average += subject_average
+                subject_count += 1
+
+        if subject_count > 0:
+            overall_average = total_average / subject_count
+            return round(overall_average, 2), None
+        else:
+            return None, "Aucune moyenne de matière valide n'a pu être calculée."
+
+    except Exception as e:
+        return None, f"Une erreur inattendue est survenue lors du calcul de la moyenne générale totale : {str(e)}"
+
+
+"""
+===========================================
+GESTION DU FICHIER EXCEL DES DATA DU SITE : 
+===========================================
+"""
 
 # TODO faire la fonction d'export des données en fichier excel qui s'envoie automatiquement vers le super user.
+

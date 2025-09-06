@@ -4,3 +4,11 @@ find . -path "*/migrations/*.py" -not -name "__init__.py" -delete
 rm db.sqlite3
 
 python3 manage.py makemigrations
+
+
+
+ok, on va maintenant faire une fonction du projet très importante, je souhaite avoir la possibilité, à nimporte quelle moment dans l'année, uniquement pour le super user, de faire une exportation de toutes les informations de la base de données sur les élèves : 
+
+le fichier excel aura les informations suivantes : 
+
+Ecole, année, type de trimestre/ou semestre, Nombre du trimestre ou semestre, nom étudiant, prénom, classe, niveau, moyenne général 
