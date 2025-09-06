@@ -4,8 +4,12 @@ from django.db.models import QuerySet, F, Sum, ExpressionWrapper, DecimalField
 from .models import Grade, Appreciation, Mention
 from users.models import Student
 from schools.models import TermYearLevel
+from classes.models import ClassStudentYear
 from scheduling.models import Course
 from subjects.models import TeacherSubject
+from attendance.models import Attendance
+import pandas as pd
+
 
 """
     Ce fichier centralise les fonctions utilitaires de l'application 'grades'.
@@ -217,7 +221,8 @@ def create_appreciation(student_id: int, term_year_id: int, content: str, teache
             student=student,
             term_year=term_year,
             teacher_subject=teacher_subject,
-            is_global=is_global
+            is_global=is_global,
+            content=content
         )
         return appreciation, None
     except ObjectDoesNotExist as e:
@@ -510,12 +515,117 @@ def get_overall_average_term(student_id: int, term_year_id: int) -> tuple:
     except Exception as e:
         return None, f"Une erreur inattendue est survenue lors du calcul de la moyenne générale totale : {str(e)}"
 
-
 """
 ===========================================
 GESTION DU FICHIER EXCEL DES DATA DU SITE : 
 ===========================================
 """
 
-# TODO faire la fonction d'export des données en fichier excel qui s'envoie automatiquement vers le super user.
+def export_all_data_to_excel() -> tuple:
+    """
+    Exporte toutes les données (étudiants, classes, trimestres, années)
+    vers un seul fichier Excel.
 
+    Args:
+        None
+
+    Returns:
+        tuple: (bool, str) - True en cas de succès avec le chemin du fichier,
+                             False avec un message d'erreur.
+    """
+    try:
+        all_data = []
+
+        # Récupération de tous les trimestres/semestres
+        all_term_years = TermYearLevel.objects.all()
+
+        if not all_term_years.exists():
+            return False, "Aucun trimestre/semestre n'a été trouvé."
+
+        # Boucle sur chaque terme pour récupérer les données de tous les étudiants
+        for term_year in all_term_years:
+            # Récupération de tous les étudiants
+            all_students = Student.objects.all()
+
+            # Boucle sur chaque étudiant pour collecter les données
+            for student in all_students:
+                # Récupération de l'inscription de l'élève pour l'année en cours
+                class_student_year = ClassStudentYear.objects.filter(
+                    student=student,
+                    year=term_year.year
+                ).first()
+                if not class_student_year:
+                    continue  # L'étudiant n'est pas inscrit cette année-là
+
+                school = student.school
+                school_type = school.get_type_display()
+                student_class = class_student_year.student_class
+                student_level = student_class.level
+
+                # Calcul de la moyenne générale
+                overall_average, _ = get_overall_average_term(student.id, term_year.id)
+
+                # Calcul des heures d'absence et de retard
+                attendance_data = Attendance.objects.filter(
+                    student=student,
+                    term_year=term_year
+                ).aggregate(
+                    total_absence=Sum(F('course__duration'), filter=F('type') == 'ABSENCE'),
+                    total_delay=Sum(F('course__duration'), filter=F('type') == 'DELAY'),
+                    justified_absence=Sum(F('course__duration'), filter=F('type') == 'ABSENCE' and F('justified') == True),
+                    justified_delay=Sum(F('course__duration'), filter=F('type') == 'DELAY' and F('justified') == True)
+                )
+
+                # Récupération de l'appréciation et de la mention
+                try:
+                    general_appreciation = Appreciation.objects.get(
+                        student=student,
+                        term_year=term_year,
+                        is_global=True
+                    ).content
+                except Appreciation.DoesNotExist:
+                    general_appreciation = "N/A"
+
+                try:
+                    mention = Mention.objects.get(
+                        student=student,
+                        term_year=term_year
+                    ).get_mention_type_display()
+                except Mention.DoesNotExist:
+                    mention = "N/A"
+
+                # Construction de la ligne de données
+                student_data = {
+                    "Établissement": school.name,
+                    "Type d'établissement": school_type,
+                    "Année": term_year.year.name,
+                    "Type trimestre/semestre": student_level.get_term_type_display(),
+                    "Nb trimestre/semestre": term_year.counter,
+                    "Nom": student.user.last_name,
+                    "Prénom": student.user.first_name,
+                    "Email": student.user.email,
+                    "Civilité": student.get_gender_display(),
+                    "Date de naissance": student.birth_date,
+                    "Classe": student_class.name,
+                    "Niveau": student_level.level,
+                    "Moyenne générale": overall_average,
+                    "Absence (h)": attendance_data.get('total_absence', 0),
+                    "Retard (h)": attendance_data.get('total_delay', 0),
+                    "Absence justifié (h)": attendance_data.get('justified_absence', 0),
+                    "Retard justifié (h)": attendance_data.get('justified_delay', 0),
+                    "Appréciations générale": general_appreciation,
+                    "Mention": mention,
+                    "Est actif": "Oui" if student.user.is_active else "Non"
+                }
+                all_data.append(student_data)
+
+        # Création du DataFrame et du fichier Excel
+        df = pd.DataFrame(all_data)
+        file_name = "rapport_general_toutes_donnees.xlsx"
+        file_path = f"/tmp/{file_name}"
+        df.to_excel(file_path, index=False)
+
+        return True, file_path
+
+    except Exception as e:
+        return False, f"Une erreur inattendue est survenue : {str(e)}"

@@ -9,8 +9,12 @@ class User(AbstractBaseUser, PermissionsMixin):
     - gère login, mot de passe, email, first_name, last_name, is_active, etc.
     """
     username = models.CharField(max_length=150, unique=True, blank=True, null=True)
-    email = models.EmailField(default="null")  # obligatoire pour login
+    email = models.EmailField(default="null")
     phone_number = models.CharField(max_length=20, blank=True, null=True)
+
+    # Ajout manuel des champs de nom
+    first_name = models.CharField(max_length=150, blank=True, null=True)
+    last_name = models.CharField(max_length=150, blank=True, null=True)
 
     # Permissions / statut
     is_active = models.BooleanField(default=True)
@@ -94,7 +98,7 @@ class Student(models.Model):
 
     def __str__(self):
         return f"Élève: {self.user.get_full_name()} - {self.school.name}"
-
+    
 
 # --> Parents liés à une école et à un ou plusieurs enfants
 class Parent(models.Model):

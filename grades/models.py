@@ -36,6 +36,7 @@ class Appreciation(models.Model):
         TeacherSubject, on_delete=models.CASCADE, related_name="appreciations",
         null=True, blank=True
     )  # professeur et matière (facultatif si appréciation globale)
+    content = models.TextField(default="Aucune apréciation.")  # contenus de l'appréciation
     is_global = models.BooleanField(default=False)  # True = appréciation générale, False = par matière
 
     def __str__(self):

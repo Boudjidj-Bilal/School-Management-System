@@ -939,3 +939,6 @@ def get_parents_by_student(student_id):
         QuerySet: Un QuerySet des objets Child correspondant aux parents.
     """
     return Child.objects.filter(student__id=student_id)
+
+
+# TODO Créer les noms d'utilisateurs automatiquement, avec incrémentation si nom et prénom existe déjà.

@@ -1,10 +1,10 @@
 from django.core.exceptions import ObjectDoesNotExist
 
 # Import des modèles locaux et liés
-from .models import School, TypeSchool, Year, ExceptionDay, ExceptionTime, TermYearLevel
+from .models import School, Year, ExceptionDay, ExceptionTime, TermYearLevel
 from users.models import SuperAdministrator
 from classes.models import Level
-from classes.utils import deactivate_all_classes_for_year
+from django.db.models import QuerySet
 
 """
     Ce fichier centralise les fonctions utilitaires de l'application 'schools'.
@@ -20,7 +20,7 @@ GESTION DES ECOLES :
 ====================
 """
 
-def create_school(name, address, type_id, email, super_admin_id, phone_number=None):
+def create_school(name, address, type, email, super_admin_id, phone_number=None):
     """
     Crée et enregistre une nouvelle école.
     Args:
@@ -34,7 +34,6 @@ def create_school(name, address, type_id, email, super_admin_id, phone_number=No
         tuple: (School, str) - L'objet école créé ou un message d'erreur.
     """
     try:
-        type_school = TypeSchool.objects.get(id=type_id)
         super_admin = SuperAdministrator.objects.get(id=super_admin_id)
         
         if School.objects.filter(email=email).exists():
@@ -43,7 +42,7 @@ def create_school(name, address, type_id, email, super_admin_id, phone_number=No
         school = School.objects.create(
             name=name,
             address=address,
-            type=type_school,
+            type=type,
             email=email,
             super_administrator=super_admin,
             phone_number=phone_number
@@ -75,18 +74,17 @@ def get_all_schools():
     """
     return School.objects.all()
 
-def get_schools_by_type(type_id):
+def get_schools_by_type(type):
     """
     Récupère les écoles par type.
     Args:
-        type_id (int): L'ID du type d'école.
+        type_id (int): Le type d'école.
     Returns:
         QuerySet: Un QuerySet des objets School correspondants.
     """
     try:
-        type_school = TypeSchool.objects.get(id=type_id)
-        return School.objects.filter(type=type_school)
-    except TypeSchool.DoesNotExist:
+        return School.objects.filter(type=type)
+    except:
         return School.objects.none()
 
 def update_school(school_id, **kwargs):
@@ -218,6 +216,22 @@ def get_year_by_id(year_id):
         return Year.objects.get(id=year_id)
     except Year.DoesNotExist:
         return None
+
+def get_years_by_school(school_id : int) -> QuerySet:
+    """
+    Récupère des années par leur école.
+    Args:
+        school_id (int): L'ID de l'école.
+    Returns:
+        QuerySet: Un QuerySet des objets Year correspondants.
+    """
+    try:
+        obj_school = School.objects.get(id=school_id)
+        years = Year.objects.filter(school=obj_school)
+        return years
+    except Exception:
+        return Year.objects.none()
+
 
 def update_year(year_id, **kwargs):
     """

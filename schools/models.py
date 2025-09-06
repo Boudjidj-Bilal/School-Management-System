@@ -1,20 +1,19 @@
 # school/models.py
 from django.db import models
 
-class TypeSchool(models.Model):
-    name = models.CharField(max_length=200)           # type d'école (ex: lycée, collège…)
-
-    def __str__(self):
-        return self.name
-
 # --> Représente une école, liée à un super administrateur
 class School(models.Model):
+
+    SCHOOL_TYPE_CHOICES = [
+        ("HIGHSCHOOL", "high_school"),   # Lycée
+        ("COLLEGE", "college"),           # Collège
+    ]
+
     name = models.CharField(max_length=200)           # nom de l'école
     address = models.TextField()                      # adresse
     created_at = models.DateTimeField(auto_now_add=True)  # date de création
-    type = models.ForeignKey(
-        TypeSchool, on_delete=models.CASCADE, related_name="type_schools"
-    )  # relation Many-to-One avec TypeSchool
+    type = models.CharField(max_length=50, choices=SCHOOL_TYPE_CHOICES)  # type d’école
+
     phone_number = models.CharField(max_length=50, blank=True, null=True)  # numéro de téléphone
     email = models.EmailField(unique=True)            # email unique de l'école
     is_active = models.BooleanField(default=True)     # statut actif
