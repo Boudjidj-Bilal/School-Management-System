@@ -131,3 +131,10 @@ def delete_document(document_id: int) -> bool:
         return False
     except Exception:
         return False
+
+"""
+========================
+GENERATION DU BULLETIN : 
+========================
+"""
+

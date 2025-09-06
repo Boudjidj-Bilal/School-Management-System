@@ -277,3 +277,5 @@ class ClassTeacherYear(models.Model):
 
     def __str__(self):
         return f"{self.teacher} for {self.student_class} ({self.year})"
+
+test

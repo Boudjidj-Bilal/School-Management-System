@@ -965,5 +965,3 @@ def generate_unique_username(first_name, last_name):
         counter += 1
 
     return username_to_check
-
-# TODO Créer les noms d'utilisateurs automatiquement, avec incrémentation si nom et prénom existe déjà.
