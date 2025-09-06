@@ -940,5 +940,30 @@ def get_parents_by_student(student_id):
     """
     return Child.objects.filter(student__id=student_id)
 
+"""
+===============================
+CREATION DES NOMS UTILISATEUR :
+===============================
+"""
+
+def generate_unique_username(first_name, last_name):
+    """
+    Génère un nom d'utilisateur unique à partir du prénom et du nom de famille.
+    Args:
+        first_name (str): Le prénom de l'utilisateur.
+        last_name (str): Le nom de famille de l'utilisateur.
+    Returns:
+        str: Le nom d'utilisateur unique généré.
+    """
+    base_username = f"{first_name.lower()}.{last_name.lower()}"
+    username_to_check = base_username
+    counter = 2
+
+    # Vérifie si le nom d'utilisateur de base existe déjà
+    while User.objects.filter(username=username_to_check).exists():
+        username_to_check = f"{base_username}{counter:02d}"
+        counter += 1
+
+    return username_to_check
 
 # TODO Créer les noms d'utilisateurs automatiquement, avec incrémentation si nom et prénom existe déjà.
