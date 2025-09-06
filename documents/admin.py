@@ -1,6 +1,5 @@
 from django.contrib import admin
-from .models import StudentDocument, StaffDocument
+from .models import Document
 
-admin.site.register(StudentDocument)
-admin.site.register(StaffDocument)
+admin.site.register(Document)
 
