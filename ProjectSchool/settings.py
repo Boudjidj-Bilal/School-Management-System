@@ -137,3 +137,9 @@ USE_TZ = True
 
 STATIC_URL = "static/"
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
+
+# Chemin de base pour les fichiers multimédia (uploads)
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+
+# URL publique pour accéder aux fichiers multimédia
+MEDIA_URL = '/media/'
