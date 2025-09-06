@@ -43,4 +43,4 @@ secret.txt
 # Fichiers de base de données temporaires
 *.db
 
-.text
+text.txt
