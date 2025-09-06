@@ -515,6 +515,112 @@ def get_overall_average_term(student_id: int, term_year_id: int) -> tuple:
     except Exception as e:
         return None, f"Une erreur inattendue est survenue lors du calcul de la moyenne générale totale : {str(e)}"
 
+# MOYENNE GENERAL DES CLASSES :
+
+# => Moyenne général d'une classe en fonction d'un trimestre, d'une matière, une année, et un professeur
+def get_class_average_subject(term_year_id: int, class_id: int, teacher_subject_id: int) -> tuple:
+    """
+    Calcule la moyenne générale d'une classe pour une matière, un trimestre et une année donnés.
+
+    Args:
+        term_year_id (int): L'ID du trimestre/de l'année.
+        class_id (int): L'ID de la classe.
+        teacher_subject_id (int): L'ID de l'objet TeacherSubject.
+
+    Returns:
+        tuple: (float, str) - La moyenne calculée ou (None, message d'erreur).
+    """
+    try:
+        # Récupère le TermYearLevel, l'année scolaire correspondante et la classe
+        term_year = TermYearLevel.objects.get(id=term_year_id)
+        year = term_year.year
+        
+        # Récupère tous les élèves inscrits pour cette classe et cette année scolaire
+        students_in_class = ClassStudentYear.objects.filter(
+            year=year, 
+            student__class_set__in=[class_id]
+        ).values_list('student', flat=True)
+        students = Student.objects.filter(id__in=students_in_class)
+
+        if not students.exists():
+            return None, "Aucun élève trouvé dans cette classe pour cette année scolaire."
+
+        class_averages = []
+
+        # Boucle sur chaque élève pour obtenir sa moyenne individuelle
+        for student in students:
+            student_average, error = get_general_average_subject(
+                student_id=student.id,
+                term_year_id=term_year_id,
+                teacher_subject_id=teacher_subject_id
+            )
+            # Ajoute la moyenne uniquement si le calcul a réussi (pas d'erreur)
+            if student_average is not None:
+                class_averages.append(student_average)
+
+        if not class_averages:
+            return None, "Aucune moyenne n'a pu être calculée pour cette matière et ce trimestre/cette année."
+
+        # Calcule la moyenne de la classe à partir des moyennes individuelles
+        class_average = sum(class_averages) / len(class_averages)
+        return round(class_average, 2), None
+
+    except TermYearLevel.DoesNotExist:
+        return None, "Le trimestre/l'année n'a pas été trouvé."
+    except Exception as e:
+        return None, f"Une erreur inattendue est survenue lors du calcul de la moyenne de la classe : {str(e)}"
+
+# => Moyenne général d'une classe en fonction d'un trimestre et d'une année
+def get_overall_class_average_term(term_year_id: int, class_id: int) -> tuple:
+    """
+    Calcule la moyenne générale totale d'une classe pour un trimestre/une année donnés.
+
+    Args:
+        term_year_id (int): L'ID du trimestre/de l'année.
+        class_id (int): L'ID de la classe.
+
+    Returns:
+        tuple: (float, str) - La moyenne générale totale de la classe ou (None, message d'erreur).
+    """
+    try:
+        # Récupère le TermYearLevel, l'année scolaire correspondante et la classe
+        term_year = TermYearLevel.objects.get(id=term_year_id)
+        year = term_year.year
+        
+        # Récupère tous les élèves inscrits pour cette classe et cette année scolaire
+        students_in_class = ClassStudentYear.objects.filter(
+            year=year,
+            student__class_set__in=[class_id]
+        ).values_list('student', flat=True)
+        students = Student.objects.filter(id__in=students_in_class)
+
+        if not students.exists():
+            return None, "Aucun élève trouvé dans cette classe pour cette année scolaire."
+            
+        overall_class_averages = []
+
+        # Boucle sur chaque élève pour obtenir sa moyenne générale individuelle pour le trimestre
+        for student in students:
+            student_overall_average, error = get_overall_average_term(
+                student_id=student.id,
+                term_year_id=term_year_id
+            )
+            # Ajoute la moyenne générale seulement si le calcul a réussi (pas d'erreur)
+            if student_overall_average is not None:
+                overall_class_averages.append(student_overall_average)
+
+        if not overall_class_averages:
+            return None, "Aucune moyenne générale valide n'a pu être calculée pour la classe."
+
+        # Calcule la moyenne générale de la classe à partir des moyennes individuelles
+        overall_class_average = sum(overall_class_averages) / len(overall_class_averages)
+        return round(overall_class_average, 2), None
+
+    except TermYearLevel.DoesNotExist:
+        return None, "Le trimestre/l'année n'a pas été trouvé."
+    except Exception as e:
+        return None, f"Une erreur inattendue est survenue lors du calcul de la moyenne générale de la classe : {str(e)}"
+
 """
 ===========================================
 GESTION DU FICHIER EXCEL DES DATA DU SITE : 
