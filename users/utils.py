@@ -1,4 +1,4 @@
-from .models import User, SuperAdministrator, Staff, Student, Parent, StaffType, Child
+from .models import User, SuperAdministrator, Staff, Student, Parent, Child
 from django.core.exceptions import ObjectDoesNotExist
 from django.db import IntegrityError
 from django.contrib.auth import authenticate, login, logout, update_session_auth_hash
@@ -369,7 +369,7 @@ def create_staff(user, staff_type, school, gender, birth_date=None):
     Crée un nouvel objet Staff lié à un utilisateur existant.
     Args:
         user_id (int): L'ID de l'utilisateur à lier.
-        staff_type (StaffType): Le type de personnel.
+        staff_type (str): Le type de personnel.
         school_id (int): L'ID de l'école de rattachement.
         gender (str): Le genre du personnel.
         birth_date (date, optional): La date de naissance du personnel.
@@ -412,26 +412,26 @@ def get_staff_by_id(staff_id):
     except Staff.DoesNotExist:
         return None
     
-def get_staff_by_type(staff_type_id):
+def get_staff_by_type(staff_type):
     """
     Récupère tous les membres du personnel d'un type donné.
     Args:
-        staff_type_id (int): L'ID du type de personnel.
+        staff_type (str): Le type de personnel.
     Returns:
         QuerySet: Un QuerySet des objets Staff correspondants.
     """
-    return Staff.objects.filter(staff_type__id=staff_type_id)
+    return Staff.objects.filter(staff_type=staff_type)
 
-def get_staff_by_gender_and_type(gender, staff_type_id):
+def get_staff_by_gender_and_type(gender, staff_type):
     """
     Récupère les membres du personnel en fonction du genre et du type.
     Args:
         gender (str): Le genre du personnel ('M' ou 'F').
-        staff_type_id (int): L'ID du type de personnel.
+        staff_type (str): L'ID du type de personnel.
     Returns:
         QuerySet: Un QuerySet des objets Staff correspondants.
     """
-    return Staff.objects.filter(gender=gender, staff_type__id=staff_type_id)
+    return Staff.objects.filter(gender=gender, staff_type=staff_type)
 
 def update_staff(staff_id, **kwargs):
     """
@@ -463,28 +463,28 @@ def get_all_staff_school(school_id):
     """
     return Staff.objects.filter(school__id=school_id)
 
-def get_staff_by_type_school(school_id, staff_type_id):
+def get_staff_by_type_school(school_id, staff_type):
     """
     Récupère les membres du personnel d'une école par type.
     Args:
         school_id (int): L'ID de l'école.
-        staff_type_id (int): L'ID du type de personnel.
+        staff_type (str): L'ID du type de personnel.
     Returns:
         QuerySet: Un QuerySet des objets Staff correspondants.
     """
-    return Staff.objects.filter(school__id=school_id, staff_type__id=staff_type_id)
+    return Staff.objects.filter(school__id=school_id, staff_type=staff_type)
 
-def get_staff_by_gender_and_type_school(school_id, gender, staff_type_id):
+def get_staff_by_gender_and_type_school(school_id, gender, staff_type):
     """
     Récupère les membres du personnel d'une école en fonction du genre et du type.
     Args:
         school_id (int): L'ID de l'école.
         gender (str): Le genre du personnel ('M' ou 'F').
-        staff_type_id (int): L'ID du type de personnel.
+        staff_type (str): L'ID du type de personnel.
     Returns:
         QuerySet: Un QuerySet des objets Staff correspondants.
     """
-    return Staff.objects.filter(school__id=school_id, gender=gender, staff_type__id=staff_type_id)
+    return Staff.objects.filter(school__id=school_id, gender=gender, staff_type=staff_type)
 
 def get_staff_by_gender_and_school(school_id, gender):
     """

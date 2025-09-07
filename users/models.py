@@ -44,20 +44,19 @@ class SuperAdministrator(models.Model):
         return f"SuperAdmin: {self.user.get_full_name()}"
 
 
-# --> Gère le modèle pour le type de personnel (Proviseur, Professeur, CPE, Administrateur…)
-class StaffType(models.Model):
-    name = models.CharField(max_length=100)  # Nom du type de personnel (ex: Professeur, CPE...)
-
-    def __str__(self):
-        return self.name
-
-
 # --> Liste de choix pour la civilité
 GENDER_CHOICES = [
     ("M", "Mister"),   # Monsieur
     ("F", "Miss"),     # Madame
 ]
 
+# --> Liste de choix pour le type de personnel
+STAFF_TYPE_CHOICES = [
+    ("PRINCIPAL", "Principal"),       # Proviseur
+    ("TEACHER", "Teacher"),           # Professeur
+    ("CPE", "CPE"),                   # Conseiller Principal d'Éducation
+    ("ADMINISTRATOR", "Administrator")  # Administratif
+]
 
 # --> Personnel appartenant à une école
 class Staff(models.Model):
@@ -68,8 +67,10 @@ class Staff(models.Model):
     user = models.OneToOneField("users.User",
     on_delete=models.CASCADE, related_name="staff_user")
 
-    staff_type = models.ForeignKey(StaffType, on_delete=models.CASCADE,
-    related_name="staff_members")  # Type de personnel (professeur, CPE, etc.)
+    staff_type = models.CharField(
+        max_length=20,
+        choices=STAFF_TYPE_CHOICES
+    )  # Type de personnel (professeur, CPE, etc.)
 
     school = models.ForeignKey("schools.School", 
     on_delete=models.CASCADE, related_name="staff_members_school")  # École à laquelle le personnel appartient
@@ -95,6 +96,7 @@ class Student(models.Model):
 
     gender = models.CharField(max_length=1, choices=GENDER_CHOICES)  # Civilité (M ou F)
     birth_date = models.DateField(blank=True,null=True)  # Date de naissance (optionnelle)
+    address = models.TextField()                      # adresse étudiant
 
     def __str__(self):
         return f"Élève: {self.user.get_full_name()} - {self.school.name}"
