@@ -109,4 +109,6 @@ def password_reset_confirm(request, uidb64, token):
             except Exception as e:
                 return JsonResponse({'success': False, 'message': str(e)}, status=500)
     else:
-        return JsonResponse({'success': False, 'message': 'Le lien de réinitialisation est invalide ou a expiré.'}, status=400)
+        return render(request, 'error_page.html', {
+            'message': 'Le lien de réinitialisation est invalide ou a expiré.'
+        })
