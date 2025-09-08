@@ -10,6 +10,14 @@ from subjects.models import TeacherSubject
 from attendance.models import Attendance
 import pandas as pd
 
+# Import des classes pour la génération de PDF avec ReportLab.
+from reportlab.lib.pagesizes import A4
+from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle, Image
+from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+from reportlab.lib.units import cm
+from reportlab.lib import colors
+
+
 """
     Ce fichier centralise les fonctions utilitaires de l'application 'grades'.
 

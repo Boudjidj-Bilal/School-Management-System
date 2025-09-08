@@ -24,7 +24,6 @@ class Level(models.Model):
 # --> Représente une salle de classe physique dans une école
 class Classroom(models.Model):
     name = models.CharField(max_length=100)        # nom de la salle
-    type = models.CharField(max_length=100)        # type de salle (ex: laboratoire, salle normale...)
     is_active = models.BooleanField(default=True)  # salle active ou non
     school = models.ForeignKey(
         "schools.School", on_delete=models.CASCADE, related_name="classrooms"

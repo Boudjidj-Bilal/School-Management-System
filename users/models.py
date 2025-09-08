@@ -41,7 +41,7 @@ class SuperAdministrator(models.Model):
     # (par ex. droits spéciaux, zone de gestion, etc.)
 
     def __str__(self):
-        return f"SuperAdmin: {self.user.get_full_name()}"
+        return f"SuperAdmin: {self.user.username}"
 
 
 # --> Liste de choix pour la civilité
@@ -79,7 +79,7 @@ class Staff(models.Model):
     birth_date = models.DateField(blank=True, null=True)  # Date de naissance (optionnelle)
 
     def __str__(self):
-        return f"{self.user.get_full_name()} ({self.staff_type})"
+        return f"{self.user.username} ({self.staff_type})"
 
 
 # --> Élèves inscrits dans une école
@@ -99,7 +99,7 @@ class Student(models.Model):
     address = models.TextField()                      # adresse étudiant
 
     def __str__(self):
-        return f"Élève: {self.user.get_full_name()} - {self.school.name}"
+        return f"Élève: {self.user.username} - {self.school.name}"
     
 
 # --> Parents liés à une école et à un ou plusieurs enfants
@@ -120,7 +120,7 @@ class Parent(models.Model):
     birth_date = models.DateField(blank=True,null=True)  # Date de naissance (optionnelle)
 
     def __str__(self):
-        return f"{self.parent_type} - {self.user.get_full_name()}"
+        return f"{self.parent_type} - {self.user.username}"
 
 
 # --> Table d'association entre Parent et Student (Many-to-Many)
