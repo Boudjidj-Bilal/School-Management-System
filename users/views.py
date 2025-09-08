@@ -104,8 +104,12 @@ def password_reset_confirm(request, uidb64, token):
                 data = json.loads(request.body)
                 new_password = data.get('new_password')
                 
-                change_user_password(user.id, new_password)
-                return JsonResponse({'success': True, 'message': 'Votre mot de passe a été mis à jour avec succès.'})
+                user, message = change_user_password(user.id, new_password)
+
+                if user:
+                    return JsonResponse({'success': True, 'message': message})
+                else: 
+                    return JsonResponse({'success': False, 'message': message})
             except Exception as e:
                 return JsonResponse({'success': False, 'message': str(e)}, status=500)
     else:

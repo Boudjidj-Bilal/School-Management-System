@@ -172,17 +172,37 @@ def update_user_session(request, user):
 
 def change_user_password(user_id, new_password):
     """
-    Change le mot de passe d'un utilisateur.
+    Change le mot de passe d'un utilisateur après avoir validé sa longueur.
+    
     Args:
-        user (User): L'objet utilisateur.
+        user_id (int): L'ID de l'utilisateur.
         new_password (str): Le nouveau mot de passe.
+        
     Returns:
-        User: L'objet utilisateur mis à jour.
+        tuple: (bool, str) - Un tuple indiquant si l'opération a réussi et
+               un message d'information.
     """
-    user = User.objects.get(id=user_id)
-    user.set_password(new_password)
-    user.save()
-    return user
+    # Vérifie que le mot de passe a au moins 4 caractères
+    if len(new_password) < 4:
+        return False, "Le mot de passe doit contenir au moins 4 caractères."
+    
+    try:
+        # Récupère l'utilisateur par son ID
+        user = User.objects.get(id=user_id)
+        
+        # Définit le nouveau mot de passe en utilisant la méthode de Django
+        # pour s'assurer qu'il est haché et sécurisé.
+        user.set_password(new_password)
+        
+        # Sauvegarde les modifications dans la base de données
+        user.save()
+        
+        return True, "Mot de passe mis à jour avec succès."
+        
+    except User.DoesNotExist:
+        # Gère le cas où l'utilisateur n'existe pas
+        return False, "Utilisateur non trouvé."
+
 
 def send_email(subject, message, recipient_list):
     """
@@ -276,9 +296,11 @@ def reset_password_with_token(uidb64, token, new_password):
         return False
     
     if user is not None and PasswordResetTokenGenerator().check_token(user, token):
-        user.set_password(new_password)
-        user.save()
-        return True
+        user, message = change_user_password(user.id, new_password)
+        if user:
+            return True, message 
+        else:
+            return False, message
     
     return False
 
