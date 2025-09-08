@@ -26,4 +26,5 @@ urlpatterns = [
 
     # API root
     path("api/", include("api.urls")),
+    path('', include('users.urls')),
 ]
