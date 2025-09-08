@@ -77,6 +77,7 @@ class Staff(models.Model):
 
     gender = models.CharField(max_length=1, choices=GENDER_CHOICES)  # Civilité (M ou F)
     birth_date = models.DateField(blank=True, null=True)  # Date de naissance (optionnelle)
+    address = models.TextField()                      # adresse étudiant
 
     def __str__(self):
         return f"{self.user.username} ({self.staff_type})"
@@ -118,6 +119,7 @@ class Parent(models.Model):
     gender = models.CharField(max_length=1, choices=GENDER_CHOICES)  # Civilité (M ou F)
     parent_type = models.CharField(max_length=10, choices=TYPE_CHOICES)  # Type (Mère ou Père)
     birth_date = models.DateField(blank=True,null=True)  # Date de naissance (optionnelle)
+    address = models.TextField()                      # adresse étudiant
 
     def __str__(self):
         return f"{self.parent_type} - {self.user.username}"
