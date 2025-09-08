@@ -1,23 +1,10 @@
-<!DOCTYPE html>
-<html lang="fr">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Tableau de bord</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
-        body {
-            font-family: 'Inter', sans-serif;
-        }
-    </style>
-</head>
-<body class="bg-gray-100 min-h-screen flex items-center justify-center p-4">
-    <div class="bg-white p-8 rounded-xl shadow-lg w-full max-w-lg text-center">
-        <h1 class="text-4xl font-bold text-gray-800 mb-4">Bienvenue !</h1>
-        <p class="text-lg text-gray-600">
-            Bonjour, {{ username }} ! Vous êtes connecté et vous êtes sur la page principale.
-        </p>
-    </div>
-</body>
-</html>
+{% extends 'base.html' %}
+
+{% block title %}Tableau de bord - {{ username }}{% endblock %}
+
+{% block content %}
+<div class="bg-white p-8 rounded-xl shadow-lg w-full max-w-md mx-auto">
+    <h1 class="text-4xl font-bold text-gray-800 mb-4">Bienvenue, {{ username }} !</h1>
+    <p class="text-lg text-gray-600">Vous êtes connecté au tableau de bord principal.</p>
+</div>
+{% endblock %}

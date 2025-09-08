@@ -1,0 +1,36 @@
+<aside class="w-64 bg-gray-900 text-white p-6 shadow-2xl flex flex-col flex-grow">
+    <nav class="flex-1 overflow-y-auto">
+        <ul class="space-y-4">
+            <li>
+                <a href="{% url 'dashboard' %}" class="flex items-center space-x-3 text-gray-300 hover:text-white transition duration-200">
+                    <i class="fas fa-home text-lg"></i>
+                    <span>Tableau de bord</span>
+                </a>
+            </li>
+            <li>
+                <a href="#" class="flex items-center space-x-3 text-gray-300 hover:text-white transition duration-200">
+                    <i class="fas fa-users text-lg"></i>
+                    <span>Utilisateurs</span>
+                </a>
+            </li>
+            <li>
+                <a href="#" class="flex items-center space-x-3 text-gray-300 hover:text-white transition duration-200">
+                    <i class="fas fa-book text-lg"></i>
+                    <span>Cours</span>
+                </a>
+            </li>
+            <li>
+                <a href="#" class="flex items-center space-x-3 text-gray-300 hover:text-white transition duration-200">
+                    <i class="fas fa-graduation-cap text-lg"></i>
+                    <span>Écoles</span>
+                </a>
+            </li>
+            <li>
+                <a href="{% url 'logout' %}" class="flex items-center space-x-3 text-gray-300 hover:text-white transition duration-200">
+                    <i class="fas fa-sign-out-alt text-lg"></i>
+                    <span>Déconnexion</span>
+                </a>
+            </li>
+        </ul>
+    </nav>
+</aside>

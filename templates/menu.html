@@ -1,0 +1,11 @@
+<nav class="bg-gray-800 p-4 shadow-lg">
+    <div class="container mx-auto flex justify-between items-center">
+        <a href="{% url 'dashboard' %}" class="text-white text-2xl font-bold">GONOTE</a>
+        <div class="flex items-center space-x-4">
+            <span class="text-gray-300">Bienvenue, {{ user.username }}</span>
+            <a href="{% url 'logout' %}" class="bg-red-500 text-white py-2 px-4 rounded-lg hover:bg-red-600 transition duration-300">
+                Déconnexion
+            </a>
+        </div>
+    </div>
+</nav>
