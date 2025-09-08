@@ -9,7 +9,7 @@ class User(AbstractBaseUser, PermissionsMixin):
     - gère login, mot de passe, email, first_name, last_name, is_active, etc.
     """
     username = models.CharField(max_length=150, unique=True, blank=True, null=True)
-    email = models.EmailField(default="null")
+    email = models.EmailField(null=True, blank=True)
     phone_number = models.CharField(max_length=20, blank=True, null=True)
 
     # Ajout manuel des champs de nom
