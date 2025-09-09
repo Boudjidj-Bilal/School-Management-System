@@ -48,8 +48,12 @@ def dashboard_page(request):
     """
     Rend la page principale (tableau de bord) accessible uniquement aux utilisateurs connectés.
     """
+    user_type = get_user_type(request.user)
+
     context = {
-        'username': request.user.username
+        'username': request.user.username,
+        'user_type': user_type
+
     }
     return render(request, 'users/dashboard_page.html', context)
 

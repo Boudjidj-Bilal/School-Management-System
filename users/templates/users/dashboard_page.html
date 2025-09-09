@@ -1,10 +1,28 @@
 {% extends 'base.html' %}
-
-{% block title %}Tableau de bord - {{ username }}{% endblock %}
+{% block title %}Tableau de bord{% endblock %}
 
 {% block content %}
-<div class="bg-white p-8 rounded-xl shadow-lg w-full max-w-md mx-auto">
-    <h1 class="text-4xl font-bold text-gray-800 mb-4">Bienvenue, {{ username }} !</h1>
-    <p class="text-lg text-gray-600">Vous êtes connecté au tableau de bord principal.</p>
-</div>
+    <main class="flex-1 p-6 bg-gray-100">
+        <div class="container mx-auto">
+            <h1 class="text-4xl font-bold text-gray-800 mb-6">Bienvenue, {{ username }} !</h1>
+
+            {% if user_type == 'SuperAdministrator' %}
+                <p class="text-lg text-green-600 font-semibold mb-4">Vous êtes connecté en tant que Super Administrateur. Vous avez un accès complet à toutes les fonctionnalités.</p>
+            {% elif user_type == 'Principal' %}
+                <p class="text-lg text-purple-600 font-semibold mb-4">Bienvenue, Proviseur ! Vous avez accès à la gestion et aux rapports de l'école.</p>
+            {% elif user_type == 'Parent' %}
+                <p class="text-lg text-blue-600 font-semibold mb-4">Bienvenue, Parent ! Vous pouvez consulter les informations et le suivi de votre enfant.</p>
+            {% elif user_type == 'Student' %}
+                <p class="text-lg text-indigo-600 font-semibold mb-4">Bienvenue, Étudiant ! Vous pouvez accéder à votre emploi du temps et à vos notes.</p>
+            {% elif user_type == 'Teacher' %}
+                <p class="text-lg text-yellow-600 font-semibold mb-4">Bienvenue, Professeur ! Vous pouvez gérer vos classes et les notes des élèves.</p>
+            {% elif user_type == 'CPE' %}
+                <p class="text-lg text-teal-600 font-semibold mb-4">Bienvenue, CPE ! Vous pouvez gérer les absences et le comportement des élèves.</p>
+            {% elif user_type == 'Administrator' %}
+                <p class="text-lg text-orange-600 font-semibold mb-4">Bienvenue, Administratif ! Vous pouvez gérer les informations du personnel et de l'école.</p>
+            {% else %}
+                <p class="text-lg text-red-600 font-semibold mb-4">Votre type d'utilisateur n'est pas reconnu.</p>
+            {% endif %}
+        </div>
+    </main>
 {% endblock %}

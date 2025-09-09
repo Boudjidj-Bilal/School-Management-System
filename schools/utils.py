@@ -2,7 +2,7 @@ from django.core.exceptions import ObjectDoesNotExist
 
 # Import des modèles locaux et liés
 from .models import School, Year, ExceptionDay, ExceptionTime, TermYearLevel
-from users.models import SuperAdministrator
+from users.utils import get_super_admin
 from classes.models import Level
 from django.db.models import QuerySet
 
@@ -34,7 +34,7 @@ def create_school(name, address, type, email, super_admin_id, phone_number=None)
         tuple: (School, str) - L'objet école créé ou un message d'erreur.
     """
     try:
-        super_admin = SuperAdministrator.objects.get(id=super_admin_id)
+        super_admin = get_super_admin(super_admin_id)
         
         if School.objects.filter(email=email).exists():
             return None, "Une école avec cet email existe déjà."

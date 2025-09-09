@@ -26,5 +26,10 @@ urlpatterns = [
 
     # API root
     path("api/", include("api.urls")),
+    
+    # App :
     path('', include('users.urls')),
+    path('schools/', include('schools.urls')),  # Inclus les URLs de l'app schools
+
+    
 ]

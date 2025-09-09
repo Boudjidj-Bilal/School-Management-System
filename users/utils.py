@@ -1,7 +1,7 @@
 from .models import User, SuperAdministrator, Staff, Student, Parent, Child
 from django.core.exceptions import ObjectDoesNotExist
 from django.db import IntegrityError
-from django.contrib.auth import authenticate, login, logout, update_session_auth_hash
+from django.contrib.auth import authenticate, login, logout, update_session_auth_hash, get_user_model
 import string
 import secrets
 
@@ -10,11 +10,13 @@ from django.core.mail import send_mail
 from ProjectSchool.settings import EMAIL_HOST_USER
 from smtplib import SMTPException
 
+
 from django.contrib.auth.tokens import PasswordResetTokenGenerator
 from django.urls import reverse
 from django.utils.encoding import force_bytes, DjangoUnicodeDecodeError
 from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
 from django.db.models import Q
+
 
 """
 - Ce fichier contient des fonctions utilitaires de haut niveau pour les opérations de l'application `users`.
@@ -144,6 +146,7 @@ def login_user(request, username, password):
     Returns:
         User or None: L'objet utilisateur si l'authentification est réussie, sinon None.
     """
+    # user = get_user_by_username(username)
     user = authenticate(request, username=username, password=password)
     if user is not None:
         login(request, user)
@@ -226,6 +229,62 @@ def send_email(subject, message, recipient_list):
     except SMTPException as e:
         print(f"Erreur d'envoi d'email: {e}")
         return False
+    
+
+
+
+def send_email_create_compte_principal(request, principal_email, username, password):
+    """
+    Envoie un email de notification au proviseur pour l'informer que son compte a été créé.
+
+    Args:
+        request : L'objet de requête HTTP.
+        principal_email (str): L'adresse email du proviseur.
+        username (str): Le nom d'utilisateur généré.
+        temporary_password (str): Le mot de passe temporaire généré.
+    """
+    # Sujet de l'email
+    subject = "Votre compte de Proviseur a été créé"
+    domain = request.get_host()
+    protocol = 'https' if request.is_secure() else 'http'
+    reset_url = ""
+    reset_link = f"{protocol}://{domain}{reset_url}" # TODO : Voir protocol et domain ?? Vérifier si sa fonctionne et/ou comment?. Si cela retourne bien vers la page voulue.
+    # TODO Envoie du lien vers la page de connexion 
+
+    # Message de l'email
+    # Utilisation d'un f-string pour insérer dynamiquement les informations
+    message = f"""
+    Bonjour,
+
+    Votre compte utilisateur sur la plateforme de gestion scolaire a été créé.
+
+    Voici vos identifiants temporaires :
+    - Nom d'utilisateur : {username}
+    - Mot de passe : {password}
+
+    Pour des raisons de sécurité, nous vous demandons de **changer votre mot de passe immédiatement** après votre première connexion pour un mot de passe plus robuste et sécurisé.
+
+    Vous pouvez vous connecter en utilisant ce lien :
+    {reset_link}
+
+    Si vous rencontrez des difficultés, veuillez contacter le support technique.
+
+    Cordialement,
+
+    L'équipe de l'administration
+    """
+
+    # Envoi de l'email
+    try:
+        recipient_list = [principal_email]
+        send_email(subject, message, recipient_list)
+        print(f"Email envoyé avec succès à {principal_email}")
+    except Exception as e:
+        print(f"Erreur lors de l'envoi de l'email à {principal_email} : {e}")
+
+
+
+
 
 
 def generate_random_password(length: int = 8, include_digits: bool = True, include_special_chars: bool = True) -> str:
@@ -332,6 +391,54 @@ def search_users(query):
     return users
 
 
+# -- FONCTION POUR RECUPERER LE TYPE D'UTILISATEUR --
+def get_user_type(user):
+    """
+    Détermine le rôle d'un utilisateur en vérifiant son appartenance à
+    différentes classes de profil.
+    
+    Args:
+        user (User): L'objet utilisateur.
+        
+    Returns:
+        str or None: Le type d'utilisateur ('SuperAdministrator', 'Principal', 'Teacher',
+               'CPE', 'Administrator', 'Student', 'Parent'), ou None si le rôle n'est pas trouvé.
+    """
+    
+    # Vérifie si l'utilisateur est un SuperAdministrator
+    # La relation OneToOneField permet de vérifier l'existence de l'objet lié
+    try:
+        user.super_administrator_user
+        return "SuperAdministrator"
+    except get_user_model().super_administrator_user.RelatedObjectDoesNotExist:
+        pass  # L'utilisateur n'est pas un SuperAdministrator, on continue
+
+    # Vérifie si l'utilisateur est un Staff
+    try:
+        staff_member = user.staff_user
+        # Utilise le type de personnel pour plus de précision
+        return staff_member.get_staff_type_display()
+    except get_user_model().staff_user.RelatedObjectDoesNotExist:
+        pass  # L'utilisateur n'est pas un Staff, on continue
+
+    # Vérifie si l'utilisateur est un Student
+    try:
+        user.student_user
+        return "Student"
+    except get_user_model().student_user.RelatedObjectDoesNotExist:
+        pass # L'utilisateur n'est pas un Student, on continue
+    
+    # Vérifie si l'utilisateur est un Parent
+    try:
+        user.parent_user
+        return "Parent"
+    except get_user_model().parent_user.RelatedObjectDoesNotExist:
+        pass  # L'utilisateur n'est pas un Parent, on continue
+    
+    # Si aucun rôle n'est trouvé, retourne None
+    return None
+
+
 """
 ==================================
 GESTION DES SUPER ADMINISTRATEUR :
@@ -386,7 +493,7 @@ GESTION DU PERSONNEL :
 """
 
 
-def create_staff(user, staff_type, school, gender, birth_date=None):
+def create_staff(user, staff_type, school, gender, address, birth_date=None):
     """
     Crée un nouvel objet Staff lié à un utilisateur existant.
     Args:
@@ -406,7 +513,8 @@ def create_staff(user, staff_type, school, gender, birth_date=None):
             staff_type=staff_type,
             school=school,
             gender=gender,
-            birth_date=birth_date
+            birth_date=birth_date,
+            address=address
         )
         return staff, None
     except Exception as e:
