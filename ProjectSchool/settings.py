@@ -123,6 +123,9 @@ TEMPLATES = [{
             "django.template.context_processors.request",
             "django.contrib.auth.context_processors.auth",
             "django.contrib.messages.context_processors.messages",
+            'users.context_processors.user_roles', # Pour faire des vérifications en fonction du rôle de l'utilisateur dans les pages du sites
+            'schools.context_processors.school_context', 
+
         ],
     },
 }]

@@ -1,0 +1,139 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Gestion des utilisateurs{% endblock %}
+
+{% block content %}
+<div class="flex flex-col lg:flex-row gap-8">
+    <!-- Liste des utilisateurs -->
+    <div class="w-full lg:w-1/3 bg-white p-6 rounded-xl shadow-lg border border-gray-200">
+        <div class="flex justify-between items-center mb-4 border-b pb-4 border-gray-200">
+            <h2 class="text-xl font-bold text-gray-800">
+                {% if user_type == 'student' %}Étudiants{% elif user_type == 'parent' %}Parents{% elif user_type == 'staff' %}Membres du personnel{% endif %}
+            </h2>
+            <button id="create-btn" class="px-4 py-2 bg-blue-600 text-white rounded-lg shadow-md hover:bg-blue-700 transition duration-300">
+                <i class="fas fa-plus mr-2"></i> Créer
+            </button>
+        </div>
+        
+        <ul id="user-list" class="space-y-2 max-h-[calc(100vh-250px)] overflow-y-auto">
+            {% for user_obj in users %}
+            <li>
+                <a href="#" 
+                   data-user-id="{{ user_obj.user.id }}" 
+                   data-first-name="{{ user_obj.user.first_name }}" 
+                   data-last-name="{{ user_obj.user.last_name }}" 
+                   data-email="{{ user_obj.user.email }}" 
+                   data-user-type="{{ user_type }}" 
+                   data-staff-type="{{ user_obj.staff_type|default:'' }}" 
+                   data-parent-type="{{ user_obj.parent_type|default:'' }}"
+                   data-address="{{ user_obj.address|default:'' }}"
+                   data-birth-date="{{ user_obj.birth_date|date:'Y-m-d'|default:'' }}"
+                   data-gender="{{ user_obj.gender|default:'' }}"
+                   class="user-link flex items-center p-3 text-sm font-medium text-gray-700 hover:bg-gray-100 rounded-lg transition-colors duration-200">
+                    <i class="fas fa-user-circle mr-3 text-lg text-gray-400"></i>
+                    {{ user_obj.user.first_name }} {{ user_obj.user.last_name }} ({{ user_obj.user.username }})
+                </a>
+            </li>
+            {% empty %}
+            <li>
+                <p class="text-gray-500 text-center py-4">Aucun utilisateur de ce type trouvé.</p>
+            </li>
+            {% endfor %}
+        </ul>
+    </div>
+
+    <!-- Formulaire de création/modification -->
+    <div class="w-full lg:w-2/3 bg-white p-8 rounded-xl shadow-lg border border-gray-200">
+        <h2 id="form-title" class="text-xl font-bold text-gray-800 mb-6">Créer un nouvel utilisateur</h2>
+        <form id="user-form" class="space-y-4" data-school-id="{{ user_school.id }}">
+            {% csrf_token %}
+            <input type="hidden" id="user-id" name="user_id">
+            <input type="hidden" id="user-type-input" name="user_type" value="{{ user_type }}">
+
+            <!-- Champs communs à tous les utilisateurs -->
+            <div class="mb-4">
+                <label for="first_name" class="block text-sm font-medium text-gray-700">Prénom</label>
+                <input type="text" id="first_name" name="first_name" required
+                    class="mt-1 block w-full pl-3 pr-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 transition duration-300">
+            </div>
+            
+            <div class="mb-4">
+                <label for="last_name" class="block text-sm font-medium text-gray-700">Nom</label>
+                <input type="text" id="last_name" name="last_name" required
+                    class="mt-1 block w-full pl-3 pr-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 transition duration-300">
+            </div>
+
+            <div class="mb-4">
+                <label for="email" class="block text-sm font-medium text-gray-700">Email</label>
+                <input type="email" id="email" name="email"
+                    class="mt-1 block w-full pl-3 pr-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 transition duration-300">
+            </div>
+            
+            <div id="password-field">
+                <label for="password" class="block text-sm font-medium text-gray-700">Mot de passe</label>
+                <input type="password" id="password" name="password" minlength="8" required
+                    class="mt-1 block w-full pl-3 pr-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 transition duration-300">
+            </div>
+
+            <div id="school-id-field" class="mb-4" style="display: none;">
+                <label for="school_id" class="block text-sm font-medium text-gray-700">École</label>
+                <input type="text" id="school_id" name="school_id"
+                    class="mt-1 block w-full pl-3 pr-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 transition duration-300" readonly>
+            </div>
+            
+            <!-- Champs spécifiques -->
+            <div id="staff-type-field" class="mb-4" style="display: none;">
+                <label for="staff_type" class="block text-sm font-medium text-gray-700">Type de personnel</label>
+                <select id="staff_type" name="staff_type"
+                    class="mt-1 block w-full pl-3 pr-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 transition duration-300">
+                    <option value="">Sélectionner un type</option>
+                    {% for value, label in staff_types.items %}
+                        <option value="{{ value }}">{{ label }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div id="parent-type-field" class="mb-4" style="display: none;">
+                <label for="parent_type" class="block text-sm font-medium text-gray-700">Type de parent</label>
+                <select id="parent_type" name="parent_type"
+                    class="mt-1 block w-full pl-3 pr-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 transition duration-300">
+                    <option value="">Sélectionner un type</option>
+                    <option value="MOTHER">Mère</option>
+                    <option value="FATHER">Père</option>
+                    <option value="GUARDIAN">Tuteur</option>
+                </select>
+            </div>
+            <div class="mb-4">
+                <label for="gender" class="block text-sm font-medium text-gray-700">Civilité</label>
+                <select id="gender" name="gender" required
+                    class="mt-1 block w-full pl-3 pr-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 transition duration-300">
+                    <option value="">Sélectionner une civilité</option>
+                    <option value="M">Homme</option>
+                    <option value="F">Femme</option>
+                </select>
+            </div>
+            <div class="mb-4">
+                <label for="address" class="block text-sm font-medium text-gray-700">Adresse</label>
+                <textarea id="address" name="address" rows="3" required
+                    class="mt-1 block w-full pl-3 pr-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 transition duration-300"></textarea>
+            </div>
+            <div class="mb-4">
+                <label for="birth_date" class="block text-sm font-medium text-gray-700">Date de naissance</label>
+                <input type="date" id="birth_date" name="birth_date"
+                    class="mt-1 block w-full pl-3 pr-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 transition duration-300">
+            </div>
+
+            <button type="submit" id="submit-btn" class="w-full py-2 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition duration-300">
+                <i class="fas fa-plus-circle mr-2"></i> Créer
+            </button>
+            <button type="button" id="cancel-btn" class="w-full py-2 px-4 mt-2 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-gray-500 hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-400 transition duration-300" style="display: none;">
+                <i class="fas fa-times-circle mr-2"></i> Annuler
+            </button>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'js/users/manage_users.js' %}"></script>
+{% endblock %}

@@ -8,6 +8,16 @@
 
             {% if user_type == 'SuperAdministrator' %}
                 <p class="text-lg text-green-600 font-semibold mb-4">Vous êtes connecté en tant que Super Administrateur. Vous avez un accès complet à toutes les fonctionnalités.</p>
+                <div class="flex items-center space-x-4">
+                    <label for="school-selector" class="text-lg font-medium text-gray-700">Changer d'école :</label>
+                    <select id="school-selector" class="mt-1 block w-full md:w-1/2 pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-blue-500 focus:border-blue-500 rounded-lg shadow-sm">
+                        {% for school in schools %}
+                            <option value="{{ school.id }}" {% if school.id == selected_school.id %}selected{% endif %}>
+                                {{ school.name }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
             {% elif user_type == 'Principal' %}
                 <p class="text-lg text-purple-600 font-semibold mb-4">Bienvenue, Proviseur ! Vous avez accès à la gestion et aux rapports de l'école.</p>
             {% elif user_type == 'Parent' %}
@@ -25,4 +35,37 @@
             {% endif %}
         </div>
     </main>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const schoolSelector = document.getElementById('school-selector');
+        if (schoolSelector) {
+            schoolSelector.addEventListener('change', async (event) => {
+                const schoolId = event.target.value;
+                try {
+                    const response = await fetch('{% url "select_school" %}', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRFToken': '{{ csrf_token }}',
+                        },
+                        body: JSON.stringify({ school_id: schoolId })
+                    });
+                    const result = await response.json();
+                    if (result.success) {
+                        alert("L'école a été changée avec succès. Les pages seront maintenant filtrées par cette école.");
+                        window.location.reload();
+                    } else {
+                        alert("Erreur lors de la sélection de l'école : " + result.message);
+                    }
+                } catch (error) {
+                    console.error("Erreur de communication:", error);
+                    alert("Une erreur de communication est survenue.");
+                }
+            });
+        }
+    });
+</script>
 {% endblock %}

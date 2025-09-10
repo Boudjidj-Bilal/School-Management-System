@@ -1,11 +1,21 @@
 from django.shortcuts import render, redirect
-from django.http import JsonResponse
+from django.http import JsonResponse, HttpResponseBadRequest
+import datetime
+
 import json
 from .utils import *
+from schools.models import School
+from schools.utils import get_all_schools, get_user_school
 from django.contrib.auth.decorators import login_required
+from django.db import IntegrityError
+from django.views.decorators.http import require_http_methods
+from django.views.decorators.csrf import csrf_exempt
 from django.utils.http import urlsafe_base64_decode
 from django.utils.encoding import force_str
 from django.contrib.auth.tokens import PasswordResetTokenGenerator
+
+from .models import User, STAFF_TYPE_CHOICES, GENDER_CHOICES
+
 
 def login(request):
     """
@@ -49,13 +59,31 @@ def dashboard_page(request):
     Rend la page principale (tableau de bord) accessible uniquement aux utilisateurs connectés.
     """
     user_type = get_user_type(request.user)
+    
+    # Gestion du sélecteur d'école pour le SuperAdmin
+    if user_type == "SuperAdministrator":
+        schools = get_all_schools()
+        selected_school_id = request.session.get('selected_school_id')
+        if not selected_school_id and schools.exists():
+            selected_school_id = schools.last().id
+            request.session['selected_school_id'] = selected_school_id
+        
+        selected_school = get_user_school(request.user, selected_school_id)
+        
+        return render(request, 'users/dashboard_page.html', {
+            'user_type': user_type,
+            'schools': schools,
+            'selected_school': selected_school,
+            'user_school': selected_school
+        })
+    
+    # Cas pour les autres utilisateurs
+    user_school = get_user_school(request.user)
+    return render(request, 'users/dashboard_page.html', {
+        'user_type': user_type,
+        'user_school': user_school
+    })
 
-    context = {
-        'username': request.user.username,
-        'user_type': user_type
-
-    }
-    return render(request, 'users/dashboard_page.html', context)
 
 
 def password_reset(request):
@@ -120,3 +148,229 @@ def password_reset_confirm(request, uidb64, token):
         return render(request, 'error_page.html', {
             'message': 'Le lien de réinitialisation est invalide ou a expiré.'
         })
+
+@login_required
+def manage_users_view(request):
+    user_type_choice = request.GET.get('type')
+    staff_type = request.GET.get('staff_type', None)
+    
+    users = []
+    
+    user_type = get_user_type(request.user)
+    user_school = get_user_school(request.user, request.session.get('selected_school_id'))
+    
+    # Vérifie si l'utilisateur a la permission de voir cette page
+    if user_type not in ["SuperAdministrator", "Principal", "Administrator"]:
+        return HttpResponseBadRequest("Vous n'avez pas la permission de gérer les utilisateurs.")
+
+    if user_type == "SuperAdministrator":
+        # Le super admin peut gérer les utilisateurs de n'importe quelle école
+        school_id_filter = request.session.get('selected_school_id')
+        school_filter = School.objects.get(id=school_id_filter)
+        
+        if user_type_choice == 'student':
+            users = Student.objects.filter(school=school_filter)
+        elif user_type_choice == 'parent':
+            users = Parent.objects.filter(school=school_filter)
+        elif user_type_choice == 'staff':
+            if staff_type:
+                users = Staff.objects.filter(staff_type=staff_type, school=school_filter)
+            else:
+                users = Staff.objects.filter(school=school_filter)
+
+    elif user_type == "Principal":
+        # Le proviseur peut voir tous les utilisateurs de son école sauf les autres proviseurs
+        school_filter = user_school
+        
+        if user_type_choice == 'student':
+            users = Student.objects.filter(school=school_filter)
+        elif user_type_choice == 'parent':
+            users = Parent.objects.filter(school=school_filter)
+        elif user_type_choice == 'staff':
+            if staff_type == 'PRINCIPAL':
+                # Un proviseur ne peut pas voir les autres proviseurs
+                users = Staff.objects.none()
+            elif staff_type:
+                users = Staff.objects.filter(staff_type=staff_type, school=school_filter)
+            else:
+                # Tous les membres du personnel sauf les proviseurs
+                users = Staff.objects.filter(school=school_filter).exclude(staff_type='PRINCIPAL')
+
+    elif user_type == "Administrator":
+        # L'administrateur ne voit que les étudiants et les parents de son école
+        school_filter = user_school
+        if user_type_choice == 'student':
+            users = Student.objects.filter(school=school_filter)
+        elif user_type_choice == 'parent':
+            users = Parent.objects.filter(school=school_filter)
+        else:
+            # Si le type d'utilisateur demandé n'est pas 'student' ou 'parent'
+            # (par exemple, 'staff'), on retourne une liste vide
+            users = []
+
+    
+    context = {
+        "users": users,
+        "user_type": user_type_choice,
+        "staff_types": dict(STAFF_TYPE_CHOICES),
+        "gender_choices": dict(GENDER_CHOICES),
+        "user_school": user_school
+    }
+
+    return render(request, "users/manage_users.html", context)
+
+
+@require_http_methods(["POST"])
+@csrf_exempt
+@login_required
+def create_user_view(request):
+    """
+    Vue unifiée pour créer et modifier des utilisateurs.
+    """
+    try:
+        data = json.loads(request.body)
+        user_type = data.get('user_type')
+        user_id = data.get('user_id')
+        
+        # Récupération des données communes
+        first_name = data.get('first_name')
+        last_name = data.get('last_name')
+        email = data.get('email', None)
+        gender = data.get('gender')
+        address = data.get('address')
+        birth_date_str = data.get('birth_date')
+        password = data.get('password')
+
+        parent_type = data.get('parent_type')
+        staff_type = data.get('staff_type')
+
+        
+        if get_user_type(request.user) == "SuperAdministrator":
+            school_id = request.session.get('selected_school_id')
+        else:
+            school_id = data.get('school_id')
+
+         # Convertir la date de naissance en objet date si elle existe
+        birth_date = None
+        if birth_date_str:
+            birth_date = datetime.datetime.strptime(birth_date_str, '%Y-%m-%d').date()
+
+        if user_id:
+            # Mode modification
+            user_to_update = get_user_by_id(user_id)
+            if not user_to_update:
+                return JsonResponse({"success": False, "message": "L'utilisateur est introuvable."}, status=404)
+
+            user_to_update.first_name = first_name
+            user_to_update.last_name = last_name
+            user_to_update.email = email
+
+            if password:
+                user_to_update.set_password(password)
+
+            user_to_update.save()
+
+            if user_type == 'student':
+                specific_user = Student.objects.get(user=user_to_update)
+            elif user_type == 'parent':
+                specific_user = Parent.objects.get(user=user_to_update)
+                if parent_type:
+                    specific_user.parent_type = parent_type
+            elif user_type == 'staff':
+                specific_user = Staff.objects.get(user=user_to_update)
+                if staff_type:
+                    specific_user.staff_type = staff_type
+
+
+            specific_user.gender = gender
+            specific_user.address = address
+            specific_user.birth_date = birth_date
+            specific_user.save()
+
+            return JsonResponse({"success": True, "message": "L'utilisateur a bien été modifié."})
+
+        else:
+            # Mode création
+            username = generate_unique_username(first_name, last_name) # Génération du nom d'utilisateur
+
+            # Génération du mot de passe
+            length_password = 10 
+            password = generate_random_password(length_password, include_digits = True, include_special_chars = False) # On génère un mot de passe automatique
+
+            try:
+                school = School.objects.get(id=school_id)
+            except School.DoesNotExist:
+                return JsonResponse({"success": False, "message": "L'école est introuvale."}, status=404)
+
+            new_user = create_user(
+                username=username,
+                password=password,
+                email=email,
+                first_name=first_name,
+                last_name=last_name
+            )
+
+            user_add = get_user_by_username(username)
+
+            if user_type == 'staff':
+                staff_type = data.get('staff_type')
+                staff, message_error = create_staff(
+                    user=user_add, 
+                    staff_type=staff_type, 
+                    school=school, 
+                    gender=gender, 
+                    address=address, 
+                    birth_date=birth_date
+                )
+            if staff_type == "PRINCIPAL":
+                send_email_create_compte_principal(request, email, username, password) # Envoie de l'email au proviseur
+
+            elif user_type == 'student':
+                student, message_error = create_student(
+                    user=user_add,
+                    school=school,
+                    gender=gender,
+                    address=address,
+                    birth_date=birth_date
+                )
+            elif user_type == 'parent':
+                parent, message_error = create_parent(
+                    user=user_add,
+                    school=school,
+                    gender=gender,
+                    address=address,
+                    birth_date=birth_date,
+                    parent_type=parent_type
+                )
+            
+            return JsonResponse({"success": True, "message": "L'utilisateur a bien été crée."})
+
+    except IntegrityError as e:
+        return JsonResponse({"success": False, "message": f"Integrity error: {str(e)}"}, status=400)
+    except Exception as e:
+        return JsonResponse({"success": False, "message": f"An error occurred: {str(e)}"}, status=500)
+
+
+@login_required
+@require_http_methods(["POST"])
+@csrf_exempt
+def select_school_view(request):
+    try:
+        data = json.loads(request.body)
+        school_id = data.get('school_id')
+        if not school_id:
+            return JsonResponse({"success": False, "message": "School ID is required."}, status=400)
+
+        # Vérifier que l'école existe et que l'utilisateur est un super administrateur
+        if get_user_type(request.user) == "SuperAdministrator":
+            try:
+                school = School.objects.get(id=school_id)
+                request.session['selected_school_id'] = school.id
+                return JsonResponse({"success": True, "message": "School selected successfully."})
+            except School.DoesNotExist:
+                return JsonResponse({"success": False, "message": "School not found."}, status=404)
+        else:
+            return JsonResponse({"success": False, "message": "Permission denied."}, status=403)
+
+    except Exception as e:
+        return JsonResponse({"success": False, "message": f"An error occurred: {str(e)}"}, status=500)

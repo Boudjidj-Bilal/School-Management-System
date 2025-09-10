@@ -41,10 +41,19 @@ def create_user(**kwargs):
         ValueError: Si le nom d'utilisateur n'est pas fourni.
     """
     try:
-        if "username" not in kwargs:
+        # Vérifie si le nom d'utilisateur est fourni
+        if "username" not in kwargs or not kwargs["username"]:
             raise ValueError("Le nom d'utilisateur est requis.")
         
+        # Si un email est fourni, vérifie qu'il n'est pas déjà utilisé
+        email = kwargs.get("email")
+        if email:
+            if User.objects.filter(email__iexact=email).exists():
+                return None, "Un utilisateur avec cet email existe déjà."
+        
+        # Crée l'utilisateur si tout est valide
         user = User.objects.create_user(**kwargs)
+
         return user, True
     except (ValueError, IntegrityError) as e:
         return str(e), False
@@ -230,9 +239,6 @@ def send_email(subject, message, recipient_list):
         print(f"Erreur d'envoi d'email: {e}")
         return False
     
-
-
-
 def send_email_create_compte_principal(request, principal_email, username, password):
     """
     Envoie un email de notification au proviseur pour l'informer que son compte a été créé.
@@ -281,10 +287,6 @@ def send_email_create_compte_principal(request, principal_email, username, passw
         print(f"Email envoyé avec succès à {principal_email}")
     except Exception as e:
         print(f"Erreur lors de l'envoi de l'email à {principal_email} : {e}")
-
-
-
-
 
 
 def generate_random_password(length: int = 8, include_digits: bool = True, include_special_chars: bool = True) -> str:

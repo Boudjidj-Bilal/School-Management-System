@@ -1,6 +1,7 @@
 from django.db import models
 from django.contrib.auth.models import AbstractBaseUser, PermissionsMixin
 from .managers import CustomUserManager
+from django.core.exceptions import ObjectDoesNotExist
 
 
 class User(AbstractBaseUser, PermissionsMixin):
@@ -9,7 +10,7 @@ class User(AbstractBaseUser, PermissionsMixin):
     - gère login, mot de passe, email, first_name, last_name, is_active, etc.
     """
     username = models.CharField(max_length=150, unique=True, blank=True, null=True)
-    email = models.EmailField(default="email_a_remplir@gmail.com", null=True, blank=True) # TODO Lors de la création d'un user il faut bien passer l'email avec le champs vide si on ne veut pas lui mettre d'email
+    email = models.EmailField(default="email_a_remplir@gmail.com", null=True, blank=True, unique=True) # TODO Lors de la création d'un user il faut bien passer l'email avec le champs vide si on ne veut pas lui mettre d'email
     phone_number = models.CharField(max_length=20, blank=True, null=True)
 
     # Ajout manuel des champs de nom
@@ -80,7 +81,7 @@ class Staff(models.Model):
     address = models.TextField()                      # adresse étudiant
 
     def __str__(self):
-        return f"{self.user.username} ({self.staff_type})"
+        return f"{self.user.username} ({self.staff_type}) - {self.school.name}"
 
 
 # --> Élèves inscrits dans une école
@@ -122,7 +123,7 @@ class Parent(models.Model):
     address = models.TextField()                      # adresse étudiant
 
     def __str__(self):
-        return f"{self.parent_type} - {self.user.username}"
+        return f"{self.parent_type} - {self.user.username} - {self.school.name}"
 
 
 # --> Table d'association entre Parent et Student (Many-to-Many)

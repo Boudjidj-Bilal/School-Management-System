@@ -18,7 +18,7 @@ def create_school_view(request):
     if type == "SuperAdministrator": # On vérifie si l'utilisateur est un super admin.
         if request.method == 'GET':
             # Affiche le formulaire
-            return render(request, 'schools/create_school.html')
+            return render(request, 'schools/form_school.html')
         
         if request.method == 'POST':
             try:
@@ -45,13 +45,16 @@ def create_school_view(request):
                 username_principal = generate_unique_username(first_name, last_name) # On génère un nom d'utilisateur unique
                 
                 # 1. Crée l'utilisateur (proviseur)
-                principal_user = create_user(
+                principal_user, message_error = create_user(
                     username=username_principal,
                     password=password,
                     email=principal_email,
                     first_name=first_name,
                     last_name=last_name
                 )
+
+                if message_error:
+                    return JsonResponse({'success': False, 'message': message_error}, status=400)
 
                 # 2. Crée l'école
                 school, message_error = create_school(
@@ -64,7 +67,6 @@ def create_school_view(request):
                 )
 
                 if message_error:
-                    print(message_error)
                     return JsonResponse({'success': False, 'message': message_error}, status=400)
 
                 # 3. Crée le membre du staff (proviseur)
@@ -91,3 +93,12 @@ def create_school_view(request):
                 return JsonResponse({'success': False, 'message': str(e)}, status=500)
     else:
         return JsonResponse({'success': False, 'message': 'Accès non autorisé.'}, status=403)
+
+
+@login_required(login_url='login')
+def update_school_view(request):
+    """
+    Vue pour modifier une école.
+    """
+    return "" # TODO Accessible pour le super admin et aussi pour le proviseur qui peut changer sa propre école
+

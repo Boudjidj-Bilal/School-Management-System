@@ -2,7 +2,7 @@ from django.core.exceptions import ObjectDoesNotExist
 
 # Import des modèles locaux et liés
 from .models import School, Year, ExceptionDay, ExceptionTime, TermYearLevel
-from users.utils import get_super_admin
+from users.utils import get_super_admin, get_user_type
 from classes.models import Level
 from django.db.models import QuerySet
 
@@ -158,6 +158,26 @@ def delete_school(school_id):
         return True
     except School.DoesNotExist:
         return False
+    
+
+# Fonction pour récupérer l'école associée à l'utilisateur
+def get_user_school(user, selected_school_id=None):
+    user_type = get_user_type(user)
+    if user_type == "SuperAdministrator":
+        if selected_school_id:
+            try:
+                return School.objects.get(id=selected_school_id)
+            except School.DoesNotExist:
+                pass
+        schools = get_all_schools()
+        return schools.last() if schools.exists() else None
+    elif user_type == "Staff":
+        return user.staff.school
+    elif user_type == "Student":
+        return user.student.school
+    elif user_type == "Parent":
+        return user.parent.school
+    return None
 
 """
 ====================
