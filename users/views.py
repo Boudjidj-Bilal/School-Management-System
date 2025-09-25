@@ -1,4 +1,5 @@
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect, get_object_or_404
+
 from django.http import JsonResponse, HttpResponseBadRequest
 import datetime
 
@@ -153,6 +154,9 @@ def password_reset_confirm(request, uidb64, token):
 def manage_users_view(request):
     user_type_choice = request.GET.get('type')
     staff_type = request.GET.get('staff_type', None)
+
+    active_users = []
+    inactive_users = []
     
     users = []
     
@@ -208,8 +212,16 @@ def manage_users_view(request):
             # (par exemple, 'staff'), on retourne une liste vide
             users = []
 
+    # Séparation des utilisateurs actifs et inactifs
+    for user_obj in users:
+        if user_obj.user.is_active:
+            active_users.append(user_obj)
+        else:
+            inactive_users.append(user_obj)
     
     context = {
+        "active_users": active_users,
+        "inactive_users": inactive_users,
         "users": users,
         "user_type": user_type_choice,
         "staff_types": dict(STAFF_TYPE_CHOICES),
@@ -241,7 +253,6 @@ def create_user_view(request):
         birth_date_str = data.get('birth_date')
         password = data.get('password')
 
-        parent_type = data.get('parent_type')
         staff_type = data.get('staff_type')
 
         
@@ -260,37 +271,50 @@ def create_user_view(request):
             user_to_update = get_user_by_id(user_id)
             if not user_to_update:
                 return JsonResponse({"success": False, "message": "L'utilisateur est introuvable."}, status=404)
-
-            user_to_update.first_name = first_name
-            user_to_update.last_name = last_name
-            user_to_update.email = email
-
+            
+            if first_name:
+                user_to_update.first_name = first_name
+            if last_name:
+                user_to_update.last_name = last_name
+            if email:
+                user_to_update.email = email
             if password:
                 user_to_update.set_password(password)
 
             user_to_update.save()
 
+            # TODO Au cours de l'année, on ne peut pas changer les types des staffs car sinon, les professeurs perdrais leur matière etc.
             if user_type == 'student':
                 specific_user = Student.objects.get(user=user_to_update)
             elif user_type == 'parent':
                 specific_user = Parent.objects.get(user=user_to_update)
-                if parent_type:
-                    specific_user.parent_type = parent_type
             elif user_type == 'staff':
                 specific_user = Staff.objects.get(user=user_to_update)
                 if staff_type:
                     specific_user.staff_type = staff_type
 
-
-            specific_user.gender = gender
-            specific_user.address = address
-            specific_user.birth_date = birth_date
+            if gender:
+                specific_user.gender = gender
+            if address:
+                specific_user.address = address
+            if birth_date:
+                specific_user.birth_date = birth_date
             specific_user.save()
 
             return JsonResponse({"success": True, "message": "L'utilisateur a bien été modifié."})
 
         else:
             # Mode création
+
+            # vérification des champs obligatoire
+            if not email or not first_name or not last_name or not gender or not address:
+                return JsonResponse({"success": False, "message": "Veuillez compléter le formulaire."}, status=404)
+
+            # Vérifier si l'email existe déjà dans la bdd :
+            unique_email = is_email_unique(email)
+            if unique_email:
+                return JsonResponse({"success": False, "message": "L'adresse email existe déjà."}, status=404)
+
             username = generate_unique_username(first_name, last_name) # Génération du nom d'utilisateur
 
             # Génération du mot de passe
@@ -302,7 +326,7 @@ def create_user_view(request):
             except School.DoesNotExist:
                 return JsonResponse({"success": False, "message": "L'école est introuvale."}, status=404)
 
-            new_user = create_user(
+            new_user, error = create_user(
                 username=username,
                 password=password,
                 email=email,
@@ -310,10 +334,12 @@ def create_user_view(request):
                 last_name=last_name
             )
 
+            if not error: # Si il y a une erreur
+                return JsonResponse({"success": False, "message": new_user}, status=404)
+
             user_add = get_user_by_username(username)
 
             if user_type == 'staff':
-                staff_type = data.get('staff_type')
                 staff, message_error = create_staff(
                     user=user_add, 
                     staff_type=staff_type, 
@@ -322,10 +348,10 @@ def create_user_view(request):
                     address=address, 
                     birth_date=birth_date
                 )
-            if staff_type == "PRINCIPAL":
-                send_email_create_compte_principal(request, email, username, password) # Envoie de l'email au proviseur
-
+                
             elif user_type == 'student':
+                # def create_student(user_id, school_id, gender, birth_date=None):
+
                 student, message_error = create_student(
                     user=user_add,
                     school=school,
@@ -340,9 +366,13 @@ def create_user_view(request):
                     gender=gender,
                     address=address,
                     birth_date=birth_date,
-                    parent_type=parent_type
                 )
+
+            send_email_create_compte(request, email, username, password) # Envoie de l'email à l'utilisateur
             
+            if message_error: 
+                return JsonResponse({"success": False, "message": message_error})
+
             return JsonResponse({"success": True, "message": "L'utilisateur a bien été crée."})
 
     except IntegrityError as e:
@@ -374,3 +404,47 @@ def select_school_view(request):
 
     except Exception as e:
         return JsonResponse({"success": False, "message": f"An error occurred: {str(e)}"}, status=500)
+
+
+
+@require_http_methods(["POST"])
+@csrf_exempt
+@login_required
+def toggle_user_status_view(request):
+    """
+    Vue pour activer ou désactiver un utilisateur.
+    """
+    try:
+        data = json.loads(request.body)
+        user_id = data.get('user_id')
+        action = data.get('action') # 'activate' ou 'deactivate'
+
+        user_to_toggle = get_object_or_404(User, id=user_id)
+        user_type_to_toggle = get_user_type(user_to_toggle)
+
+        # Vérification des permissions
+        current_user_type = get_user_type(request.user)
+        if current_user_type not in ["SuperAdministrator", "Principal", "Administrator"]:
+            return JsonResponse({"success": False, "message": "Permission denied."}, status=403)
+        
+        # Un proviseur ne peut pas désactiver un autre proviseur
+        if current_user_type == "Principal" and user_type_to_toggle == "Principal":
+            return JsonResponse({"success": False, "message": "Vous ne pouvez pas modifier le statut d'un autre proviseur."}, status=403)
+
+        if current_user_type == "Administrator" and user_type_to_toggle == "Principal" or user_type_to_toggle == "Teaacher" or user_type_to_toggle == "CPE" or user_type_to_toggle == "Administrator":
+            return JsonResponse({"success": False, "message": "Vous ne pouvez pas modifier le statut d'un membre du personnel."}, status=403)
+        
+        if action == 'activate':
+            user_to_toggle.is_active = True
+            message = "Utilisateur activé avec succès."
+        elif action == 'deactivate':
+            user_to_toggle.is_active = False
+            message = "Utilisateur désactivé avec succès."
+        else:
+            return JsonResponse({"success": False, "message": "Action invalide."}, status=400)
+
+        user_to_toggle.save()
+        return JsonResponse({"success": True, "message": message})
+
+    except Exception as e:
+        return JsonResponse({"success": False, "message": f"Une erreur est survenue: {str(e)}"}, status=500)

@@ -11,7 +11,7 @@ class CustomUserManager(BaseUserManager):
         Crée et sauvegarde un utilisateur avec l'email et le mot de passe donnés.
         
         Args:
-            email (str): L'adresse email de l'utilisateur, utilisée comme identifiant.
+            username (str): L'username de l'utilisateur, utilisée comme identifiant.
             password (str, optional): Le mot de passe non haché de l'utilisateur.
             **extra_fields: Des champs supplémentaires à passer lors de la création.
         

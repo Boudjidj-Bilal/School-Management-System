@@ -3,7 +3,7 @@ from django.http import JsonResponse
 import json
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth import get_user_model
-from users.utils import create_user, create_staff, get_user_type, generate_unique_username, send_email_create_compte_principal, get_user_by_username, generate_random_password
+from users.utils import create_user, create_staff, get_user_type, generate_unique_username, send_email_create_compte, get_user_by_username, generate_random_password
 from .utils import create_school
 
 User = get_user_model()
@@ -84,7 +84,7 @@ def create_school_view(request):
                 if message_error:
                     return JsonResponse({'success': False, 'message': message_error}, status=400)
 
-                send_email_create_compte_principal(request, principal_email, username_principal, password) # Envoie de l'email au proviseur
+                send_email_create_compte(request, principal_email, username_principal, password) # Envoie de l'email au proviseur
 
                 return JsonResponse({'success': True, 'message': "École et proviseur créés avec succès. Voici le nom d'utilisateur du proviseur : "+username_principal})
             except json.JSONDecodeError:
@@ -102,3 +102,7 @@ def update_school_view(request):
     """
     return "" # TODO Accessible pour le super admin et aussi pour le proviseur qui peut changer sa propre école
 
+
+
+
+# TODO Envoyer un mail lorsque l'année commence à tous le personnel de l'école, sauf le proviseur.

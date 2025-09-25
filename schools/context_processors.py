@@ -27,12 +27,12 @@ def school_context(request):
     else:
         # Pour les autres utilisateurs, trouver leur école associée
         try:
-            if user_type == "Staff":
-                user_school = user.staff.school
+            if user_type in ["Administrator", "CPE", "Principal", "Teacher", "Staff"]:
+                user_school = user.staff_user.school
             elif user_type == "Student":
-                user_school = user.student.school
+                user_school = user.student_user.school
             elif user_type == "Parent":
-                user_school = user.parent.school
+                user_school = user.parent_user.school
         except (Staff.DoesNotExist, Student.DoesNotExist, Parent.DoesNotExist):
             user_school = None
 

@@ -110,20 +110,15 @@ class Parent(models.Model):
     Représente un parent d'élève.
     Chaque parent est lié à un compte utilisateur central (User).
     """
-    TYPE_CHOICES = [
-        ("MOTHER", "Mother"),
-        ("FATHER", "Father"),
-    ]
 
     user = models.OneToOneField("users.User", on_delete=models.CASCADE, related_name="parent_user")
     school = models.ForeignKey("schools.School", on_delete=models.CASCADE, related_name="parents_school")  # L'école de rattachement
     gender = models.CharField(max_length=1, choices=GENDER_CHOICES)  # Civilité (M ou F)
-    parent_type = models.CharField(max_length=10, choices=TYPE_CHOICES)  # Type (Mère ou Père)
     birth_date = models.DateField(blank=True,null=True)  # Date de naissance (optionnelle)
     address = models.TextField()                      # adresse étudiant
 
     def __str__(self):
-        return f"{self.parent_type} - {self.user.username} - {self.school.name}"
+        return f"{self.user.username} - {self.school.name}"
 
 
 # --> Table d'association entre Parent et Student (Many-to-Many)

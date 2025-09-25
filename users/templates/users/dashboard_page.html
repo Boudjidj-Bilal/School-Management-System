@@ -21,7 +21,7 @@
             {% elif user_type == 'Principal' %}
                 <p class="text-lg text-purple-600 font-semibold mb-4">Bienvenue, Proviseur ! Vous avez accès à la gestion et aux rapports de l'école.</p>
             {% elif user_type == 'Parent' %}
-                <p class="text-lg text-blue-600 font-semibold mb-4">Bienvenue, Parent ! Vous pouvez consulter les informations et le suivi de votre enfant.</p>
+                <p class="text-lg text-blue-600 font-semibold mb-4">Bienvenue, Parent ! Vous pouvez consulter les informations et le suivi de vos enfants.</p>
             {% elif user_type == 'Student' %}
                 <p class="text-lg text-indigo-600 font-semibold mb-4">Bienvenue, Étudiant ! Vous pouvez accéder à votre emploi du temps et à vos notes.</p>
             {% elif user_type == 'Teacher' %}
@@ -29,7 +29,7 @@
             {% elif user_type == 'CPE' %}
                 <p class="text-lg text-teal-600 font-semibold mb-4">Bienvenue, CPE ! Vous pouvez gérer les absences et le comportement des élèves.</p>
             {% elif user_type == 'Administrator' %}
-                <p class="text-lg text-orange-600 font-semibold mb-4">Bienvenue, Administratif ! Vous pouvez gérer les informations du personnel et de l'école.</p>
+                <p class="text-lg text-orange-600 font-semibold mb-4">Bienvenue, Administrateur ! Vous pouvez gérer les informations des étudiants et de l'école.</p>
             {% else %}
                 <p class="text-lg text-red-600 font-semibold mb-4">Votre type d'utilisateur n'est pas reconnu.</p>
             {% endif %}

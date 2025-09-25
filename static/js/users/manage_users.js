@@ -4,7 +4,6 @@ document.addEventListener('DOMContentLoaded', function() {
     const userLinks = document.querySelectorAll('.user-link');
     const formTitle = document.getElementById('form-title');
     const submitBtn = document.getElementById('submit-btn');
-    const cancelBtn = document.getElementById('cancel-btn');
     const userIdInput = document.getElementById('user-id');
     const userTypeInput = document.getElementById('user-type-input');
     const firstNameInput = document.getElementById('first_name');
@@ -13,45 +12,38 @@ document.addEventListener('DOMContentLoaded', function() {
     const passwordField = document.getElementById('password-field');
     const passwordInput = document.getElementById('password');
     const staffTypeField = document.getElementById('staff-type-field');
-    const parentTypeField = document.getElementById('parent-type-field');
     const addressInput = document.getElementById('address');
     const genderInput = document.getElementById('gender');
     const birthDateInput = document.getElementById('birth_date');
 
-    passwordField.style.display = 'none';
-    passwordInput.required = false;
-    
-    // Récupération des données du template Django
+    const toggleStatusButtons = document.querySelectorAll('.toggle-status-btn');
+    const confirmationModal = document.getElementById('confirmation-modal');
+    const modalMessage = document.getElementById('modal-message');
+    const modalConfirmBtn = document.getElementById('modal-confirm-btn');
+    const modalCancelBtn = document.getElementById('modal-cancel-btn');
+    const cancelBtn = document.getElementById('cancel-btn'); // Corrected: This line was missing.
+
     const userType = userTypeInput.value;
     const userSchoolId = userForm.getAttribute('data-school-id');
 
-    // Fonction pour afficher le mode de création
     function showCreateMode() {
         formTitle.textContent = 'Créer un nouvel utilisateur';
         submitBtn.innerHTML = '<i class="fas fa-plus-circle mr-2"></i> Créer';
         userIdInput.value = '';
         userForm.reset();
-        // passwordField.style.display = 'block';
-        // passwordInput.required = true;
-        cancelBtn.style.display = 'none';
-
         passwordField.style.display = 'none';
-        passwordInput.required = false;
         
-        // Affichage/masquage des champs spécifiques
+        cancelBtn.style.display = 'none'; // Hide cancel button in create mode
+
         if (userType === 'staff') {
             staffTypeField.style.display = 'block';
-            parentTypeField.style.display = 'none';
         } else if (userType === 'parent') {
             staffTypeField.style.display = 'none';
-            parentTypeField.style.display = 'block';
         } else {
             staffTypeField.style.display = 'none';
-            parentTypeField.style.display = 'none';
         }
     }
 
-    // Fonction pour afficher le mode de modification
     function showEditMode(user) {
         formTitle.textContent = 'Modifier un utilisateur';
         submitBtn.innerHTML = '<i class="fas fa-edit mr-2"></i> Mettre à jour';
@@ -63,11 +55,9 @@ document.addEventListener('DOMContentLoaded', function() {
         genderInput.value = user.gender;
         birthDateInput.value = user.birthDate;
 
-        // Cacher le champ mot de passe en mode modification
         passwordField.style.display = 'block';
         passwordInput.required = false;
-
-        cancelBtn.style.display = 'block';
+        cancelBtn.style.display = 'block'; // Show cancel button in edit mode
 
         if (user.staffType) {
             staffTypeField.style.display = 'block';
@@ -76,21 +66,11 @@ document.addEventListener('DOMContentLoaded', function() {
             staffTypeField.style.display = 'none';
         }
 
-        if (user.parentType) {
-            parentTypeField.style.display = 'block';
-            document.getElementById('parent_type').value = user.parentType;
-        } else {
-            parentTypeField.style.display = 'none';
-        }
     }
 
-    // Écouteur pour le bouton 'Créer'
     createBtn.addEventListener('click', showCreateMode);
+    cancelBtn.addEventListener('click', showCreateMode); // Corrected: Moved this listener here.
 
-    // Écouteur pour le bouton 'Annuler'
-    cancelBtn.addEventListener('click', showCreateMode);
-
-    // Écouteurs pour les liens d'utilisateurs
     userLinks.forEach(link => {
         link.addEventListener('click', function(e) {
             e.preventDefault();
@@ -100,7 +80,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 lastName: this.getAttribute('data-last-name'),
                 email: this.getAttribute('data-email'),
                 staffType: this.getAttribute('data-staff-type'),
-                parentType: this.getAttribute('data-parent-type'),
                 address: this.getAttribute('data-address'),
                 gender: this.getAttribute('data-gender'),
                 birthDate: this.getAttribute('data-birth-date')
@@ -109,7 +88,6 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
 
-    // Gestion de la soumission du formulaire
     userForm.addEventListener('submit', function(e) {
         e.preventDefault();
         
@@ -117,12 +95,11 @@ document.addEventListener('DOMContentLoaded', function() {
         const data = {};
         formData.forEach((value, key) => (data[key] = value));
 
-        // Ajout de l'ID de l'école (récupéré depuis le contexte Django)
         if (userSchoolId) {
             data['school_id'] = userSchoolId;
         }
 
-        fetch('/create-user/', { // J'ai remplacé 'this.action' par l'URL de la vue de création/modification
+        fetch('/create-user/', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -133,21 +110,71 @@ document.addEventListener('DOMContentLoaded', function() {
         .then(response => response.json())
         .then(data => {
             if (data.success) {
-                // Utiliser une boîte de dialogue personnalisée au lieu d'alert()
-                // pour une meilleure expérience utilisateur
-                // window.location.reload();
                 showCustomMessage(data.message);
+                window.location.reload();
             } else {
                 showCustomMessage('Erreur: ' + data.message);
             }
         })
         .catch(error => {
-            console.error('Erreur:', error);
+            console.error('Erreur :', error);
             showCustomMessage('Une erreur est survenue lors de l\'opération.');
         });
     });
 
-    // Simple fonction pour remplacer l'alerte
+    toggleStatusButtons.forEach(button => {
+        button.addEventListener('click', function() {
+            const userId = this.getAttribute('data-user-id');
+            const action = this.getAttribute('data-action');
+            const userName = this.getAttribute('data-user-name');
+
+            let message = '';
+            let confirmBtnClass = '';
+            if (action === 'deactivate') {
+                message = `Êtes-vous sûr de vouloir désactiver l'utilisateur "${userName}" ?`;
+                confirmBtnClass = 'bg-red-600 hover:bg-red-700';
+            } else {
+                message = `Êtes-vous sûr de vouloir activer l'utilisateur "${userName}" ?`;
+                confirmBtnClass = 'bg-green-600 hover:bg-green-700';
+            }
+
+            modalMessage.textContent = message;
+            modalConfirmBtn.className = `px-4 py-2 text-white rounded-lg text-sm font-medium transition duration-300 ${confirmBtnClass}`;
+            
+            confirmationModal.classList.remove('hidden');
+
+            modalConfirmBtn.onclick = () => {
+                confirmationModal.classList.add('hidden');
+                fetch('/toggle-user-status/', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+                    },
+                    body: JSON.stringify({
+                        user_id: userId,
+                        action: action
+                    })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    showCustomMessage(data.message);
+                    if (data.success) {
+                        window.location.reload();
+                    }
+                })
+                .catch(error => {
+                    console.error('Erreur:', error);
+                    showCustomMessage('Une erreur est survenue lors de l\'opération.');
+                });
+            };
+
+            modalCancelBtn.onclick = () => {
+                confirmationModal.classList.add('hidden');
+            };
+        });
+    });
+
     function showCustomMessage(message) {
       const messageBox = document.createElement('div');
       messageBox.textContent = message;
@@ -169,11 +196,7 @@ document.addEventListener('DOMContentLoaded', function() {
       document.body.appendChild(messageBox);
       setTimeout(() => messageBox.remove(), 3000);
     }
-
-    // Afficher les champs spécifiques au chargement de la page
-    if (userType === 'staff') {
-        staffTypeField.style.display = 'block';
-    } else if (userType === 'parent') {
-        parentTypeField.style.display = 'block';
-    }
+    
+    // Call the function on page load to initialize the form correctly
+    showCreateMode();
 });

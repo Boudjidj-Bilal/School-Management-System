@@ -2,9 +2,10 @@ from django.core.exceptions import ObjectDoesNotExist
 
 # Import des modèles locaux et liés
 from .models import School, Year, ExceptionDay, ExceptionTime, TermYearLevel
-from users.utils import get_super_admin, get_user_type
+from users.utils import get_super_admin, get_user_type, get_parent_by_user_id, get_staff_by_user_id, get_student_by_user_id
 from classes.models import Level
 from django.db.models import QuerySet
+from users.models import Student, Parent, Staff
 
 """
     Ce fichier centralise les fonctions utilitaires de l'application 'schools'.
@@ -168,15 +169,20 @@ def get_user_school(user, selected_school_id=None):
             try:
                 return School.objects.get(id=selected_school_id)
             except School.DoesNotExist:
-                pass
-        schools = get_all_schools()
-        return schools.last() if schools.exists() else None
-    elif user_type == "Staff":
-        return user.staff.school
-    elif user_type == "Student":
-        return user.student.school
-    elif user_type == "Parent":
-        return user.parent.school
+                return get_all_schools().first()
+        return get_all_schools().first()
+    try:
+        if user_type == "Principal" or user_type == "CPE" or user_type == "Administrator" or user_type == "Teacher":
+            user_staff = get_staff_by_user_id(user.id)
+            return user_staff.school
+        elif user_type == "Student":
+            user_student = get_student_by_user_id(user.id)
+            return user_student.school
+        elif user_type == "Parent":
+            user_parent = get_parent_by_user_id(user.id)
+            return user_parent.school
+    except (Staff.DoesNotExist, Student.DoesNotExist, Parent.DoesNotExist):
+        return None
     return None
 
 """

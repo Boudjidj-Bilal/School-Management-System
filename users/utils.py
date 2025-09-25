@@ -49,7 +49,7 @@ def create_user(**kwargs):
         email = kwargs.get("email")
         if email:
             if User.objects.filter(email__iexact=email).exists():
-                return None, "Un utilisateur avec cet email existe déjà."
+                return "Un utilisateur avec cet email existe déjà.", False
         
         # Crée l'utilisateur si tout est valide
         user = User.objects.create_user(**kwargs)
@@ -68,7 +68,8 @@ def get_user_by_username(username):
         User or None: L'objet utilisateur s'il existe, sinon None.
     """
     try:
-        return User.objects.get(username=username)
+        user = User.objects.get(username=username)
+        return user
     except ObjectDoesNotExist:
         return None
 
@@ -144,6 +145,26 @@ def activate_user(user_id):
         return user, True
     except User.DoesNotExist:
         return "Utilisateur non trouvé.", False
+    
+def is_email_unique(email):
+    """
+    Vérifie si un email existe déjà dans la base de données.
+    Args:
+        email (str): L'adresse email à vérifier.
+    Returns:
+        bool: True si l'email n'existe pas encore, False sinon.
+    """
+    try:
+        User.objects.get(email=email)
+        # Si un utilisateur est trouvé, l'email existe déjà
+        return True
+    except User.DoesNotExist:
+        # Si aucun utilisateur n'est trouvé, l'email est unique
+        return False
+    except Exception as e:
+        # Gère les autres erreurs potentielles
+        print(f"Une erreur s'est produite lors de la vérification de l'email : {e}")
+        return True
 
 def login_user(request, username, password):
     """
@@ -155,7 +176,7 @@ def login_user(request, username, password):
     Returns:
         User or None: L'objet utilisateur si l'authentification est réussie, sinon None.
     """
-    # user = get_user_by_username(username)
+    username2 = get_user_by_username(username)
     user = authenticate(request, username=username, password=password)
     if user is not None:
         login(request, user)
@@ -239,18 +260,18 @@ def send_email(subject, message, recipient_list):
         print(f"Erreur d'envoi d'email: {e}")
         return False
     
-def send_email_create_compte_principal(request, principal_email, username, password):
+def send_email_create_compte(request, email, username, password):
     """
-    Envoie un email de notification au proviseur pour l'informer que son compte a été créé.
+    Envoie un email de notification à l'utilisateur pour l'informer que son compte a été créé.
 
     Args:
         request : L'objet de requête HTTP.
-        principal_email (str): L'adresse email du proviseur.
+        email (str): L'adresse email de l'utilisateur.
         username (str): Le nom d'utilisateur généré.
-        temporary_password (str): Le mot de passe temporaire généré.
+        password (str): Le mot de passe temporaire généré.
     """
     # Sujet de l'email
-    subject = "Votre compte de Proviseur a été créé"
+    subject = "Votre compte Gonote a été créé"
     domain = request.get_host()
     protocol = 'https' if request.is_secure() else 'http'
     reset_url = ""
@@ -282,11 +303,11 @@ def send_email_create_compte_principal(request, principal_email, username, passw
 
     # Envoi de l'email
     try:
-        recipient_list = [principal_email]
+        recipient_list = [email]
         send_email(subject, message, recipient_list)
-        print(f"Email envoyé avec succès à {principal_email}")
+        print(f"Email envoyé avec succès à {email}")
     except Exception as e:
-        print(f"Erreur lors de l'envoi de l'email à {principal_email} : {e}")
+        print(f"Erreur lors de l'envoi de l'email à {email} : {e}")
 
 
 def generate_random_password(length: int = 8, include_digits: bool = True, include_special_chars: bool = True) -> str:
@@ -629,13 +650,20 @@ def get_staff_by_gender_and_school(school_id, gender):
     """
     return Staff.objects.filter(school__id=school_id, gender=gender)
 
+# Fonction pour récupérer un Staff à partir d'un user.id
+def get_staff_by_user_id(user_id):
+    try:
+        return Staff.objects.get(user__id=user_id)
+    except ObjectDoesNotExist:
+        return None
+
 """
 =======================
 GESTION DES ETUDIANTS :
 =======================
 """
 
-def create_student(user_id, school_id, gender, birth_date=None):
+def create_student(user, school, gender, address, birth_date=None):
     """
     Crée un nouvel objet Student lié à un utilisateur existant.
     Args:
@@ -647,16 +675,13 @@ def create_student(user_id, school_id, gender, birth_date=None):
         tuple: (Student, str) - L'objet Student créé ou un message d'erreur.
     """
     try:
-        user = User.objects.get(id=user_id)
-        # Import local pour éviter les dépendances circulaires
-        from schools.models import School
-        school = School.objects.get(id=school_id)
         if Student.objects.filter(user=user).exists():
             return None, "Cet utilisateur est déjà lié à un élève."
         student = Student.objects.create(
             user=user,
             school=school,
             gender=gender,
+            address=address,
             birth_date=birth_date
         )
         return student, None
@@ -796,6 +821,12 @@ def activate_student(student_id):
     except Exception as e:
         return f"Erreur lors de l'activation de l'élève : {str(e)}", False
 
+# Fonction pour récupérer un Student à partir d'un user.id
+def get_student_by_user_id(user_id):
+    try:
+        return Student.objects.get(user__id=user_id)
+    except ObjectDoesNotExist:
+        return None
 
 """
 =======================
@@ -803,30 +834,25 @@ GESTION DES PARENT :
 =======================
 """
 
-def create_parent(user_id, school_id, gender, parent_type, birth_date=None):
+def create_parent(user, school, gender, address, birth_date=None):
     """
     Crée un nouvel objet Parent lié à un utilisateur existant.
     Args:
         user_id (int): L'ID de l'utilisateur à lier.
         school_id (int): L'ID de l'école de rattachement.
         gender (str): Le genre du parent.
-        parent_type (str): Le type de parent ('MOTHER' ou 'FATHER').
         birth_date (date, optional): La date de naissance du parent.
     Returns:
         tuple: (Parent, str) - L'objet Parent créé ou un message d'erreur.
     """
     try:
-        user = User.objects.get(id=user_id)
-        # Import local pour éviter les dépendances circulaires
-        from schools.models import School
-        school = School.objects.get(id=school_id)
         if Parent.objects.filter(user=user).exists():
             return None, "Cet utilisateur est déjà lié à un parent."
         parent = Parent.objects.create(
             user=user,
             school=school,
             gender=gender,
-            parent_type=parent_type,
+            address=address,
             birth_date=birth_date
         )
         return parent, None
@@ -965,10 +991,17 @@ def update_profile_parent_or_student(user_id, **kwargs):
     except Exception as e:
         return f"Erreur lors de la mise à jour du profil du parent : {str(e)}", False
 
+# Fonction pour récupérer un Parent à partir d'un user.id
+def get_parent_by_user_id(user_id):
+    try:
+        return Parent.objects.get(user__id=user_id)
+    except ObjectDoesNotExist:
+        return None
+
 """
-=======================
+=====================
 GESTION DES ENFANT :
-=======================
+=====================
 """
 
 # --- Fonctions CRUD pour la classe Child ---
