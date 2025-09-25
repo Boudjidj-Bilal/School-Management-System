@@ -19,70 +19,71 @@
         <div class="space-y-4 max-h-[calc(100vh-250px)] overflow-y-auto">
             <!-- Utilisateurs actifs -->
             <ul id="user-list-active" class="space-y-2">
-                {% if active_users %}
-                    <li class="px-3 py-1 text-sm font-semibold text-gray-500">Actif</li>
-                    {% for user_obj in active_users %}
-                    <li>
-                        <div class="flex items-center justify-between p-3 text-sm font-medium text-gray-700 hover:bg-gray-100 rounded-lg transition-colors duration-200">
-                            <a href="#" 
-                               data-user-id="{{ user_obj.user.id }}" 
-                               data-first-name="{{ user_obj.user.first_name }}" 
-                               data-last-name="{{ user_obj.user.last_name }}" 
-                               data-email="{{ user_obj.user.email }}" 
-                               data-user-type="{{ user_type }}" 
-                               data-staff-type="{{ user_obj.staff_type|default:'' }}" 
-                               data-address="{{ user_obj.address|default:'' }}"
-                               data-birth-date="{{ user_obj.birth_date|date:'Y-m-d'|default:'' }}"
-                               data-gender="{{ user_obj.gender|default:'' }}"
-                               class="user-link flex items-center flex-grow">
-                                <i class="fas fa-user-circle mr-3 text-lg text-green-500"></i>
-                                <span>{{ user_obj.user.username }}</span>
-                            </a>
-                            <button class="toggle-status-btn px-2 py-1 text-xs bg-red-500 text-white rounded-md shadow-sm hover:bg-red-600 transition duration-300"
-                                    data-user-id="{{ user_obj.user.id }}" 
-                                    data-action="deactivate"
-                                    data-user-name="{{ user_obj.user.first_name }} {{ user_obj.user.last_name }}">
-                                Désactiver
-                            </button>
-                        </div>
-                    </li>
-                    {% endfor %}
-                {% endif %}
+                <li class="px-3 py-1 text-sm font-semibold text-gray-500">Actif</li>
+                {% for user_obj in users %}
+                    {% if user_obj.user.is_active %}
+                        <li>
+                            <div class="flex items-center justify-between p-3 text-sm font-medium text-gray-700 hover:bg-gray-100 rounded-lg transition-colors duration-200">
+                                <a href="#" 
+                                   data-user-id="{{ user_obj.user.id }}" 
+                                   data-first-name="{{ user_obj.user.first_name }}" 
+                                   data-last-name="{{ user_obj.user.last_name }}" 
+                                   data-email="{{ user_obj.user.email }}" 
+                                   data-user-type="{{ user_type }}" 
+                                   data-staff-type="{{ user_obj.staff_type|default:'' }}" 
+                                   data-address="{{ user_obj.address|default:'' }}"
+                                   data-birth-date="{{ user_obj.birth_date|date:'Y-m-d'|default:'' }}"
+                                   data-gender="{{ user_obj.gender|default:'' }}"
+                                   class="user-link flex items-center flex-grow">
+                                    <i class="fas fa-user-circle mr-3 text-lg text-green-500"></i>
+                                    <span>{{ user_obj.user.username }}</span>
+                                </a>
+                                <button class="toggle-status-btn px-2 py-1 text-xs bg-red-500 text-white rounded-md shadow-sm hover:bg-red-600 transition duration-300"
+                                        data-user-id="{{ user_obj.user.id }}" 
+                                        data-action="deactivate"
+                                        data-user-name="{{ user_obj.user.first_name }} {{ user_obj.user.last_name }}">
+                                    Désactiver
+                                </button>
+                            </div>
+                        </li>
+                    {% endif %}
+                {% endfor %}
             </ul>
 
             <!-- Utilisateurs inactifs -->
             <ul id="user-list-inactive" class="space-y-2">
-                {% if inactive_users %}
-                    <li class="px-3 py-1 text-sm font-semibold text-gray-500">Inactif</li>
-                    {% for user_obj in inactive_users %}
-                    <li>
-                        <div class="flex items-center justify-between p-3 text-sm font-medium text-gray-400 hover:bg-gray-100 rounded-lg transition-colors duration-200">
-                            <a href="#" 
-                               data-user-id="{{ user_obj.user.id }}" 
-                               data-first-name="{{ user_obj.user.first_name }}" 
-                               data-last-name="{{ user_obj.user.last_name }}" 
-                               data-email="{{ user_obj.user.email }}" 
-                               data-user-type="{{ user_type }}" 
-                               data-staff-type="{{ user_obj.staff_type|default:'' }}" 
-                               data-address="{{ user_obj.address|default:'' }}"
-                               data-birth-date="{{ user_obj.birth_date|date:'Y-m-d'|default:'' }}"
-                               data-gender="{{ user_obj.gender|default:'' }}"
-                               class="user-link flex items-center flex-grow">
-                                <i class="fas fa-user-slash mr-3 text-lg text-gray-400"></i>
-                                <span>{{ user_obj.user.username }}</span>
-                            </a>
-                            <button class="toggle-status-btn px-2 py-1 text-xs bg-green-500 text-white rounded-md shadow-sm hover:bg-green-600 transition duration-300"
-                                    data-user-id="{{ user_obj.user.id }}" 
-                                    data-action="activate"
-                                    data-user-name="{{ user_obj.user.first_name }} {{ user_obj.user.last_name }}">
-                                Activer
-                            </button>
-                        </div>
-                    </li>
-                    {% endfor %}
-                {% endif %}
+                <li class="px-3 py-1 text-sm font-semibold text-gray-500">Inactif</li>
+                {% for user_obj in users %}
+                    {% if not user_obj.user.is_active %}
+                        <li>
+                            <div class="flex items-center justify-between p-3 text-sm font-medium text-gray-400 hover:bg-gray-100 rounded-lg transition-colors duration-200">
+                                <a href="#" 
+                                   data-user-id="{{ user_obj.user.id }}" 
+                                   data-first-name="{{ user_obj.user.first_name }}" 
+                                   data-last-name="{{ user_obj.user.last_name }}" 
+                                   data-email="{{ user_obj.user.email }}" 
+                                   data-user-type="{{ user_type }}" 
+                                   data-staff-type="{{ user_obj.staff_type|default:'' }}" 
+                                   data-address="{{ user_obj.address|default:'' }}"
+                                   data-birth-date="{{ user_obj.birth_date|date:'Y-m-d'|default:'' }}"
+                                   data-gender="{{ user_obj.gender|default:'' }}"
+                                   class="user-link flex items-center flex-grow">
+                                    <i class="fas fa-user-slash mr-3 text-lg text-gray-400"></i>
+                                    <span>{{ user_obj.user.username }}</span>
+                                </a>
+                                <button class="toggle-status-btn px-2 py-1 text-xs bg-green-500 text-white rounded-md shadow-sm hover:bg-green-600 transition duration-300"
+                                        data-user-id="{{ user_obj.user.id }}" 
+                                        data-action="activate"
+                                        data-user-name="{{ user_obj.user.first_name }} {{ user_obj.user.last_name }}">
+                                    Activer
+                                </button>
+                            </div>
+                        </li>
+                    {% endif %}
+                {% endfor %}
             </ul>
-            {% if not active_users and not inactive_users %}
+
+            {% if not users %}
                 <p class="text-gray-500 text-center py-4">Aucun utilisateur de ce type trouvé.</p>
             {% endif %}
         </div>

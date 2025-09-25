@@ -9,6 +9,8 @@ urlpatterns = [
     path('create-user/', views.create_user_view, name='create_user'),
     path('manage-users/', views.manage_users_view, name='manage_users'),
     path('select-school/', views.select_school_view, name='select_school'),
+    path('toggle-user-status/', views.toggle_user_status_view, name='toggle-user-status'),
+
 
     re_path(r'^reset/(?P<uidb64>[0-9A-Za-z_\-]+)/(?P<token>[0-9A-Za-z]{1,32}-[0-9A-Za-z]{1,32})/$', 
             views.password_reset_confirm, name='password_reset_confirm'),
