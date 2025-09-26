@@ -10,6 +10,8 @@ urlpatterns = [
     path('manage-users/', views.manage_users_view, name='manage_users'),
     path('select-school/', views.select_school_view, name='select_school'),
     path('toggle-user-status/', views.toggle_user_status_view, name='toggle-user-status'),
+    path('assign-children/', views.assign_children_view, name='assign_children'),
+    path('toggle-child-assignment/', views.toggle_child_assignment_api, name='toggle_child_assignment_api'),
 
 
     re_path(r'^reset/(?P<uidb64>[0-9A-Za-z_\-]+)/(?P<token>[0-9A-Za-z]{1,32}-[0-9A-Za-z]{1,32})/$', 

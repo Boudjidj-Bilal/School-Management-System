@@ -4,6 +4,8 @@ from django.db import IntegrityError
 from django.contrib.auth import authenticate, login, logout, update_session_auth_hash, get_user_model
 import string
 import secrets
+from django.core.serializers.json import DjangoJSONEncoder
+
 
 # Gestion des emails automatique :
 from django.core.mail import send_mail
@@ -1130,3 +1132,21 @@ def generate_unique_username(first_name, last_name):
         counter += 1
 
     return username_to_check
+
+
+class CustomDjangoJSONEncoder(DjangoJSONEncoder):
+    """
+    Encodeur personnalisé pour gérer les décimaux, dates, etc.,
+    spécifiques à Django lors de la sérialisation en JSON.
+    """
+    def default(self, o):
+        if isinstance(o, (Parent, Student, Child)):
+            # Si nous passons les objets directement, nous pourrions avoir besoin
+            # de sérialiser leurs champs manuellement, mais ici, nous nous
+            # concentrons sur les IDs et les noms/prénoms.
+            return {
+                'id': o.id,
+                'first_name': getattr(o, 'first_name', ''),
+                'last_name': getattr(o, 'last_name', ''),
+            }
+        return super().default(o)

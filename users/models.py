@@ -134,4 +134,4 @@ class Child(models.Model):
         unique_together = ("student", "parent")  # empêche les doublons
 
     def __str__(self):
-        return f"{self.student} child of {self.parent}"
+        return f"{self.student.user.username} child of {self.parent.user.username} {self.student.school.name}"

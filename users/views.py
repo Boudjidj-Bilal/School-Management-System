@@ -2,14 +2,15 @@ from django.shortcuts import render, redirect, get_object_or_404
 
 from django.http import JsonResponse, HttpResponseBadRequest
 import datetime
+from django.db.models import F
 
 import json
 from .utils import *
 from schools.models import School
 from schools.utils import get_all_schools, get_user_school
 from django.contrib.auth.decorators import login_required
-from django.db import IntegrityError
-from django.views.decorators.http import require_http_methods
+from django.db import IntegrityError, transaction
+from django.views.decorators.http import require_http_methods, require_POST
 from django.views.decorators.csrf import csrf_exempt
 from django.utils.http import urlsafe_base64_decode
 from django.utils.encoding import force_str
@@ -407,21 +408,29 @@ def toggle_user_status_view(request):
         user_id = data.get('user_id')
         action = data.get('action') # 'activate' ou 'deactivate'
 
+        # Récupérer l'utilisateur à modifier
         user_to_toggle = get_object_or_404(User, id=user_id)
+        
+        # Récupérer les types d'utilisateur pour les vérifications de permissions
+        current_user_type = get_user_type(request.user)
         user_type_to_toggle = get_user_type(user_to_toggle)
 
         # Vérification des permissions
-        current_user_type = get_user_type(request.user)
-        if current_user_type not in ["SuperAdministrator", "Principal", "Administrator"]:
+        # Un SuperAdministrateur peut modifier n'importe quel utilisateur
+        if current_user_type == "SuperAdministrator":
+            pass # Aucune restriction pour le SuperAdmin
+        elif current_user_type == "Principal": # Un Principal ne peut pas modifier un autre Principal
+            if user_type_to_toggle == "Principal":
+                return JsonResponse({"success": False, "message": "Vous ne pouvez pas modifier le statut d'un autre proviseur."}, status=403)
+        elif current_user_type == "Administrator": # Un Administrateur ne peut modifier que les étudiants et les parents
+            forbidden_types = ["Principal", "Teacher", "CPE", "Administrator"]
+            if user_type_to_toggle in forbidden_types:
+                return JsonResponse({"success": False, "message": "Vous ne pouvez pas modifier le statut d'un membre du personnel."}, status=403)
+        # Tous les autres types d'utilisateurs n'ont pas la permission
+        else:
             return JsonResponse({"success": False, "message": "Permission denied."}, status=403)
-        
-        # Un proviseur ne peut pas désactiver un autre proviseur
-        if current_user_type == "Principal" and user_type_to_toggle == "Principal":
-            return JsonResponse({"success": False, "message": "Vous ne pouvez pas modifier le statut d'un autre proviseur."}, status=403)
 
-        if current_user_type == "Administrator" and user_type_to_toggle == "Principal" or user_type_to_toggle == "Teaacher" or user_type_to_toggle == "CPE" or user_type_to_toggle == "Administrator":
-            return JsonResponse({"success": False, "message": "Vous ne pouvez pas modifier le statut d'un membre du personnel."}, status=403)
-        
+        # Logique d'activation/désactivation
         if action == 'activate':
             user_to_toggle.is_active = True
             message = "Utilisateur activé avec succès."
@@ -436,3 +445,130 @@ def toggle_user_status_view(request):
 
     except Exception as e:
         return JsonResponse({"success": False, "message": f"Une erreur est survenue: {str(e)}"}, status=500)
+
+
+# TODO cette views est accessible que pour les types d'utilisateur suivants : super admin, principal et administrateur
+@login_required(login_url='login')
+def assign_children_view(request):
+    """
+    Vue principale pour afficher la page d'attribution.
+    Récupère toutes les données nécessaires (avec les champs du User associé) 
+    et les passe au template en JSON.
+    """
+
+    user_type = get_user_type(request.user)
+    
+    # Vérifie si l'utilisateur a la permission de voir cette page : 
+    if user_type not in ["SuperAdministrator", "Principal", "Administrator"]:
+        return HttpResponseBadRequest("Accès refusé. Seuls les Principaux et Administrateurs peuvent accéder à cette page.")
+
+    
+    # 1. Récupérer tous les parents et étudiants en préchargeant l'objet User pour les noms.
+    # Ceci optimise les requêtes SQL (select_related).
+    parents_queryset = Parent.objects.select_related('user').filter(user__is_active=True).order_by('user__first_name', 'user__last_name')
+    students_queryset = Student.objects.select_related('user').filter(user__is_active=True).order_by('user__first_name', 'user__last_name')
+
+    # 2. Construire la liste des étudiants pour l'objet JSON (pour le JS)
+    students_to_serialize = []
+    for student in students_queryset:
+        students_to_serialize.append({
+            # On utilise str(id) pour garantir que le JS manipule des chaînes (cohérence)
+            'id': str(student.id), 
+            # Les noms sont récupérés via la relation 'user'
+            'username': student.user.username,
+        })
+
+    # 3. Construire la structure des liens (links_data)
+    # Format désiré: { parent_id: [student_id1, student_id2, ...], ... }
+    
+    # Récupérer tous les liens existants
+    all_links = Child.objects.all()
+    links_data = {}
+
+    for link in all_links:
+        parent_id_str = str(link.parent_id)
+        student_id_str = str(link.student_id)
+
+        if parent_id_str not in links_data:
+            links_data[parent_id_str] = []
+        
+        links_data[parent_id_str].append(student_id_str)
+
+    # 4. Sérialisation des données en chaînes JSON
+    students_json = json.dumps(students_to_serialize)
+    links_json = json.dumps(links_data)
+
+    context = {
+        # 'parents': QuerySet directement passé au template pour le loop Django
+        'parents': parents_queryset, 
+        # 'students': Données sérialisées pour la logique JavaScript
+        'students': students_json, 
+        'links_data': links_json,
+    }
+
+    return render(request, 'users/assign_children.html', context)
+
+
+@require_POST
+def toggle_child_assignment_api(request):
+    """
+    Endpoint API pour lier ou délier un enfant à un parent.
+    Nécessite: parent_id, student_id, action ('link' ou 'unlink').
+    """
+    try:
+        data = json.loads(request.body)
+        parent_id = data.get('parent_id')
+        student_id = data.get('student_id')
+        action = data.get('action')
+
+        if not all([parent_id, student_id, action]):
+            return JsonResponse({'success': False, 'message': 'Données manquantes (parent_id, student_id, action).'}, status=400)
+
+        # Récupérer les objets Parent et Student AVEC leurs utilisateurs pour les messages
+        # Si un Parent/Student n'existe pas, une exception DoesNotExist sera levée
+        parent = Parent.objects.select_related('user').get(pk=parent_id)
+        student = Student.objects.select_related('user').get(pk=student_id)
+        
+        # Accès aux noms via l'objet user (fallback sur le username si le prénom est null)
+        parent_name = parent.user.first_name or parent.user.username 
+        student_name = student.user.first_name or student.user.username
+
+
+        if action == 'link':
+            try:
+                # Utiliser transaction.atomic pour s'assurer que l'opération est atomique
+                with transaction.atomic():
+                    Child.objects.create(parent=parent, student=student)
+                message = f"Lien créé : {student_name} est maintenant un enfant de {parent_name}."
+                return JsonResponse({'success': True, 'message': message})
+            except IntegrityError:
+                # Gère le cas où le lien existe déjà (unique_together)
+                message = "Le lien existe déjà."
+                return JsonResponse({'success': True, 'message': message}) 
+
+        elif action == 'unlink':
+            try:
+                # Supprime le lien existant
+                deleted_count, _ = Child.objects.filter(parent=parent, student=student).delete()
+                
+                if deleted_count > 0:
+                    message = f"Lien supprimé : {student_name} n'est plus un enfant de {parent_name}."
+                    return JsonResponse({'success': True, 'message': message})
+                else:
+                    message = "Le lien n'existe pas, aucune suppression effectuée."
+                    return JsonResponse({'success': True, 'message': message})
+            except Exception as e:
+                return JsonResponse({'success': False, 'message': f"Erreur lors de la suppression: {str(e)}"}, status=500)
+        
+        else:
+            return JsonResponse({'success': False, 'message': 'Action non reconnue. Utilisez "link" ou "unlink".'}, status=400)
+
+    except Parent.DoesNotExist:
+        return JsonResponse({'success': False, 'message': 'Parent non trouvé.'}, status=404)
+    except Student.DoesNotExist:
+        return JsonResponse({'success': False, 'message': 'Étudiant non trouvé.'}, status=404)
+    except json.JSONDecodeError:
+        return JsonResponse({'success': False, 'message': 'Requête invalide (JSON non valide).'}, status=400)
+    except Exception as e:
+        # Gère toutes les autres erreurs imprévues
+        return JsonResponse({'success': False, 'message': f'Erreur interne du serveur: {str(e)}'}, status=500)
