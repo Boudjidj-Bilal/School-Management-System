@@ -462,11 +462,27 @@ def assign_children_view(request):
     if user_type not in ["SuperAdministrator", "Principal", "Administrator"]:
         return HttpResponseBadRequest("Accès refusé. Seuls les Principaux et Administrateurs peuvent accéder à cette page.")
 
-    
+    user_school = get_user_school(request.user, request.session.get('selected_school_id'))
+
     # 1. Récupérer tous les parents et étudiants en préchargeant l'objet User pour les noms.
     # Ceci optimise les requêtes SQL (select_related).
-    parents_queryset = Parent.objects.select_related('user').filter(user__is_active=True).order_by('user__first_name', 'user__last_name')
-    students_queryset = Student.objects.select_related('user').filter(user__is_active=True).order_by('user__first_name', 'user__last_name')
+    # Condition : Récupérer uniquement les parents et étudiants d'une même école, qui sont actif 
+    if user_type == "SuperAdministrator":
+        school_id_filter = request.session.get('selected_school_id')
+        school_filter = School.objects.get(id=school_id_filter)
+
+        parents_queryset = Parent.objects.select_related('user').filter(user__is_active=True, school=school_filter).order_by('user__first_name', 'user__last_name')
+        students_queryset = Student.objects.select_related('user').filter(user__is_active=True, school=school_filter).order_by('user__first_name', 'user__last_name')
+    else:
+        school_filter = user_school
+
+        parents_queryset = Parent.objects.select_related('user').filter(user__is_active=True, school=school_filter).order_by('user__first_name', 'user__last_name')
+        students_queryset = Student.objects.select_related('user').filter(user__is_active=True, school=school_filter).order_by('user__first_name', 'user__last_name')
+
+
+
+    # parents_queryset = Parent.objects.select_related('user').filter(user__is_active=True).order_by('user__first_name', 'user__last_name')
+    # students_queryset = Student.objects.select_related('user').filter(user__is_active=True).order_by('user__first_name', 'user__last_name')
 
     # 2. Construire la liste des étudiants pour l'objet JSON (pour le JS)
     students_to_serialize = []
@@ -572,3 +588,78 @@ def toggle_child_assignment_api(request):
     except Exception as e:
         # Gère toutes les autres erreurs imprévues
         return JsonResponse({'success': False, 'message': f'Erreur interne du serveur: {str(e)}'}, status=500)
+
+
+
+
+
+
+
+@login_required
+def manage_users_view_test(request):
+    user_type_choice = request.GET.get('type')
+    staff_type = request.GET.get('staff_type', None)
+
+    users = []
+    
+    user_type = get_user_type(request.user)
+    user_school = get_user_school(request.user, request.session.get('selected_school_id'))
+    
+    # Vérifie si l'utilisateur a la permission de voir cette page
+    if user_type not in ["SuperAdministrator", "Principal", "Administrator"]:
+        return HttpResponseBadRequest("Vous n'avez pas la permission de gérer les utilisateurs.")
+
+    if user_type == "SuperAdministrator":
+        # Le super admin peut gérer les utilisateurs de n'importe quelle école
+        school_id_filter = request.session.get('selected_school_id')
+        school_filter = School.objects.get(id=school_id_filter)
+        
+        if user_type_choice == 'student':
+            users = Student.objects.filter(school=school_filter).order_by('user__first_name', 'user__last_name')
+        elif user_type_choice == 'parent':
+            users = Parent.objects.filter(school=school_filter).order_by('user__first_name', 'user__last_name')
+        elif user_type_choice == 'staff':
+            if staff_type:
+                users = Staff.objects.filter(staff_type=staff_type, school=school_filter).order_by('user__first_name', 'user__last_name')
+            else:
+                users = Staff.objects.filter(school=school_filter).order_by('user__first_name', 'user__last_name')
+
+    elif user_type == "Principal":
+        # Le proviseur peut voir tous les utilisateurs de son école sauf les autres proviseurs
+        school_filter = user_school
+        
+        if user_type_choice == 'student':
+            users = Student.objects.filter(school=school_filter).order_by('user__first_name', 'user__last_name')
+        elif user_type_choice == 'parent':
+            users = Parent.objects.filter(school=school_filter).order_by('user__first_name', 'user__last_name')
+        elif user_type_choice == 'staff':
+            if staff_type == 'PRINCIPAL':
+                # Un proviseur ne peut pas voir les autres proviseurs
+                users = Staff.objects.none()
+            elif staff_type:
+                users = Staff.objects.filter(staff_type=staff_type, school=school_filter).order_by('user__first_name', 'user__last_name')
+            else:
+                # Tous les membres du personnel sauf les proviseurs
+                users = Staff.objects.filter(school=school_filter).exclude(staff_type='PRINCIPAL').order_by('user__first_name', 'user__last_name')
+
+    elif user_type == "Administrator":
+        # L'administrateur ne voit que les étudiants et les parents de son école
+        school_filter = user_school
+        if user_type_choice == 'student':
+            users = Student.objects.filter(school=school_filter).order_by('user__first_name', 'user__last_name')
+        elif user_type_choice == 'parent':
+            users = Parent.objects.filter(school=school_filter).order_by('user__first_name', 'user__last_name')
+        else:
+            # Si le type d'utilisateur demandé n'est pas 'student' ou 'parent'
+            # (par exemple, 'staff'), on retourne une liste vide
+            users = []
+    
+    context = {
+        "users": users,
+        "user_type": user_type_choice,
+        "staff_types": dict(STAFF_TYPE_CHOICES),
+        "gender_choices": dict(GENDER_CHOICES),
+        "user_school": user_school
+    }
+
+    return render(request, "users/manage_users.html", context)

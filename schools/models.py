@@ -36,7 +36,7 @@ class Year(models.Model):
     
     # États de l'année
     creation = models.BooleanField(default=True)   # état : création et validation
-    registration = models.BooleanField(default=False) # état : enregistrement
+    registration = models.BooleanField(default=False) # état : enregistrement TODO Personne ne peut se connecter en dehos de l'étape running et end_year, sauf cas exception tel que le principal et l'administrateur pour l'étape registration
     running = models.BooleanField(default=False)   # état : déroulement en cours
     end_year = models.BooleanField(default=False)  # état : fin de l'année
     finished = models.BooleanField(default=False)  # état : année terminé
