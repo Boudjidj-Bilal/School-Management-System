@@ -6,8 +6,8 @@ import datetime
 
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth import get_user_model
-from users.utils import create_user, create_staff, get_user_type, generate_unique_username, send_email_create_compte, get_user_by_username, generate_random_password
-from .utils import create_school, get_user_school, create_year
+from users.utils import create_user, create_staff, get_user_type, generate_unique_username, send_email_create_compte, get_user_by_username, generate_random_password, send_emails_for_year_stage
+from .utils import create_school, get_user_school
 
 from django.views.decorators.http import require_http_methods
 from django.views.decorators.csrf import csrf_exempt
@@ -336,10 +336,14 @@ def change_year_status_api(request, year_id):
         # 8. Sauvegarder les modifications
         year.save()
 
+        # 9. On récupère l'école
+        school = year.school
+
+        # 10. Envoie des emails 
         if new_field_name == 'registration':
-            pass # TODO Envoie un mail à tout les administrateur actif de cette école afin de les prévenir que l'étape de l'enregistrement à commencé
+            send_emails_for_year_stage(school, new_field_name) # Envoie un mail à tous les administrateurs actif de cette école afin de les prévenir que l'étape de l'enregistrement à commencé
         elif new_field_name == 'running': 
-            pass # TODO Envoie un mail à tout les profs et les CPE actif de cette école afin de les prévenir que l'étape de l'enregistrement à commencé
+            send_emails_for_year_stage(school, new_field_name)  # TODO Envoie un mail à tous les professeurs et les CPE actif de cette école afin de les prévenir que l'étape du déroulé à commencé
         
         return JsonResponse({'success': True, 'message': message})
 

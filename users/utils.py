@@ -464,6 +464,113 @@ def get_user_type(user):
     return None
 
 
+def send_emails_for_year_stage(school, year_stape):
+    """
+    Envoie un email aux utilisateurs concernés d'une école, 
+    en fonction de l'étape de l'année scolaire (year_stape).
+
+    Args:
+        subject (str): Le sujet de l'email.
+        message (str): Le corps de l'email.
+        school (School): L'objet École (ForeignKey de Staff) utilisé pour le filtrage.
+        year_stape (str): L'étape de l'année ('registration', 'running', etc.).
+
+    Returns:
+        bool: True si au moins un email a été envoyé, False sinon.
+    """
+    recipient_emails = []
+    subject = ""
+    message = ""
+
+    # 1. Filtrage des utilisateurs basés sur l'étape (year_stape)
+    if year_stape == 'registration':
+        # Cible : Tous les administrateurs actifs (STAFF_TYPE: PRINCIPAL, ADMINISTRATOR)
+        
+        # Sujet et message pour l'enregistrement
+        subject = f"Année Scolaire: L'étape d'enregistrement commence : {school.name}"
+        message = f"""
+Cher Administrateur,
+
+L'étape d'enregistrement de la nouvelle année scolaire a officiellement commencé pour l'école **{school.name}**.
+
+Vous pouvez maintenant vous connecter à la plateforme pour :
+1. Valider les inscriptions des nouveaux élèves.
+2. Finaliser la configuration des classes et des cours. 
+3. Mettre à jour les plannings.
+
+Veuillez procéder aux vérifications nécessaires pour assurer une transition fluide.
+
+Cordialement,
+L'Équipe de Gestion.
+        """
+
+        # Détermination des types de personnel à cibler pour l'enregistrement
+        admin_types = ["PRINCIPAL", "ADMINISTRATOR"]
+
+        # Récupération des membres du personnel de l'école correspondant aux types d'admins
+        staff_members = Staff.objects.filter(
+            school=school, 
+            staff_type__in=admin_types
+        ).select_related('user') # Optimisation pour charger les données de l'utilisateur
+
+        # Extraction des emails des utilisateurs actifs
+        for staff in staff_members:
+            if staff.user.is_active and staff.user.email:
+                recipient_emails.append(staff.user.email)
+                
+    elif year_stape == 'running':
+        # Cible : Tous les profs et CPE actifs (STAFF_TYPE: TEACHER, CPE) ainsi que les principal et les administrateurs
+
+        # Sujet et message pour le déroulement en cours
+        subject = f"Année Scolaire: Le déroulement normal commence : {school.name}"
+        message = f"""
+Cher Membre du Personnel (Professeur / CPE / Administrateur),
+
+L'étape de déroulement normal de l'année scolaire est maintenant activée pour l'école **{school.name}**.
+
+La plateforme est pleinement opérationnelle pour :
+1. L'entrée des notes et des appréciations.
+2. La gestion des absences et des retards.
+3. L'accès aux outils de communication avec les parents et élèves.
+
+Nous vous souhaitons une excellente année !
+
+Cordialement,
+L'Administration de {school.name}.
+        """
+        
+        # Détermination des types de personnel à cibler pour l'étape en cours
+        teaching_staff_types = ["TEACHER", "CPE", "ADMINISTRATOR", "PRINCIPAL"]
+
+        # Récupération des membres du personnel de l'école correspondant aux types d'enseignants/éducateurs
+        staff_members = Staff.objects.filter(
+            school=school, 
+            staff_type__in=teaching_staff_types
+        ).select_related('user')
+
+        # Extraction des emails des utilisateurs actifs
+        for staff in staff_members:
+            if staff.user.is_active and staff.user.email:
+                recipient_emails.append(staff.user.email)
+
+    # Note : Ajoutez ici d'autres conditions (elif year_stape == 'end_year', etc.) si nécessaire.
+
+    # 2. Nettoyage et envoi des emails
+    
+    # Assurer l'unicité des adresses et la validité (ex: filtrer les adresses vides ou par défaut)
+    unique_recipients = list(set([email for email in recipient_emails if email and email != "email_a_remplir@gmail.com"]))
+    
+    if not unique_recipients:
+        print(f"Aucun destinataire trouvé pour l'étape '{year_stape}' à l'école {school.name}.")
+        return False
+
+    # Envoi
+    print(f"Tentative d'envoi à {len(unique_recipients)} destinataire(s) pour l'étape '{year_stape}'...")
+    mail_envoye = send_email(subject, message, unique_recipients)
+
+    return mail_envoye
+
+
 """
 ==================================
 GESTION DES SUPER ADMINISTRATEUR :
