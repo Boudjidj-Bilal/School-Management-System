@@ -1,6 +1,7 @@
 from django.shortcuts import render, redirect, get_object_or_404
 
-from django.http import JsonResponse, HttpResponseBadRequest
+from django.http import JsonResponse, HttpResponseBadRequest, HttpResponseForbidden
+
 import datetime
 from django.db.models import F
 
@@ -42,10 +43,50 @@ def login(request):
             data = json.loads(request.body)
             username = data.get('username')
             password = data.get('password')
+
+            user = get_user_by_username(username)
+            user_type = get_user_type(user)
+
+            # 1. Déterminer l'école 
+            if not user_type == "SuperAdministrator":
+                school = get_user_school(user)                
+                # Erreur : S'il n'y a pas d'école
+                if not school:
+                    return JsonResponse({"success": False, "message": "Impossible de vous connecter."}, status=400)
+                
+                # Erreur : Si l'école est inactive
+                if school.is_active == False:
+                    return JsonResponse({"success": False, "message": "Impossible de vous connecter."}, status=400)
+
+                # On vérifie si ces utilisateurs on le droit de se connecter :
+                if user_type in ["Teacher", "CPE", "Administrator", "Student", "Parent"]:
+
+                    # On importe ici pour éviter les imports circulaires :
+                    from schools.utils import get_current_school_year 
+
+                    # On récupère l'année en fonction de l'école
+                    year = get_current_school_year(school.id)
+
+                    # S'il n'y a pas d'année, impossible de se connecter pour le moment
+                    if not year:
+                        return JsonResponse({"success": False, "message": "Impossible de vous connecter pour le moment."}, status=400)
+
+                    # Si on est à l'étape de creation ou fini d'une année, impossible de se connecter
+                    if year.creation == True or year.finished == True:
+                        return JsonResponse({"success": False, "message": "Impossible de vous connecter pour le moment."}, status=400)
+                    
+                    # On vérifie si ces utilisateurs on le droit de se connecter :
+                    elif user_type in ["Teacher", "CPE", "Student", "Parent"]:
+
+                        # Si on est à l'étape d'enregistrement d'une année, impossible de se connecter
+                        if year.registration == True:
+                            return JsonResponse({"success": False, "message": "Impossible de vous connecter pour le moment."}, status=400)
+                    
+
+
+            user_login = login_user(request, username, password)
             
-            user = login_user(request, username, password)
-            
-            if user:
+            if user_login:
                 return JsonResponse({'success': True, 'message': 'Connexion réussie.'})
             else:
                 return JsonResponse({'success': False, 'message': 'Nom d\'utilisateur ou mot de passe incorrect.'})

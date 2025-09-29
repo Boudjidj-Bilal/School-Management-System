@@ -1,5 +1,5 @@
 from django.shortcuts import render, get_object_or_404
-from django.http import JsonResponse, HttpResponseBadRequest, HttpResponseForbidden
+from django.http import JsonResponse, HttpResponseForbidden
 
 import json
 import datetime
@@ -113,10 +113,6 @@ def update_school_view(request):
     return "" # TODO Accessible pour le super admin et aussi pour le proviseur qui peut changer sa propre école
 
 
-
-
-# TODO Envoyer un mail lorsque l'année commence à tous le personnel de l'école, sauf le proviseur.
-
 @login_required(login_url='login')
 def manage_years_view(request):
     """
@@ -134,8 +130,9 @@ def manage_years_view(request):
         school = School.objects.get(id=school_id_filter)
     else:
         school = get_user_school(request.user)
-        # TODO : Vérifie si l'école est actif ou inactif
-        # Si inactif, retourne un message d'erreur
+
+    if school.is_active == False:
+        return HttpResponseForbidden("Lécole est inactif.")
 
     if not school:
         # Si SuperAdmin n'a pas sélectionné d'école ou si l'utilisateur n'est pas lié
@@ -156,7 +153,6 @@ def manage_years_view(request):
     return render(request, 'schools/manage_years.html', context)
 
 
-# TODO Si l'école est inactif, impossible d'accéder à cette fonction
 @require_http_methods(["POST"])
 @csrf_exempt
 @login_required
@@ -168,6 +164,21 @@ def create_or_update_year_api(request):
     if user_type not in ["SuperAdministrator", "Principal"]:
         return JsonResponse({"success": False, "message": "Accès refusé."}, status=403)
         
+    # 1. Déterminer l'école (même logique que dans la vue)
+    if user_type == "SuperAdministrator":
+        school_id_filter = request.session.get('selected_school_id')
+        school = School.objects.get(id=school_id_filter)
+    else:
+        school = get_user_school(request.user)
+
+    # Erreur : S'il n'y a pas d'école
+    if not school:
+        return JsonResponse({"success": False, "message": "École non déterminée."}, status=400)
+
+    # Erreur : Si l'école est inactive
+    if school.is_active == False:
+            return HttpResponseForbidden("Lécole est inactif.")
+    
     try:
         data = json.loads(request.body)
         year_id = data.get('year_id')
@@ -178,7 +189,7 @@ def create_or_update_year_api(request):
         min_time_str = data.get('min_time')
         max_time_str = data.get('max_time')
         
-        # 1. Validation des données de base
+        # 2. Validation des données de base
         if not all([name, start_date_str, end_date_str, min_time_str, max_time_str]):
             return JsonResponse({"success": False, "message": "Veuillez compléter tous les champs obligatoires (nom, dates, heures)."}, status=400)
             
@@ -187,17 +198,7 @@ def create_or_update_year_api(request):
         end_date = datetime.datetime.strptime(end_date_str, '%Y-%m-%d').date()
         min_time = datetime.datetime.strptime(min_time_str, '%H:%M').time()
         max_time = datetime.datetime.strptime(max_time_str, '%H:%M').time()
-        
-        # 2. Déterminer l'école (même logique que dans la vue)
-        if user_type == "SuperAdministrator":
-            school_id_filter = request.session.get('selected_school_id')
-            school = School.objects.get(id=school_id_filter)
-        else:
-            school = get_user_school(request.user)
-
-        if not school:
-            return JsonResponse({"success": False, "message": "École non déterminée."}, status=400)
-
+                
         with transaction.atomic():
             if year_id:
                 # --- MODE MODIFICATION ---
@@ -331,7 +332,6 @@ def change_year_status_api(request, year_id):
         # TODO Ajouter une vérification dans le js, lorsqu"on clique sur passer à une étape suivante il faut un message de vérfication
         
         message = f"L'année '{year.name}' est passée à l'étape '{new_status_key.capitalize()}'. (Veuillez recharger la page)"
-
 
         # 8. Sauvegarder les modifications
         year.save()

@@ -257,6 +257,30 @@ def get_years_by_school(school_id : int) -> QuerySet:
         return years
     except Exception:
         return Year.objects.none()
+    
+
+def get_current_school_year(school):
+    """
+    Récupère l'année scolaire en cours pour une école donnée, en se basant sur le champ 'current = True'.
+
+    Args:
+        school (School): L'objet School pour lequel on cherche l'année en cours.
+
+    Returns:
+        Year | None: L'objet Year en cours, ou None si aucune année n'est marquée comme active pour cette école.
+    """
+        
+    try:
+        # Recherche l'année scolaire où 'is_active' est explicitement True
+        current_year = Year.objects.filter(
+            school=school, 
+            current=True 
+        ).first() # .first() retourne l'objet ou None
+
+        return current_year
+
+    except Exception as e:
+        return None
 
 
 def update_year(year_id, **kwargs):
