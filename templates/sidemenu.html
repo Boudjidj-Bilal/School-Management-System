@@ -38,39 +38,48 @@
             {% if user_can_manage_users %}
                 <h3 class="text-xs font-semibold text-gray-400 uppercase tracking-wider mt-4 mb-2">Gestion des utilisateurs</h3>
                 {% if user_is_super_admin %}
-                    <a href="{% url 'manage_users' %}?type=staff&staff_type=PRINCIPAL" class="flex items-center px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-200 rounded-lg transition-colors duration-200">
+                    <a href="{% url 'manage_users' %}?type=staff&staff_type=PRINCIPAL" class="flex items-center space-x-3 text-gray-300 hover:bg-gray-700 hover:text-white rounded-lg p-2 transition-colors duration-200">
                         <i class="fas fa-user-tie mr-3 text-lg"></i>
                         Proviseurs
                     </a>
                 {% endif %}
                 {% if user_is_principal or user_is_super_admin %}
-                    <a href="{% url 'manage_users' %}?type=staff&staff_type=TEACHER" class="flex items-center px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-200 rounded-lg transition-colors duration-200">
+                    <a href="{% url 'manage_users' %}?type=staff&staff_type=TEACHER" class="flex items-center space-x-3 text-gray-300 hover:bg-gray-700 hover:text-white rounded-lg p-2 transition-colors duration-200">
                         <i class="fas fa-chalkboard-teacher mr-3 text-lg"></i>
                         Professeurs
                     </a>
-                    <a href="{% url 'manage_users' %}?type=staff&staff_type=CPE" class="flex items-center px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-200 rounded-lg transition-colors duration-200">
+                    <a href="{% url 'manage_users' %}?type=staff&staff_type=CPE" class="flex items-center space-x-3 text-gray-300 hover:bg-gray-700 hover:text-white rounded-lg p-2 transition-colors duration-200">
                         <i class="fas fa-user-friends mr-3 text-lg"></i>
                         CPE
                     </a>
-                    <a href="{% url 'manage_users' %}?type=staff&staff_type=ADMINISTRATOR" class="flex items-center px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-200 rounded-lg transition-colors duration-200">
+                    <a href="{% url 'manage_users' %}?type=staff&staff_type=ADMINISTRATOR" class="flex items-center space-x-3 text-gray-300 hover:bg-gray-700 hover:text-white rounded-lg p-2 transition-colors duration-200">
                         <i class="fas fa-user-cog mr-3 text-lg"></i>
                         Administrateurs
                     </a>
                 {% endif %}
                 {% if user_is_principal or user_is_super_admin or user_is_administrator %}
-                    <a href="{% url 'manage_users' %}?type=parent" class="flex items-center px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-200 rounded-lg transition-colors duration-200">
+                    <a href="{% url 'manage_users' %}?type=parent" class="flex items-center space-x-3 text-gray-300 hover:bg-gray-700 hover:text-white rounded-lg p-2 transition-colors duration-200">
                         <i class="fas fa-users mr-3 text-lg"></i>
                         Parents
                     </a>
-                    <a href="{% url 'manage_users' %}?type=student" class="flex items-center px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-200 rounded-lg transition-colors duration-200">
+                    <a href="{% url 'manage_users' %}?type=student" class="flex items-center space-x-3 text-gray-300 hover:bg-gray-700 hover:text-white rounded-lg p-2 transition-colors duration-200">
                         <i class="fas fa-user-graduate mr-3 text-lg"></i>
                         Étudiants
                     </a>
-                    <a href="{% url 'assign_children' %}" class="flex items-center px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-200 rounded-lg transition-colors duration-200">
+                    <a href="{% url 'assign_children' %}" class="flex items-center space-x-3 text-gray-300 hover:bg-gray-700 hover:text-white rounded-lg p-2 transition-colors duration-200">
                         <i class="fas fa-child mr-3 text-lg"></i>
                         Enfants
                     </a>
                 {% endif %}
+            {% endif %}
+            {% if user_is_principal or user_is_super_admin %}
+                <h3 class="text-xs font-semibold text-gray-400 uppercase tracking-wider mt-4 mb-2">Gestion de l'école</h3>
+                <li>
+                    <a href="{% url 'manage_years' %}" class="flex items-center space-x-3 text-gray-300 hover:bg-gray-700 hover:text-white rounded-lg p-2 transition-colors duration-200">
+                        <i class="fas fa-calendar-alt text-lg"></i>
+                        <span>Années</span>
+                    </a>
+                </li>
             {% endif %}
         </ul>
     </nav>
