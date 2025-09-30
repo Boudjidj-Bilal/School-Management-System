@@ -1,3 +1,5 @@
+// TODO : Ajouter un message de vérification lorsqu'on passe d'une étape à l'autre d'une année.
+
 document.addEventListener('DOMContentLoaded', () => {
     // Définition de l'ordre des étapes de l'année scolaire
     const STATUS_ORDER = [

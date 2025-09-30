@@ -106,7 +106,7 @@
                     <option value="" disabled selected>Choisir une couleur</option>
                     <!-- Les choix sont injectés par Django -->
                     {% for code, label in color_choices %}
-                    <option value="{{ code }}">{{ label }} ({{ code }})</option>
+                    <option value="{{ code }}">{{ label }}</option>
                     {% endfor %}
                 </select>
                 <p id="color-preview" class="text-sm mt-2 font-medium"></p>
