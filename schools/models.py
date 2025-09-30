@@ -2,7 +2,7 @@
 from django.db import models
 
 # --> Représente une école, liée à un super administrateur
-class School(models.Model):
+class School(models.Model): # TODO : Pour gérer l'internationalisation, ajouter un champs dans ce model : langue de l'école
 
     SCHOOL_TYPE_CHOICES = [
         ("HIGHSCHOOL", "high_school"),   # Lycée

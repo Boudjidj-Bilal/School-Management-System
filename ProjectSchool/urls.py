@@ -30,6 +30,8 @@ urlpatterns = [
     # App :
     path('', include('users.urls')),
     path('schools/', include('schools.urls')),  # Inclus les URLs de l'app schools
+    path('subjects/', include('subjects.urls', namespace='subjects')), # Assurez-vous d'avoir ceci
+
 
     
 ]
