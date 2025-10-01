@@ -10,7 +10,7 @@ from django.http import JsonResponse
 import json
 
 from subjects.models import Subject, TeacherSubject
-from schools.models import School 
+from schools.models import School, Year
 from users.models import Staff
 
 from users.utils import get_user_type
@@ -193,6 +193,18 @@ def toggle_subject_status(request):
         subject = get_object_or_404(Subject, id=subject_id, school=school)
         
         new_status = not subject.is_active
+
+        # Si on veut désactiver une matière 
+        if new_status == False:
+            # Récupération de l'année actuelle en fonction de l'école de la matière 
+            all_years = Year.objects.filter(school=subject.school).order_by('-start_date')
+            current_year = all_years.filter(current=True).first()
+
+            # Si l'année est en cours de déroulement, impossible d'enlever une matière d'un professeurs
+            if current_year.running == True:
+                return JsonResponse({'success': False, 'message': "Vous ne pouvez pas désactiver une matière lorsque l'école est dans sa phase de déroulement."}, status=500)
+
+
         subject.is_active = new_status
         subject.save()
         
@@ -211,7 +223,6 @@ def toggle_subject_status(request):
          return JsonResponse({"success": False, "message": "Matière introuvable ou non associée à l'école cible."}, status=404)
     except Exception as e:
         return JsonResponse({"success": False, "message": f"Erreur inattendue : {str(e)}"}, status=500)
-
 
 
 @login_required(login_url='login')
@@ -258,7 +269,6 @@ def assign_subjects_view(request):
         all_links = TeacherSubject.objects.filter(
             teacher__school=school
         ).select_related('teacher', 'subject')
-
 
         # 6. Construire la liste des matières pour le front-end JSON
         subjects_to_serialize = []
@@ -355,8 +365,15 @@ def toggle_teacher_subject_assignment_api(request):
 
         elif action == 'unlink':
             # Suppression du lien
-            # TODO : La fonctionnalité de suprimé une matière d'un professeur est impossible lorsque l'année est à l'étape du déroulement
             try:
+                # Récupération de l'année actuelle en fonction de l'école de la matière 
+                all_years = Year.objects.filter(school=subject.school).order_by('-start_date')
+                current_year = all_years.filter(current=True).first()
+
+                # Si l'année est en cours de déroulement, impossible d'enlever une matière d'un professeurs
+                if current_year.running == True:
+                    return JsonResponse({'success': False, 'message': "Vous ne pouvez pas désactiver une matière lorsque l'école est dans sa phase de déroulement."}, status=500)
+
                 deleted_count, _ = TeacherSubject.objects.filter(teacher=teacher, subject=subject).delete()
 
                 if deleted_count > 0:
