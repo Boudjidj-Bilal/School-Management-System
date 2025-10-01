@@ -201,9 +201,9 @@ def toggle_subject_status(request):
             current_year = all_years.filter(current=True).first()
 
             # Si l'année est en cours de déroulement, impossible d'enlever une matière d'un professeurs
-            if current_year.running == True:
-                return JsonResponse({'success': False, 'message': "Vous ne pouvez pas désactiver une matière lorsque l'école est dans sa phase de déroulement."}, status=500)
-
+            if current_year:
+                if current_year.running == True:
+                    return JsonResponse({'success': False, 'message': "Vous ne pouvez pas désactiver une matière lorsque l'école est dans sa phase de déroulement."}, status=500)
 
         subject.is_active = new_status
         subject.save()
@@ -371,8 +371,9 @@ def toggle_teacher_subject_assignment_api(request):
                 current_year = all_years.filter(current=True).first()
 
                 # Si l'année est en cours de déroulement, impossible d'enlever une matière d'un professeurs
-                if current_year.running == True:
-                    return JsonResponse({'success': False, 'message': "Vous ne pouvez pas désactiver une matière lorsque l'école est dans sa phase de déroulement."}, status=500)
+                if current_year:
+                    if current_year.running == True:
+                        return JsonResponse({'success': False, 'message': "Vous ne pouvez pas désactiver une matière lorsque l'école est dans sa phase de déroulement."}, status=500)
 
                 deleted_count, _ = TeacherSubject.objects.filter(teacher=teacher, subject=subject).delete()
 
