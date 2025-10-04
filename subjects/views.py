@@ -204,7 +204,7 @@ def toggle_subject_status(request):
             if current_year:
                 if current_year.running == True:
                     return JsonResponse({'success': False, 'message': "Vous ne pouvez pas désactiver une matière lorsque l'école est dans sa phase de déroulement."}, status=500)
-
+    
         subject.is_active = new_status
         subject.save()
         
