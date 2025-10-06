@@ -14,7 +14,7 @@ from schools.models import School, Year
 from users.models import Staff
 
 from users.utils import get_user_type
-from schools.utils import get_user_school
+from schools.utils import get_user_school, get_authorisation_stape_run_year
 
 
 # Choix des couleurs pour le formulaire de création/modification
@@ -366,14 +366,11 @@ def toggle_teacher_subject_assignment_api(request):
         elif action == 'unlink':
             # Suppression du lien
             try:
-                # Récupération de l'année actuelle en fonction de l'école de la matière 
-                all_years = Year.objects.filter(school=subject.school).order_by('-start_date')
-                current_year = all_years.filter(current=True).first()
+                authorisation = get_authorisation_stape_run_year(subject.school)
 
                 # Si l'année est en cours de déroulement, impossible d'enlever une matière d'un professeurs
-                if current_year:
-                    if current_year.running == True:
-                        return JsonResponse({'success': False, 'message': "Vous ne pouvez pas désactiver une matière lorsque l'école est dans sa phase de déroulement."}, status=500)
+                if not authorisation:
+                    return JsonResponse({'success': False, 'message': "Vous ne pouvez pas désactiver une matière lorsque l'école est dans sa phase de déroulement."}, status=500)
 
                 deleted_count, _ = TeacherSubject.objects.filter(teacher=teacher, subject=subject).delete()
 

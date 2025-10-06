@@ -370,6 +370,27 @@ def get_school_by_year_id(year_id):
         return year.school
     except Year.DoesNotExist:
         return None
+    
+def get_authorisation_stape_run_year(school):
+    """
+        Si l'école est à l'étape du running, aucune modification ne peut être appliqué.
+    """
+    try: 
+        # Récupération de l'année actuelle en fonction de l'école de la matière 
+        all_years = Year.objects.filter(school=school).order_by('-start_date')
+        current_year = all_years.filter(current=True).first()
+
+        # Si l'année est en cours de déroulement
+        if current_year:
+            if current_year.running == True:
+                return False
+            else: 
+                return True
+        else: 
+            return False
+    except:
+        return False
+
 
 """
 ==============================
