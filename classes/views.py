@@ -12,7 +12,6 @@ from .models import Classroom
 from schools.models import School 
 
 
-# TODO : Si l'école est désactivé, impossible de faire tout cela : 
 @require_http_methods(["GET", "POST"])
 @csrf_exempt
 @login_required

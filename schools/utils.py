@@ -382,7 +382,7 @@ def get_authorisation_stape_run_year(school):
 
         # Si l'année est en cours de déroulement
         if current_year:
-            if current_year.running == True:
+            if current_year.running:
                 return False
             else: 
                 return True
@@ -390,7 +390,41 @@ def get_authorisation_stape_run_year(school):
             return False
     except:
         return False
+    
+def get_authorisation_stape_creation_year(school):
+    """
+        Si l'école n'est pas à l'étape de la création, aucune modification ne peut être appliqué.
+    """
+    try: 
+        # Récupération de l'année actuelle en fonction de l'école de la matière 
+        all_years = Year.objects.filter(school=school).order_by('-start_date')
+        current_year = all_years.filter(current=True).first()
 
+        # Si l'année est en cours de déroulement
+        if current_year:
+            if current_year.creation:
+                return True
+            else: 
+                return False
+        else: 
+            return False
+    except:
+        return False
+
+def get_current_year_for_school(school):
+    """
+    Récupère l'année actuelle de l'école.
+    Args:
+        school (School): L'objet école.
+    Returns:
+        Year: L'objet year associé ou None si l'année n'est pas trouvée.
+    """
+    try:
+        all_years = Year.objects.filter(school=school).order_by('-start_date')
+        current_year = all_years.filter(current=True).first()
+        return current_year
+    except:
+        return None
 
 """
 ==============================

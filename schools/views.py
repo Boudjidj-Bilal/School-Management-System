@@ -2,19 +2,21 @@ from django.shortcuts import render, get_object_or_404
 from django.http import JsonResponse, HttpResponseForbidden
 
 import json
-import datetime
+from datetime import date, time, datetime
+
 
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth import get_user_model
 from users.utils import create_user, create_staff, get_user_type, generate_unique_username, send_email_create_compte, get_user_by_username, generate_random_password, send_emails_for_year_stage
-from .utils import create_school, get_user_school
+from .utils import create_school, get_user_school, get_current_year_for_school, get_authorisation_stape_creation_year
 
 from django.views.decorators.http import require_http_methods
 from django.views.decorators.csrf import csrf_exempt
 from django.db import IntegrityError, transaction
 from django.db.models import Q # Assurez-vous d'importer Q en haut du fichier views.py
+from django.core.exceptions import ValidationError
 
-from .models import School, Year
+from .models import School, Year, ExceptionDay, ExceptionTime
 
 User = get_user_model()
 
@@ -352,3 +354,187 @@ def change_year_status_api(request, year_id):
     except Exception as e:
         print(f"Erreur lors du changement de statut: {e}")
         return JsonResponse({'success': False, 'message': 'Une erreur serveur est survenue lors du changement de statut.'}, status=500)
+
+
+@require_http_methods(["GET", "POST"])
+@csrf_exempt
+@login_required
+def exception_management(request):
+    """
+    Vue unifiée pour la gestion des jours d'exception (vacances) et des horaires d'exception (pause déjeuner).
+    La permission et le contexte de l'école/année sont déterminés par le rôle de l'utilisateur.
+    """
+    
+    # 1. Détermination du contexte utilisateur et permission
+    user_type = get_user_type(request.user)
+    allowed_roles = ["SuperAdministrator", "Principal"]
+    
+    if user_type not in allowed_roles:
+        return JsonResponse({"success": False, "message": "Vous n'avez pas la permission de gérer les exceptions."}, status=403)
+
+    # 2. Détermination du contexte de l'école
+    try:
+        school_filter = get_user_school(request.user, request.session.get('selected_school_id'))
+    except School.DoesNotExist:
+        return JsonResponse({"success": False, "message": "L'école sélectionnée est introuvable."}, status=404)
+    
+    # Vérification de l'état actif de l'école (relecture forcée pour la sécurité)
+    # (En se basant sur la correction précédente, nous supposons que school_filter est l'instance fraîche)
+    if not school_filter:
+        return JsonResponse({"success": False, "message": "L'école sélectionnée est introuvable."}, status=404)
+    
+    elif not school_filter.is_active:
+        return JsonResponse({"success": False, "message": "L'école sélectionnée est désactivée. Impossible de procéder."}, status=403)
+        
+    # 3. Détermination de l'année scolaire actuelle
+    current_year = get_current_year_for_school(school_filter)
+    if not current_year:
+        return JsonResponse({"success": False, "message": "Aucune année scolaire active n'est définie pour cette école."}, status=400)
+
+
+    # --- 4. Gestion des requêtes POST (API CRUD) ---
+    if request.method == 'POST':
+        try:
+            stape_creation_year = get_authorisation_stape_creation_year(school_filter)
+            if not stape_creation_year:
+                return JsonResponse({"success": False, "message": "Opération non autorisée. La gestion des exceptions n'est possible que lorsque l'année scolaire est à l'étape de création"}, status=400)
+
+            data = json.loads(request.body)
+            action = data.get('action') 
+            exception_type = data.get('exception_type') # 'day' ou 'time'
+            exception_id = data.get('exception_id')
+
+            if exception_type not in ['day', 'time']:
+                 return JsonResponse({'success': False, 'message': 'Type d\'exception invalide.'}, status=400)
+
+            # Helpers de conversion de données pour la création/mise à jour
+            def get_date_or_none(date_str):
+                return date.fromisoformat(date_str) if date_str else None
+            
+            def get_time_or_none(time_str):
+                return time.fromisoformat(time_str) if time_str else None
+
+            # --- CRUD pour ExceptionDay (Jours d'exception) ---
+            if exception_type == 'day':
+                # Champs spécifiques aux jours d'exception
+                start_date_str = data.get('start_date')
+                end_date_str = data.get('end_date')
+                type_name = data.get('type', '').strip()
+
+                if action == 'create' or action == 'update':
+                    if not start_date_str or not end_date_str or not type_name:
+                         return JsonResponse({'success': False, 'message': 'La date de début, la date de fin et le type sont obligatoires.'}, status=400)
+                    
+                    start_date = get_date_or_none(start_date_str)
+                    end_date = get_date_or_none(end_date_str)
+
+                    if action == 'create':
+                        ExceptionDay.objects.create(
+                            start_date=start_date,
+                            end_date=end_date,
+                            type=type_name,
+                            year=current_year
+                        )
+                        return JsonResponse({'success': True, 'message': f'Exception de jour "{type_name}" créée avec succès.'}, status=201)
+                    
+                    elif action == 'update':
+                        if not exception_id:
+                            return JsonResponse({'success': False, 'message': 'ID de l\'exception manquant pour la mise à jour.'}, status=400)
+                        
+                        try:
+                            exception_obj = ExceptionDay.objects.get(pk=exception_id, year=current_year)
+                            exception_obj.start_date = start_date
+                            exception_obj.end_date = end_date
+                            exception_obj.type = type_name
+                            exception_obj.save()
+                            return JsonResponse({'success': True, 'message': f'Exception de jour "{type_name}" mise à jour avec succès.'}, status=200)
+                        except ExceptionDay.DoesNotExist:
+                            return JsonResponse({'success': False, 'message': 'Exception de jour non trouvée.'}, status=404)
+                
+                elif action == 'delete':
+                    if not exception_id:
+                        return JsonResponse({'success': False, 'message': 'ID de l\'exception manquant pour la suppression.'}, status=400)
+                    
+                    try:
+                        exception_obj = ExceptionDay.objects.get(pk=exception_id, year=current_year)
+                        exception_name = str(exception_obj)
+                        exception_obj.delete()
+                        return JsonResponse({'success': True, 'message': f'Exception de jour "{exception_name}" supprimée.'}, status=200)
+                    except ExceptionDay.DoesNotExist:
+                        return JsonResponse({'success': False, 'message': 'Exception de jour non trouvée.'}, status=404)
+
+            # --- CRUD pour ExceptionTime (Horaires d'exception) ---
+            elif exception_type == 'time':
+                # Champs spécifiques aux horaires d'exception
+                start_time_str = data.get('start_time')
+                end_time_str = data.get('end_time')
+
+                if action == 'create' or action == 'update':
+                    if not start_time_str or not end_time_str:
+                        return JsonResponse({'success': False, 'message': 'L\'heure de début et l\'heure de fin sont obligatoires.'}, status=400)
+                    
+                    start_time = get_time_or_none(start_time_str)
+                    end_time = get_time_or_none(end_time_str)
+                    
+                    if action == 'create':
+                        # Vérification simple de non-chevauchement (facultatif mais recommandé)
+                        ExceptionTime.objects.create(
+                            start_time=start_time,
+                            end_time=end_time,
+                            year=current_year
+                        )
+                        return JsonResponse({'success': True, 'message': 'Horaire d\'exception créé avec succès.'}, status=201)
+                    
+                    elif action == 'update':
+                        if not exception_id:
+                            return JsonResponse({'success': False, 'message': 'ID de l\'exception manquant pour la mise à jour.'}, status=400)
+                        
+                        try:
+                            exception_obj = ExceptionTime.objects.get(pk=exception_id, year=current_year)
+                            exception_obj.start_time = start_time
+                            exception_obj.end_time = end_time
+                            exception_obj.save()
+                            return JsonResponse({'success': True, 'message': 'Horaire d\'exception mis à jour avec succès.'}, status=200)
+                        except ExceptionTime.DoesNotExist:
+                            return JsonResponse({'success': False, 'message': 'Horaire d\'exception non trouvé.'}, status=404)
+
+                elif action == 'delete':
+                    if not exception_id:
+                        return JsonResponse({'success': False, 'message': 'ID de l\'exception manquant pour la suppression.'}, status=400)
+                    
+                    try:
+                        exception_obj = ExceptionTime.objects.get(pk=exception_id, year=current_year)
+                        exception_name = str(exception_obj)
+                        exception_obj.delete()
+                        return JsonResponse({'success': True, 'message': f'Horaire d\'exception "{exception_name}" supprimé.'}, status=200)
+                    except ExceptionTime.DoesNotExist:
+                        return JsonResponse({'success': False, 'message': 'Horaire d\'exception non trouvé.'}, status=404)
+                
+            else:
+                 return JsonResponse({'success': False, 'message': 'Action non reconnue.'}, status=400)
+
+        except json.JSONDecodeError:
+            return JsonResponse({'success': False, 'message': 'Données JSON invalides.'}, status=400)
+        except ValidationError as e:
+             # Gérer les erreurs de validation de date/heure (ex: format incorrect)
+             return JsonResponse({'success': False, 'message': f'Erreur de format de donnée: {e.message}'}, status=400)
+        except Exception as e:
+            # Pensez à logger l'erreur 'e' en production
+            return JsonResponse({'success': False, 'message': f'Une erreur interne du serveur est survenue: {str(e)}'}, status=500)
+
+    # --- 5. Gestion des requêtes GET (Affichage de la page) ---
+    
+    # Récupérer toutes les exceptions pour l'année en cours
+    exception_days = ExceptionDay.objects.filter(year=current_year).order_by('start_date')
+    exception_times = ExceptionTime.objects.filter(year=current_year).order_by('start_time')
+    
+    context = {
+        'school': school_filter,
+        'current_year': current_year,
+        'exception_days': exception_days,
+        'exception_times': exception_times,
+        'user_type': user_type,
+    }
+    
+    # Le template pour l'interface utilisateur (à créer)
+    return render(request, 'schools/exception_management.html', context)
