@@ -7,7 +7,19 @@ class Level(models.Model):
     ("SEMESTRE", "Semestre"),
     ]
 
-    level = models.IntegerField()  # niveau numérique (ex: 6, 5, 1, 2...)
+    LEVEL_CHOICES = [
+    ("6E", "6e"),
+    ("5E", "5e"),
+    ("4E", "4e"),
+    ("3E", "3e"),
+    ("2ND", "Seconde"),
+    ("1ER", "Première"),
+    ("T", "Terminale"),
+    ("BTS1", "Bts1"),
+    ("BTS2", "Bts2"),
+    ]
+
+    level = models.CharField(max_length=255, choices=LEVEL_CHOICES, default="6E")  # niveau numérique (ex: 6, 5, 1, 2...)
     term_type = models.CharField(
         max_length=10,
         choices=TERM_TYPE_CHOICES,
