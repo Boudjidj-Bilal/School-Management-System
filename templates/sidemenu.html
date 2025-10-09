@@ -7,27 +7,13 @@
                     <span>Tableau de bord</span>
                 </a>
             </li>
-            {% if user_can_manage_users %}
+            {% if user_is_super_admin %}
                 <li>
                     <a href="#" class="flex items-center space-x-3 text-gray-300 hover:text-white transition duration-200">
-                        <i class="fas fa-users text-lg"></i>
-                        <span>Utilisateurs</span>
+                        <i class="fas fa-graduation-cap text-lg"></i>
+                        <span>Écoles</span>
                     </a>
                 </li>
-            {% endif %}
-            <li>
-                <a href="#" class="flex items-center space-x-3 text-gray-300 hover:text-white transition duration-200">
-                    <i class="fas fa-book text-lg"></i>
-                    <span>Cours</span>
-                </a>
-            </li>
-            <li>
-                <a href="#" class="flex items-center space-x-3 text-gray-300 hover:text-white transition duration-200">
-                    <i class="fas fa-graduation-cap text-lg"></i>
-                    <span>Écoles</span>
-                </a>
-            </li>
-            {% if user_is_super_admin %}
                 <li>
                     <a href="{% url 'create_school' %}" class="flex items-center space-x-3 text-gray-300 hover:bg-gray-700 hover:text-white rounded-lg p-2 transition-colors duration-200">
                         <i class="fas fa-plus-circle"></i>
@@ -104,7 +90,19 @@
                         <span>Exceptions Calendrier</span>
                     </a>
                 </li>
+                <li>
+                    <a href="{% url 'classes:level_management' %}" class="flex items-center space-x-3 text-gray-300 hover:bg-gray-700 hover:text-white rounded-lg p-2 transition-colors duration-200">
+                        <i class="fas fa-layer-group text-lg"></i>
+                        <span>Niveaux Scolaires</span>
+                    </a>
+                </li>
             {% endif %}
+            <li>
+                <a href="#" class="flex items-center space-x-3 text-gray-300 hover:bg-gray-700 hover:text-white rounded-lg p-2 transition-colors duration-200">
+                    <i class="fas fa-book text-lg"></i>
+                    <span>Cours</span>
+                </a>
+            </li>
         </ul>
     </nav>
 </aside>

@@ -6,10 +6,12 @@ from django.views.decorators.csrf import csrf_exempt
 import json
 
 from users.utils import get_user_type
-from schools.utils import get_user_school, get_authorisation_stape_run_year
+from schools.utils import get_user_school, get_authorisation_stape_run_year, get_current_year_for_school, get_authorisation_stape_creation_year
 
-from .models import Classroom 
+from .models import Classroom, Level
 from schools.models import School 
+
+from django.db import IntegrityError
 
 
 @require_http_methods(["GET", "POST"])
@@ -137,3 +139,162 @@ def classroom_management(request):
     
     # Ce template sera créé dans l'étape suivante pour l'interface utilisateur.
     return render(request, 'classes/classroom_management.html', context)
+
+
+
+
+@require_http_methods(["GET", "POST"])
+@csrf_exempt
+@login_required
+def level_management(request):
+    """
+    Vue unifiée pour la gestion des niveaux scolaires (Level) pour une école.
+    Permet la création, modification et suppression des niveaux.
+    """
+    
+    # 1. Détermination du contexte utilisateur et permission
+    user_type = get_user_type(request.user)
+    # Seuls les SuperAdministrators et Principals peuvent gérer les niveaux
+    allowed_roles = ["SuperAdministrator", "Principal"] 
+    
+    if user_type not in allowed_roles:
+        return JsonResponse({"success": False, "message": "Vous n'avez pas la permission de gérer les niveaux scolaires."}, status=403) 
+
+    # 2. Détermination du contexte de l'école
+    try:
+        school_filter = get_user_school(request.user, request.session.get('selected_school_id'))
+    except School.DoesNotExist:
+        return JsonResponse({"success": False, "message": "L'école sélectionnée est introuvable."}, status=404) # TODO : return une page d'erreur
+    
+    if not school_filter:
+        return JsonResponse({"success": False, "message": "L'école sélectionnée est introuvable."}, status=404) # TODO : return une page d'erreur
+    
+    elif not school_filter.is_active:
+        return JsonResponse({"success": False, "message": "L'école sélectionnée est désactivée. Impossible de procéder."}, status=403) # TODO : return une page d'erreur
+        
+    # 3. Détermination de l'année scolaire actuelle
+    current_year = get_current_year_for_school(school_filter)
+
+    # --- 4. Gestion des requêtes POST (API CRUD) ---
+    if request.method == 'POST':
+        try:
+            # ================================================================
+            # REPRENDRE ICI :
+            # ================================================================
+
+            # Vérification de l'étape de création (Condition clé)
+            stape_creation_year = get_authorisation_stape_creation_year(school_filter)
+            if not stape_creation_year:
+                return JsonResponse(
+                    {"success": False, 
+                     "message": "Opération non autorisée. La gestion des niveaux n'est possible que lorsque l'année scolaire est à l'étape de Création."}, 
+                    status=400
+                )
+
+            data = json.loads(request.body)
+            action = data.get('action') 
+            level_id = data.get('level_id')
+
+            # Champs du modèle Level
+            level_code = data.get('level_code') # Ex: '6E', 'T'
+            term_type = data.get('term_type') # Ex: 'TRIMESTRE', 'SEMESTRE'
+
+            if action == 'create' or action == 'update':
+                # Validation des champs obligatoires
+                if not level_code or not term_type:
+                    return JsonResponse({'success': False, 'message': 'Le code de niveau et le type de niveau sont obligatoires.'}, status=400)
+                
+                # Validation des choix (optionnel mais recommandé pour la sécurité)
+                # On utilise les choix définis dans le modèle Level
+                valid_levels = [choice[0] for choice in Level.LEVEL_CHOICES]
+                valid_terms = [choice[0] for choice in Level.TERM_TYPE_CHOICES]
+                
+                if level_code not in valid_levels:
+                    return JsonResponse({'success': False, 'message': f'Code de niveau invalide: {level_code}.'}, status=400)
+                
+                if term_type not in valid_terms:
+                    return JsonResponse({'success': False, 'message': f'Type de niveau invalide: {term_type}.'}, status=400)
+                
+                # Vérification d'unicité (un niveau ne doit pas être créé deux fois pour la même école)
+                if Level.objects.filter(school=school_filter, level=level_code).exists() and action == 'create':
+                    # Dans ce cas, nous renvoyons un message d'erreur si l'on tente de créer un niveau existant.
+                    return JsonResponse({'success': False, 'message': f'Le niveau {Level.objects.get(level=level_code).get_level_display()} est déjà défini pour cette école.'}, status=409) # 409 Conflict
+
+                if action == 'create':
+                    Level.objects.create(
+                        level=level_code,
+                        term_type=term_type,
+                        school=school_filter
+                    )
+                    # return JsonResponse({'success': True, 'message': f'Niveau "{Level.LEVEL_CHOICES[Level.LEVEL_CHOICES.index((level_code, Level.LEVEL_CHOICES[Level.LEVEL_CHOICES.index((level_code, ""))[1]])[1])]}" créé avec succès.'}, status=201)
+                    return JsonResponse({'success': True, 'message': f'Niveau "{next((display for code, display in Level.LEVEL_CHOICES if code == level_code), level_code)}" créé avec succès.'}, status=201)
+
+                elif action == 'update':
+                    if not level_id:
+                        return JsonResponse({'success': False, 'message': 'ID du niveau manquant pour la mise à jour.'}, status=400)
+                    
+                    try:
+                        # Assurez-vous que l'objet Level appartient bien à l'école de l'utilisateur
+                        level_obj = Level.objects.get(pk=level_id, school=school_filter)
+                        
+                        # Si l'utilisateur change le code de niveau, vérifiez si le nouveau code existe déjà
+                        if level_obj.level != level_code and Level.objects.filter(school=school_filter, level=level_code).exclude(pk=level_id).exists():
+                            # return JsonResponse({'success': False, 'message': f'Le niveau {Level.LEVEL_CHOICES[Level.LEVEL_CHOICES.index((level_code, Level.LEVEL_CHOICES[Level.LEVEL_CHOICES.index((level_code, ""))[1]])[1])]} existe déjà pour cette école.'}, status=409)
+                            return JsonResponse({'success': False, 'message': f'Le niveau {next((display for code, display in Level.LEVEL_CHOICES if code == level_code), level_code)} existe déjà pour cette école.'}, status=409)
+
+                        level_obj.level = level_code
+                        level_obj.term_type = term_type
+                        level_obj.save()
+                        return JsonResponse({'success': True, 'message': f'Niveau mis à jour avec succès.'}, status=200)
+                    
+                    except Level.DoesNotExist:
+                        return JsonResponse({'success': False, 'message': 'Niveau non trouvé pour cette école.'}, status=404)
+
+            elif action == 'delete':
+                # Si une année actuelle existe, on vérifie l'étape de celle ci :
+                if current_year:
+                    if not current_year.creation == True:
+                        return JsonResponse({"success": False, "message": "L'année actuelle doit être à l'étape de la création. Impossible de supprimer un niveau ."}, status=400) 
+
+                if not level_id:
+                    return JsonResponse({'success': False, 'message': 'ID du niveau manquant pour la suppression.'}, status=400)
+                
+                try:
+                    level_obj = Level.objects.get(pk=level_id, school=school_filter)
+                    level_name = level_obj.get_level_display() # Utilisation de get_level_display() pour le nom convivial
+                    level_obj.delete()
+                    return JsonResponse({'success': True, 'message': f'Niveau "{level_name}" supprimé.'}, status=200)
+                except Level.DoesNotExist:
+                    return JsonResponse({'success': False, 'message': 'Niveau non trouvé pour cette école.'}, status=404)
+
+            else:
+                 return JsonResponse({'success': False, 'message': 'Action non reconnue.'}, status=400)
+
+        except json.JSONDecodeError:
+            return JsonResponse({'success': False, 'message': 'Données JSON invalides.'}, status=400)
+        except IntegrityError:
+             return JsonResponse({'success': False, 'message': 'Erreur d\'intégrité de la base de données. Vérifiez les contraintes.'}, status=400)
+        except Exception as e:
+            # Log l'erreur 'e'
+            return JsonResponse({'success': False, 'message': f'Une erreur interne du serveur est survenue: {str(e)}'}, status=500)
+
+    # --- 5. Gestion des requêtes GET (Affichage de la page) ---
+    
+    # Récupérer tous les niveaux pour l'école en cours
+    school_levels = Level.objects.filter(school=school_filter).order_by('level') # Vous pourriez vouloir un tri plus logique ici
+    
+    # Récupérer les choix pour les passer au JS/HTML si nécessaire
+    level_choices = Level.LEVEL_CHOICES
+    term_choices = Level.TERM_TYPE_CHOICES
+    
+    context = {
+        'school': school_filter,
+        'current_year': current_year,
+        'school_levels': school_levels,
+        'level_choices': level_choices,
+        'term_choices': term_choices,
+        'user_type': user_type,
+    }
+    
+    # Le template pour l'interface utilisateur (à créer)
+    return render(request, 'classes/level_management.html', context)

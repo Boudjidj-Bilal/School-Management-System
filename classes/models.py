@@ -20,11 +20,7 @@ class Level(models.Model):
     ]
 
     level = models.CharField(max_length=255, choices=LEVEL_CHOICES, default="6E")  # niveau numérique (ex: 6, 5, 1, 2...)
-    term_type = models.CharField(
-        max_length=10,
-        choices=TERM_TYPE_CHOICES,
-        default="TRIMESTRE"
-    )
+    term_type = models.CharField(max_length=10,choices=TERM_TYPE_CHOICES,default="TRIMESTRE")
     school = models.ForeignKey(
         "schools.School", on_delete=models.CASCADE, related_name="levels"
     )  # relation Many-to-One avec School

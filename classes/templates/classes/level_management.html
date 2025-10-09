@@ -1,0 +1,198 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Gestion des Niveaux Scolaires{% endblock %}
+
+{% block content %}
+    <!-- NOTE: Assumer que Tailwind CSS et Font Awesome sont inclus dans base.html -->
+
+    <style>
+        /* Limiter la hauteur du corps du tableau pour un défilement agréable */
+        .scrollable-list {
+            /* Ajusté pour tenir compte de la hauteur de l'en-tête et du pied de page éventuels */
+            max-height: calc(100vh - 250px); 
+            overflow-y: auto;
+        }
+    </style>
+
+    <!-- Le jeton CSRF est essentiel pour les requêtes POST -->
+    {% csrf_token %}
+
+    <div class="max-w-4xl mx-auto p-4 sm:p-8 bg-gray-100 min-h-screen">
+        <!-- En-tête -->
+        <header class="mb-8 p-4 rounded-lg bg-white shadow-md border-t-4 border-emerald-500">
+            <h1 class="text-3xl font-extrabold text-gray-900 mb-2">Gestion des Niveaux Scolaires</h1>
+            <p class="text-lg text-emerald-600 font-semibold">École: {{ school.name }}</p>
+        </header>
+        
+        <!-- Bouton d'ajout de niveau -->
+        <div class="mb-6 flex justify-end">
+            <button id="open-modal-create" 
+                    class="bg-emerald-600 hover:bg-emerald-700 text-white font-semibold py-2 px-4 rounded-xl shadow-lg transition duration-150 ease-in-out transform hover:scale-[1.02] focus:outline-none focus:ring-4 focus:ring-emerald-500/50">
+                <i class="fas fa-plus mr-2"></i> Ajouter un Niveau
+            </button>
+        </div>
+
+        <!-- Liste des Niveaux -->
+        <div class="bg-white rounded-2xl shadow-xl p-6 border border-gray-200">
+            <h2 class="text-2xl font-bold text-gray-800 mb-4">Liste des Niveaux (<span id="level-count-display">{{ school_levels|length }}</span>)</h2>            
+            <div class="scrollable-list">
+                <table class="min-w-full divide-y divide-gray-200">
+                    <thead class="bg-gray-50 sticky top-0 shadow-sm z-10">
+                        <tr>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">Niveau Scolaire</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-600 uppercase tracking-wider hidden sm:table-cell">Type de Terme</th>
+                            <th class="px-6 py-3 text-right text-xs font-medium text-gray-600 uppercase tracking-wider">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="levels-table-body" class="bg-white divide-y divide-gray-100">
+                        {% for level_obj in school_levels %}
+                        {% for code, display_name in level_choices %}
+                            {% if code == level_obj.level %}
+                                {% with level_display=display_name %}
+                                    {% for code_t, display_t in term_choices %}
+                                        {% if code_t == level_obj.term_type %}
+                                            {% with term_display=display_t %}
+                                                <tr id="level-row-{{ level_obj.id }}" 
+                                                    data-id="{{ level_obj.id }}" 
+                                                    data-level-code="{{ level_obj.level }}" 
+                                                    data-level-display="{{ level_display|escapejs }}"
+                                                    data-term-type="{{ level_obj.term_type }}"
+                                                    class="hover:bg-emerald-50/50 transition duration-100">
+                                                    
+                                                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{{ level_display }}</td>
+                                                    <td class="px-6 py-4 whitespace-nowrap hidden sm:table-cell text-sm text-gray-500">
+                                                        {{ term_display }}
+                                                    </td>
+                                                    <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                                                        <button onclick="openModalById('{{ level_obj.id }}')" 
+                                                                class="text-emerald-600 hover:text-emerald-800 p-2 rounded-full hover:bg-gray-100 transition duration-150"
+                                                                title="Modifier">
+                                                            <i class="fas fa-edit"></i>
+                                                        </button>
+                                                        <button onclick="handleDeleteLevel('{{ level_obj.id }}', '{{ level_display|escapejs }}')" 
+                                                                class="text-red-600 hover:text-red-800 ml-3 p-2 rounded-full hover:bg-gray-100 transition duration-150"
+                                                                title="Supprimer">
+                                                            <i class="fas fa-trash-alt"></i>
+                                                        </button>
+                                                    </td>
+                                                </tr>
+                                            {% endwith %}
+                                        {% endif %}
+                                    {% endfor %}
+                                {% endwith %}
+                            {% endif %}
+                        {% endfor %}
+                        {% empty %}
+                        <tr id="no-level-row">
+                            <td colspan="3" class="px-6 py-4 text-center text-gray-500">Aucun niveau scolaire trouvé pour cette école.</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal pour Création/Modification -->
+    <div id="level-modal" class="fixed inset-0 bg-gray-600 bg-opacity-75 hidden items-center justify-center p-4 z-40 transition-opacity duration-300">
+        <div class="bg-white rounded-xl shadow-2xl w-full max-w-md p-6 border-t-4 border-emerald-500">
+            <div class="flex justify-between items-center mb-4">
+                <h3 id="modal-title" class="text-xl font-bold text-gray-900">Ajouter un Nouveau Niveau</h3>
+                <button type="button" onclick="closeModal()" class="text-gray-400 hover:text-gray-600 transition">
+                    <i class="fas fa-times text-xl"></i>
+                </button>
+            </div>
+            
+            <form id="level-form">
+                <input type="hidden" id="level-id" name="level_id" value="">
+                <input type="hidden" id="action-type" name="action" value="create">
+
+                <!-- Champ 1: Niveau Scolaire (Select) -->
+                <div class="mb-4">
+                    <label for="level-code" class="block text-sm font-medium text-gray-700 mb-1">Niveau Scolaire</label>
+                    <select id="level-code" name="level_code" required
+                           class="w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-emerald-500 focus:border-emerald-500 transition duration-150">
+                        <option value="">Sélectionnez un niveau</option>
+                        {% for code, display_name in level_choices %}
+                            <option value="{{ code }}">{{ display_name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <!-- Champ 2: Type de Terme (Select) -->
+                <div class="mb-6">
+                    <label for="term-type" class="block text-sm font-medium text-gray-700 mb-1">Type de Terme</label>
+                    <select id="term-type" name="term_type" required
+                           class="w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-emerald-500 focus:border-emerald-500 transition duration-150">
+                        <!-- AJOUTÉ : Option de sélection par défaut pour prévenir l'envoi de chaînes vides non autorisées -->
+                        <option value="" disabled selected>Sélectionnez un type de terme</option> 
+                        {% for code, display_name in term_choices %}
+                            <option value="{{ code }}">{{ display_name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <button type="submit" id="submit-button"
+                        class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-semibold py-2 rounded-xl shadow-md transition duration-150 ease-in-out transform hover:scale-[1.01] focus:outline-none focus:ring-4 focus:ring-emerald-500/50">
+                    <i class="fas fa-save mr-2"></i> Enregistrer
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal pour la Confirmation de Suppression -->
+    <div id="confirm-modal" class="fixed inset-0 bg-gray-600 bg-opacity-75 hidden items-center justify-center p-4 z-40 transition-opacity duration-300">
+        <div class="bg-white rounded-xl shadow-2xl w-full max-w-sm p-6">
+            <h3 class="text-xl font-bold text-gray-900 mb-4">Confirmer la Suppression</h3>
+            <p class="text-gray-700 mb-6">Êtes-vous sûr de vouloir supprimer le niveau <strong id="confirm-level-name"></strong> ? Cette action est irréversible.</p>
+            
+            <div class="flex justify-end space-x-4">
+                <button type="button" onclick="closeConfirmModal()" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-xl hover:bg-gray-300 transition duration-150">
+                    Annuler
+                </button>
+                <button type="button" id="confirm-delete-btn" class="px-4 py-2 bg-red-600 text-white rounded-xl hover:bg-red-700 transition duration-150">
+                    Supprimer
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal pour les messages de succès/erreur (Z-index 50) -->
+    <div id="message-modal" class="fixed inset-0 bg-gray-900 bg-opacity-70 flex items-center justify-center hidden z-50 transition-opacity duration-300 opacity-0">
+        <div id="modal-content-msg" class="bg-white rounded-xl p-6 shadow-2xl border-t-4 border-emerald-500 max-w-md w-full transform transition-transform duration-300 scale-95">
+            
+            <div class="flex items-start">
+                <!-- Icône dynamique -->
+                <div id="modal-icon-container" class="flex-shrink-0 mr-4 mt-1">
+                    <!-- Icon placeholder -->
+                </div>
+                
+                <div>
+                    <h3 id="modal-title-msg" class="text-lg font-bold text-gray-900 mb-1">Notification</h3>
+                    <p id="modal-message" class="text-sm text-gray-600"></p>
+                </div>
+            </div>
+
+            <div class="flex justify-end mt-6">
+                <button id="modal-close-btn" class="px-5 py-2 bg-gray-200 text-gray-700 rounded-lg text-sm font-semibold hover:bg-gray-300 transition duration-300 focus:outline-none focus:ring-2 focus:ring-opacity-50">
+                    Fermer
+                </button>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+{% block extra_js %}
+{{ level_choices|json_script:"level-choices-data" }}
+{{ term_choices|json_script:"term-choices-data" }}
+
+<script>
+    // Variables globales simples et non problématiques
+    const CSRF_TOKEN = document.querySelector('[name=csrfmiddlewaretoken]').value;
+    const API_URL = "{% url 'classes:level_management' %}"; 
+</script>
+
+<!-- Le fichier JS de l'application est inclus en dernier -->
+<script src="{% static 'js/classes/manage_levels.js' %}"></script>
+{% endblock %}
