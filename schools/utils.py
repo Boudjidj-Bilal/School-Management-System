@@ -583,6 +583,11 @@ def delete_exception_time(exception_time_id):
     except ExceptionTime.DoesNotExist:
         return False
 
+"""
+=====================================
+GESTION DES TRIMESTRES ET SEMESTRES :
+=====================================
+"""
 
 def create_term_year_level(counter, year_id, level_id, start_date=None, end_date=None):
     """
@@ -607,6 +612,9 @@ def create_term_year_level(counter, year_id, level_id, start_date=None, end_date
             level=level,
             finished=False
         ).update(finished=True)
+
+        if counter > 3 and counter < 1:
+            return None, f"Erreur lors de la création du trimestre/semestre : le numéro du trimestre/semestre est incorecte."
 
         term_year_level = TermYearLevel.objects.create(
             counter=counter,
@@ -749,3 +757,46 @@ def advance_term_for_level(year_id, level_id, start_date=None, end_date=None):
     except Exception as e:
         return None, f"Erreur lors du passage au trimestre/semestre suivant : {str(e)}"
 
+
+def check_first_terms_for_school_year(school_id, year_id):
+    """
+    Vérifie si le premier trimestre/semestre (counter=1) a été créé pour tous 
+    les niveaux scolaires d'une école, pour une année donnée.
+
+    Args:
+        school_id (int): L'ID de l'école (School).
+        year_id (int): L'ID de l'année scolaire (Year).
+
+    Returns:
+        tuple: (bool, str) - True si tous les Term/Sem 1 existent, False sinon, 
+        et un message d'erreur si une exception survient.
+    """
+    try:
+        # 1. Compter le nombre total de niveaux associés à cette école.
+        # Nous utilisons .count() pour une requête DB efficace.
+        total_levels_count = Level.objects.filter(school_id=school_id).count()
+
+        # Si l'école n'a aucun niveau, on considère que la condition est remplie.
+        if total_levels_count == 0:
+            return False, f"Il n'y a aucun niveau dans l'école."
+        
+        # 2. Compter le nombre de niveaux DISTINCT qui ont un TermYearLevel de counter=1 
+        # pour l'année et l'école spécifiées.
+        levels_with_term_1_count = TermYearLevel.objects.filter(
+            year_id=year_id,
+            level__school_id=school_id, # Utilisation du lookup 'level__school_id' pour filtrer par école
+            counter=1
+        ).values('level').distinct().count() # Utilisation de .distinct().count() pour ne compter qu'une fois chaque niveau
+        
+        # 3. Comparer les deux comptes
+        if total_levels_count == levels_with_term_1_count:
+            # Tous les niveaux ont leur premier trimestre/semestre
+            return True, None
+        else:
+            # Il manque un ou plusieurs trimestres/semestres
+            missing_count = total_levels_count - levels_with_term_1_count
+            return False, f"Il manque le premier trimestre/semestre (counter=1) pour {missing_count} niveau(x) de cette école pour l'année spécifiée."
+
+    except Exception as e:
+        # Gérer les erreurs inattendues (ex: ID inexistant si non géré en amont, erreur DB)
+        return False, f"Erreur inattendue lors de la vérification des trimestres : {str(e)}"

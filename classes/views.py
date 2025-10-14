@@ -141,8 +141,6 @@ def classroom_management(request):
     return render(request, 'classes/classroom_management.html', context)
 
 
-
-
 @require_http_methods(["GET", "POST"])
 @csrf_exempt
 @login_required
@@ -178,10 +176,6 @@ def level_management(request):
     # --- 4. Gestion des requêtes POST (API CRUD) ---
     if request.method == 'POST':
         try:
-            # ================================================================
-            # REPRENDRE ICI :
-            # ================================================================
-
             # Vérification de l'étape de création (Condition clé)
             stape_creation_year = get_authorisation_stape_creation_year(school_filter)
             if not stape_creation_year:

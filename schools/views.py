@@ -8,7 +8,7 @@ from datetime import date, time, datetime
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth import get_user_model
 from users.utils import create_user, create_staff, get_user_type, generate_unique_username, send_email_create_compte, get_user_by_username, generate_random_password, send_emails_for_year_stage
-from .utils import create_school, get_user_school, get_current_year_for_school, get_authorisation_stape_creation_year
+from .utils import create_school, get_user_school, get_current_year_for_school, get_authorisation_stape_creation_year, create_term_year_level, check_first_terms_for_school_year
 
 from django.views.decorators.http import require_http_methods
 from django.views.decorators.csrf import csrf_exempt
@@ -16,7 +16,8 @@ from django.db import IntegrityError, transaction
 from django.db.models import Q # Assurez-vous d'importer Q en haut du fichier views.py
 from django.core.exceptions import ValidationError
 
-from .models import School, Year, ExceptionDay, ExceptionTime
+from .models import School, Year, ExceptionDay, ExceptionTime, TermYearLevel
+from classes.utils import get_levels_by_school
 
 User = get_user_model()
 
@@ -331,10 +332,26 @@ def change_year_status_api(request, year_id):
         # 7. Définir le nouveau champ de statut à True
         setattr(year, new_field_name, True)
 
-        # TODO Ajouter une vérification dans le js, lorsqu"on clique sur passer à une étape suivante il faut un message de vérfication
-        
         message = f"L'année '{year.name}' est passée à l'étape '{new_status_key.capitalize()}'. (Veuillez recharger la page)"
 
+
+        if new_field_name == "running":
+            # On récupère l'id de l'école :
+            school_id = year.school.id
+
+            # On vérifie dabord si les premier trimestres ou semestres existes déjà pour cette année, pour tous les niveaux, s'ils existes déjà, on ne fait rien, sinon on les créer
+            terme_created, message_response = check_first_terms_for_school_year(school_id, year_id)
+
+            if not terme_created:
+                # On créer tous les premiers trimestres et les premiers semestres :
+                levels = get_levels_by_school(school_id)
+                for level in levels:
+                    create_term_year_level(1, year_id, level.id)
+
+                message = f"L'année '{year.name}' est passée à l'étape '{new_status_key.capitalize()}', les premier trimestres ou semestres ont été créer. (Veuillez recharger la page)"
+
+        # TODO Ajouter une vérification dans le js, lorsqu"on clique sur passer à une étape suivante il faut un message de vérfication
+        
         # 8. Sauvegarder les modifications
         year.save()
 

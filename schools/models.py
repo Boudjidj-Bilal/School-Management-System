@@ -93,4 +93,4 @@ class TermYearLevel(models.Model):
     finished = models.BooleanField(default=False)  # état : terminé
 
     def __str__(self):
-        return f"{self.counter} - {self.year.name}"
+        return f"{self.counter} - {self.level.level} - {self.year.name} - {self.year.school.name}"

@@ -291,7 +291,7 @@ def send_email_create_compte(request, email, username, password):
     - Nom d'utilisateur : {username}
     - Mot de passe : {password}
 
-    Pour des raisons de sécurité, nous vous demandons de **changer votre mot de passe immédiatement** après votre première connexion pour un mot de passe plus robuste et sécurisé.
+    Pour des raisons de sécurité, nous vous demandons de changer votre mot de passe immédiatement après votre première connexion pour un mot de passe plus robuste et sécurisé.
 
     Vous pouvez vous connecter en utilisant ce lien :
     {reset_link}
@@ -491,7 +491,7 @@ def send_emails_for_year_stage(school, year_stape):
         message = f"""
 Cher Administrateur,
 
-L'étape d'enregistrement de la nouvelle année scolaire a officiellement commencé pour l'école **{school.name}**.
+L'étape d'enregistrement de la nouvelle année scolaire a officiellement commencé pour l'école {school.name}.
 
 Vous pouvez maintenant vous connecter à la plateforme pour :
 1. Valider les inscriptions des nouveaux élèves.
@@ -526,7 +526,7 @@ L'Équipe de Gestion.
         message = f"""
 Cher Membre du Personnel (Professeur / CPE / Administrateur),
 
-L'étape de déroulement normal de l'année scolaire est maintenant activée pour l'école **{school.name}**.
+L'étape de déroulement normal de l'année scolaire est maintenant activée pour l'école {school.name}.
 
 La plateforme est pleinement opérationnelle pour :
 1. L'entrée des notes et des appréciations.
