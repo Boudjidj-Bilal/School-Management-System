@@ -215,8 +215,10 @@ def create_or_update_year_api(request):
                 
                 year = get_object_or_404(Year, pk=year_id, school=school)
 
-                # TODO : Impossible de modifier l'année lorsqu'on n'est pas à l'étape de la création
-                
+                # Impossible de modifier l'année lorsqu'on n'est pas à l'étape de la création.
+                if not year.creation:
+                    return JsonResponse({"success": False, "message": f"Impossible de modifier l'année, vous devez être dans la phase de création."}, status=400)
+
                 # Mise à jour des champs
                 year.name = name
                 year.start_date = start_date
