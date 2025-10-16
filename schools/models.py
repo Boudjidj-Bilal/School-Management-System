@@ -88,8 +88,8 @@ class TermYearLevel(models.Model):
     level = models.ForeignKey(
         "classes.Level", on_delete=models.CASCADE, related_name="term_levels"
     )  # relation Many-to-One avec Year
-    start_date = models.DateField(null=True)       # date de début
-    end_date = models.DateField(null=True)         # date de fin
+    start_date = models.DateField(null=True, blank=True)       # date de début
+    end_date = models.DateField(null=True, blank=True)         # date de fin
     finished = models.BooleanField(default=False)  # état : terminé
 
     def __str__(self):

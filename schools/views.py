@@ -18,6 +18,13 @@ from django.core.exceptions import ValidationError
 
 from .models import School, Year, ExceptionDay, ExceptionTime, TermYearLevel
 from classes.utils import get_levels_by_school
+from classes.models import Level
+
+# --- Constantes pour la logique de gestion des trimestres ---
+TERM_TYPE_TRIMESTRE = "TRIMESTRE"
+TERM_TYPE_SEMESTRE = "SEMESTRE"
+MAX_COUNTER_TRIMESTRE = 3
+MAX_COUNTER_SEMESTRE = 2
 
 User = get_user_model()
 
@@ -197,15 +204,18 @@ def create_or_update_year_api(request):
             return JsonResponse({"success": False, "message": "Veuillez compléter tous les champs obligatoires (nom, dates, heures)."}, status=400)
             
         # Conversion des chaînes en objets Python
-        start_date = datetime.datetime.strptime(start_date_str, '%Y-%m-%d').date()
-        end_date = datetime.datetime.strptime(end_date_str, '%Y-%m-%d').date()
-        min_time = datetime.datetime.strptime(min_time_str, '%H:%M').time()
-        max_time = datetime.datetime.strptime(max_time_str, '%H:%M').time()
+        start_date = datetime.strptime(start_date_str, '%Y-%m-%d').date()
+        end_date = datetime.strptime(end_date_str, '%Y-%m-%d').date()
+        min_time = datetime.strptime(min_time_str, '%H:%M').time()
+        max_time = datetime.strptime(max_time_str, '%H:%M').time()
                 
         with transaction.atomic():
             if year_id:
                 # --- MODE MODIFICATION ---
+                
                 year = get_object_or_404(Year, pk=year_id, school=school)
+
+                # TODO : Impossible de modifier l'année lorsqu'on n'est pas à l'étape de la création
                 
                 # Mise à jour des champs
                 year.name = name
@@ -219,14 +229,22 @@ def create_or_update_year_api(request):
                 # Mais si l'utilisateur sélectionne explicitement 'current' via un autre mécanisme, on peut le gérer ici.
 
                 year.save()
-                message = f"L'année scolaire **{year.name}** a été modifiée avec succès."
+                message = f"L'année scolaire {year.name} a été modifiée avec succès."
 
             else:
                 # --- MODE CRÉATION ---
-                
+
+                # TODO : Avant de créer une nouvelle année il faut vérifier que la précédente est bien à l'état de terminé, sinon -> message d'erreur
+                current_year = get_current_year_for_school(school)
+                if current_year:
+                    if not current_year.finished:
+                        return JsonResponse({"success": False, "message": f"Impossible de créer une nouvelle année, vous devez d'abord terminer la précédente."}, status=400)
+   
+
                 # Vérification de la non-chevauchement des dates (simplifié)
                 if Year.objects.filter(school=school, name=name).exists():
                      return JsonResponse({"success": False, "message": f"Une année scolaire nommée '{name}' existe déjà."}, status=400)
+
 
                 # 3. Gérer le drapeau 'current' : Si on crée une nouvelle année, l'ancienne est désactivée
                 # Note: La nouvelle année est mise à 'current=True' par défaut
@@ -263,7 +281,7 @@ def create_or_update_year_api(request):
                     end_year=False
                 )
 
-                message = f"La nouvelle année scolaire **{new_year.name}** a été créée et est maintenant l'année actuelle."
+                message = f"La nouvelle année scolaire {new_year.name} a été créée et est maintenant l'année actuelle."
                 
             return JsonResponse({"success": True, "message": message})
 
@@ -285,6 +303,10 @@ STATUS_FIELDS = {
     'finished': 'finished',
 }
 
+"""
+
+"""
+
 @require_http_methods(["POST"])
 @login_required
 def change_year_status_api(request, year_id):
@@ -302,7 +324,7 @@ def change_year_status_api(request, year_id):
         year = get_object_or_404(Year, pk=year_id)
 
         # 2. On vérifie si on est bien dans l'année actuelle :
-        if year.current == False :
+        if not year or year.current == False :
             return JsonResponse({'success': False, 'message': 'Impossible de modifier le statut d\'une année terminée.'}, status=400)
    
         # 3. Charger les données du corps de la requête
@@ -323,7 +345,18 @@ def change_year_status_api(request, year_id):
             # Si l'année est 'finished', le seul changement autorisé est de revenir à 'end_year'.
             if new_status_key != 'end_year':
                 return JsonResponse({'success': False, 'message': 'Une année terminée ne peut être modifiée que pour revenir à l\'étape "Fin d\'année".'}, status=403)
-        
+
+        # On vérifie que tous les trimestres/semestres soit bien terminés pour passer à la fin de l'année. 
+        if new_field_name == 'end_year':
+            school_levels = Level.objects.filter(school=year.school)
+            for level in school_levels:
+                # Si un seul trimestre n'est pas terminé, retourne un message d'erreur.
+                terms = TermYearLevel.objects.filter(year=year, level=level)
+                if terms :
+                    for term in terms:
+                        if term.finished == False:
+                            return JsonResponse({'success': False, 'message': f"Impossible de passer à l'étape de fin d'année car vous avez encore un trimestre ou un semestre qui n'es pas terminé."}, status=403)
+
         # 6. Réinitialiser tous les champs de statut booléens à False pour garantir l'unicité
         # N'inclut pas is_current_year
         for field_name in STATUS_FIELDS.values():
@@ -334,7 +367,7 @@ def change_year_status_api(request, year_id):
 
         message = f"L'année '{year.name}' est passée à l'étape '{new_status_key.capitalize()}'. (Veuillez recharger la page)"
 
-
+        # TODO Ajouter une condition, si on veut passer l'année à fini, il faut que tous les trimestres/semestres soit terminé
         if new_field_name == "running":
             # On récupère l'id de l'école :
             school_id = year.school.id
@@ -405,14 +438,15 @@ def exception_management(request):
         
     # 3. Détermination de l'année scolaire actuelle
     current_year = get_current_year_for_school(school_filter)
-    if not current_year:
-        return JsonResponse({"success": False, "message": "Aucune année scolaire active n'est définie pour cette école."}, status=400)
-
 
     # --- 4. Gestion des requêtes POST (API CRUD) ---
     if request.method == 'POST':
         try:
+            if not current_year:
+                return JsonResponse({"success": False, "message": "Aucune année scolaire active n'est définie pour cette école."}, status=400)
+
             stape_creation_year = get_authorisation_stape_creation_year(school_filter)
+
             if not stape_creation_year:
                 return JsonResponse({"success": False, "message": "Opération non autorisée. La gestion des exceptions n'est possible que lorsque l'année scolaire est à l'étape de création"}, status=400)
 
@@ -555,3 +589,207 @@ def exception_management(request):
     
     # Le template pour l'interface utilisateur (à créer)
     return render(request, 'schools/exception_management.html', context)
+
+# TODO : Quand on passe d'un trimestre à un autre il faut terminé le précédent
+@require_http_methods(["GET", "POST"])
+@csrf_exempt 
+@login_required
+def manage_term(request):
+    """
+    Vue unifiée pour la gestion de l'avancement et de la finalisation des trimestres/semestres
+    pour tous les niveaux d'une école et l'année en cours.
+    
+    Actions POST possibles:
+    - 'advance': Crée le trimestre/semestre suivant si la limite n'est pas atteinte.
+    - 'finish': Marque le dernier trimestre/semestre comme terminé si la limite est atteinte.
+    """
+    
+    # 1. Détermination du contexte utilisateur et permission
+    user_type = get_user_type(request.user)
+    allowed_roles = ["SuperAdministrator", "Principal"] 
+    
+    if user_type not in allowed_roles:
+        return JsonResponse({"success": False, "message": "Vous n'avez pas la permission de gérer l'avancement des trimestres/semestres."}, status=403) 
+
+    # 2. Détermination du contexte de l'école
+    try:
+        school_filter = get_user_school(request.user, request.session.get('selected_school_id'))
+    except School.DoesNotExist:
+        return JsonResponse({"success": False, "message": "L'école sélectionnée est introuvable."}, status=404)
+    
+    if not school_filter or not school_filter.is_active:
+        message = "L'école sélectionnée est introuvable ou désactivée. Impossible de procéder."
+        return JsonResponse({"success": False, "message": message}, status=404 if not school_filter else 403)
+        
+    # 3. Détermination de l'année scolaire actuelle
+    current_year = get_current_year_for_school(school_filter)
+
+    # --- 4. Gestion des requêtes POST (API d'avancement) ---
+    if request.method == 'POST':
+        try:
+            # On vérifie si l'année existe
+            if not current_year: 
+                return JsonResponse(
+                    {"success": False, 
+                    "message": "Opération non autorisée. La gestion des trimestres/semestres n'est possible que lorsque l'année est créer."}, 
+                    status=400
+                )
+            
+            # La gestion des trimestres n'est possible que si l'année est en mode 'running'
+            if not current_year.running: 
+                return JsonResponse(
+                    {"success": False,
+                    "message": "Opération non autorisée. La gestion des trimestres/semestres n'est possible que lorsque l'année scolaire est à l'étape de Déroulement (Running)."}, 
+                    status=400
+                )
+                
+            data = json.loads(request.body)
+            action = data.get('action') # 'advance' ou 'finish'
+            level_id = data.get('level_id')
+
+            if not level_id or not action:
+                return JsonResponse({'success': False, 'message': 'L\'ID du niveau et l\'action sont obligatoires.'}, status=400)
+
+            # Utilisation de transaction.atomic() pour garantir que les opérations sont atomiques
+            with transaction.atomic():
+                # A. Récupérer le niveau et le terme *actuel* non terminé
+                try:
+                    level_obj = Level.objects.get(pk=level_id, school=school_filter)
+                    
+                    # Récupérer l'unique terme actif (finished=False) pour ce niveau et cette année
+                    current_term = TermYearLevel.objects.get(
+                        year=current_year,
+                        level=level_obj,
+                        finished=False
+                    )
+                except Level.DoesNotExist:
+                    return JsonResponse({'success': False, 'message': 'Niveau non trouvé pour cette école.'}, status=404)
+                except TermYearLevel.DoesNotExist:
+                    # Le terme 1 est soit non créé, soit tous les termes sont finis
+                    return JsonResponse({'success': False, 'message': f'Aucun trimestre/semestre actif trouvé pour le niveau {level_obj.get_level_display()} et l\'année en cours.'}, status=404)
+                
+                # Déterminer la limite en fonction du type de niveau
+                is_trimestre = level_obj.term_type == TERM_TYPE_TRIMESTRE
+                MAX_COUNTER = MAX_COUNTER_TRIMESTRE if is_trimestre else MAX_COUNTER_SEMESTRE
+                term_type_name = "trimestre" if is_trimestre else "semestre"
+                
+                # B. Logique d'Avancement ('advance')
+                if action == 'advance':
+                    next_counter = current_term.counter + 1
+                    
+                    # 1. Vérification de la progression possible
+                    if next_counter > MAX_COUNTER:
+                        return JsonResponse(
+                            {'success': False, 
+                             'message': f'Impossible d\'avancer. Le {current_term.counter}e {term_type_name} est le dernier possible ({MAX_COUNTER}) pour ce niveau.'}, 
+                            status=400
+                        )
+                    
+                    # 2. Avancement (Marquer l'ancien comme terminé et créer le nouveau)
+                    
+                    # Marquer l'actuel comme terminé
+                    current_term.finished = True
+                    current_term.save()
+                    
+                    # Créer le nouveau terme
+                    TermYearLevel.objects.create(
+                        counter=next_counter,
+                        year=current_year,
+                        level=level_obj,
+                        start_date=None, 
+                        end_date=None, 
+                        finished=False
+                    )
+                    
+                    return JsonResponse(
+                        {'success': True, 
+                         'message': f'Avancement réussi ! Le niveau {level_obj.get_level_display()} est maintenant au {next_counter}e {term_type_name}.'}, 
+                        status=201
+                    )
+
+                # C. Logique de Finalisation ('finish')
+                elif action == 'finish':
+                    
+                    # 1. Vérification que c'est bien le dernier terme
+                    if current_term.counter < MAX_COUNTER:
+                        return JsonResponse(
+                            {'success': False, 
+                             'message': f'Impossible de terminer le cycle. Le niveau {level_obj.get_level_display()} est seulement au {current_term.counter}e {term_type_name}. Il reste encore des termes à créer.'}, 
+                            status=400
+                        )
+                    
+                    # 2. Marquer le dernier terme comme terminé
+                    current_term.finished = True
+                    current_term.save()
+                    
+                    return JsonResponse(
+                        {'success': True, 
+                         'message': f'Cycle terminé ! Le {current_term.counter}e et dernier {term_type_name} du niveau {level_obj.get_level_display()} est maintenant marqué comme terminé pour l\'année {current_year.name}.'}, 
+                        status=200
+                    )
+                
+                else:
+                    return JsonResponse({'success': False, 'message': 'Action non reconnue.'}, status=400)
+
+
+        except json.JSONDecodeError:
+            return JsonResponse({'success': False, 'message': 'Données JSON invalides.'}, status=400)
+        except IntegrityError as e:
+             # Cette erreur est levée si la transaction échoue (ex: doublon inattendu, contrainte violée)
+             error_message = f"Erreur de base de données. Opération annulée: {str(e)}"
+             return JsonResponse({'success': False, 'message': error_message}, status=400)
+        except Exception as e:
+            print(f"Erreur lors de la gestion des termes : {e}")
+            return JsonResponse({'success': False, 'message': f'Une erreur interne du serveur est survenue: {str(e)}'}, status=500)
+
+    # --- 5. Gestion des requêtes GET (Affichage de la page) ---
+    
+    # Récupérer tous les niveaux pour l'école en cours
+    school_levels = Level.objects.filter(school=school_filter).order_by('level') 
+    
+    # Récupérer le statut actuel pour chaque niveau
+    levels_status = []
+    
+    for level in school_levels:
+        # Trouver le terme actif (finished=False) pour l'année actuelle
+        current_term = TermYearLevel.objects.filter(
+            year=current_year,
+            level=level,
+            finished=False
+        ).order_by('-counter').first()
+        
+        # Trouver le dernier terme créé (actif ou terminé)
+        last_term_created = TermYearLevel.objects.filter(
+            year=current_year,
+            level=level,
+        ).order_by('-counter').first()
+
+        # Déterminer la limite max
+        is_trimestre = level.term_type == TERM_TYPE_TRIMESTRE
+        MAX_COUNTER = MAX_COUNTER_TRIMESTRE if is_trimestre else MAX_COUNTER_SEMESTRE
+        
+        # Calculer le statut
+        status = {
+            'level_id': level.id,
+            'level_code': level.level,
+            'level_name': level.get_level_display(),
+            'term_type': level.term_type,
+            'max_counter': MAX_COUNTER,
+            'current_counter': current_term.counter if current_term else 0,
+            'is_active': bool(current_term),
+            # Cycle Terminé si le dernier terme créé est finished=True ET qu'il est au counter max
+            'is_finished': bool(last_term_created and last_term_created.finished and last_term_created.counter == MAX_COUNTER),
+            'can_advance': bool(current_term and current_term.counter < MAX_COUNTER), # Avancer si actif et pas au max
+            'can_finish': bool(current_term and current_term.counter == MAX_COUNTER), # Finir si actif et au max
+            'has_term_1': bool(TermYearLevel.objects.filter(year=current_year, level=level, counter=1).exists()), # Terme 1 créé
+        }
+        levels_status.append(status)
+
+    context = {
+        'school': school_filter,
+        'current_year': current_year,
+        'levels_status': levels_status,
+        'user_type': user_type,
+    }
+    
+    return render(request, 'schools/manage_term.html', context)
