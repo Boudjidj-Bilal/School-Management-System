@@ -236,7 +236,7 @@ def create_or_update_year_api(request):
             else:
                 # --- MODE CRÉATION ---
 
-                # TODO : Avant de créer une nouvelle année il faut vérifier que la précédente est bien à l'état de terminé, sinon -> message d'erreur
+                # Avant de créer une nouvelle année il faut vérifier que la précédente est bien à l'état de terminé, sinon -> message d'erreur
                 current_year = get_current_year_for_school(school)
                 if current_year:
                     if not current_year.finished:
