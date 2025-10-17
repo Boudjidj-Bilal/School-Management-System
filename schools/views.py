@@ -592,7 +592,6 @@ def exception_management(request):
     # Le template pour l'interface utilisateur (à créer)
     return render(request, 'schools/exception_management.html', context)
 
-# TODO : Quand on passe d'un trimestre à un autre il faut terminé le précédent
 @require_http_methods(["GET", "POST"])
 @csrf_exempt 
 @login_required

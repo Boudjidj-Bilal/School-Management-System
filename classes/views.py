@@ -8,10 +8,10 @@ import json
 from users.utils import get_user_type
 from schools.utils import get_user_school, get_authorisation_stape_run_year, get_current_year_for_school, get_authorisation_stape_creation_year
 
-from .models import Classroom, Level
+from .models import Classroom, Level, Class
 from schools.models import School 
 
-from django.db import IntegrityError
+from django.db import IntegrityError, transaction
 
 
 @require_http_methods(["GET", "POST"])
@@ -292,3 +292,172 @@ def level_management(request):
     
     # Le template pour l'interface utilisateur (à créer)
     return render(request, 'classes/level_management.html', context)
+
+# TODO Lorsqu'on clique sur une classe, possibilité de lui ajouter des élèves et des professeurs 
+# (principal (1 seul) délégués de classe), un élève peut être que dans une seul classe par année, 
+# un prof peut apparaitre dans plusieurs classes mais peut être le professeurs principal d'une seul 
+# classe par année
+@require_http_methods(["GET", "POST"])
+@csrf_exempt 
+@login_required
+def class_management(request):
+    """
+    Vue unifiée pour la gestion complète (CRUD) des classes académiques (Class)
+    pour une école donnée.
+    L'opération est uniquement autorisée lorsque l'année scolaire est en phase de Création.
+    """
+    
+    # 1. Détermination du contexte utilisateur et permission
+    user_type = get_user_type(request.user)
+    allowed_roles = ["SuperAdministrator", "Principal", "Administrator"] 
+    
+    if user_type not in allowed_roles:
+        return JsonResponse({"success": False, "message": "Vous n'avez pas la permission de gérer les classes."}, status=403) 
+
+    # 2. Détermination du contexte de l'école
+    try:
+        school_filter = get_user_school(request.user, request.session.get('selected_school_id'))
+    except School.DoesNotExist:
+        return JsonResponse({"success": False, "message": "L'école sélectionnée est introuvable."}, status=404)
+    
+    if not school_filter or not school_filter.is_active:
+        message = "L'école sélectionnée est introuvable ou désactivée. Impossible de procéder."
+        return JsonResponse({"success": False, "message": message}, status=404 if not school_filter else 403)
+        
+    # 3. Détermination de l'année scolaire actuelle
+    current_year = get_current_year_for_school(school_filter)
+
+    # 4. Vérification du stade de l'année scolaire (Condition clé pour le CRUD)
+    stape_creation_year = current_year and current_year.creation
+    
+    if stape_creation_year and request.method == 'POST':
+        return JsonResponse(
+            {"success": False, 
+             "message": "Opération non autorisée. La gestion des classes (Création/Modification/Suppression) n'est possible que lorsque l'année scolaire est à l'étape de Création."}, 
+            status=403
+        )
+
+    # --- 5. Gestion des requêtes POST (API CRUD) ---
+    if request.method == 'POST':
+        try:
+            data = json.loads(request.body)
+            action = data.get('action') # 'create', 'update', ou 'delete'
+            
+            # Utilisation de transaction.atomic() pour garantir l'intégrité
+            with transaction.atomic():
+
+                # --- A. Logique de Création ('create') ---
+                if action == 'create':
+                    class_name = data.get('class_name', '').strip()
+                    level_id = data.get('level_id')
+                    
+                    if not class_name or not level_id:
+                        return JsonResponse({'success': False, 'message': 'Le nom de la classe et le niveau sont obligatoires.'}, status=400)
+
+                    try:
+                        # Assurez que le niveau appartient bien à l'école de l'utilisateur
+                        level_obj = Level.objects.get(pk=level_id, school=school_filter)
+                    except Level.DoesNotExist:
+                        return JsonResponse({'success': False, 'message': 'Niveau scolaire non trouvé ou non valide pour cette école.'}, status=404)
+                    
+                    # Vérifier l'unicité du nom de la classe DANS CE NIVEAU
+                    if Class.objects.filter(name__iexact=class_name, level=level_obj).exists():
+                         return JsonResponse(
+                            {'success': False, 
+                             'message': f'Une classe nommée "{class_name}" existe déjà pour le niveau {level_obj.get_level_display()}.'}, 
+                            status=409 # Conflict
+                        )
+
+                    new_class = Class.objects.create(
+                        name=class_name,
+                        level=level_obj,
+                        is_valid=True
+                    )
+                    
+                    return JsonResponse(
+                        {'success': True, 
+                         'message': f'La classe "{new_class.name}" a été créée avec succès.',
+                         'class_id': new_class.id}, 
+                        status=201
+                    )
+
+                # --- B. Logique de Modification ('update') ---
+                elif action == 'update':
+                    class_id = data.get('class_id')
+                    class_name = data.get('class_name', '').strip()
+                    level_id = data.get('level_id')
+
+                    if not class_id or not class_name or not level_id:
+                        return JsonResponse({'success': False, 'message': 'L\'ID de la classe, le nom et le niveau sont obligatoires pour la mise à jour.'}, status=400)
+                    
+                    try:
+                        # Assurez que la classe appartient bien à l'école via le niveau
+                        class_obj = Class.objects.get(pk=class_id, level__school=school_filter)
+                        level_obj = Level.objects.get(pk=level_id, school=school_filter) # Nouveau niveau
+                    except (Class.DoesNotExist, Level.DoesNotExist):
+                        return JsonResponse({'success': False, 'message': 'Classe ou Niveau non trouvé/valide pour cette école.'}, status=404)
+
+                    # Vérifier l'unicité du nouveau nom DANS le nouveau niveau, en excluant la classe actuelle
+                    if Class.objects.filter(name__iexact=class_name, level=level_obj).exclude(pk=class_id).exists():
+                         return JsonResponse(
+                            {'success': False, 
+                             'message': f'Le nom de classe "{class_name}" existe déjà dans le niveau {level_obj.get_level_display()}.'}, 
+                            status=409
+                        )
+
+                    # Mise à jour des champs
+                    class_obj.name = class_name
+                    class_obj.level = level_obj
+                    class_obj.save()
+                    
+                    return JsonResponse({'success': True, 'message': f'La classe "{class_name}" a été mise à jour avec succès.'}, status=200)
+
+                # --- C. Logique de Suppression ('delete') ---
+                elif action == 'delete':
+                    class_id = data.get('class_id')
+
+                    if not class_id:
+                        return JsonResponse({'success': False, 'message': 'ID de la classe manquant pour la suppression.'}, status=400)
+                    
+                    try:
+                        class_obj = Class.objects.get(pk=class_id, level__school=school_filter)
+                        class_name = class_obj.name
+                        
+                        # La suppression du Class entraînera la suppression en cascade des ClassStudentYear et ClassTeacherYear associées.
+                        class_obj.delete()
+                        return JsonResponse({'success': True, 'message': f'La classe "{class_name}" a été supprimée.'}, status=200)
+                    except Class.DoesNotExist:
+                        return JsonResponse({'success': False, 'message': 'Classe non trouvée pour cette école.'}, status=404)
+
+                else:
+                    return JsonResponse({'success': False, 'message': 'Action non reconnue.'}, status=400)
+
+
+        except json.JSONDecodeError:
+            return JsonResponse({'success': False, 'message': 'Données JSON invalides.'}, status=400)
+        except IntegrityError:
+             return JsonResponse({'success': False, 'message': 'Erreur d\'intégrité de la base de données. Opération annulée.'}, status=400)
+        except Exception as e:
+            print(f"Erreur lors de la gestion de la classe : {e}")
+            return JsonResponse({'success': False, 'message': f'Une erreur interne du serveur est survenue: {str(e)}'}, status=500)
+
+    # --- 6. Gestion des requêtes GET (Affichage de la page) ---
+    stape_creation_year_html = current_year and current_year.creation
+
+    
+    # Récupérer tous les niveaux disponibles pour l'école
+    school_levels = Level.objects.filter(school=school_filter).order_by('level') 
+    
+    # Récupérer toutes les classes existantes pour l'affichage
+    existing_classes = Class.objects.filter(level__school=school_filter).select_related('level').order_by('level__level', 'name')
+
+    context = {
+        'school': school_filter,
+        'current_year': current_year,
+        'levels': school_levels,
+        'existing_classes': existing_classes,
+        'user_type': user_type,
+        'is_creation_stape': stape_creation_year_html, # Pour l'affichage conditionnel dans le template
+    }
+    
+    return render(request, 'classes/class_management.html', context)
