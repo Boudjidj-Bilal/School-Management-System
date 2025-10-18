@@ -1,15 +1,17 @@
-from django.shortcuts import render
+from django.shortcuts import render, get_object_or_404
 from django.http import JsonResponse
 from django.contrib.auth.decorators import login_required
-from django.views.decorators.http import require_http_methods
+from django.views.decorators.http import require_http_methods, require_POST
 from django.views.decorators.csrf import csrf_exempt
 import json
 
 from users.utils import get_user_type
 from schools.utils import get_user_school, get_authorisation_stape_run_year, get_current_year_for_school, get_authorisation_stape_creation_year
 
-from .models import Classroom, Level, Class
-from schools.models import School 
+from .models import Classroom, Level, Class, ClassStudentYear, ClassTeacherYear
+from schools.models import School, Year
+from users.models import Student 
+from subjects.models import TeacherSubject 
 
 from django.db import IntegrityError, transaction
 
@@ -461,3 +463,584 @@ def class_management(request):
     }
     
     return render(request, 'classes/class_management.html', context)
+
+
+@login_required(login_url='login')
+def class_assignment_main_view2(request, pk):
+    """
+    Vue principale pour afficher la page de gestion des associations (Élèves/Professeurs)
+    pour une classe donnée.
+    """
+    
+    user_type = get_user_type(request.user)
+    allowed_roles = ["SuperAdministrator", "Principal", "Administrator"] 
+    
+    if user_type not in allowed_roles:
+        # NOTE: Pour la vue principale, il est préférable de rediriger ou d'afficher une page d'erreur standard (403),
+        # mais je conserve ici la logique de JsonResponse pour la cohérence des erreurs.
+        return JsonResponse({"success": False, "message": "Vous n'avez pas la permission de gérer les classes."}, status=403) 
+
+    try:
+        school_filter = get_user_school(request.user, request.session.get('selected_school_id'))
+    except School.DoesNotExist:
+        return JsonResponse({"success": False, "message": "L'école sélectionnée est introuvable."}, status=404)
+    
+    if not school_filter or not school_filter.is_active:
+        message = "L'école sélectionnée est introuvable ou désactivée. Impossible de procéder."
+        return JsonResponse({"success": False, "message": message}, status=404 if not school_filter else 403)
+        
+    current_class = get_object_or_404(Class, pk=pk)
+    current_year = get_current_year_for_school(school_filter)
+
+    # --- 1. Association Élèves ---
+    
+    # Élèves actifs qui ne sont PAS déjà dans cette classe pour cette année
+    # Nous sélectionnons directement les champs nécessaires pour la sérialisation JSON
+    available_students_queryset = Student.objects.select_related('user').exclude(
+        class_years__student_class=current_class, 
+        class_years__year=current_year,
+        class_years__is_active=True
+    ).order_by('user__last_name').values('pk', 'user__first_name', 'user__last_name', 'user__username')
+    
+    # Sérialisation des données d'élèves disponibles (liste de dictionnaires) pour le JS
+    available_students_json = json.dumps(list(available_students_queryset))
+
+
+    # Liens actuels des élèves (pour le JS)
+    student_assignments_pks = ClassStudentYear.objects.filter(
+        student_class=current_class, 
+        year=current_year, 
+        is_active=True
+    ).values_list('student_id', flat=True)
+    
+    # Sérialisation des IDs d'élèves affectés
+    students_links_json = json.dumps([str(pk) for pk in student_assignments_pks])
+    
+    # --- 2. Association Professeurs ---
+
+    # TeacherSubject disponibles (non affectés à cette classe pour cette année)
+    # Nous sélectionnons directement les champs nécessaires pour la sérialisation JSON
+    available_teacher_subjects_queryset = TeacherSubject.objects.select_related('teacher__user', 'subject').exclude(
+        class_years__student_class=current_class, 
+        class_years__year=current_year,
+        class_years__is_active=True
+    ).order_by('teacher__user__last_name', 'subject__name').values(
+        'pk', 
+        'subject__name', 
+        'teacher__user__first_name', 
+        'teacher__user__last_name', 
+        'teacher__user__username'
+    )
+    
+    # Sérialisation des données des affectations Prof/Matière disponibles (liste de dictionnaires) pour le JS
+    available_teacher_subjects_json = json.dumps(list(available_teacher_subjects_queryset))
+
+
+    # Liens actuels des professeurs (pour le JS)
+    teacher_assignments_pks = ClassTeacherYear.objects.filter(
+        student_class=current_class, 
+        year=current_year, 
+        is_active=True
+    ).values_list('teacher_id', flat=True)
+    
+    # Sérialisation des IDs des TeacherSubject affectés
+    teachers_links_json = json.dumps([str(pk) for pk in teacher_assignments_pks])
+
+
+    # --- 3. Construction du Contexte ---
+
+    context = {
+        'current_class': current_class,
+        'current_year': current_year,
+        # On passe ici les QuerySets complets pour l'affichage dans le select HTML (les boucles {% for %} du template)
+        # Ces QureySets sont optimisés avec .select_related() et .values()
+        'available_students': available_students_queryset,
+        'available_teacher_subjects': available_teacher_subjects_queryset,
+
+        # On passe ici les chaînes JSON sérialisées pour la balise |json_script
+        # qui doivent être des listes de dictionnaires ou de PKs
+        'available_students_json': available_students_json,
+        'available_teacher_subjects_json': available_teacher_subjects_json,
+        'students_links_json': students_links_json,
+        'teachers_links_json': teachers_links_json,
+    }
+
+    return render(request, 'classes/class_assignment.html', context)
+
+
+@require_POST
+@login_required(login_url='login')
+def toggle_class_assignment_api2(request, pk):
+    """
+    Endpoint API (via AJAX) pour lier/délier un Élève ou un Professeur/Matière à une Classe.
+    Nécessite: entity_id (student_id ou teacher_subject_id), entity_type ('student' ou 'teacher'), action ('link' ou 'unlink').
+    """
+
+    user_type = get_user_type(request.user)
+    allowed_roles = ["SuperAdministrator", "Principal", "Administrator"] 
+    
+    if user_type not in allowed_roles:
+        return JsonResponse({"success": False, "message": "Vous n'avez pas la permission de gérer les classes."}, status=403) 
+
+    try:
+        school_filter = get_user_school(request.user, request.session.get('selected_school_id'))
+    except School.DoesNotExist:
+        return JsonResponse({"success": False, "message": "L'école sélectionnée est introuvable."}, status=404)
+    
+    if not school_filter or not school_filter.is_active:
+        message = "L'école sélectionnée est introuvable ou désactivée. Impossible de procéder."
+        return JsonResponse({"success": False, "message": message}, status=404 if not school_filter else 403)
+        
+    
+    current_class = get_object_or_404(Class, pk=pk)
+    current_year = get_current_year_for_school(school_filter)
+    
+    try:
+        data = json.loads(request.body)
+        entity_id = data.get('entity_id')
+        entity_type = data.get('entity_type')
+        action = data.get('action')
+
+        if not all([entity_id, entity_type, action]):
+            return JsonResponse({'success': False, 'message': 'Données manquantes.'}, status=400)
+
+        with transaction.atomic():
+            if entity_type == 'student':
+                student = get_object_or_404(Student, pk=entity_id)
+                entity_name = student.user.username
+                
+                if action == 'link':
+                    try:
+                        # Crée l'association. unique_together gère le doublon.
+                        ClassStudentYear.objects.create(
+                            student_class=current_class, 
+                            student=student, 
+                            year=current_year
+                        )
+                        message = f"L'élève {entity_name} a été affecté à {current_class}."
+                    except IntegrityError:
+                        message = f"L'élève {entity_name} est déjà affecté."
+                        return JsonResponse({'success': True, 'message': message})
+
+                elif action == 'unlink':
+                    # Désactive l'association (maintient l'historique)
+                    deleted_count = ClassStudentYear.objects.filter(
+                        student_class=current_class, 
+                        student=student, 
+                        year=current_year,
+                        is_active=True # S'assurer de désactiver uniquement les liens actifs
+                    ).update(is_active=False)
+                    
+                    if deleted_count > 0:
+                        message = f"L'élève {entity_name} a été retiré de {current_class}."
+                    else:
+                        message = f"Association élève/classe active non trouvée pour désactivation."
+                        return JsonResponse({'success': True, 'message': message})
+                else:
+                    return JsonResponse({'success': False, 'message': 'Action invalide pour l\'élève.'}, status=400)
+                
+                return JsonResponse({'success': True, 'message': message})
+
+            elif entity_type == 'teacher':
+                teacher_subject = get_object_or_404(TeacherSubject, pk=entity_id)
+                teacher_name = teacher_subject.teacher.user.username
+                subject_name = teacher_subject.subject.name
+                
+                if action == 'link':
+                    # Logique de vérification de la contrainte : Professeur n'enseigne pas 2 fois la même matière dans la même classe
+                    # NOTE: La vérification ci-dessous vérifie si le couple (Professeur/Matière) est déjà affecté, 
+                    # ce qui n'est pas la même chose que vérifier si UN professeur enseigne deux fois LA MÊME matière.
+                    # L'implémentation actuelle de ClassTeacherYear est basée sur TeacherSubject, qui est unique.
+                    # Si TeacherSubject est unique (Prof + Matière), la contrainte d'intégrité suffit.
+                    # Si TeacherSubject peut être non unique, nous devons revoir la logique.
+                    
+                    # Supposons que TeacherSubject.pk garantit l'unicité de (Professeur + Matière)
+                    # et que la table ClassTeacherYear a une contrainte unique_together sur (classe, annee, teacher_subject)
+                    
+                    try:
+                        # Crée l'association
+                        ClassTeacherYear.objects.create(
+                            student_class=current_class, 
+                            teacher=teacher_subject, 
+                            year=current_year
+                        )
+                        message = f"Affectation ajoutée : {teacher_name} pour {subject_name} dans {current_class}."
+                    except IntegrityError:
+                         message = f"Affectation {teacher_name} / {subject_name} est déjà enregistrée."
+                         return JsonResponse({'success': True, 'message': message})
+
+                elif action == 'unlink':
+                    # Désactive l'association (maintient l'historique)
+                    deleted_count = ClassTeacherYear.objects.filter(
+                        student_class=current_class, 
+                        teacher=teacher_subject, 
+                        year=current_year,
+                        is_active=True # S'assurer de désactiver uniquement les liens actifs
+                    ).update(is_active=False)
+                    
+                    if deleted_count > 0:
+                        message = f"L'affectation {teacher_name} / {subject_name} a été retirée."
+                    else:
+                        message = f"Affectation professeur/classe active non trouvée pour désactivation."
+                        return JsonResponse({'success': True, 'message': message})
+                else:
+                    return JsonResponse({'success': False, 'message': 'Action invalide pour le professeur.'}, status=400)
+                
+                return JsonResponse({'success': True, 'message': message})
+
+            else:
+                return JsonResponse({'success': False, 'message': 'Type d\'entité non reconnu.'}, status=400)
+
+    except json.JSONDecodeError:
+        return JsonResponse({'success': False, 'message': 'Requête invalide (JSON non valide).'}, status=400)
+    except Exception as e:
+        return JsonResponse({'success': False, 'message': f'Erreur interne du serveur: {str(e)}'}, status=500)
+
+
+
+
+
+
+
+
+
+
+# ----------------------------------------------------------------------
+# VUE PRINCIPALE (GET) - Corrigée pour retourner JSON sur les erreurs
+# ----------------------------------------------------------------------
+
+@login_required(login_url='login')
+def class_assignment_main_view(request, pk):
+    """
+    Vue principale (GET) pour la gestion des associations (Élèves/Professeurs)
+    pour une classe donnée.
+    
+    Retourne la page HTML en cas de succès ou un JsonResponse en cas d'erreur
+    de permission ou d'objet introuvable.
+    """
+    
+    user_type = get_user_type(request.user)
+    allowed_roles = ["SuperAdministrator", "Principal", "Administrator"] 
+    
+    if user_type not in allowed_roles:
+        # Retourne JSON au lieu de rendre une page 403.html
+        return JsonResponse({"success": False, "message": "Permission refusée. Rôle non autorisé."}, status=403) 
+
+    try:
+        school_filter = get_user_school(request.user, request.session.get('selected_school_id'))
+    except School.DoesNotExist:
+        # Retourne JSON au lieu de rendre une page 404.html
+        return JsonResponse({"success": False, "message": "École introuvable. Connexion impossible."}, status=404)
+        
+    # Utilisation de get_object_or_404, qui lève une Http404 si l'objet n'existe pas
+    try:
+        current_class = Class.objects.get(pk=pk)
+    except Class.DoesNotExist:
+         return JsonResponse({"success": False, "message": "Classe introuvable."}, status=404)
+        
+    current_year = get_current_year_for_school(school_filter)
+    
+    # Vérification de la cohérence de l'école
+    if current_class.level.school != school_filter:
+        # Retourne JSON au lieu de rendre une page 403.html
+        return JsonResponse({"success": False, "message": "Accès classe refusé. La classe n'appartient pas à votre école."}, status=403)
+
+    # --- 1. Élèves : Données disponibles (Ceux qui n'ont AUCUNE affectation active cette année) ---
+    
+    # Exclure les élèves ayant DÉJÀ une affectation active (ClassStudentYear) pour l'année en cours
+    available_students_queryset = Student.objects.select_related('user').filter(
+        school=school_filter, user__is_active=True
+    ).exclude(
+        class_years__year=current_year,
+        class_years__is_active=True
+    ).order_by('user__last_name').values(
+        'pk', 'user__first_name', 'user__last_name', 'user__username'
+    )
+    
+    available_students_json = json.dumps(list(available_students_queryset))
+
+    # --- 1.bis Élèves : Données déjà affectées à CETTE classe ---
+    
+    # On récupère l'ID de l'affectation (pk de ClassStudentYear) et le statut délégué
+    assigned_students_queryset = ClassStudentYear.objects.filter(
+        student_class=current_class, 
+        year=current_year, 
+        is_active=True
+    ).select_related('student__user').values(
+        'pk', # ID de l'objet ClassStudentYear (nécessaire pour toggle_delegate/unlink)
+        'student_id', 
+        'is_delegate', 
+        'student__user__first_name', 
+        'student__user__last_name', 
+        'student__user__username'
+    ).order_by('student__user__last_name')
+    
+    assigned_students_json = json.dumps(list(assigned_students_queryset))
+
+    # --- 2. Professeurs : Données disponibles ---
+
+    # Exclure les TeacherSubject déjà affectés à CETTE classe pour l'année en cours
+    # NOTE: Un TeacherSubject est l'unicité (Professeur + Matière).
+    available_teacher_subjects_queryset = TeacherSubject.objects.select_related('teacher__user', 'subject').filter(
+        # Filtre sur l'école (assumant Teacher a une relation avec School)
+        teacher__school=school_filter, 
+        teacher__user__is_active=True
+    ).exclude(
+        class_years__student_class=current_class, 
+        class_years__year=current_year,
+        class_years__is_active=True
+    ).order_by('teacher__user__last_name', 'subject__name').values(
+        'pk', 'subject__name', 'teacher__user__first_name', 'teacher__user__last_name', 'teacher__user__username'
+    )
+    
+    available_teacher_subjects_json = json.dumps(list(available_teacher_subjects_queryset))
+
+    # --- 2.bis Professeurs : Données déjà affectées à CETTE classe ---
+    
+    # On récupère l'ID de l'affectation (pk de ClassTeacherYear) et le statut principal
+    assigned_teachers_queryset = ClassTeacherYear.objects.filter(
+        student_class=current_class, 
+        year=current_year, 
+        is_active=True
+    ).select_related('teacher__user', 'teacher__subject').values(
+        'pk', # ID de l'objet ClassTeacherYear (nécessaire pour toggle_main_teacher/unlink)
+        'teacher_id', # ID de l'objet TeacherSubject
+        'is_main_teacher', 
+        'teacher__subject__name', 
+        'teacher__teacher__user__first_name', 
+        'teacher__teacher__user__last_name'
+    ).order_by('teacher__subject__name')
+    
+    assigned_teachers_json = json.dumps(list(assigned_teachers_queryset))
+
+    # --- 3. Construction du Contexte ---
+
+    context = {
+        'current_class': current_class,
+        'current_year': current_year,
+        'assigned_students_json': assigned_students_json,
+        'available_students_json': available_students_json,
+        'assigned_teachers_json': assigned_teachers_json,
+        'available_teacher_subjects_json': available_teacher_subjects_json,
+    }
+
+    # Le seul endroit où l'on retourne une page HTML
+    return render(request, 'classes/class_assignment.html', context)
+
+
+@require_POST
+@login_required(login_url='login')
+def toggle_class_assignment_api(request, pk):
+    """
+    Endpoint API (POST) pour gérer le cycle de vie complet des affectations :
+    - Lier/Délier Élève/Professeur
+    - Mettre à jour le statut (Délégué / Prof Principal)
+    """
+
+    user_type = get_user_type(request.user)
+    allowed_roles = ["SuperAdministrator", "Principal", "Administrator"] 
+    
+    if user_type not in allowed_roles:
+        return JsonResponse({"success": False, "message": "Permission refusée. Rôle non autorisé."}, status=403) 
+
+    try:
+        school_filter = get_user_school(request.user, request.session.get('selected_school_id'))
+    except School.DoesNotExist:
+        return JsonResponse({"success": False, "message": "École introuvable."}, status=404)
+        
+    try:
+        current_class = Class.objects.get(pk=pk)
+    except Class.DoesNotExist:
+         return JsonResponse({"success": False, "message": "Classe introuvable."}, status=404)
+
+    current_year = get_current_year_for_school(school_filter)
+    
+    if current_class.level.school != school_filter:
+        return JsonResponse({"success": False, "message": "Accès classe refusé. La classe n'appartient pas à votre école."}, status=403)
+    
+    try:
+        data = json.loads(request.body)
+        action = data.get('action')
+        
+        if action in ['link_student', 'unlink_student', 'set_delegate']:
+            # Logique pour les Élèves
+            
+            with transaction.atomic():
+                if action == 'link_student':
+                    student_id = data.get('student_id')
+                    try:
+                        student = Student.objects.get(pk=student_id)
+                    except Student.DoesNotExist:
+                        return JsonResponse({'success': False, 'message': 'Élève introuvable.'}, status=404)
+                        
+                    entity_name = student.user.username
+
+                    # 1. CONFORMITÉ : Désactiver toutes les affectations actives pour cet élève/année
+                    # Garantit qu'un élève n'a qu'UNE seule classe active par an.
+                    ClassStudentYear.objects.filter(
+                        student=student, 
+                        year=current_year, 
+                        is_active=True
+                    ).update(is_active=False)
+                    
+                    # 2. Créer ou réactiver la nouvelle affectation
+                    assignment, created = ClassStudentYear.objects.get_or_create(
+                        student_class=current_class, 
+                        student=student, 
+                        year=current_year,
+                        defaults={'is_active': True}
+                    )
+
+                    # Si l'objet existait (et a été désactivé par la ligne 1, ou était déjà lié)
+                    if not created and not assignment.is_active:
+                         assignment.is_active = True
+                         assignment.save()
+                    elif not created and assignment.student_class != current_class:
+                         assignment.student_class = current_class
+                         assignment.is_active = True
+                         assignment.save()
+                    
+                    message = f"L'élève {entity_name} a été affecté à {current_class}. Anciennes classes désaffectées."
+                    
+                    return JsonResponse({
+                        'success': True, 
+                        'message': message, 
+                        'assignment_pk': assignment.pk, 
+                        'student_id': str(student.pk)
+                    })
+
+                elif action == 'unlink_student':
+                    assignment_pk = data.get('assignment_pk')
+                    
+                    # Désactive l'affectation spécifique (maintient l'historique)
+                    deleted_count = ClassStudentYear.objects.filter(
+                        pk=assignment_pk,
+                        student_class=current_class, 
+                        year=current_year,
+                        is_active=True
+                    ).update(is_active=False, is_delegate=False) # Désactive le statut délégué au passage
+                    
+                    if deleted_count > 0:
+                        message = f"L'élève a été retiré de {current_class}."
+                    else:
+                        message = f"Affectation élève active non trouvée pour désactivation."
+                    
+                    return JsonResponse({'success': True, 'message': message})
+
+                elif action == 'set_delegate':
+                    assignment_pk = data.get('assignment_pk')
+                    is_delegate = data.get('is_delegate') # Booléen
+                    
+                    try:
+                        assignment = ClassStudentYear.objects.get(pk=assignment_pk)
+                    except ClassStudentYear.DoesNotExist:
+                        return JsonResponse({'success': False, 'message': 'Affectation élève introuvable.'}, status=404)
+
+                    assignment.is_delegate = is_delegate
+                    assignment.save()
+                    
+                    status_text = "Délégué" if is_delegate else "Non Délégué"
+                    message = f"Statut élève mis à jour: {status_text}."
+                    
+                    return JsonResponse({'success': True, 'message': message, 'is_delegate': is_delegate})
+
+
+        elif action in ['link_teacher', 'unlink_teacher', 'set_main_teacher']:
+            # Logique pour les Professeurs
+            
+            with transaction.atomic():
+                if action == 'link_teacher':
+                    teacher_subject_id = data.get('teacher_subject_id')
+                    try:
+                        teacher_subject = TeacherSubject.objects.get(pk=teacher_subject_id)
+                    except TeacherSubject.DoesNotExist:
+                        return JsonResponse({'success': False, 'message': 'Affectation Professeur/Matière introuvable.'}, status=404)
+                        
+                    teacher_name = teacher_subject.teacher.user.username
+                    subject_name = teacher_subject.subject.name
+
+                    # CONFORMITÉ : Assuré par unique_together sur (student_class, teacher, year)
+                    try:
+                        assignment, created = ClassTeacherYear.objects.get_or_create(
+                            student_class=current_class, 
+                            teacher=teacher_subject, 
+                            year=current_year,
+                            defaults={'is_active': True}
+                        )
+                        
+                        if not created and not assignment.is_active:
+                             # Réactive si l'entrée historique existe mais a été désactivée
+                             assignment.is_active = True
+                             assignment.save()
+                             created = True # Traiter comme une nouvelle affectation pour le message
+                        
+                        if created:
+                            message = f"Affectation ajoutée : {teacher_name} pour {subject_name}."
+                        else:
+                            # Ce cas signifie que l'affectation était déjà active
+                            message = f"Affectation {teacher_name} / {subject_name} est déjà enregistrée."
+                            
+                        return JsonResponse({
+                            'success': True, 
+                            'message': message, 
+                            'assignment_pk': assignment.pk, 
+                            'teacher_subject_id': str(teacher_subject.pk)
+                        })
+                    except IntegrityError:
+                         message = f"Erreur d'intégrité : Affectation Professeur/Matière déjà enregistrée."
+                         return JsonResponse({'success': False, 'message': message}, status=400)
+
+
+                elif action == 'unlink_teacher':
+                    assignment_pk = data.get('assignment_pk')
+                    
+                    # Désactive l'affectation spécifique (maintient l'historique)
+                    deleted_count = ClassTeacherYear.objects.filter(
+                        pk=assignment_pk,
+                        student_class=current_class, 
+                        year=current_year,
+                        is_active=True 
+                    ).update(is_active=False, is_main_teacher=False) # Désactive le statut principal
+                    
+                    if deleted_count > 0:
+                        message = f"L'affectation professeur/matière a été retirée."
+                    else:
+                        message = f"Affectation professeur/classe active non trouvée pour désactivation."
+                    
+                    return JsonResponse({'success': True, 'message': message})
+
+
+                elif action == 'set_main_teacher':
+                    assignment_pk = data.get('assignment_pk')
+                    is_main_teacher = data.get('is_main_teacher') # Booléen
+                    
+                    try:
+                        assignment = ClassTeacherYear.objects.get(pk=assignment_pk)
+                    except ClassTeacherYear.DoesNotExist:
+                        return JsonResponse({'success': False, 'message': 'Affectation professeur introuvable.'}, status=404)
+
+                    # CONFORMITÉ : Un seul professeur principal par classe/année
+                    if is_main_teacher:
+                        # Désactiver le statut principal de tous les autres professeurs dans cette classe/année
+                        ClassTeacherYear.objects.filter(
+                            student_class=current_class, 
+                            year=current_year, 
+                            is_active=True,
+                            is_main_teacher=True
+                        ).exclude(pk=assignment_pk).update(is_main_teacher=False)
+                        
+                    assignment.is_main_teacher = is_main_teacher
+                    assignment.save()
+                    
+                    status_text = "Principal" if is_main_teacher else "Non Principal"
+                    message = f"Statut professeur mis à jour: {status_text}."
+                    
+                    return JsonResponse({'success': True, 'message': message, 'is_main_teacher': is_main_teacher})
+
+        else:
+            return JsonResponse({'success': False, 'message': 'Action non reconnue.'}, status=400)
+
+    except json.JSONDecodeError:
+        return JsonResponse({'success': False, 'message': 'Requête invalide (JSON non valide).'}, status=400)
+    except Exception as e:
+        return JsonResponse({'success': False, 'message': f'Erreur interne du serveur: {str(e)}'}, status=500)

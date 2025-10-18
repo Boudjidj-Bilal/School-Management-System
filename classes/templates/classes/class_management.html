@@ -45,24 +45,6 @@
             <p class="text-lg text-indigo-600 font-semibold">École: {{ school.name }} | Année: {{ current_year.name }}</p>
         </header>
 
-        <!-- Statut de l'autorisation de modification -->
-        {% if is_creation_stape %}
-        <div class="bg-yellow-100 border-l-4 border-yellow-500 text-yellow-800 p-4 mb-6 rounded-lg shadow-inner" role="alert">
-            <div class="flex items-center">
-                <i class="fas fa-exclamation-triangle text-xl mr-3"></i>
-                <span class="font-medium text-lg">Gestion Désactivée:</span> 
-            </div>
-            <p class="mt-2 text-sm">La création, modification ou suppression des classes est impossible lorsque l'année scolaire est en phase de **Création**. Les opérations sont bloquées par la logique métier.</p>
-        </div>
-        {% else %}
-        <div class="bg-green-100 border-l-4 border-green-500 text-green-800 p-4 mb-6 rounded-lg shadow-inner" role="alert">
-            <div class="flex items-center">
-                <i class="fas fa-check-circle text-xl mr-3"></i>
-                <span class="font-medium text-lg">Gestion Activée:</span>
-            </div>
-            <p class="mt-2 text-sm">Vous pouvez gérer les classes. Le niveau doit être sélectionné avant de nommer la classe (ex: 6e4).</p>
-        </div>
-        {% endif %}
         <div id="form-message" class="text-sm font-medium p-3 mb-6 rounded-lg hidden transition-opacity duration-300"></div>
 
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -141,7 +123,15 @@
                                 <tr id="class-row-{{ class_obj.id }}" class="hover:bg-indigo-50/50 transition duration-100">
                                     <td class="px-4 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{{ class_obj.name }}</td>
                                     <td class="px-4 py-4 whitespace-nowrap text-sm text-gray-500" data-level-id="{{ class_obj.level.id }}">{{ class_obj.level.get_level_display }}</td>
-                                    <td class="px-4 py-4 whitespace-nowrap text-right text-sm font-medium space-x-2">
+                                    <td class="px-4 py-4 whitespace-nowrap text-right text-sm font-medium flex justify-end items-center space-x-2">
+                                        
+                                        <!-- Utilise le nom d'URL 'class_assignment_main' avec le pk de la classe -->
+                                        <a href="{% url 'classes:class_assignment_main' pk=class_obj.id %}"
+                                            class="text-teal-600 hover:text-teal-800 p-2 rounded-full hover:bg-gray-100 transition duration-150"
+                                            title="Affecter Élèves et Professeurs">
+                                            <i class="fas fa-user-check"></i>
+                                        </a>
+
                                         <!-- Bouton Modifier - utilise des attributs data-* pour le JS -->
                                         <button type="button"
                                                 data-action="edit"
@@ -158,7 +148,7 @@
                                                 data-action="delete"
                                                 data-id="{{ class_obj.id }}" 
                                                 data-name="{{ class_obj.name }}"
-                                                class="text-red-600 hover:text-red-800 ml-3 p-2 rounded-full hover:bg-gray-100 transition duration-150 disabled:opacity-50 disabled:cursor-not-allowed"
+                                                class="text-red-600 hover:text-red-800 p-2 rounded-full hover:bg-gray-100 transition duration-150 disabled:opacity-50 disabled:cursor-not-allowed"
                                                 title="Supprimer la classe"
                                                 {% if is_creation_stape %}disabled{% endif %}>
                                             <i class="fas fa-trash-alt"></i>
