@@ -500,7 +500,7 @@ def class_assignment_main_view2(request, pk):
         class_years__student_class=current_class, 
         class_years__year=current_year,
         class_years__is_active=True
-    ).order_by('user__last_name').values('pk', 'user__first_name', 'user__last_name', 'user__username')
+    ).order_by('user__username').values('pk', 'user__first_name', 'user__last_name', 'user__username')
     
     # Sérialisation des données d'élèves disponibles (liste de dictionnaires) pour le JS
     available_students_json = json.dumps(list(available_students_queryset))
@@ -524,7 +524,7 @@ def class_assignment_main_view2(request, pk):
         class_years__student_class=current_class, 
         class_years__year=current_year,
         class_years__is_active=True
-    ).order_by('teacher__user__last_name', 'subject__name').values(
+    ).order_by('teacher__user__username', 'subject__name').values(
         'pk', 
         'subject__name', 
         'teacher__user__first_name', 
@@ -753,7 +753,7 @@ def class_assignment_main_view(request, pk):
     ).exclude(
         class_years__year=current_year,
         class_years__is_active=True
-    ).order_by('user__last_name').values(
+    ).order_by('user__username').values(
         'pk', 'user__first_name', 'user__last_name', 'user__username'
     )
     
@@ -773,7 +773,7 @@ def class_assignment_main_view(request, pk):
         'student__user__first_name', 
         'student__user__last_name', 
         'student__user__username'
-    ).order_by('student__user__last_name')
+    ).order_by('student__user__username')
     
     assigned_students_json = json.dumps(list(assigned_students_queryset))
 
@@ -789,7 +789,7 @@ def class_assignment_main_view(request, pk):
         class_years__student_class=current_class, 
         class_years__year=current_year,
         class_years__is_active=True
-    ).order_by('teacher__user__last_name', 'subject__name').values(
+    ).order_by('teacher__user__username', 'subject__name').values(
         'pk', 'subject__name', 'teacher__user__first_name', 'teacher__user__last_name', 'teacher__user__username'
     )
     
