@@ -2,7 +2,7 @@ from django.db import models
 from schools.models import TermYearLevel
 from subjects.models import TeacherSubject
 from users.models import Student
-from scheduling.models import Course
+from scheduling.models import ScheduledCourse
 
 # --> Représente une note obtenue par un élève dans un cours
 class Grade(models.Model):
@@ -16,7 +16,7 @@ class Grade(models.Model):
         Student, on_delete=models.CASCADE, related_name="grades"
     )  # lien vers l'élève
     course = models.ForeignKey(
-        Course, on_delete=models.CASCADE, related_name="grades"
+        ScheduledCourse, on_delete=models.CASCADE, related_name="grades"
     )  # lien vers le cours concerné
     is_absent = models.BooleanField(default=False)  # élève absent lors de l'évaluation
 
@@ -66,4 +66,4 @@ class Mention(models.Model):
         # un élève ne peut avoir qu'une seule mention par période
 
     def __str__(self):
-        return f"{self.student} - {self.get_mention_type_display()} ({self.term_year})"
+        return f"{self.student} - {self.mention_type()} ({self.term_year})"

@@ -1,7 +1,7 @@
 from django.db import models
 from schools.models import TermYearLevel
 from users.models import Student
-from scheduling.models import Course
+from scheduling.models import ScheduledCourse
 
 
 # --> Représente les absences et les retards d'un élève
@@ -20,7 +20,7 @@ class Attendance(models.Model):
         Student, on_delete=models.CASCADE, related_name="student_attendance"
     )  # lien vers l'élève
     course = models.ForeignKey(
-        Course, on_delete=models.CASCADE, related_name="course_attendance"
+        ScheduledCourse, on_delete=models.CASCADE, related_name="course_attendance"
     )  # lien vers le cours
 
     class Meta:
@@ -28,4 +28,4 @@ class Attendance(models.Model):
         # un élève ne peut avoir qu'une seule absence ou qu'un seul retard par cours
 
     def __str__(self):
-        return f"{self.type} ({self.student.first_name} / {self.course.day})"
+        return f"{self.type} ({self.student.user.username} / {self.course.day})"

@@ -9,7 +9,7 @@
 from django.core.exceptions import ObjectDoesNotExist
 from schools.models import TermYearLevel
 from users.models import Student
-from scheduling.models import Course
+from scheduling.models import ScheduledCourse
 from .models import Attendance
 
 """
@@ -37,7 +37,7 @@ def create_attendance(student_id, course_id, term_year_id, attendance_type, just
     """
     try:
         student = Student.objects.get(id=student_id)
-        course = Course.objects.get(id=course_id)
+        course = ScheduledCourse.objects.get(id=course_id)
         term_year = TermYearLevel.objects.get(id=term_year_id)
 
         attendance = Attendance.objects.create(

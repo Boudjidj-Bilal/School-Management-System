@@ -1,7 +1,8 @@
 from django.contrib import admin
-from .models import WeeklyScheduleTemplate, Course, WeeklyScheduleInstance
+from .models import WeeklyScheduleTemplate, ScheduledCourse, CourseTemplate
 
 admin.site.register(WeeklyScheduleTemplate)
-admin.site.register(WeeklyScheduleInstance)
-admin.site.register(Course)
+admin.site.register(ScheduledCourse)
+admin.site.register(CourseTemplate)
+
 

@@ -3,6 +3,8 @@
 
 {% block title %}Affectation de la Classe {{ current_class.name }}{% endblock %}
 
+<!-- TODO : Attention lorsqu'on suprime une attribution matière professeur, cela suprime aussi les cours de ce prof pour cette matière dans le planning des classes : mettre un message d'information pour prévenir et faire une vérification dans la views. -->
+
 {% block content %}
     <!-- Le jeton CSRF est essentiel. Il crée un champ caché que le JavaScript lira. -->
     {% csrf_token %}

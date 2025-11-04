@@ -1,456 +1,266 @@
-from django.core.exceptions import ObjectDoesNotExist
-from django.db.models import QuerySet
-from .models import WeeklyScheduleTemplate, WeeklyScheduleInstance, Course
-from schools.models import Year
-from datetime import date, time
-from subjects.models import TeacherSubject
-from classes.models import Classroom, Class
+from django.db.models import Q
+from django.utils import timezone
+from scheduling.models import ScheduledCourse
+from schools.models import Year, ExceptionDay, ExceptionTime
+from subjects.models import TeacherSubject # <-- [AJOUTÉ] Import nécessaire
+from users.models import Staff # Assurez-vous que Staff est importable
 
-"""
-    Ce fichier centralise les fonctions utilitaires de l'application 'scheduling'.
+from datetime import datetime
 
-    Il gère la logique métier liée à la création, la lecture, la mise à jour et la suppression
-    (CRUD) des modèles de planification hebdomadaire.
-"""
-
-"""
-================================
-GESTION D'UN MODEL DE PLANNING :
-================================
-"""
-
-def create_weekly_schedule_template(name: str, description: str, year_id: int):
+def _parse_iso_datetime(dt_string):
     """
-    Crée et enregistre un nouveau modèle de planning hebdomadaire.
-
-    Args:
-        name (str): Le nom du modèle.
-        description (str): La description du modèle.
-        year_id (int): L'ID de l'année scolaire associée.
-
-    Returns:
-        tuple: (WeeklyScheduleTemplate, str) - L'objet créé ou un message d'erreur.
+    Helper pour parser les strings ISO 8601 de JS, y compris ceux finissant par 'Z'.
     """
-    try:
-        year = Year.objects.get(id=year_id)
-        template = WeeklyScheduleTemplate.objects.create(
-            name=name,
-            description=description,
-            year=year
-        )
-        return template, None
-    except ObjectDoesNotExist as e:
-        return None, f"Erreur: L'année spécifiée n'existe pas. Détails: {str(e)}"
-    except Exception as e:
-        return None, f"Erreur lors de la création du modèle de planning : {str(e)}"
+    if dt_string.endswith('Z'):
+        return datetime.fromisoformat(dt_string.replace('Z', '+00:00'))
+    return datetime.fromisoformat(dt_string)
 
 
-def get_weekly_schedule_template_by_id(template_id: int):
+def check_course_conflicts(courses_to_check, year):
     """
-    Récupère un modèle de planning hebdomadaire par son ID.
-
-    Args:
-        template_id (int): L'ID du modèle.
-
-    Returns:
-        WeeklyScheduleTemplate: L'objet WeeklyScheduleTemplate ou None si non trouvé.
+    Vérifie les conflits pour une liste de cours.
+    Retourne une liste d'erreurs détaillant les problèmes trouvés.
     """
-    try:
-        return WeeklyScheduleTemplate.objects.get(id=template_id)
-    except WeeklyScheduleTemplate.DoesNotExist:
-        return None
+    all_errors = []
 
-
-def get_all_weekly_schedule_templates() -> QuerySet:
-    """
-    Récupère tous les modèles de planning hebdomadaire.
-
-    Returns:
-        QuerySet: Un QuerySet des objets WeeklyScheduleTemplate.
-    """
-    return WeeklyScheduleTemplate.objects.all().order_by('year__start_date', 'name')
-
-
-def update_weekly_schedule_template(template_id: int, **kwargs):
-    """
-    Met à jour un modèle de planning hebdomadaire existant.
-
-    Args:
-        template_id (int): L'ID du modèle à mettre à jour.
-        **kwargs: Les champs à mettre à jour.
-
-    Returns:
-        tuple: (WeeklyScheduleTemplate, str) - L'objet mis à jour ou un message d'erreur.
-    """
-    try:
-        template = WeeklyScheduleTemplate.objects.get(id=template_id)
-        for key, value in kwargs.items():
-            if key == 'year_id':
-                template.year = Year.objects.get(id=value)
-            else:
-                setattr(template, key, value)
-        template.save()
-        return template, None
-    except WeeklyScheduleTemplate.DoesNotExist:
-        return None, "Erreur: Le modèle de planning spécifié n'existe pas."
-    except ObjectDoesNotExist as e:
-        return None, f"Erreur: Une des relations (année) n'existe pas. Détails: {str(e)}"
-    except Exception as e:
-        return None, f"Erreur lors de la mise à jour du modèle de planning : {str(e)}"
-
-
-def delete_weekly_schedule_template(template_id: int) -> bool:
-    """
-    Supprime un modèle de planning hebdomadaire par son ID.
-
-    Args:
-        template_id (int): L'ID du modèle à supprimer.
-
-    Returns:
-        bool: True si la suppression est réussie, False sinon.
-    """
-    try:
-        template = WeeklyScheduleTemplate.objects.get(id=template_id)
-        template.delete()
-        return True
-    except WeeklyScheduleTemplate.DoesNotExist:
-        return False
-    except Exception:
-        return False
-
-"""
-======================================
-GESTION D'UNE INSTANCE D'UN PLANNING :
-======================================
-"""
-
-def create_weekly_schedule_instance(start_date: date, end_date: date, schedule_template_id: int):
-    """
-    Crée et enregistre une nouvelle instance de planning hebdomadaire.
-
-    Args:
-        start_date (date): La date de début de l'instance.
-        end_date (date): La date de fin de l'instance.
-        schedule_template_id (int): L'ID du modèle de planning associé.
-
-    Returns:
-        tuple: (WeeklyScheduleInstance, str) - L'objet créé ou un message d'erreur.
-    """
-    try:
-        schedule_template = WeeklyScheduleTemplate.objects.get(id=schedule_template_id)
-        instance = WeeklyScheduleInstance.objects.create(
-            start_date=start_date,
-            end_date=end_date,
-            schedule_template=schedule_template
-        )
-        return instance, None
-    except ObjectDoesNotExist as e:
-        return None, f"Erreur: Le modèle de planning spécifié n'existe pas. Détails: {str(e)}"
-    except Exception as e:
-        return None, f"Erreur lors de la création de l'instance de planning : {str(e)}"
-
-
-def get_weekly_schedule_instance_by_id(instance_id: int):
-    """
-    Récupère une instance de planning hebdomadaire par son ID.
-
-    Args:
-        instance_id (int): L'ID de l'instance.
-
-    Returns:
-        WeeklyScheduleInstance: L'objet WeeklyScheduleInstance ou None si non trouvé.
-    """
-    try:
-        return WeeklyScheduleInstance.objects.get(id=instance_id)
-    except WeeklyScheduleInstance.DoesNotExist:
-        return None
-
-
-def get_all_weekly_schedule_instances() -> QuerySet:
-    """
-    Récupère toutes les instances de planning hebdomadaire.
-
-    Returns:
-        QuerySet: Un QuerySet des objets WeeklyScheduleInstance.
-    """
-    return WeeklyScheduleInstance.objects.all().order_by('start_date')
-
-
-def get_weekly_schedule_instances_by_template(template_id: int) -> QuerySet:
-    """
-    Récupère toutes les instances de planning associées à un modèle donné.
-
-    Args:
-        template_id (int): L'ID du modèle de planning.
-
-    Returns:
-        QuerySet: Un QuerySet des objets WeeklyScheduleInstance.
-    """
-    try:
-        return WeeklyScheduleInstance.objects.filter(
-            schedule_template_id=template_id
-        ).order_by('start_date')
-    except Exception:
-        return WeeklyScheduleInstance.objects.none()
-
-
-def update_weekly_schedule_instance(instance_id: int, **kwargs):
-    """
-    Met à jour une instance de planning hebdomadaire existante.
-
-    Args:
-        instance_id (int): L'ID de l'instance à mettre à jour.
-        **kwargs: Les champs à mettre à jour.
-
-    Returns:
-        tuple: (WeeklyScheduleInstance, str) - L'objet mis à jour ou un message d'erreur.
-    """
-    try:
-        instance = WeeklyScheduleInstance.objects.get(id=instance_id)
-        for key, value in kwargs.items():
-            if key == 'schedule_template_id':
-                instance.schedule_template = WeeklyScheduleTemplate.objects.get(id=value)
-            else:
-                setattr(instance, key, value)
-        instance.save()
-        return instance, None
-    except WeeklyScheduleInstance.DoesNotExist:
-        return None, "Erreur: L'instance de planning spécifiée n'existe pas."
-    except ObjectDoesNotExist as e:
-        return None, f"Erreur: Le modèle de planning spécifié n'existe pas. Détails: {str(e)}"
-    except Exception as e:
-        return None, f"Erreur lors de la mise à jour de l'instance de planning : {str(e)}"
-
-
-def delete_weekly_schedule_instance(instance_id: int) -> bool:
-    """
-    Supprime une instance de planning hebdomadaire par son ID.
-
-    Args:
-        instance_id (int): L'ID de l'instance à supprimer.
-
-    Returns:
-        bool: True si la suppression est réussie, False sinon.
-    """
-    try:
-        instance = WeeklyScheduleInstance.objects.get(id=instance_id)
-        instance.delete()
-        return True
-    except WeeklyScheduleInstance.DoesNotExist:
-        return False
-    except Exception:
-        return False
-
-
-"""
-====================
-GESTIONS DES COURS :
-====================
-"""
-
-def create_course(day_of_week: int, start_time: time, end_time: time, classroom_id: int, student_class_id: int, teacher_subject_id: int, weekly_planning_template_id: int):
-    """
-    Crée et enregistre un nouveau cours planifié.
-
-    Args:
-        day_of_week (int): Le jour de la semaine.
-        start_time (time): L'heure de début.
-        end_time (time): L'heure de fin.
-        classroom_id (int): L'ID de la salle de classe.
-        student_class_id (int): L'ID de la classe d'élèves.
-        teacher_subject_id (int): L'ID de l'affectation professeur-matière.
-        weekly_planning_template_id (int): L'ID du modèle de planning hebdomadaire.
-
-    Returns:
-        tuple: (Course, str) - L'objet Course créé ou un message d'erreur.
-    """
-    try:
-        classroom = Classroom.objects.get(id=classroom_id)
-        student_class = Class.objects.get(id=student_class_id)
-        teacher_subject = TeacherSubject.objects.get(id=teacher_subject_id)
-        weekly_planning_template = WeeklyScheduleTemplate.objects.get(id=weekly_planning_template_id)
+    # --- Pré-chargement des IDs de Professeur ---
+    ts_ids = {course["teacher_subject_id"] for course in courses_to_check}
+    ts_map = TeacherSubject.objects.filter(id__in=ts_ids).values('id', 'teacher__id')
+    teacher_id_map = {item['id']: item['teacher__id'] for item in ts_map}
+    
+    # Modifie la liste 'courses_to_check' EN PLACE au lieu de la copier.
+    # Cela préserve l'identité des dictionnaires pour la vue.
+    valid_courses_for_check = []
+    for course in courses_to_check:
+        ts_id = course["teacher_subject_id"]
+        teacher_id = teacher_id_map.get(ts_id)
         
-        course = Course.objects.create(
-            day_of_week=day_of_week,
-            start_time=start_time,
-            end_time=end_time,
-            classroom=classroom,
-            student_class=student_class,
-            teacher_subject=teacher_subject,
-            weekly_planning_template=weekly_planning_template
-        )
-        return course, None
-    except ObjectDoesNotExist as e:
-        return None, f"Erreur: Un des objets liés (salle, classe, professeur/matière, modèle) n'existe pas. Détails: {str(e)}"
+        if not teacher_id:
+            all_errors.append({"course": course, "reason": f"ID Prof/Matière {ts_id} invalide ou introuvable."})
+        else:
+            # [CORRIGÉ] Modifie le dictionnaire original en ajoutant une clé.
+            course["teacher_id"] = teacher_id 
+            valid_courses_for_check.append(course)
+    
+    # Les vérifications suivantes ne portent que sur les cours valides
+    # (qui sont des RÉFÉRENCES aux originaux)
+    courses_to_check = valid_courses_for_check 
+    # --- Fin de la modification ---
+
+    # Charger les données existantes pour l’année
+    existing_courses = (
+        ScheduledCourse.objects.filter(year=year)
+        .select_related("teacher_subject__teacher", "classroom", "student_class") # Optimisation: inclure le professeur
+    )
+
+    exception_days = ExceptionDay.objects.filter(year=year)
+    exception_times = ExceptionTime.objects.filter(year=year)
+
+    # Étape 1 : Vérification temporelle (bornes année)
+    all_errors += _check_time_bounds(courses_to_check, year)
+
+    # Étape 2 : Vérification des jours d'exception
+    all_errors += _check_exception_days(courses_to_check, exception_days)
+
+    # Étape 3 : Vérification des horaires d'exception
+    all_errors += _check_exception_times(courses_to_check, exception_times)
+
+    # Étape 4 : Vérification des chevauchements avec les cours existants
+    all_errors += _check_overlap_with_existing_courses(courses_to_check, existing_courses)
+
+    # Étape 5 : Vérification des chevauchements internes
+    all_errors += _check_internal_overlaps(courses_to_check)
+
+    return all_errors
+
+
+# -------------------- Vérifications unitaires -------------------- #
+
+def _check_time_bounds(courses, year):
+    """Vérifie que chaque cours respecte les bornes de l’année."""
+    errors = []
+
+    try:
+        year_start_date = year.start_date.date()
+        year_end_date = year.end_date.date()
+        year_min_time = year.min_time
+        year_max_time = year.max_time
+
+        for course in courses:
+            start_dt_aware = _parse_iso_datetime(course["start_datetime"])
+            end_dt_aware = _parse_iso_datetime(course["end_datetime"])
+
+            start_dt_local = timezone.localtime(start_dt_aware)
+            end_dt_local = timezone.localtime(end_dt_aware)
+            
+            start_date_naive = start_dt_local.date()
+            end_date_naive = end_dt_local.date()
+            start_time_naive = start_dt_local.time()
+            end_time_naive = end_dt_local.time()
+
+            if start_date_naive < year_start_date or end_date_naive > year_end_date:
+                errors.append({
+                    "course": course,
+                    "reason": "Le cours est en dehors des dates de l'année scolaire."
+                })
+            
+            if start_time_naive < year_min_time or end_time_naive > year_max_time:
+                errors.append({
+                    "course": course,
+                    "reason": f"Le cours ({start_time_naive}) dépasse les limites horaires ({year_min_time}-{year_max_time}) autorisées pour l'année."
+                })
+                
     except Exception as e:
-        return None, f"Erreur lors de la création du cours : {str(e)}"
+        print(f"Erreur dans _check_time_bounds: {e}")
+        errors.append({ "course": None, "reason": f"Erreur interne de validation d'heure : {e}" })
+
+    return errors
 
 
-def get_course_by_id(course_id: int):
-    """
-    Récupère un cours par son ID.
+def _check_exception_days(courses, exception_days):
+    """Vérifie que le cours ne tombe pas sur un jour d’exception (vacances, jour férié...)."""
+    errors = []
+    if not exception_days.exists():
+        return errors
 
-    Args:
-        course_id (int): L'ID du cours.
+    for course in courses:
+        try:
+            start_dt_aware = _parse_iso_datetime(course["start_datetime"])
+            start_date_local = timezone.localtime(start_dt_aware).date()
+            
+            for ex_day in exception_days:
+                if ex_day.start_date <= start_date_local <= ex_day.end_date:
+                    errors.append({
+                        "course": course,
+                        "reason": f"Le cours tombe pendant une période exceptionnelle ({ex_day.type})."
+                    })
+                    break 
+        except Exception as e:
+            print(f"Erreur dans _check_exception_days: {e}")
 
-    Returns:
-        Course: L'objet Course ou None si non trouvé.
-    """
-    try:
-        return Course.objects.get(id=course_id)
-    except Course.DoesNotExist:
-        return None
-
-
-def get_all_courses() -> QuerySet:
-    """
-    Récupère tous les cours planifiés.
-
-    Returns:
-        QuerySet: Un QuerySet des objets Course.
-    """
-    return Course.objects.all().order_by('day_of_week', 'start_time')
+    return errors
 
 
-def get_courses_by_template(template_id: int) -> QuerySet:
-    """
-    Récupère tous les cours associés à un modèle de planning hebdomadaire.
+def _check_exception_times(courses, exception_times):
+    """Vérifie que le créneau horaire ne touche pas un créneau d’exception."""
+    errors = []
+    if not exception_times.exists():
+        return errors
 
-    Args:
-        template_id (int): L'ID du modèle de planning.
+    for course in courses:
+        try:
+            start_dt_aware = _parse_iso_datetime(course["start_datetime"])
+            end_dt_aware = _parse_iso_datetime(course["end_datetime"])
 
-    Returns:
-        QuerySet: Un QuerySet des objets Course.
-    """
-    try:
-        return Course.objects.filter(
-            weekly_planning_template_id=template_id
-        ).order_by('day_of_week', 'start_time')
-    except Exception:
-        return Course.objects.none()
+            start_t = timezone.localtime(start_dt_aware).time()
+            end_t = timezone.localtime(end_dt_aware).time()
 
+            for ex_time in exception_times:
+                # Formule de chevauchement stricte (correcte)
+                if (start_t < ex_time.end_time) and (end_t > ex_time.start_time):
+                    errors.append({
+                        "course": course,
+                        "reason": f"Le cours ({start_t}-{end_t}) chevauche un horaire exceptionnel (ex: pause {ex_time.start_time}-{ex_time.end_time})."
+                    })
+                    break 
+        except Exception as e:
+            print(f"Erreur dans _check_exception_times: {e}")
 
-def get_courses_by_class(student_class_id: int) -> QuerySet:
-    """
-    Récupère tous les cours associés à une classe d'élèves.
-
-    Args:
-        student_class_id (int): L'ID de la classe d'élèves.
-
-    Returns:
-        QuerySet: Un QuerySet des objets Course.
-    """
-    try:
-        return Course.objects.filter(
-            student_class_id=student_class_id
-        ).order_by('day_of_week', 'start_time')
-    except Exception:
-        return Course.objects.none()
+    return errors
 
 
-def get_courses_by_teacher(teacher_subject_id: int) -> QuerySet:
-    """
-    Récupère tous les cours associés à un professeur et une matière.
+def _check_overlap_with_existing_courses(courses, existing_courses):
+    """Vérifie les chevauchements (partiels ou totaux) avec les cours existants de l’année."""
+    errors = []
+    if not existing_courses.exists():
+        return errors
 
-    Args:
-        teacher_subject_id (int): L'ID de l'affectation professeur-matière.
+    for new_course in courses:
+        try:
+            start_dt = _parse_iso_datetime(new_course["start_datetime"])
+            end_dt = _parse_iso_datetime(new_course["end_datetime"])
+            
+            for existing in existing_courses:
+                # Condition de chevauchement (comparaison aware vs aware)
+                if (start_dt < existing.end_datetime) and (end_dt > existing.start_datetime):
 
-    Returns:
-        QuerySet: Un QuerySet des objets Course.
-    """
-    try:
-        return Course.objects.filter(
-            teacher_subject_id=teacher_subject_id
-        ).order_by('day_of_week', 'start_time')
-    except Exception:
-        return Course.objects.none()
+                    # 1. Conflit professeur
+                    # Compare le 'teacher_id' (Staff ID) du nouveau cours
+                    # avec le 'teacher_id' (Staff ID) du cours existant.
+                    if existing.teacher_subject.teacher.id == new_course["teacher_id"]:
+                        errors.append({
+                            "course": new_course,
+                            "reason": f"Le professeur ({existing.teacher_subject.teacher}) a déjà un cours sur ce créneau (Classe: {existing.student_class.name}).",
+                            "conflicting_course_id": existing.id
+                        })
 
+                    # 2. Conflit salle
+                    if existing.classroom.id == new_course["classroom_id"]:
+                        errors.append({
+                            "course": new_course,
+                            "reason": f"La salle ({existing.classroom.name}) est déjà occupée sur ce créneau.",
+                            "conflicting_course_id": existing.id
+                        })
 
-def get_courses_by_classroom(classroom_id: int) -> QuerySet:
-    """
-    Récupère tous les cours se déroulant dans une salle de classe.
+                    # 3. Conflit classe
+                    if existing.student_class.id == new_course["student_class_id"]:
+                        errors.append({
+                            "course": new_course,
+                            "reason": "La classe a déjà un cours sur ce créneau.",
+                            "conflicting_course_id": existing.id
+                        })
+        except Exception as e:
+            print(f"Erreur dans _check_overlap_with_existing_courses: {e}")
 
-    Args:
-        classroom_id (int): L'ID de la salle de classe.
-
-    Returns:
-        QuerySet: Un QuerySet des objets Course.
-    """
-    try:
-        return Course.objects.filter(
-            classroom_id=classroom_id
-        ).order_by('day_of_week', 'start_time')
-    except Exception:
-        return Course.objects.none()
-
-
-def get_courses_by_day(day_of_week: int) -> QuerySet:
-    """
-    Récupère tous les cours d'un jour de la semaine donné.
-
-    Args:
-        day_of_week (int): Le jour de la semaine (1 pour Lundi, etc.).
-
-    Returns:
-        QuerySet: Un QuerySet des objets Course.
-    """
-    try:
-        return Course.objects.filter(
-            day_of_week=day_of_week
-        ).order_by('start_time')
-    except Exception:
-        return Course.objects.none()
+    return errors
 
 
-def update_course(course_id: int, **kwargs):
-    """
-    Met à jour un cours planifié existant.
+def _check_internal_overlaps(courses):
+    """Vérifie les chevauchements entre les nouveaux cours (dans la même requête)."""
+    errors = []
+    if len(courses) < 2:
+        return errors
 
-    Args:
-        course_id (int): L'ID du cours à mettre à jour.
-        **kwargs: Les champs à mettre à jour.
+    for i, c1 in enumerate(courses):
+        try:
+            start1 = _parse_iso_datetime(c1["start_datetime"])
+            end1 = _parse_iso_datetime(c1["end_datetime"])
 
-    Returns:
-        tuple: (Course, str) - L'objet mis à jour ou un message d'erreur.
-    """
-    try:
-        course = Course.objects.get(id=course_id)
-        for key, value in kwargs.items():
-            if key == 'classroom_id':
-                course.classroom = Classroom.objects.get(id=value)
-            elif key == 'student_class_id':
-                course.student_class = Class.objects.get(id=value)
-            elif key == 'teacher_subject_id':
-                course.teacher_subject = TeacherSubject.objects.get(id=value)
-            elif key == 'weekly_planning_template_id':
-                course.weekly_planning_template = WeeklyScheduleTemplate.objects.get(id=value)
-            else:
-                setattr(course, key, value)
-        course.save()
-        return course, None
-    except Course.DoesNotExist:
-        return None, "Erreur: Le cours spécifié n'existe pas."
-    except ObjectDoesNotExist as e:
-        return None, f"Erreur: Une des relations liées au cours n'existe pas. Détails: {str(e)}"
-    except Exception as e:
-        return None, f"Erreur lors de la mise à jour du cours : {str(e)}"
+            for j, c2 in enumerate(courses):
+                if i >= j:
+                    continue 
 
+                start2 = _parse_iso_datetime(c2["start_datetime"])
+                end2 = _parse_iso_datetime(c2["end_datetime"])
 
-def delete_course(course_id: int) -> bool:
-    """
-    Supprime un cours planifié par son ID.
+                # Condition de chevauchement (comparaison aware vs aware)
+                if (start1 < end2) and (end1 > start2):
+                    
+                    # [MODIFIÉ] 1. Conflit Professeur
+                    if c1["teacher_id"] == c2["teacher_id"]:
+                        errors.append({
+                            "course": c1,
+                            "reason": "Conflit interne: Le même professeur est assigné à deux cours en même temps.",
+                            "conflict_with": c2
+                        })
 
-    Args:
-        course_id (int): L'ID du cours à supprimer.
+                    # 2. Conflit Salle
+                    if c1["classroom_id"] == c2["classroom_id"]:
+                        errors.append({
+                            "course": c1,
+                            "reason": "Conflit interne: La même salle est utilisée pour deux cours en même temps.",
+                            "conflict_with": c2
+                        })
 
-    Returns:
-        bool: True si la suppression est réussie, False sinon.
-    """
-    try:
-        course = Course.objects.get(id=course_id)
-        course.delete()
-        return True
-    except Course.DoesNotExist:
-        return False
-    except Exception:
-        return False
+                    # 3. Conflit Classe
+                    if c1["student_class_id"] == c2["student_class_id"]:
+                        errors.append({
+                            "course": c1,
+                            "reason": "Conflit interne: La même classe a deux cours en même temps.",
+                            "conflict_with": c2
+                        })
+        except Exception as e:
+            print(f"Erreur dans _check_internal_overlaps: {e}")
+
+    return errors
+

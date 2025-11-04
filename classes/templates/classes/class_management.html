@@ -125,6 +125,15 @@
                                     <td class="px-4 py-4 whitespace-nowrap text-sm text-gray-500" data-level-id="{{ class_obj.level.id }}">{{ class_obj.level.get_level_display }}</td>
                                     <td class="px-4 py-4 whitespace-nowrap text-right text-sm font-medium flex justify-end items-center space-x-2">
                                         
+                                        <a 
+                                        {% if not is_creation_stape %}
+                                        href="{% url 'scheduling:planning_gestion_view' pk_class=class_obj.id %}"
+                                        {% endif %}
+                                        class="text-pink-600 hover:text-pink-800 p-2 rounded-full hover:bg-gray-100 transition duration-150"
+                                        title="Gérer le planning hebdomadaire">
+                                            <i class="fas fa-calendar-alt"></i>
+                                        </a>
+                                        
                                         <!-- Utilise le nom d'URL 'class_assignment_main' avec le pk de la classe -->
                                         <a href="{% url 'classes:class_assignment_main' pk=class_obj.id %}"
                                             class="text-teal-600 hover:text-teal-800 p-2 rounded-full hover:bg-gray-100 transition duration-150"
@@ -143,6 +152,7 @@
                                                 {% if is_creation_stape %}disabled{% endif %}>
                                             <i class="fas fa-edit"></i>
                                         </button>
+
                                         <!-- Bouton Supprimer - utilise des attributs data-* pour le JS -->
                                         <button type="button"
                                                 data-action="delete"

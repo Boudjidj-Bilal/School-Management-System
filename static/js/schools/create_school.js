@@ -4,21 +4,9 @@ document.addEventListener('DOMContentLoaded', () => {
     const messageBox = document.getElementById('messageBox');
     const loadingIndicator = document.getElementById('loadingIndicator');
 
-    // Fonction pour obtenir le jeton CSRF
-    function getCookie(name) {
-        let cookieValue = null;
-        if (document.cookie && document.cookie !== '') {
-            const cookies = document.cookie.split(';');
-            for (let i = 0; i < cookies.length; i++) {
-                const cookie = cookies[i].trim();
-                if (cookie.substring(0, name.length + 1) === (name + '=')) {
-                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
-                    break;
-                }
-            }
-        }
-        return cookieValue;
-    }
+    // 💡 NOUVEAU : Récupération du jeton CSRF directement à partir du DOM (la méthode la plus fiable)
+    const CSRF_TOKEN = document.querySelector('[name=csrfmiddlewaretoken]').value; 
+    // La fonction getCookie n'est plus nécessaire et a été supprimée.
 
     createSchoolForm.addEventListener('submit', async function(event) {
         event.preventDefault();
@@ -29,7 +17,7 @@ document.addEventListener('DOMContentLoaded', () => {
         messageBox.className = 'text-sm font-medium text-center';
         submitBtn.disabled = true;
 
-        // Collecte des données du formulaire
+        // Collecte des données du formulaire (aucun changement ici)
         const schoolName = document.getElementById('schoolName').value;
         const schoolAddress = document.getElementById('schoolAddress').value;
         const schoolType = document.getElementById('schoolType').value;
@@ -43,7 +31,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const principalBirthDate = document.getElementById('principalBirthDate').value;
         const principalAddress = document.getElementById('principalAddress').value;
 
-        // Préparation des données pour la requête
+        // Préparation des données pour la requête (aucun changement ici)
         const data = {
             school_data: {
                 name: schoolName,
@@ -67,18 +55,40 @@ document.addEventListener('DOMContentLoaded', () => {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    'X-CSRFToken': getCookie('csrftoken'),
+                    // Utilisation du jeton directement récupéré (CSRF_TOKEN)
+                    'X-CSRFToken': CSRF_TOKEN, 
                 },
                 body: JSON.stringify(data)
             });
 
+            // 💡 AMÉLIORATION : Gestion des statuts HTTP (403, 500, etc.)
+            if (!response.ok) {
+                // Tente de lire le JSON pour obtenir un message d'erreur du serveur
+                let errorMessage;
+                try {
+                    const errorJson = await response.json();
+                    errorMessage = errorJson.message || `Erreur serveur (Status: ${response.status}).`;
+                } catch (e) {
+                    // Si ce n'est pas du JSON (par exemple, un HTML de 403/Redirection)
+                    errorMessage = response.status === 403 
+                        ? "Accès refusé. Vérifiez vos droits (SuperAdmin)."
+                        : `Erreur inattendue (Status: ${response.status}).`;
+                }
+
+                messageBox.textContent = errorMessage;
+                messageBox.classList.remove('text-green-600');
+                messageBox.classList.add('text-red-600');
+                // Lance une erreur pour passer au bloc catch si vous voulez loguer
+                throw new Error(`HTTP Error Status: ${response.status}`);
+            }
+
+            // Si response.ok est vrai (Status 200), on traite la réponse JSON
             const result = await response.json();
 
-            if (response.ok && result.success) {
+            if (result.success) {
                 messageBox.textContent = result.message;
                 messageBox.classList.remove('text-red-600');
                 messageBox.classList.add('text-green-600');
-                // Vous pouvez réinitialiser le formulaire ici si vous le souhaitez
                 createSchoolForm.reset();
             } else {
                 messageBox.textContent = result.message || 'Erreur lors de la création.';
@@ -86,10 +96,13 @@ document.addEventListener('DOMContentLoaded', () => {
                 messageBox.classList.add('text-red-600');
             }
         } catch (error) {
+            // Le bloc catch ne sera exécuté que si une erreur réseau survient ou si on 'throw' une erreur dans le try
+            if (!messageBox.textContent) { // Pour ne pas écraser les messages d'erreur du serveur
+                 messageBox.textContent = 'Une erreur réseau ou interne est survenue. Veuillez réessayer.';
+                 messageBox.classList.remove('text-green-600');
+                 messageBox.classList.add('text-red-600');
+            }
             console.error('Erreur:', error);
-            messageBox.textContent = 'Une erreur est survenue. Veuillez réessayer.';
-            messageBox.classList.remove('text-green-600');
-            messageBox.classList.add('text-red-600');
         } finally {
             // Masquer l'indicateur de chargement et réactiver le bouton
             loadingIndicator.classList.add('hidden');

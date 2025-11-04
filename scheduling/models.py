@@ -2,82 +2,115 @@ from django.db import models
 from schools.models import Year
 from classes.models import Classroom, Class
 from subjects.models import TeacherSubject
-
+from users.models import User
 
 class WeeklyScheduleTemplate(models.Model):
-    name = models.CharField(max_length=150, default = "Semaine 1") # Nom du modèle (ex: "Planning-Type-1", "Semaine-Examen")
-    description = models.TextField()                     # description du modèle
-    year = models.ForeignKey( 
-        Year, on_delete=models.CASCADE, related_name="weekly_template_annee"
-    )  # relation Many-to-One avec Year
-
-    def __str__(self):
-        return f"Week ({self.name} - {self.year})"
-
-
-# --> Représente une instance précise de planning hebdomadaire
-class WeeklyScheduleInstance(models.Model):
-    start_date = models.DateField()  # date de début
-    end_date = models.DateField()    # date de fin
-
-    schedule_template = models.ForeignKey( 
-        WeeklyScheduleTemplate, on_delete=models.CASCADE, related_name="weekly_template"
-    )  # relation Many-to-One avec Year
-
-    def __str__(self):
-        return f"Week ({self.start_date} - {self.end_date} - template : {self.schedule_template.name})"
+    name = models.CharField(max_length=150, default="Semaine Type")
+    description = models.TextField(blank=True, null=True)
     
-
-# --> Représente un cours planifié (jour, horaires, salle, professeur, matière…)
-class Course(models.Model):
-    day_of_week = models.IntegerField(
-        choices=[(1, 'Lundi'), (2, 'Mardi'), (3, 'Mercredi'), (4, 'Jeudi'), (5, 'Vendredi'), (6, 'Samedi'), (7, 'Dimanche')],
-        default = 1
-    )           
-    start_time = models.TimeField()              # horaire de début
-    end_time = models.TimeField()                # horaire de fin
-    classroom = models.ForeignKey(
-        Classroom, on_delete=models.CASCADE, related_name="courses_classroom"
-    )  # relation Many-to-One avec Classroom
+    # Le template est spécifique à une année
+    year = models.ForeignKey( 
+        Year, on_delete=models.CASCADE, related_name="weekly_template_years"
+    )
+    # Le template est spécifique à UNE classe pour cette année
     student_class = models.ForeignKey(
-        Class, on_delete=models.CASCADE, related_name="courses_student_class"
-    )  # relation Many-to-One avec Class
+        Class, on_delete=models.CASCADE, related_name="weekly_template_class"
+    )
+
+    def __str__(self):
+        return f"Template {self.name} - {self.student_class} ({self.year})"
+
+
+# Modèle Course (représente un cours DANS UN TEMPLATE de semaine)
+class CourseTemplate(models.Model): # Renommé pour plus de clarté
+    day_of_week = models.IntegerField(
+        choices=[(1, 'Lundi'), (2, 'Mardi'), (3, 'Mercredi'), (4, 'Jeudi'), (5, 'Vendredi'), (6, 'Samedi'), (7, 'Dimanche')]
+    )           
+    start_time = models.TimeField()              
+    end_time = models.TimeField()                
+    classroom = models.ForeignKey(
+        Classroom, on_delete=models.CASCADE, related_name="course_templates"
+    )  
     teacher_subject = models.ForeignKey(
-        TeacherSubject, on_delete=models.CASCADE, related_name="courses_teacher_subject"
-    )  # relation Many-to-One avec TeacherSubject
-    is_deleted = models.BooleanField(default=False)  # cours supprimé
-    is_inactive = models.BooleanField(default=False)  # cours inactif
-    weekly_planning_template = models.ForeignKey(
+        TeacherSubject, on_delete=models.CASCADE, related_name="course_templates"
+    )  # Contient la matière et le professeur
+    
+    # Lien avec le nouveau WeeklyScheduleTemplate
+    weekly_template = models.ForeignKey(
         WeeklyScheduleTemplate, on_delete=models.CASCADE, 
-        related_name="courses_weekly_planning_template", default=1
-    )  # relation Many-to-One avec WeeklyScheduleTemplate
+        related_name="course_templates" 
+    )  
 
     class Meta:
         constraints = [
-            # 1️ Un professeur ne peut avoir qu’un seul cours (classe + salle) pour un même créneau et jour dans la même semaine
+            # 1️ Un professeur ne peut avoir qu’un seul cours (dans CE template) pour un même créneau et jour
             models.UniqueConstraint(
-                fields=["day_of_week", "start_time", "end_time", "teacher_subject", "weekly_planning_template"],
-                name="unique_teacher_course_per_week"
+                fields=["day_of_week", "start_time", "end_time", "teacher_subject", "weekly_template"],
+                name="unique_teacher_course_per_template"
             ),
-
-            # 2️ Une classe ne peut avoir qu’un seul cours pour un même créneau et jour dans la même semaine
+            # 2️ Une salle ne peut être utilisée qu’une seule fois (dans CE template) pour un même créneau et jour
             models.UniqueConstraint(
-                fields=["day_of_week", "start_time", "end_time", "student_class", "weekly_planning_template"],
-                name="unique_class_course_per_week"
+                fields=["day_of_week", "start_time", "end_time", "classroom", "weekly_template"],
+                name="unique_classroom_course_per_template"
             ),
-
-            # 3️ Une salle ne peut être utilisée qu’une seule fois pour un même créneau et jour dans la même semaine
-            models.UniqueConstraint(
-                fields=["day_of_week", "start_time", "end_time", "classroom", "weekly_planning_template"],
-                name="unique_classroom_course_per_week"
-            ),
-
-            # 4️ Sécurité supplémentaire : empêcher doublon strict sur tous les champs clés dans la même semaine
-            models.UniqueConstraint(
-                fields=["day_of_week", "start_time", "end_time", "teacher_subject", "student_class", "classroom", "weekly_planning_template"],
-                name="unique_classroom_course_per_week_all"
-            ),
+            # Règle de la classe (n°2 de votre liste initiale) : 
+            # Comme le template est lié à UNE SEULE classe, la classe est implicitement unique pour le template.
         ]
 
     def __str__(self):
-        return f"{self.teacher_subject} - {self.student_class} on {self.day_of_week} ({self.start_time}-{self.end_time})"
+        # La classe est accessible via self.weekly_template.student_class
+        return f"{self.teacher_subject} - {self.weekly_template.student_class} ({self.day_of_week}) ({self.start_time}-{self.end_time})"
+    
+
+
+# --> Représente l'enregistrement d'un cours réel pour une date précise.
+class ScheduledCourse(models.Model):
+    
+    # [MODIFIÉ] Ajout des choix de statut
+    STATUS_CHOICES = [
+        ('ACTIVE', 'Actif'),
+        ('CANCELLED', 'Cours annulé'),
+        ('TEACHER_ABSENT', 'Professeur absent'),
+    ]
+
+    # Lien vers l'objet "template" qui a servi à le créer (pour la traçabilité)
+    course_template = models.ForeignKey(
+        CourseTemplate, on_delete=models.SET_NULL, null=True, related_name="scheduled_instances"
+    )
+    
+    # Informations de planification fixes (copiées du template)
+    classroom = models.ForeignKey(
+        Classroom, on_delete=models.PROTECT, related_name="scheduled_courses_classroom"
+    )
+    teacher_subject = models.ForeignKey(
+        TeacherSubject, on_delete=models.PROTECT, related_name="scheduled_courses_teacher"
+    )
+    student_class = models.ForeignKey(
+        Class, on_delete=models.PROTECT, related_name="scheduled_courses_class"
+    )
+
+    # Informations temporelles précises
+    start_datetime = models.DateTimeField() # Date et heure de début
+    end_datetime = models.DateTimeField()   # Date et heure de fin
+    
+    # [MODIFIÉ] Ajout du champ status
+    status = models.CharField(
+        max_length=20, 
+        choices=STATUS_CHOICES, 
+        default='ACTIVE',
+        db_index=True # Ajout d'un index pour accélérer les filtrages sur le statut
+    )
+
+    # Métadonnées
+    created_by = models.ForeignKey(
+        User, on_delete=models.PROTECT, related_name="created_courses"
+    ) # Assurez-vous d'importer le modèle User
+    
+    year = models.ForeignKey(
+        Year, on_delete=models.PROTECT, related_name="scheduled_courses_year"
+    ) 
+    
+    def __str__(self):
+        # Amélioration du __str__ pour inclure le statut
+        return f"{self.teacher_subject} - {self.student_class} ({self.start_datetime.strftime('%Y-%m-%d %H:%M')}) [{self.status}]"
+

@@ -61,22 +61,8 @@ def create_school_view(request):
                 last_name = principal_data['last_name']
 
                 principal_email = principal_data['email']
-
-                username_principal = generate_unique_username(first_name, last_name) # On génère un nom d'utilisateur unique
-                
-                # 1. Crée l'utilisateur (proviseur)
-                principal_user, message_error = create_user(
-                    username=username_principal,
-                    password=password,
-                    email=principal_email,
-                    first_name=first_name,
-                    last_name=last_name
-                )
-
-                if message_error:
-                    return JsonResponse({'success': False, 'message': message_error}, status=400)
-
-                # 2. Crée l'école
+            
+                # 1. Crée l'école
                 school, message_error = create_school(
                     name=school_data['name'],
                     address=school_data['address'],
@@ -87,6 +73,22 @@ def create_school_view(request):
                 )
 
                 if message_error:
+                    return JsonResponse({'success': False, 'message': message_error}, status=400)
+                
+                username_principal = generate_unique_username(first_name, last_name) # On génère un nom d'utilisateur unique
+
+                # 2. Crée l'utilisateur (proviseur)
+                principal_user, message_error = create_user(
+                    username=username_principal,
+                    password=password,
+                    email=principal_email,
+                    first_name=first_name,
+                    last_name=last_name
+                )
+
+                print(principal_user)
+
+                if not message_error:
                     return JsonResponse({'success': False, 'message': message_error}, status=400)
 
                 # 3. Crée le membre du staff (proviseur)
@@ -100,6 +102,8 @@ def create_school_view(request):
                     address=principal_data['address'],
                     birth_date=principal_data.get('birth_date')
                 )
+                print(principal_staff)
+
 
                 if message_error:
                     return JsonResponse({'success': False, 'message': message_error}, status=400)
@@ -186,7 +190,7 @@ def create_or_update_year_api(request):
         return JsonResponse({"success": False, "message": "École non déterminée."}, status=400)
 
     # Erreur : Si l'école est inactive
-    if school.is_active == False:
+    if not school.is_active:
             return HttpResponseForbidden("Lécole est inactif.")
     
     try:
@@ -304,10 +308,6 @@ STATUS_FIELDS = {
     'end_year': 'end_year',
     'finished': 'finished',
 }
-
-"""
-
-"""
 
 @require_http_methods(["POST"])
 @login_required

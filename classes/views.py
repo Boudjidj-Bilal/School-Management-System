@@ -479,16 +479,13 @@ def class_assignment_main_view(request, pk):
     allowed_roles = ["SuperAdministrator", "Principal", "Administrator"] 
     
     if user_type not in allowed_roles:
-        # Retourne JSON au lieu de rendre une page 403.html
         return JsonResponse({"success": False, "message": "Permission refusée. Rôle non autorisé."}, status=403) 
 
     try:
         school_filter = get_user_school(request.user, request.session.get('selected_school_id'))
     except School.DoesNotExist:
-        # Retourne JSON au lieu de rendre une page 404.html
         return JsonResponse({"success": False, "message": "École introuvable. Connexion impossible."}, status=404)
         
-    # Utilisation de get_object_or_404, qui lève une Http404 si l'objet n'existe pas
     try:
         current_class = Class.objects.get(pk=pk)
     except Class.DoesNotExist:

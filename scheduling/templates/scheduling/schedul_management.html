@@ -1,0 +1,242 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Gestion du Planning : {{ classe.name }} ({{ current_year.name }}){% endblock %}
+
+{% block content %}
+    {% csrf_token %}
+
+    <div class="max-w-7xl mx-auto p-4 sm:p-8">
+        <header class="mb-8 border-b pb-4 border-gray-200">
+            <a href="#" onclick="history.back();" class="text-indigo-600 hover:text-indigo-800 text-sm font-medium transition duration-150">
+                <i class="fas fa-arrow-left mr-2"></i> Retour
+            </a>
+            <h1 class="text-3xl font-extrabold text-gray-900 mt-2 flex items-center">
+                <i class="fas fa-calendar-alt text-indigo-600 mr-3"></i>
+                Gestion du Planning : <span class="text-indigo-600">{{ classe.name }}</span>
+            </h1>
+            <p class="text-lg text-gray-600 font-medium">Année Scolaire : {{ current_year.name }}</p>
+        </header>
+
+        <div id="notification-area" class="mb-6 space-y-3">
+            <!-- Notifications JS -->
+        </div>
+        
+        <!-- Outils de planning en deux parties -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-8">
+            
+            <!-- Colonne 1: Gestion Modèle et Génération -->
+            <aside class="lg:col-span-1 space-y-8">
+                <!-- Gestion des Modèles -->
+                <div class="w-full bg-white rounded-xl shadow-2xl p-6 border border-gray-100">
+                    <h2 class="text-2xl font-bold text-gray-800 mb-6 flex items-center border-b pb-3">
+                        <i class="fas fa-layer-group text-indigo-500 mr-3"></i> 1. Modèle de Semaine
+                    </h2>
+                    
+                    <div class="mb-4">
+                        <label for="template-select" class="block text-sm font-semibold text-gray-700 mb-2">Charger / Nouveau Modèle</label>
+                        <select id="template-select"
+                            class="w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-indigo-500 focus:border-indigo-500 transition duration-150">
+                            <option value="NEW" selected>-- Nouveau Modèle --</option>
+                            {% for template in weekly_scheduling_templates %}
+                                <option value="{{ template.pk }}">{{ template.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <button id="save-template-btn" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-2 px-4 rounded-lg shadow-md transition duration-150 ease-in-out">
+                        <i class="fas fa-save mr-2"></i> Enregistrer/Mettre à jour
+                    </button>
+                </div>
+
+                <!-- Génération des Cours Réels -->
+                <div class="w-full bg-white rounded-xl shadow-2xl p-6 border border-gray-100">
+                    <h2 class="text-2xl font-bold text-gray-800 mb-6 flex items-center border-b pb-3">
+                        <i class="fas fa-cogs text-red-500 mr-3"></i> 3. Génération
+                    </h2>
+                    <p class="text-sm text-gray-600 mb-4">
+                        Utilisez le modèle de planning actuel pour <b>générer les cours réels</b> pour une ou plusieurs semaines.
+                    </p>
+                    <button id="create-scheduled-courses-btn"
+                        class="w-full bg-red-600 hover:bg-red-700 text-white font-semibold py-3 px-4 rounded-lg shadow-lg transition duration-150 ease-in-out disabled:opacity-50"
+                        disabled>
+                        <i class="fas fa-calendar-check mr-2"></i> Générer les Cours Réels
+                    </button>
+                </div>
+            </aside>
+
+            <!-- Colonne 2: Ajout de cours au modèle -->
+            <section class="lg:col-span-2 w-full bg-white rounded-xl shadow-2xl p-6 border border-gray-100">
+                <h2 class="text-2xl font-bold text-gray-800 mb-6 flex items-center border-b pb-3">
+                    <i class="fas fa-pencil-alt text-teal-500 mr-3"></i> 2. Ajouter un Cours au Modèle
+                </h2>
+                
+                <div id="school-hours-info" 
+                     class="p-4 rounded-lg bg-teal-50 border border-teal-200 text-teal-800 space-y-2 mb-6 text-sm">
+                    <!-- Rempli par JavaScript au chargement -->
+                    <p>Chargement des informations horaires...</p>
+                </div>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <!-- Horaires -->
+                    <div class="space-y-4 p-4 border rounded-lg bg-gray-50">
+                        <div>
+                            <label for="course-day-select" class="block text-sm font-semibold text-gray-700 mb-1">Jour de la semaine</label>
+                            <select id="course-day-select" class="w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-teal-500 focus:border-teal-500">
+                                <option value="1">Lundi</option>
+                                <option value="2">Mardi</option>
+                                <option value="3">Mercredi</option>
+                                <option value="4">Jeudi</option>
+                                <option value="5">Vendredi</option>
+                                <option value="6">Samedi</option>
+                                <option value="7">Dimanche</option>
+                            </select>
+                        </div>
+                        <div class="flex space-x-4">
+                            <div class="flex-1">
+                                <label for="course-start-time" class="block text-sm font-semibold text-gray-700 mb-1">Début (HH:MM)</label>
+                                <input type="time" id="course-start-time" class="w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm" step="300">
+                            </div>
+                            <div class="flex-1">
+                                <label for="course-end-time" class="block text-sm font-semibold text-gray-700 mb-1">Fin (HH:MM)</label>
+                                <input type="time" id="course-end-time" class="w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm" step="300">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Ressources -->
+                    <div class="space-y-4 p-4 border rounded-lg bg-gray-50">
+                        <div>
+                            <label for="teacher-subject-select" class="block text-sm font-semibold text-gray-700 mb-1">Matière & Professeur</label>
+                            <select id="teacher-subject-select" class="w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-indigo-500 focus:border-indigo-500">
+                                <!-- Rempli par JS -->
+                            </select>
+                        </div>
+                        <div>
+                            <label for="classroom-select" class="block text-sm font-semibold text-gray-700 mb-1">Salle de Classe</label>
+                            <select id="classroom-select" class="w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-indigo-500 focus:border-indigo-500">
+                                <!-- Rempli par JS -->
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="mt-6">
+                    <button id="add-course-template-btn" class="w-full bg-teal-600 hover:bg-teal-700 text-white font-bold py-3 px-4 rounded-lg shadow-md transition duration-150 ease-in-out">
+                        <i class="fas fa-plus-circle mr-2"></i> Ajouter ce cours au modèle
+                    </button>
+                </div>
+            </section>
+        </div>
+
+        <!-- Conteneur pour les "Cartes" de Cours -->
+        <section class="w-full bg-white rounded-xl shadow-2xl p-6 border border-gray-100">
+            
+            <!-- [MODIFIÉ] Ajout du conteneur pour le total -->
+            <div class="flex flex-wrap justify-between items-center mb-6 border-b pb-3">
+                <h2 class="text-2xl font-bold text-gray-800 flex items-center">
+                    <i class="fas fa-table text-indigo-500 mr-3"></i> Cours dans le Modèle Actuel
+                </h2>
+                <!-- [NOUVEAU] Badge pour le total des heures -->
+                <div id="template-total-hours" class="text-lg font-bold text-gray-700 bg-indigo-100 text-indigo-800 px-4 py-2 rounded-lg shadow-inner" style="display: none;">
+                    Total: 0h 00m
+                </div>
+            </div>
+
+            <div id="schedule-grid-container" class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-4" style="min-height: 100px;">
+                <p id="no-courses-message" class="text-gray-500 text-center col-span-full">
+                    Ce modèle est vide. Ajoutez des cours en utilisant le formulaire ci-dessus.
+                </p>
+            </div>
+        </section>
+    </div>
+
+    <!-- Modal de Confirmation (O/N) -->
+    <div id="confirmation-modal" class="fixed inset-0 bg-gray-900 bg-opacity-75 flex items-center justify-center z-50 transition-opacity duration-300 opacity-0 pointer-events-none">
+        <div class="bg-white rounded-xl shadow-2xl w-full max-w-md p-6 transform translate-y-4 transition-transform duration-300">
+            <h3 id="modal-title" class="text-xl font-bold text-red-600 mb-3 flex items-center">
+                <i class="fas fa-exclamation-triangle mr-3"></i> Confirmation
+            </h3>
+            <p id="modal-message" class="text-gray-700 mb-6">
+                Êtes-vous sûr ?
+            </p>
+            <div class="flex justify-end space-x-4">
+                <button id="modal-cancel-btn"
+                        class="px-4 py-2 bg-gray-200 text-gray-800 font-semibold rounded-lg hover:bg-gray-300 transition duration-150">
+                    Annuler
+                </button>
+                <button id="modal-confirm-btn"
+                        class="px-4 py-2 bg-red-600 text-white font-semibold rounded-lg shadow-md hover:bg-red-700 transition duration-150">
+                    Confirmer
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal pour Saisie (Nom Template, Date Génération) -->
+    <div id="input-modal" class="fixed inset-0 bg-gray-900 bg-opacity-75 flex items-center justify-center z-50 transition-opacity duration-300 opacity-0 pointer-events-none">
+        <div class="bg-white rounded-xl shadow-2xl w-full max-w-md p-6 transform translate-y-4 transition-transform duration-300">
+            <h3 id="modal-input-title" class="text-xl font-bold text-gray-800 mb-4">
+                <!-- Titre JS -->
+            </h3>
+            <div id="modal-input-content" class="space-y-2 mb-6">
+                <!-- Contenu JS -->
+            </div>
+            <div class="flex justify-end space-x-4">
+                <button id="modal-input-cancel-btn"
+                        class="px-4 py-2 bg-gray-200 text-gray-800 font-semibold rounded-lg hover:bg-gray-300 transition duration-150">
+                    Annuler
+                </button>
+                <button id="modal-input-confirm-btn"
+                        class="px-4 py-2 bg-indigo-600 text-white font-semibold rounded-lg shadow-md hover:bg-indigo-700 transition duration-150">
+                    Confirmer
+                </button>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+{% block extra_js %}
+{# --- BLOC JSON SÉRIALISÉ --- #}
+{{ classrooms_data|json_script:"classrooms_data" }}
+{{ teacher_subjects_data|json_script:"teacher_subjects_data" }}
+{{ weekly_scheduling_templates_data|json_script:"weekly_templates_data" }}
+{{ course_templates_data|json_script:"course_templates_data" }}
+{{ exception_days_data|json_script:"exception_days_data" }}
+{{ exception_times_data|json_script:"exception_times_data" }}
+
+{# --- VARIABLES DE L'ANNÉE --- #}
+<script>
+    // Variables contextuelles
+    const CLASS_PK = "{{ classe.pk }}"; 
+    const YEAR_PK = "{{ current_year.pk }}"; 
+    const YEAR_MIN_TIME = "{{ current_year.min_time|time:'H:i' }}";
+    const YEAR_MAX_TIME = "{{ current_year.max_time|time:'H:i' }}";
+    const YEAR_START_DATE = "{{ current_year.start_date|date:'Y-m-d' }}";
+    const YEAR_END_DATE = "{{ current_year.end_date|date:'Y-m-d' }}";
+    
+    // Récupération du jeton CSRF
+    const CSRF_TOKEN = document.querySelector('[name=csrfmiddlewaretoken]').value;
+    
+    // URLs des APIs
+    const API_URLS = {
+        MANAGE_TEMPLATE: "{% url 'scheduling:manage_weekly_schedule_template_view' %}",
+        MANAGE_COURSE: "{% url 'scheduling:manage_course_template_view' %}",
+        CREATE_SCHEDULED_COURSES: "{% url 'scheduling:create_scheduled_courses_view' %}",
+    };
+    
+    // Jours de la semaine (pour le rendu)
+    const DAYS_OF_WEEK = [
+        { key: 1, name: 'Lundi' },
+        { key: 2, name: 'Mardi' },
+        { key: 3, name: 'Mercredi' },
+        { key: 4, name: 'Jeudi' },
+        { key: 5, name: 'Vendredi' },
+        { key: 6, name: 'Samedi' },
+        { key: 7, name: 'Dimanche' },
+    ];
+</script>
+
+<script src="{% static 'js/scheduling/schedul_management.js' %}"></script>
+{% endblock %}
+

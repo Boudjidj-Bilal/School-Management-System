@@ -18,6 +18,7 @@ __pycache__/
 
 # ------------------ Fichiers Python et dépendances ------------------
 venv/
+venv.txt
 env/
 .env
 pip-log.txt

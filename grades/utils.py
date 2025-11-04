@@ -5,7 +5,7 @@ from .models import Grade, Appreciation, Mention
 from users.models import Student, Staff
 from schools.models import TermYearLevel, School
 from classes.models import ClassStudentYear, ClassTeacherYear, Class
-from scheduling.models import Course
+from scheduling.models import ScheduledCourse
 from subjects.models import TeacherSubject
 from attendance.models import Attendance
 import pandas as pd
@@ -48,7 +48,7 @@ def create_grade(student_id: int, course_id: int, term_year_id: int, grade_value
     """
     try:
         student = Student.objects.get(id=student_id)
-        course = Course.objects.get(id=course_id)
+        course = ScheduledCourse.objects.get(id=course_id)
         term_year = TermYearLevel.objects.get(id=term_year_id)
 
         grade = Grade.objects.create(
@@ -429,7 +429,7 @@ def get_general_average_subject(student_id: int, term_year_id: int, teacher_subj
         # 2. Récupère tous les cours pour la matière et le professeur donnés
         # On utilise le lien Year > WeeklyScheduleTemplate pour trouver les cours.
         # Le modèle TermYearLevel a une relation avec le modèle Year.
-        courses = Course.objects.filter(
+        courses = ScheduledCourse.objects.filter(
             teacher_subject=teacher_subject,
             weekly_planning_template__year=term_year.year
         )
@@ -856,7 +856,7 @@ def generate_report_card(student_id: int, term_year_id: int, class_id: int) -> t
             
             # On vérifie que la matière est bien liée à un cours dans la classe de l'élève.
             # Cela évite d'inclure des matières que la classe n'a pas.
-            if not Course.objects.filter(
+            if not ScheduledCourse.objects.filter(
                 teacher_subject=ts,
                 class_set__in=[current_class.id],
                 weekly_planning_template__year=year
