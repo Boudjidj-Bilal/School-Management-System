@@ -7,16 +7,15 @@ from django.db import IntegrityError, transaction
 from django.contrib.auth.decorators import login_required
 from django.views.decorators.http import require_http_methods
 from django.db.models import F # Assurez-vous d'importer F en haut du fichier
+from django.utils import timezone
 
 # Import des modèles
 from scheduling.models import WeeklyScheduleTemplate, CourseTemplate, ScheduledCourse
 from schools.models import Year, ExceptionDay, ExceptionTime
 from classes.models import Class, Classroom, ClassTeacherYear
-from subjects.models import TeacherSubject
-
 
 # Import des utilitaires
-from .utils import check_course_conflicts
+from .utils import check_course_conflicts, get_week_schedule_data
 from users.utils import get_user_type
 from schools.utils import get_current_year_for_school
 
@@ -293,134 +292,6 @@ def manage_course_template_view(request):
         return JsonResponse({'success': False, 'message': f"Erreur interne : {str(e)}"}, status=500)
 
 
-
-@require_http_methods(["POST"])
-@csrf_exempt
-@login_required(login_url='login')
-def create_scheduled_courses_view2(request):
-    """
-    API pour la création des cours réels (ScheduledCourse) à partir des données envoyées.
-    - Vérifie toutes les contraintes (règles de chevauchement, heures, exceptions, etc.)
-    - Enregistre uniquement les cours valides
-    - Retourne la liste complète des erreurs si des conflits sont détectés
-
-    Corps JSON attendu :
-    {
-        "courses_list": [
-            {
-                "teacher_subject_id": int,
-                "classroom_id": int,
-                "student_class_id": int,
-                "start_datetime": "2025-09-01T08:00:00",
-                "end_datetime": "2025-09-01T09:30:00"
-            },
-            ...
-        ],
-        "year_id": int
-    }
-    """
-
-    # Vérification du rôle utilisateur
-    user_type = get_user_type(request.user)
-    if user_type not in ["SuperAdministrator", "Principal", "Administrator"]:
-        return JsonResponse({"success": False, "message": "Accès refusé."}, status=403)
-
-    try:
-        # --------------------------------------------------------
-        # 1. Lecture et validation des données reçues
-        # --------------------------------------------------------
-        data = json.loads(request.body)
-        courses_list = data.get("courses_list", [])
-        year_id = data.get("year_id")
-
-        if not courses_list or not year_id:
-            return JsonResponse({
-                "success": False,
-                "message": "Les champs 'courses_list' et 'year_id' sont obligatoires."
-            }, status=400)
-
-        # Vérification de l'existence de l'année
-        year = get_object_or_404(Year, pk=year_id)
-
-        # --------------------------------------------------------
-        # 2. Vérification des conflits
-        # --------------------------------------------------------
-        conflicts = check_course_conflicts(courses_list, year_id)
-        if conflicts:
-            return JsonResponse({
-                "success": False,
-                "message": "Certains cours présentent des conflits.",
-                "errors": conflicts
-            }, status=409)
-
-        # --------------------------------------------------------
-        # 3. Création des cours valides
-        # --------------------------------------------------------
-        created_courses = []
-        errors = []
-
-        with transaction.atomic():
-            for course_data in courses_list:
-                try:
-                    start_dt = datetime.datetime.fromisoformat(
-                        course_data['start_datetime'].replace('Z', '+00:00')
-                    )
-                    end_dt = datetime.datetime.fromisoformat(
-                        course_data['end_datetime'].replace('Z', '+00:00')
-                    )
-
-                    new_course = ScheduledCourse.objects.create(
-                        classroom__id=course_data["classroom_id"],
-                        teacher_subject__id=course_data["teacher_subject_id"],
-                        student_class__id=course_data["student_class_id"],
-                        start_datetime=start_dt,
-                        end_datetime=end_dt,
-                        year=year,
-                        created_by=request.user,
-                    )
-
-                    created_courses.append({
-                        "id": new_course.id,
-                        "teacher_subject_id": new_course.teacher_subject.id,
-                        "classroom_id": new_course.classroom.id,
-                        "student_class_id": new_course.student_class.id,
-                        "start_datetime": str(new_course.start_datetime),
-                        "end_datetime": str(new_course.end_datetime)
-                    })
-
-                except IntegrityError as e:
-                    errors.append({
-                        "course_data": course_data,
-                        "error": f"Erreur d'intégrité : {str(e)}"
-                    })
-                except Exception as e:
-                    errors.append({
-                        "course_data": course_data,
-                        "error": f"Erreur lors de la création : {str(e)}"
-                    })
-
-        # --------------------------------------------------------
-        # 4. Réponse finale
-        # --------------------------------------------------------
-        return JsonResponse({
-            "success": True if not errors else False,
-            "message": (
-                "Tous les cours ont été créés avec succès."
-                if not errors
-                else "Certains cours n'ont pas pu être créés."
-            ),
-            "created_count": len(created_courses),
-            "errors_count": len(errors),
-            "created_courses": created_courses,
-            "errors": errors
-        })
-
-    except json.JSONDecodeError:
-        return JsonResponse({"success": False, "message": "Requête JSON invalide."}, status=400)
-    except Exception as e:
-        return JsonResponse({"success": False, "message": f"Erreur interne : {str(e)}"}, status=500)
-
-
 @require_http_methods(["POST"])
 @csrf_exempt
 @login_required(login_url='login')
@@ -547,82 +418,159 @@ def create_scheduled_courses_view(request):
 
 
 
-
-
-
-# ====================================================================================
-# ====================================================================================
-# ====================================================================================
-# ====================================================================================
-# ====================================================================================
-
-
-
-
-# --- API 3: RÉCUPÉRATION DU CALENDRIER (FRONT-END) ---
-
-@require_http_methods(["GET"])
 @login_required(login_url='login')
-def planningCalendarView(request):
+def view_class_schedule_page(request, pk_class):
     """
-    API pour récupérer les cours planifiés pour l'affichage du calendrier (élève ou professeur).
+    Affiche la page principale de l'AFFICHAGE du planning pour une classe.
     """
-    year_pk = request.GET.get('year_pk')
-    class_pk = request.GET.get('class_pk')
-    teacher_pk = request.GET.get('teacher_pk')
+    try:
+        classe = get_object_or_404(Class, pk=pk_class)
+        school = classe.level.school
+        current_year = get_current_year_for_school(school)
 
-    if not year_pk:
-        return JsonResponse({"success": False, "message": "L'ID de l'année est obligatoire."}, status=400)
+        if not current_year:
+            return HttpResponseForbidden("Aucune année scolaire courante n'est définie pour cette école.")
+
+        # --- 1. Logique de Date ---
+        today = timezone.now().date()
+        year_start_date = current_year.start_date.date()
+        year_end_date = current_year.end_date.date()
+        
+        target_date = today
+        
+        # Gère les cas hors-limites
+        if today < year_start_date:
+            target_date = year_start_date
+        elif today > year_end_date:
+            target_date = year_end_date
+            
+        # Calcule le Lundi de la semaine cible
+        start_of_week = target_date - datetime.timedelta(days=target_date.weekday())
+        
+        # --- 2. Permissions ---
+        user_type = get_user_type(request.user)
+        is_admin_user = user_type in ["SuperAdministrator", "Principal", "Administrator"]
+
+        # --- 3. Données initiales ---
+        courses_data = get_week_schedule_data(classe, start_of_week)
+        
+        # --- 4. Contexte ---
+        context = {
+            'current_year': current_year,
+            'classe': classe,
+            'is_admin_user': is_admin_user,
+            
+            # Données pour le JS
+            'courses_data': courses_data, # Données de la première semaine
+            'week_start_date_iso': start_of_week.isoformat(),
+            'year_min_time': current_year.min_time.strftime('%H:%M'),
+            'year_max_time': current_year.max_time.strftime('%H:%M'),
+            'year_start_date_iso': year_start_date.isoformat(),
+            'year_end_date_iso': year_end_date.isoformat(),
+            'exception_times_data': list(ExceptionTime.objects.filter(year=current_year).values('start_time', 'end_time')),
+        }
+        
+        return render(request, 'scheduling/view_schedule.html', context)
+
+    except Exception as e:
+        print(f"Erreur dans view_class_schedule_page: {e}")
+        return HttpResponseForbidden("Erreur lors du chargement de la page.")
+
+
+@require_http_methods(["POST"])
+@csrf_exempt
+@login_required(login_url='login')
+def api_get_week_schedule_views(request):
+    """
+    API pour récupérer les cours d'une semaine spécifique via JS (navigation).
+    """
+    try:
+        data = json.loads(request.body)
+        start_date_str = data.get("start_date")
+        class_id = data.get("class_id")
+
+        if not start_date_str or not class_id:
+            return JsonResponse({"success": False, "message": "Date de début ou ID de classe manquant."}, status=400)
+
+        classe = get_object_or_404(Class, pk=class_id)
+        start_of_week = datetime.date.fromisoformat(start_date_str)
+
+        # Appelle le même utilitaire que la vue principale
+        courses_data = get_week_schedule_data(classe, start_of_week)
+        
+        return JsonResponse({"success": True, "courses": courses_data})
+
+    except Class.DoesNotExist:
+        return JsonResponse({"success": False, "message": "Classe introuvable."}, status=404)
+    except Exception as e:
+        return JsonResponse({"success": False, "message": f"Erreur interne : {str(e)}"}, status=500)
+
+
+@require_http_methods(["POST"])
+@csrf_exempt
+@login_required(login_url='login')
+def api_manage_course_status_views(request):
+    """
+    API sécurisée pour les Admins pour modifier le statut d'un cours
+    (Annuler, Marquer absent, Réactiver) ou le Supprimer.
+    """
+    # --- 1. Sécurité ---
+    user_type = get_user_type(request.user)
+    if user_type not in ["SuperAdministrator", "Principal", "Administrator"]:
+        return JsonResponse({"success": False, "message": "Accès refusé. Droits insuffisants."}, status=403)
 
     try:
-        courses = ScheduledCourse.objects.filter(year_id=year_pk)
-        
-        # Filtrage par classe
-        if class_pk:
-            courses = courses.filter(student_class_id=class_pk)
-            
-        # Filtrage par professeur
-        elif teacher_pk:
-            teacher_subjects_ids = TeacherSubject.objects.filter(teacher_id=teacher_pk).values_list('pk', flat=True)
-            courses = courses.filter(teacher_subject_id__in=teacher_subjects_ids)
+        data = json.loads(request.body)
+        course_id = data.get("course_id")
+        action = data.get("action") # ex: "DELETE", "SET_CANCELLED", "SET_ACTIVE", "SET_TEACHER_ABSENT"
 
-        # Récupération des données formatées
-        course_data = list(courses.select_related(
-            'student_class', 'classroom', 'teacher_subject__subject', 'teacher_subject__teacher__user'
-        ).values(
-            'pk', 
-            'start_datetime', 
-            'end_datetime', 
-            'classroom__name',
-            'student_class__name', 
-            'teacher_subject__subject__name',
-            'teacher_subject__teacher__user__first_name',
-            'teacher_subject__teacher__user__last_name'
-        ))
-        
-        formatted_courses = []
-        for course in course_data:
-            start_iso = course['start_datetime'].isoformat() if course['start_datetime'] else None
-            end_iso = course['end_datetime'].isoformat() if course['end_datetime'] else None
-            
-            title = f"{course['teacher_subject__subject__name']} - {course['student_class__name']}"
-            teacher_name = f"{course['teacher_subject__teacher__user__first_name']} {course['teacher_subject__teacher__user__last_name']}"
-            
-            formatted_courses.append({
-                'id': course['pk'],
-                'title': title,
-                'start': start_iso,
-                'end': end_iso,
-                'classroom': course['classroom__name'],
-                'class_name': course['student_class__name'],
-                'teacher_name': teacher_name
-            })
+        if not course_id or not action:
+            return JsonResponse({"success": False, "message": "ID de cours ou action manquante."}, status=400)
 
+        new_status = None
+        message = ""
+
+        with transaction.atomic():
+            course = get_object_or_404(ScheduledCourse, pk=course_id)
+            
+            # [TODO] Vérification de sécurité :
+            # Vérifier si l'utilisateur a le droit d'agir sur un cours de CETTE école ?
+            # (Pour l'instant, on fait confiance au rôle)
+
+            if action == "DELETE":
+                course.delete()
+                message = "Cours supprimé définitivement."
+                
+            elif action == "SET_ACTIVE":
+                course.status = 'ACTIVE'
+                course.save()
+                message = "Cours marqué comme 'Actif'."
+                new_status = course.get_status_display()
+                
+            elif action == "SET_CANCELLED":
+                course.status = 'CANCELLED'
+                course.save()
+                message = "Cours marqué comme 'Annulé'."
+                new_status = course.get_status_display()
+
+            elif action == "SET_TEACHER_ABSENT":
+                course.status = 'TEACHER_ABSENT'
+                course.save()
+                message = "Cours marqué comme 'Professeur absent'."
+                new_status = course.get_status_display()
+                
+            else:
+                return JsonResponse({"success": False, "message": "Action non reconnue."}, status=400)
 
         return JsonResponse({
-            'success': True, 
-            'data': formatted_courses
+            "success": True, 
+            "message": message,
+            "new_status": new_status, # Renvoie le nouveau statut (ex: "Cours annulé")
+            "new_status_key": course.status if action != "DELETE" else None # Renvoie la clé (ex: "CANCELLED")
         })
-        
+
+    except ScheduledCourse.DoesNotExist:
+        return JsonResponse({"success": False, "message": "Cours introuvable."}, status=404)
     except Exception as e:
-        return JsonResponse({"success": False, "message": f"Erreur lors de la récupération du calendrier: {str(e)}"}, status=500)
+        return JsonResponse({"success": False, "message": f"Erreur interne : {str(e)}"}, status=500)
+

@@ -124,13 +124,31 @@
                                     <td class="px-4 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{{ class_obj.name }}</td>
                                     <td class="px-4 py-4 whitespace-nowrap text-sm text-gray-500" data-level-id="{{ class_obj.level.id }}">{{ class_obj.level.get_level_display }}</td>
                                     <td class="px-4 py-4 whitespace-nowrap text-right text-sm font-medium flex justify-end items-center space-x-2">
-                                        
                                         <a 
-                                        {% if not is_creation_stape %}
-                                        href="{% url 'scheduling:planning_gestion_view' pk_class=class_obj.id %}"
-                                        {% endif %}
-                                        class="text-pink-600 hover:text-pink-800 p-2 rounded-full hover:bg-gray-100 transition duration-150"
-                                        title="Gérer le planning hebdomadaire">
+                                            {% if not is_creation_stape %}
+                                                href="{% url 'scheduling:view_class_schedule_page' pk_class=class_obj.id %}"
+                                            {% endif %}
+                                            class="text-blue-600 p-2 rounded-full hover:bg-gray-100 transition duration-150
+                                                {% if is_creation_stape %}
+                                                    opacity-50 cursor-not-allowed pointer-events-none
+                                                {% else %}
+                                                    hover:text-blue-800
+                                                {% endif %}"
+                                            title="Voir le planning de la classe">
+                                            <i class="fas fa-eye"></i>
+                                        </a>
+
+                                        <a 
+                                            {% if not is_creation_stape %}
+                                                href="{% url 'scheduling:planning_gestion_view' pk_class=class_obj.id %}"
+                                            {% endif %}
+                                            class="text-pink-600 p-2 rounded-full hover:bg-gray-100 transition duration-150
+                                                {% if is_creation_stape %}
+                                                    opacity-50 cursor-not-allowed pointer-events-none
+                                                {% else %}
+                                                    hover:text-pink-800
+                                                {% endif %}"
+                                            title="Gérer le planning hebdomadaire">
                                             <i class="fas fa-calendar-alt"></i>
                                         </a>
                                         

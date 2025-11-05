@@ -1,11 +1,12 @@
 from django.db.models import Q
 from django.utils import timezone
 from scheduling.models import ScheduledCourse
-from schools.models import Year, ExceptionDay, ExceptionTime
-from subjects.models import TeacherSubject # <-- [AJOUTÉ] Import nécessaire
-from users.models import Staff # Assurez-vous que Staff est importable
+from schools.models import ExceptionDay, ExceptionTime
+from subjects.models import TeacherSubject 
+from classes.models import Class
 
 from datetime import datetime
+from datetime import timedelta
 
 def _parse_iso_datetime(dt_string):
     """
@@ -263,4 +264,58 @@ def _check_internal_overlaps(courses):
             print(f"Erreur dans _check_internal_overlaps: {e}")
 
     return errors
+
+
+
+
+def get_week_schedule_data(classe, start_of_week):
+    """
+    Récupère et formate les cours pour une classe et une semaine données.
+    """
+    
+    # Calcule la plage de dates (du Lundi 00:00 au Lundi suivant 00:00)
+    start_date = start_of_week
+    end_date = start_of_week + timedelta(days=7) # 7 jours complets
+    # ============================================================
+    # ERREUR NAVIGATION ENTRE LES SEMAINES VIENS PEUT ETRE D'ICI.
+    # ============================================================
+    # Interroge la BDD
+    courses = ScheduledCourse.objects.filter(
+        student_class=classe,
+        start_datetime__gte=start_date, # Commence pendant la semaine
+        start_datetime__lt=end_date     # (exclusif)
+    ).select_related(
+        'teacher_subject__teacher__user', # Optimisation pour le nom du prof
+        'teacher_subject__subject',       # Optimisation pour le nom et la couleur
+        'classroom'                       # Optimisation pour le nom de la salle
+    ).order_by('start_datetime') # Important pour l'affichage
+    
+    courses_data = []
+    for course in courses:
+        
+        # [CORRECTION] Convertir les datetimes UTC de la BDD en heure LOCALE
+        # (ex: 06:00+00:00 devient 08:00 en France)
+        start_local = timezone.localtime(course.start_datetime)
+        end_local = timezone.localtime(course.end_datetime)
+        
+        courses_data.append({
+            'id': course.id,
+            'start_datetime': course.start_datetime.isoformat(), # Gardé pour info
+            'end_datetime': course.end_datetime.isoformat(),     # Gardé pour info
+            
+            # --- [AJOUTÉ] Les champs clés manquants pour le JS ---
+            'start_time_local': start_local.strftime('%H:%M'), # ex: "08:30"
+            'end_time_local': end_local.strftime('%H:%M'),   # ex: "09:45"
+            # --- Fin de l'ajout ---
+            
+            'status': course.status,
+            'status_display': course.status,
+            
+            'subject_name': course.teacher_subject.subject.name,
+            'teacher_name': course.teacher_subject.teacher.user.username, # Ajuste si tu préfères last_name
+            'classroom_name': course.classroom.name,
+            'subject_color': course.teacher_subject.subject.color,
+        })
+        
+    return courses_data
 
