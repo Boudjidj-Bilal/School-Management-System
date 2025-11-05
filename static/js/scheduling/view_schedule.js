@@ -1,6 +1,6 @@
 // ====================================================================
 // LOGIQUE JAVASCRIPT POUR l'AFFICHAGE DU PLANNING (view_schedule.js)
-// v9 - Modale de suppression personnalisée + Centrage + Masquage 'Actif'
+// v11 - Corrige le bug de la suppression (selectedCourseId était effacé trop tôt)
 // ====================================================================
 
 // État global de l'application
@@ -13,6 +13,7 @@ const STATE = {
     minuteHeightPx: 1.0, // 1px par minute. 10h = 600px.
     selectedCourseId: null, // ID du cours cliqué par un admin
     dayColumnElements: [], // Stocke les 7 divs des colonnes de jour
+    onConfirmCallback: null, // Stocke la fonction à exécuter lors de la confirmation
 };
 
 // --- 1. Récupération des Éléments du DOM ---
@@ -30,7 +31,7 @@ const modalCourseTitle = document.getElementById('modal-course-title');
 const modalCourseDetails = document.getElementById('modal-course-details');
 const modalCancelBtn = document.getElementById('modal-cancel-btn');
 
-// [NOUVEAU] Modale de confirmation générique
+// Modale de confirmation générique
 const genericConfirmModal = document.getElementById('generic-confirm-modal');
 const genericConfirmTitle = document.getElementById('generic-confirm-title');
 const genericConfirmMessage = document.getElementById('generic-confirm-message');
@@ -303,20 +304,17 @@ function renderSchedule() {
 
         const courseEl = document.createElement('div');
         
-        // [MODIFIÉ] 'items-center' ajouté pour le centrage vertical
         courseEl.className = `absolute left-0 right-0 p-1 border overflow-hidden ${getColorClass(course.subject_color)} ${getStatusClass(course.status)} flex flex-col items-center justify-center`; 
         courseEl.style.top = `${top}px`;
         courseEl.style.height = `${height}px`;
 
-        // --- [MODIFIÉ] Contenu dynamique basé sur la hauteur ---
+        // --- Contenu dynamique basé sur la hauteur ---
         let contentHtml = '';
         
-        // [MODIFIÉ] Masque le statut "Actif"
         const statusText = (course.status === 'ACTIVE') ? '' : course.status_display;
 
         // Hauteur suffisante pour tout (ex: > 45px, soit 45 min)
         if (height > 45) {
-            // [MODIFIÉ] 'w-full' et 'block' retirés, 'text-center' ajouté
             contentHtml = `
                 <div class="flex-grow flex flex-col items-center justify-center w-full overflow-hidden text-center">
                     <strong class="text-xs font-bold truncate">${course.subject_name}</strong>
@@ -365,17 +363,15 @@ function renderSchedule() {
 // --- 4. Logique de Navigation ---
 
 /**
- * [MODIFIÉ] Met à jour l'affichage de la semaine (titre) et les en-têtes des jours.
+ * Met à jour l'affichage de la semaine (titre) et les en-têtes des jours.
  */
 function updateWeekView() {
     const start = STATE.currentMonday;
 
-    // [MODIFIÉ] Simplifie l'affichage principal
     weekDisplay.textContent = `Semaine du ${formatSimpleDate(start)}`;
     document.querySelector('p.text-sm.text-gray-500').textContent = `Semaine`;
 
 
-    // [AJOUTÉ] Met à jour les en-têtes des 7 jours
     for (let i = 0; i < 7; i++) {
         const dayHeaderEl = document.getElementById(`day-header-${i}`);
         if (dayHeaderEl) {
@@ -385,7 +381,6 @@ function updateWeekView() {
         }
     }
     
-    // [MODIFIÉ] Utilise parseISODate pour des comparaisons locales sûres
     const yearStart = parseISODate(YEAR_START_DATE_ISO);
     const yearEnd = parseISODate(YEAR_END_DATE_ISO);
 
@@ -414,7 +409,6 @@ async function fetchWeekData(dateISO) {
 
     if (result.success) {
         STATE.courses = result.courses;
-        // [MODIFIÉ] Utilise parseISODate pour créer la date locale
         STATE.currentMonday = parseISODate(dateISO); 
         updateWeekView(); 
     } else {
@@ -429,7 +423,6 @@ async function fetchWeekData(dateISO) {
 function handleNavigation(direction) {
     const newDate = new Date(STATE.currentMonday.getTime());
     newDate.setDate(newDate.getDate() + direction);
-    // [MODIFIÉ] Utilise formatDateToISO pour envoyer la date locale correcte
     fetchWeekData(formatDateToISO(newDate));
 }
 
@@ -465,48 +458,45 @@ function handleCourseClick(e) {
 }
 
 /**
- * Ferme la modale d'action.
+ * [MODIFIÉ] Ferme la modale d'action.
+ * N'efface plus le 'selectedCourseId' (c'est le rôle de la modale de confirmation).
  */
 function closeActionModal() {
     actionModal.classList.add('opacity-0', 'pointer-events-none');
     actionModal.querySelector('div').classList.add('translate-y-4');
-    STATE.selectedCourseId = null;
+    // STATE.selectedCourseId = null; <-- [RETIRÉ] C'est la source du bug.
 }
 
 /**
- * [NOUVEAU] Ouvre la modale de confirmation générique.
+ * Ouvre la modale de confirmation générique.
+ * Stocke la fonction de callback dans STATE.
  */
 function openGenericConfirmModal(title, message, onConfirm) {
     genericConfirmTitle.textContent = title;
     genericConfirmMessage.innerHTML = message;
-
-    // Recrée le bouton pour éviter les écouteurs fantômes
-    const newConfirmBtn = genericConfirmConfirmBtn.cloneNode(true);
-    genericConfirmConfirmBtn.parentNode.replaceChild(newConfirmBtn, genericConfirmConfirmBtn);
-    
-    newConfirmBtn.addEventListener('click', () => {
-        onConfirm();
-        closeGenericConfirmModal();
-    });
+    STATE.onConfirmCallback = onConfirm; // Stocke la fonction
 
     genericConfirmModal.classList.remove('opacity-0', 'pointer-events-none');
     genericConfirmModal.querySelector('div').classList.remove('translate-y-4');
 }
 
 /**
- * [NOUVEAU] Ferme la modale de confirmation générique.
+ * [MODIFIÉ] Ferme la modale de confirmation générique.
+ * Nettoie le callback ET le 'selectedCourseId'. C'est la fin du workflow.
  */
 function closeGenericConfirmModal() {
     genericConfirmModal.classList.add('opacity-0', 'pointer-events-none');
     genericConfirmModal.querySelector('div').classList.add('translate-y-4');
+    STATE.onConfirmCallback = null; // Nettoie le callback
+    STATE.selectedCourseId = null; // [AJOUTÉ] Efface l'ID à la fin de l'action
 }
 
 /**
- * [NOUVEAU] Gère la confirmation de suppression
+ * Fonction à exécuter lors de la confirmation de suppression
  */
 async function executeDelete() {
     const courseId = STATE.selectedCourseId;
-    if (!courseId) return;
+    if (!courseId) return; // 'selectedCourseId' est maintenant toujours valide ici
 
     const result = await apiFetch(API_URLS.MANAGE_STATUS, {
         course_id: courseId,
@@ -528,14 +518,14 @@ async function handleActionClick(e) {
 
     if (!action || !courseId) return;
     
-    // [MODIFIÉ] N'utilise plus confirm(), ouvre la nouvelle modale
     if (action === 'DELETE') {
         openGenericConfirmModal(
             "Confirmation de Suppression",
             "Êtes-vous sûr de vouloir supprimer ce cours ?<br>Cette action est irréversible.",
             executeDelete // Passe la fonction à exécuter
         );
-        closeActionModal(); // Ferme la modale d'action
+        // [MODIFIÉ] On ferme la modale d'action (le selectedCourseId reste)
+        closeActionModal(); 
         return;
     }
 
@@ -556,7 +546,9 @@ async function handleActionClick(e) {
         renderSchedule(); 
     }
     
+    // [MODIFIÉ] L'action est finie, on ferme la modale ET on efface l'ID
     closeActionModal();
+    STATE.selectedCourseId = null;
 }
 
 
@@ -573,7 +565,7 @@ document.addEventListener('DOMContentLoaded', () => {
         return;
     }
 
-    // 2. [MODIFIÉ] Initialise la date de la semaine (localement et sans risque)
+    // 2. Initialise la date de la semaine (localement et sans risque)
     STATE.currentMonday = parseISODate(currentWeekStartDateISO); 
 
     // 3. Dessine la grille de fond (heures, lignes, pauses)
@@ -588,13 +580,22 @@ document.addEventListener('DOMContentLoaded', () => {
     
     // Écouteurs pour la modale (Admin)
     if (IS_ADMIN_USER) {
-        modalCancelBtn.addEventListener('click', closeActionModal);
+        modalCancelBtn.addEventListener('click', () => {
+            closeActionModal();
+            STATE.selectedCourseId = null; // Efface l'ID si on annule la première modale
+        });
         document.querySelectorAll('#action-modal .action-btn').forEach(btn => {
             btn.addEventListener('click', handleActionClick);
         });
         
-        // [NOUVEAU] Écouteur pour la modale de confirmation
+        // [MODIFIÉ] Logique de la modale de confirmation
         genericConfirmCancelBtn.addEventListener('click', closeGenericConfirmModal);
+        genericConfirmConfirmBtn.addEventListener('click', () => {
+            if (typeof STATE.onConfirmCallback === 'function') {
+                STATE.onConfirmCallback();
+            }
+            closeGenericConfirmModal();
+        });
     }
 });
 
