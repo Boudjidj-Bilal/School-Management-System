@@ -547,19 +547,19 @@ def api_manage_course_status_views(request):
                 course.status = 'ACTIVE'
                 course.save()
                 message = "Cours marqué comme 'Actif'."
-                new_status = course.status
+                new_status = course.get_status_display()
                 
             elif action == "SET_CANCELLED":
                 course.status = 'CANCELLED'
                 course.save()
                 message = "Cours marqué comme 'Annulé'."
-                new_status = course.status
+                new_status = course.get_status_display()
 
             elif action == "SET_TEACHER_ABSENT":
                 course.status = 'TEACHER_ABSENT'
                 course.save()
                 message = "Cours marqué comme 'Professeur absent'."
-                new_status = course.status
+                new_status = course.get_status_display()
                 
             else:
                 return JsonResponse({"success": False, "message": "Action non reconnue."}, status=400)
@@ -568,7 +568,7 @@ def api_manage_course_status_views(request):
             "success": True, 
             "message": message,
             "new_status": new_status, # Renvoie le nouveau statut (ex: "Cours annulé")
-            "new_status_key": course.status if action != "DELETE" else None # Renvoie la clé (ex: "CANCELLED")
+            "new_status_key": course.get_status_display() if action != "DELETE" else None # Renvoie la clé (ex: "CANCELLED")
         })
 
     except ScheduledCourse.DoesNotExist:
@@ -740,31 +740,31 @@ def api_manage_teacher_course_status_views(request):
                 course.status = 'ACTIVE'
                 course.save()
                 message = "Cours marqué comme 'Actif'."
-                new_status = course.status
+                new_status = course.get_status_display()
                 
             elif action == "SET_CANCELLED":
                 course.status = 'CANCELLED'
                 course.save()
                 message = "Cours marqué comme 'Annulé'."
-                new_status = course.status
+                new_status = course.get_status_display()
 
             elif action == "SET_TEACHER_ABSENT":
                 course.status = 'TEACHER_ABSENT'
                 course.save()
                 message = "Cours marqué comme 'Professeur absent'."
-                new_status = course.status
+                new_status = course.get_status_display()
             
             # Gère les actions "placeholder"
             elif action in ["Faire l'appel", "Mettre des notes"]:
                 # Ne fait rien au backend, mais renvoie un succès pour que la modale se ferme
                 message = f"Fonctionnalité '{action}' non implémentée."
-                new_status = course.status # Garde le statut actuel
+                new_status = course.get_status_display() # Garde le statut actuel
 
         return JsonResponse({
             "success": True, 
             "message": message,
             "new_status": new_status,
-            "new_status_key": course.status if action != "DELETE" else None
+            "new_status_key": course.get_status_display() if action != "DELETE" else None
         })
 
     except ScheduledCourse.DoesNotExist:
