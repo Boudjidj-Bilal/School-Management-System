@@ -13,9 +13,11 @@ from django.utils import timezone
 from scheduling.models import WeeklyScheduleTemplate, CourseTemplate, ScheduledCourse
 from schools.models import Year, ExceptionDay, ExceptionTime
 from classes.models import Class, Classroom, ClassTeacherYear
+from users.models import Staff 
+
 
 # Import des utilitaires
-from .utils import check_course_conflicts, get_week_schedule_data
+from .utils import check_course_conflicts, get_week_schedule_data, get_week_schedule_data_for_teacher
 from users.utils import get_user_type
 from schools.utils import get_current_year_for_school
 
@@ -545,19 +547,19 @@ def api_manage_course_status_views(request):
                 course.status = 'ACTIVE'
                 course.save()
                 message = "Cours marqué comme 'Actif'."
-                new_status = course.get_status_display()
+                new_status = course.status
                 
             elif action == "SET_CANCELLED":
                 course.status = 'CANCELLED'
                 course.save()
                 message = "Cours marqué comme 'Annulé'."
-                new_status = course.get_status_display()
+                new_status = course.status
 
             elif action == "SET_TEACHER_ABSENT":
                 course.status = 'TEACHER_ABSENT'
                 course.save()
                 message = "Cours marqué comme 'Professeur absent'."
-                new_status = course.get_status_display()
+                new_status = course.status
                 
             else:
                 return JsonResponse({"success": False, "message": "Action non reconnue."}, status=400)
@@ -574,3 +576,198 @@ def api_manage_course_status_views(request):
     except Exception as e:
         return JsonResponse({"success": False, "message": f"Erreur interne : {str(e)}"}, status=500)
 
+
+
+@login_required(login_url='login')
+def view_teacher_schedule_page(request, pk_staff):
+    """
+    Affiche la page principale de l'AFFICHAGE du planning pour un PROFESSEUR.
+    """
+    try:
+        # 1. Récupérer le professeur cible
+        teacher_staff = get_object_or_404(Staff, pk=pk_staff)
+        school = teacher_staff.school
+        current_year = get_current_year_for_school(school)
+
+        if not current_year:
+            return HttpResponseForbidden("Aucune année scolaire courante n'est définie pour cette école.")
+
+        # --- 2. Logique de Permission ---
+        user = request.user
+        user_type = get_user_type(user)
+        
+        is_admin_or_principal = user_type in ["SuperAdministrator", "Principal"]
+        is_self = (hasattr(user, 'staff_user') and user.staff_user.id == teacher_staff.id)
+
+        # Vérifie si l'utilisateur est Admin/Principal OU s'il consulte son propre planning
+        if not (is_admin_or_principal or is_self):
+            return HttpResponseForbidden("Accès refusé. Vous ne pouvez consulter que votre propre planning ou vous n'avez pas les droits suffisants.")
+
+        # --- 3. Logique de Date ---
+        today = timezone.now().date()
+        year_start_date = current_year.start_date.date()
+        year_end_date = current_year.end_date.date()
+        
+        target_date = today
+        
+        # Gère les cas hors-limites
+        if today < year_start_date:
+            target_date = year_start_date
+        elif today > year_end_date:
+            target_date = year_end_date
+            
+        # Calcule le Lundi de la semaine cible
+        start_of_week = target_date - datetime.timedelta(days=target_date.weekday())
+        
+        # --- 4. Données initiales ---
+        courses_data = get_week_schedule_data_for_teacher(teacher_staff, start_of_week)
+        
+        # --- 5. Contexte ---
+        context = {
+            'current_year': current_year,
+            'teacher_staff': teacher_staff, # Le professeur dont on voit le planning
+            
+            # Booléens pour la logique d'affichage dans le JS
+            'is_admin_user': is_admin_or_principal,
+            'is_teacher_owner': is_self,
+            
+            # Données pour le JS
+            'courses_data': courses_data, # Données de la première semaine
+            'week_start_date_iso': start_of_week.isoformat(),
+            'year_min_time': current_year.min_time.strftime('%H:%M'),
+            'year_max_time': current_year.max_time.strftime('%H:%M'),
+            'year_start_date_iso': year_start_date.isoformat(),
+            'year_end_date_iso': year_end_date.isoformat(),
+            'exception_times_data': list(ExceptionTime.objects.filter(year=current_year).values('start_time', 'end_time')),
+        }
+        
+        return render(request, 'scheduling/view_teacher_schedule.html', context)
+
+    except Exception as e:
+        print(f"Erreur dans view_teacher_schedule_page: {e}")
+        return HttpResponseForbidden("Erreur lors du chargement de la page.")
+
+
+@require_http_methods(["POST"])
+@csrf_exempt
+@login_required(login_url='login')
+def api_get_teacher_week_schedule_views(request):
+    """
+    API pour récupérer les cours d'un PROFESSEUR pour une semaine spécifique.
+    """
+    try:
+        data = json.loads(request.body)
+        start_date_str = data.get("start_date")
+        staff_id = data.get("staff_id") # L'ID du prof dont on regarde le planning
+
+        if not start_date_str or not staff_id:
+            return JsonResponse({"success": False, "message": "Date de début ou ID de professeur manquant."}, status=400)
+
+        # --- Re-vérification des permissions ---
+        teacher_staff = get_object_or_404(Staff, pk=staff_id)
+        user = request.user
+        user_type = get_user_type(user)
+        is_admin_or_principal = user_type in ["SuperAdministrator", "Principal", "Administrator"]
+        is_self = (hasattr(user, 'staff_user') and user.staff_user.id == teacher_staff.id)
+
+        if not (is_admin_or_principal or is_self):
+            return JsonResponse({"success": False, "message": "Accès refusé."}, status=403)
+        # --- Fin des permissions ---
+
+        start_of_week = datetime.date.fromisoformat(start_date_str)
+
+        # Appelle le nouvel utilitaire
+        courses_data = get_week_schedule_data_for_teacher(teacher_staff, start_of_week)
+        
+        return JsonResponse({"success": True, "courses": courses_data})
+
+    except Staff.DoesNotExist:
+        return JsonResponse({"success": False, "message": "Professeur introuvable."}, status=404)
+    except Exception as e:
+        return JsonResponse({"success": False, "message": f"Erreur interne : {str(e)}"}, status=500)
+
+
+@require_http_methods(["POST"])
+@csrf_exempt
+@login_required(login_url='login')
+def api_manage_teacher_course_status_views(request):
+    """
+    API sécurisée pour modifier le statut d'un cours (Vue Professeur).
+    - Admins/Principals : peuvent tout faire (Supprimer, Annuler, Absent, Actif).
+    - Professeurs : ne peuvent que marquer 'Absent' ou 'Actif'.
+    """
+    try:
+        data = json.loads(request.body)
+        course_id = data.get("course_id")
+        action = data.get("action") # ex: "DELETE", "SET_CANCELLED", "SET_ACTIVE", "SET_TEACHER_ABSENT"
+
+        if not course_id or not action:
+            return JsonResponse({"success": False, "message": "ID de cours ou action manquante."}, status=400)
+
+        course = get_object_or_404(ScheduledCourse, pk=course_id)
+        
+        # --- 1. Logique de Permission d'Action ---
+        user = request.user
+        user_type = get_user_type(user)
+        
+        is_admin_or_principal = user_type in ["SuperAdministrator", "Principal", "Administrator"]
+        is_teacher_owner = (hasattr(user, 'staff_user') and user.staff_user.id == course.teacher_subject.teacher.id)
+
+        # Si l'action est restreinte (Delete/Cancel)
+        if action in ["DELETE", "SET_CANCELLED"]:
+            if not is_admin_or_principal:
+                return JsonResponse({"success": False, "message": "Accès refusé. Seul un administrateur peut supprimer ou annuler un cours."}, status=403)
+        
+        # Si l'action est autorisée (Active/Absent)
+        elif action in ["SET_ACTIVE", "SET_TEACHER_ABSENT"]:
+            if not (is_admin_or_principal or is_teacher_owner):
+                return JsonResponse({"success": False, "message": "Accès refusé. Vous n'êtes pas l'enseignant de ce cours."}, status=403)
+        
+        # Si l'action n'est pas reconnue
+        elif action not in ["Faire l'appel", "Mettre des notes"]: # Accepte les placeholders
+             return JsonResponse({"success": False, "message": "Action non reconnue."}, status=400)
+
+        # --- 2. Exécution de l'Action ---
+        new_status = None
+        message = ""
+
+        with transaction.atomic():
+            if action == "DELETE":
+                course.delete()
+                message = "Cours supprimé définitivement."
+                
+            elif action == "SET_ACTIVE":
+                course.status = 'ACTIVE'
+                course.save()
+                message = "Cours marqué comme 'Actif'."
+                new_status = course.status
+                
+            elif action == "SET_CANCELLED":
+                course.status = 'CANCELLED'
+                course.save()
+                message = "Cours marqué comme 'Annulé'."
+                new_status = course.status
+
+            elif action == "SET_TEACHER_ABSENT":
+                course.status = 'TEACHER_ABSENT'
+                course.save()
+                message = "Cours marqué comme 'Professeur absent'."
+                new_status = course.status
+            
+            # Gère les actions "placeholder"
+            elif action in ["Faire l'appel", "Mettre des notes"]:
+                # Ne fait rien au backend, mais renvoie un succès pour que la modale se ferme
+                message = f"Fonctionnalité '{action}' non implémentée."
+                new_status = course.status # Garde le statut actuel
+
+        return JsonResponse({
+            "success": True, 
+            "message": message,
+            "new_status": new_status,
+            "new_status_key": course.status if action != "DELETE" else None
+        })
+
+    except ScheduledCourse.DoesNotExist:
+        return JsonResponse({"success": False, "message": "Cours introuvable."}, status=404)
+    except Exception as e:
+        return JsonResponse({"success": False, "message": f"Erreur interne : {str(e)}"}, status=500)

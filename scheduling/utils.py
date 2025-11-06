@@ -265,9 +265,6 @@ def _check_internal_overlaps(courses):
 
     return errors
 
-
-
-
 def get_week_schedule_data(classe, start_of_week):
     """
     Récupère et formate les cours pour une classe et une semaine données.
@@ -319,3 +316,60 @@ def get_week_schedule_data(classe, start_of_week):
         
     return courses_data
 
+
+def get_week_schedule_data_for_teacher(teacher_staff, start_of_week):
+    """
+    Récupère et formate les cours pour un PROFESSEUR spécifique et une semaine donnée.
+    
+    Prend en entrée un objet Staff (le professeur) et un objet Date (le Lundi).
+    
+    Retourne une liste de dictionnaires formatés pour le JSON, contenant
+    le nom de la CLASSE au lieu du nom du professeur.
+    """
+    
+    # 1. Calcule la plage de dates (du Lundi 00:00 au Lundi suivant 00:00)
+    start_date = start_of_week
+    end_date = start_of_week + timedelta(days=7) # 7 jours complets
+    
+    # 2. Interroge la BDD
+    # La logique clé est de filtrer par 'teacher_subject__teacher'
+    courses = ScheduledCourse.objects.filter(
+        teacher_subject__teacher=teacher_staff,
+        start_datetime__gte=start_date, # Commence pendant la semaine
+        start_datetime__lt=end_date     # (exclusif)
+    ).select_related(
+        'teacher_subject__subject',       # Optimisation pour le nom et la couleur
+        'classroom',                      # Optimisation pour le nom de la salle
+        'student_class'                   # Optimisation pour le nom de la classe
+    ).order_by('start_datetime')
+    
+    courses_data = []
+    for course in courses:
+        
+        # 3. Convertir les datetimes UTC de la BDD en heure LOCALE
+        start_local = timezone.localtime(course.start_datetime)
+        end_local = timezone.localtime(course.end_datetime)
+        
+        courses_data.append({
+            'id': course.id,
+            'start_datetime': course.start_datetime.isoformat(),
+            'end_datetime': course.end_datetime.isoformat(),
+            
+            # Heures locales pour l'affichage
+            'start_time_local': start_local.strftime('%H:%M'),
+            'end_time_local': end_local.strftime('%H:%M'),
+            
+            # Statut du cours
+            'status': course.status,
+            'status_display': course.status,
+            
+            # Informations sur le cours
+            'subject_name': course.teacher_subject.subject.name,
+            'subject_color': course.teacher_subject.subject.color,
+            'classroom_name': course.classroom.name,
+            
+            # [DIFFÉRENCE CLÉ] : On renvoie le nom de la classe
+            'class_name': course.student_class.name, 
+        })
+        
+    return courses_data
