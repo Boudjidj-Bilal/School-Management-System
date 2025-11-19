@@ -40,19 +40,29 @@
                                 </a>
 
                                 {% if user_obj.staff_type == 'TEACHER' %}
+                                <div class="flex items-center space-x-2">
+                                    <!-- [EXISTANT] Lien Planning -->
                                     <a href="{% url 'scheduling:view_teacher_schedule' pk_staff=user_obj.id %}"
                                        class="text-blue-600 hover:text-blue-800 p-2 rounded-full hover:bg-gray-100 transition duration-150"
                                        title="Voir le planning du professeur">
                                         <i class="fas fa-calendar-check"></i>
                                     </a>
-                                {% endif %}
+                                    
+                                    <!-- [AJOUTÉ] Lien Notes -->
+                                    <a href="{% url 'grades:view_teacher_grades_as_admin' pk_staff=user_obj.pk %}" 
+                                       title="Consulter le tableau de bord des notes"
+                                       class="px-2 py-1 text-xs bg-indigo-600 text-white rounded-md shadow-sm hover:bg-indigo-700 transition duration-300">
+                                        <i class="fas fa-chart-line"></i>
+                                    </a>
 
-                                <button class="toggle-status-btn px-2 py-1 text-xs bg-red-500 text-white rounded-md shadow-sm hover:bg-red-600 transition duration-300"
-                                        data-user-id="{{ user_obj.user.id }}" 
-                                        data-action="deactivate"
-                                        data-user-name="{{ user_obj.user.first_name }} {{ user_obj.user.last_name }}">
-                                    Désactiver
-                                </button>
+                                    <button class="toggle-status-btn px-2 py-1 text-xs bg-red-500 text-white rounded-md shadow-sm hover:bg-red-600 transition duration-300"
+                                            data-user-id="{{ user_obj.user.id }}" 
+                                            data-action="deactivate"
+                                            data-user-name="{{ user_obj.user.first_name }} {{ user_obj.user.last_name }}">
+                                        Désactiver
+                                    </button>
+                                </div>
+                                {% endif %}
                             </div>
                         </li>
                     {% endif %}
@@ -80,12 +90,21 @@
                                     <i class="fas fa-user-slash mr-3 text-lg text-gray-400"></i>
                                     <span>{{ user_obj.user.username }}</span>
                                 </a>
-                                <button class="toggle-status-btn px-2 py-1 text-xs bg-green-500 text-white rounded-md shadow-sm hover:bg-green-600 transition duration-300"
-                                        data-user-id="{{ user_obj.user.id }}" 
-                                        data-action="activate"
-                                        data-user-name="{{ user_obj.user.first_name }} {{ user_obj.user.last_name }}">
-                                    Activer
-                                </button>
+                                <div class="flex items-center space-x-2">
+                                    <!-- [AJOUTÉ] Lien Notes -->
+                                    <a href="{% url 'grades:view_teacher_grades_as_admin' pk_staff=user_obj.pk %}" 
+                                       title="Consulter le tableau de bord des notes"
+                                       class="px-2 py-1 text-xs bg-indigo-600 text-white rounded-md shadow-sm hover:bg-indigo-700 transition duration-300">
+                                        <i class="fas fa-chart-line"></i>
+                                    </a>
+                                    
+                                    <button class="toggle-status-btn px-2 py-1 text-xs bg-green-500 text-white rounded-md shadow-sm hover:bg-green-600 transition duration-300"
+                                            data-user-id="{{ user_obj.user.id }}" 
+                                            data-action="activate"
+                                            data-user-name="{{ user_obj.user.first_name }} {{ user_obj.user.last_name }}">
+                                        Activer
+                                    </button>
+                                </div>
                             </div>
                         </li>
                     {% endif %}

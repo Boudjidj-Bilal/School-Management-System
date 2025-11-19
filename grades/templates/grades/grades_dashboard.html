@@ -1,0 +1,292 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Gestion des Évaluations{% endblock %}
+
+{% block content %}
+    {% csrf_token %}
+
+    <!-- En-tête de la page -->
+    <header class="mb-6 border-b pb-4 border-gray-200">
+        <h1 class="text-3xl font-extrabold text-gray-900 flex items-center">
+            <i class="fas fa-edit text-indigo-600 mr-3"></i>
+            Gestion des Évaluations
+        </h1>
+        <p class="text-lg text-gray-600 font-medium">
+            Professeur : {{ teacher_staff.user.first_name }} {{ teacher_staff.user.last_name }}
+            <span class="mx-2">|</span>
+            Année : {{ current_year.name }}
+        </p>
+    </header>
+
+    <!-- Conteneur pour les messages de notification -->
+    <div id="notification-area" class="mb-6 space-y-3"></div>
+
+    <!-- 1. Onglets de Fonctionnalité Principale (Future-Proof) -->
+    <div class="mb-6">
+        <div class="border-b border-gray-200">
+            <nav class="-mb-px flex space-x-8" aria-label="Tabs">
+                <!-- Onglet Actif -->
+                <a href="#" class="border-indigo-500 text-indigo-600 whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm" aria-current="page">
+                    <i class="fas fa-marker mr-2"></i> Évaluations
+                </a>
+                <!-- Onglets Inactifs -->
+                <a href="#" class="border-transparent text-gray-400 hover:text-gray-700 hover:border-gray-300 whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm cursor-not-allowed" title="Bientôt disponible">
+                    <i class="fas fa-user-check mr-2"></i> Appel
+                </a>
+                <a href="#" class="border-transparent text-gray-400 hover:text-gray-700 hover:border-gray-300 whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm cursor-not-allowed" title="Bientôt disponible">
+                    <i class="fas fa-comment-alt mr-2"></i> Appréciations
+                </a>
+            </nav>
+        </div>
+    </div>
+
+    <!-- 3. Contenu de la page (les 2 sections) -->
+    <div id="grades-content-wrapper" class="space-y-8">
+        
+        <!-- 3a. Section "Professeur Principal" -->
+        <section class="bg-white rounded-xl shadow-2xl p-6 border border-indigo-200">
+            <h2 class="text-2xl font-bold text-indigo-700 mb-4 flex items-center">
+                <i class="fas fa-star text-yellow-400 mr-3"></i> 
+                Vue "Professeur Principal"
+            </h2>
+            <div id="main-class-container" class="space-y-6">
+                {% if not dashboard_data.main_class_data %}
+                    <p class="text-gray-500">Vous n'êtes professeur principal d'aucune classe pour cette année.</p>
+                {% endif %}
+                {% for class_id, data in dashboard_data.main_class_data.items %}
+                <div class="p-4 border rounded-lg bg-indigo-50" data-context-key="{{ class_id }}">
+                    <h4 class="text-lg font-bold text-indigo-800">{{ data.class_name }}</h4>
+                    
+                    <nav class="flex space-x-4 border-b border-indigo-200 my-3">
+                        {% for term in data.available_terms %}
+                        <button data-action="change-term"
+                                data-term-id="{{ term.id }}"
+                                data-context-key="{{ class_id }}"
+                                data-type="main"
+                                class="term-tab-{{ class_id }} py-2 px-3 text-sm font-medium {% if term.id == data.current_term_id %}border-indigo-500 text-indigo-600 border-b-2{% else %}border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300{% endif %}">
+                            Trimestre/Semestre {{ term.counter }}
+                        </button>
+                        {% endfor %}
+                    </nav>
+
+                    <div id="main-class-content-{{ class_id }}">
+                        <p class="text-sm font-semibold text-gray-600 mb-2">
+                            Moyenne Générale de la Classe : 
+                            <span id="main-avg-container-{{ class_id }}" class="text-lg font-bold text-black">
+                                <!-- [CORRECTION] La clé Python est 'overall_class_average', pas 'overall_average' -->
+                                {{ data.overall_class_average }}
+                            </span>
+                        </p>
+                        <button data-action="toggle-student-avg" data-target="student-main-avg-{{ class_id }}" class="text-sm text-indigo-600 hover:underline">
+                            Afficher/Masquer les moyennes des élèves
+                        </button>
+                        <ul id="student-main-avg-{{ class_id }}" class="hidden mt-4 pr-2 max-h-60 overflow-y-auto space-y-1 divide-y divide-indigo-100">
+                            {% for student in data.student_averages %}
+                            <li class="flex justify-between items-center text-sm py-1">
+                                <span class="text-gray-700">{{ student.student_name }}</span>
+                                <span class="font-bold text-gray-900">{{ student.average }}</span>
+                            </li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </section>
+
+        <!-- 3b. Section "Mes Matières" -->
+        <section class="bg-white rounded-xl shadow-2xl p-6 border border-gray-100">
+            <h2 class="text-2xl font-bold text-gray-800 mb-4 flex items-center">
+                <i class="fas fa-book-open text-teal-500 mr-3"></i> 
+                Mes Matières
+            </h2>
+            <div id="subject-class-container" class="space-y-6">
+                {% if not dashboard_data.taught_classes_list_for_template %}
+                    <p class="text-gray-500">Aucune matière ne vous est assignée pour cette année.</p>
+                {% endif %}
+
+                {% regroup dashboard_data.taught_classes_list_for_template by student_class.name as class_list %}
+                {% for class_group in class_list %}
+                    <div class="p-4 border rounded-lg bg-gray-50">
+                        <h3 class="text-xl font-bold text-gray-700 mb-4">Classe : {{ class_group.grouper }}</h3>
+                        <div class="space-y-4">
+                            {% for data in class_group.list %}
+                            {% with student_class=data.student_class ts=data.teacher_subject key=data.key %}
+                                <div id="subject-container-{{ key }}" class="p-4 bg-white rounded-lg border border-gray-200" data-context-key="{{ key }}">
+                                    <div class="flex justify-between items-center mb-3">
+                                        <h4 class="text-lg font-semibold text-teal-600">{{ ts.subject.name }}</h4>
+                                        <button data-action="add-eval" 
+                                                data-class-id="{{ student_class.id }}" 
+                                                data-ts-id="{{ ts.id }}"
+                                                data-class-name="{{ student_class.name }}"
+                                                data-subject-name="{{ ts.subject.name }}"
+                                                class="add-eval-btn can-edit-hide px-3 py-1 bg-teal-600 text-white text-sm font-medium rounded-lg shadow-md hover:bg-teal-700 transition disabled:opacity-50">
+                                            <i class="fas fa-plus mr-2"></i> Ajouter Évaluation
+                                        </button>
+                                    </div>
+
+                                    <nav class="flex space-x-4 border-b border-gray-200 my-3">
+                                        {% for term in data.available_terms %}
+                                        <button data-action="change-term"
+                                                data-term-id="{{ term.id }}"
+                                                data-context-key="{{ key }}"
+                                                data-type="subject"
+                                                class="term-tab-{{ key }} py-2 px-3 text-sm font-medium {% if term.id == data.current_term_id %}border-teal-500 text-teal-600 border-b-2{% else %}border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300{% endif %}">
+                                            Trimestre/Semestre {{ term.counter }}
+                                        </button>
+                                        {% endfor %}
+                                    </nav>
+                                    
+                                    <div id="subject-content-{{ key }}">
+                                        <p class="text-sm font-semibold text-gray-600 mb-2">
+                                            Moyenne de la classe (pour la Matière) : 
+                                            <span id="subject-avg-container-{{ key }}" class="text-lg font-bold text-black">
+                                                {{ data.class_average }}
+                                            </span>
+                                        </p>
+                                        
+                                        <div id="eval-list-container-{{ key }}" class="space-y-2 mt-4">
+                                            {% for eval in data.evaluations %}
+                                            <div class="flex justify-between items-center p-2 bg-white border rounded-md">
+                                                <div class="text-sm">
+                                                    <strong class="text-gray-800">{{ eval.name }}</strong>
+                                                    <span class="text-gray-500">(Coeff: {{ eval.coefficient }} / Sur: {{ eval.max_grade }})</span>
+                                                </div>
+                                                <div>
+                                                    <button data-action="view-eval" data-eval-id="{{ eval.id }}" class="edit-eval-btn px-3 py-1 text-sm text-indigo-600 hover:text-indigo-800" title="Voir/Modifier les notes">
+                                                        <i class="fas fa-edit mr-1"></i> <span>Voir / Modifier</span>
+                                                    </button>
+                                                    <button data-action="delete-eval" data-eval-id="{{ eval.id }}" data-eval-name="{{ eval.name }}" class="delete-eval-btn can-edit-hide px-3 py-1 text-sm text-red-600 hover:text-red-800 transition disabled:opacity-50" title="Supprimer l'évaluation">
+                                                        <i class="fas fa-trash"></i>
+                                                    </button>
+                                                </div>
+                                            </div>
+                                            {% empty %}
+                                            <p class="text-sm text-gray-500 italic">Aucune évaluation pour ce trimestre.</p>
+                                            {% endfor %}
+                                        </div>
+
+                                        <button data-action="toggle-student-avg" data-target="student-subject-avg-{{ key }}" class="text-sm text-indigo-600 hover:underline mt-4">
+                                            Afficher/Masquer les moyennes des élèves
+                                        </button>
+                                        <div id="student-subject-avg-{{ key }}" class="hidden mt-4 pr-2 max-h-60 overflow-y-auto">
+                                            <ul class="space-y-1 divide-y divide-gray-100">
+                                            {% for student in data.student_averages %}
+                                            <li class="flex justify-between items-center text-sm py-1">
+                                                <span class="text-gray-700">{{ student.student_name }}</span>
+                                                <span class="font-bold text-gray-900">{{ student.average }}</span>
+                                            </li>
+                                            {% endfor %}
+                                            </ul>
+                                        </div>
+                                    </div>
+                                </div>
+                            {% endwith %}
+                            {% endfor %}
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        </section>
+
+    </div>
+
+    <!-- Modale de Confirmation (pour Suppression) -->
+    <div id="generic-confirm-modal" class="fixed inset-0 bg-gray-900 bg-opacity-75 flex items-center justify-center z-50 transition-opacity duration-300 opacity-0 pointer-events-none">
+        <div class="bg-white rounded-xl shadow-2xl w-full max-w-md p-6 transform translate-y-4 transition-transform duration-300">
+            <h3 id="generic-confirm-title" class="text-xl font-bold text-red-600 mb-3 flex items-center">
+                <i class="fas fa-exclamation-triangle mr-3"></i> Confirmation
+            </h3>
+            <p id="generic-confirm-message" class="text-gray-700 mb-6">
+                <!-- Rempli par JS -->
+            </p>
+            <div class="flex justify-end space-x-4">
+                <button id="generic-confirm-cancel-btn" class="px-4 py-2 bg-gray-200 text-gray-800 font-semibold rounded-lg hover:bg-gray-300 transition duration-150">
+                    Annuler
+                </button>
+                <button id="generic-confirm-confirm-btn" class="px-4 py-2 bg-red-600 text-white font-semibold rounded-lg shadow-md hover:bg-red-700 transition duration-150">
+                    Confirmer
+                </button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Modale d'Ajout/Modification d'Évaluation -->
+    <div id="evaluation-modal" class="fixed inset-0 bg-gray-900 bg-opacity-75 flex items-center justify-center z-50 transition-opacity duration-300 opacity-0 pointer-events-none">
+        <div class="bg-white rounded-xl shadow-2xl w-full max-w-3xl p-6 transform translate-y-4 transition-transform duration-300">
+            <h3 id="evaluation-modal-title" class="text-2xl font-bold text-gray-800 mb-4">
+                <!-- Rempli par JS -->
+            </h3>
+            
+            <form id="evaluation-form" class="space-y-4">
+                <input type="hidden" id="eval-id-input">
+                <input type="hidden" id="eval-class-id-input">
+                <input type="hidden" id="eval-ts-id-input">
+                <input type="hidden" id="eval-term-id-input">
+
+                <!-- Infos Évaluation -->
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div>
+                        <label for="eval-name-input" class="block text-sm font-medium text-gray-700">Titre de l'évaluation</label>
+                        <input type="text" id="eval-name-input" class="mt-1 block w-full p-2 border border-gray-300 rounded-lg shadow-sm" required>
+                    </div>
+                    <div>
+                        <label for="eval-coeff-input" class="block text-sm font-medium text-gray-700">Coefficient</label>
+                        <input type="number" id="eval-coeff-input" step="0.5" min="0" value="1.0" class="mt-1 block w-full p-2 border border-gray-300 rounded-lg shadow-sm" required>
+                    </div>
+                    <!-- [NOUVEAU CHAMP] -->
+                    <div>
+                        <label for="eval-max-grade-input" class="block text-sm font-medium text-gray-700">Noté sur</label>
+                        <input type="number" id="eval-max-grade-input" step="1" min="1" value="20.0" class="mt-1 block w-full p-2 border border-gray-300 rounded-lg shadow-sm" required>
+                    </div>
+                </div>
+
+                <!-- Liste des Élèves pour Saisie des Notes -->
+                <h4 class="text-lg font-semibold text-gray-700 pt-4 border-t">Notes des élèves</h4>
+                <div id="student-grades-list-container" class="space-y-2 max-h-60 overflow-y-auto pr-2">
+                    <!-- Rempli par JS -->
+                </div>
+                
+                <!-- Boutons d'action -->
+                <div id="evaluation-modal-footer" class="flex justify-end space-x-4 pt-4 border-t">
+                    <button type="button" id="evaluation-modal-cancel-btn" class="px-4 py-2 bg-gray-200 text-gray-800 font-semibold rounded-lg hover:bg-gray-300 transition duration-150">
+                        Annuler
+                    </button>
+                    <button type="submit" id="evaluation-modal-save-btn" class="can-edit-hide px-4 py-2 bg-indigo-600 text-white font-semibold rounded-lg shadow-md hover:bg-indigo-700 transition duration-150">
+                        Enregistrer
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+{% endblock %}
+
+
+{% block extra_js %}
+    <!-- [CORRECTION] Utilise la nouvelle variable 'initial_data_for_script' -->
+    {{ initial_data_for_script|json_script:"initial-dashboard-data" }}
+
+    {# URLs des APIs #}
+    {% url 'grades:api_get_grades_for_term' as api_get_term_url %}
+    {% url 'grades:api_manage_evaluation' as api_manage_eval_url %}
+
+    <script>
+        // Données contextuelles
+        const STAFF_PK = "{{ staff_pk_for_js }}";
+        const CAN_EDIT_GRADES = '{{ can_edit_grades|yesno:"true,false" }}' === 'true';
+        
+        // Token CSRF
+        const CSRF_TOKEN = document.querySelector('[name=csrfmiddlewaretoken]').value;
+        
+        // URLs des APIs
+        const API_URLS = {
+            GET_TERM_DATA: "{{ api_get_term_url|escapejs }}",
+            MANAGE_EVAL: "{{ api_manage_eval_url|escapejs }}"
+        };
+    </script>
+    
+    {# --- Fichier JS principal pour cette page --- #}
+    <script src="{% static 'js/grades/grades_dashboard.js' %}"></script>
+{% endblock %}
