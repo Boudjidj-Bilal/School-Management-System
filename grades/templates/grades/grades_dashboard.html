@@ -22,33 +22,14 @@
     <!-- Conteneur pour les messages de notification -->
     <div id="notification-area" class="mb-6 space-y-3"></div>
 
-    <!-- 1. Onglets de Fonctionnalité Principale (Future-Proof) -->
-    <div class="mb-6">
-        <div class="border-b border-gray-200">
-            <nav class="-mb-px flex space-x-8" aria-label="Tabs">
-                <!-- Onglet Actif -->
-                <a href="#" class="border-indigo-500 text-indigo-600 whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm" aria-current="page">
-                    <i class="fas fa-marker mr-2"></i> Évaluations
-                </a>
-                <!-- Onglets Inactifs -->
-                <a href="#" class="border-transparent text-gray-400 hover:text-gray-700 hover:border-gray-300 whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm cursor-not-allowed" title="Bientôt disponible">
-                    <i class="fas fa-user-check mr-2"></i> Appel
-                </a>
-                <a href="#" class="border-transparent text-gray-400 hover:text-gray-700 hover:border-gray-300 whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm cursor-not-allowed" title="Bientôt disponible">
-                    <i class="fas fa-comment-alt mr-2"></i> Appréciations
-                </a>
-            </nav>
-        </div>
-    </div>
 
-    <!-- 3. Contenu de la page (les 2 sections) -->
+    <!-- Contenu de la page (les 2 sections) -->
     <div id="grades-content-wrapper" class="space-y-8">
         
-        <!-- 3a. Section "Professeur Principal" -->
+        <!-- Section "Professeur Principal" -->
         <section class="bg-white rounded-xl shadow-2xl p-6 border border-indigo-200">
             <h2 class="text-2xl font-bold text-indigo-700 mb-4 flex items-center">
-                <i class="fas fa-star text-yellow-400 mr-3"></i> 
-                Vue "Professeur Principal"
+                Professeur Principal :
             </h2>
             <div id="main-class-container" class="space-y-6">
                 {% if not dashboard_data.main_class_data %}
@@ -95,7 +76,7 @@
             </div>
         </section>
 
-        <!-- 3b. Section "Mes Matières" -->
+        <!-- Section "Mes Matières" -->
         <section class="bg-white rounded-xl shadow-2xl p-6 border border-gray-100">
             <h2 class="text-2xl font-bold text-gray-800 mb-4 flex items-center">
                 <i class="fas fa-book-open text-teal-500 mr-3"></i> 
@@ -235,7 +216,7 @@
                         <label for="eval-coeff-input" class="block text-sm font-medium text-gray-700">Coefficient</label>
                         <input type="number" id="eval-coeff-input" step="0.5" min="0" value="1.0" class="mt-1 block w-full p-2 border border-gray-300 rounded-lg shadow-sm" required>
                     </div>
-                    <!-- [NOUVEAU CHAMP] -->
+
                     <div>
                         <label for="eval-max-grade-input" class="block text-sm font-medium text-gray-700">Noté sur</label>
                         <input type="number" id="eval-max-grade-input" step="1" min="1" value="20.0" class="mt-1 block w-full p-2 border border-gray-300 rounded-lg shadow-sm" required>
@@ -287,6 +268,5 @@
         };
     </script>
     
-    {# --- Fichier JS principal pour cette page --- #}
     <script src="{% static 'js/grades/grades_dashboard.js' %}"></script>
 {% endblock %}

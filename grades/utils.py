@@ -120,50 +120,40 @@ def calculate_overall_class_average(student_class, term_year):
     4. Calcule la moyenne GÉNÉRALE d'une CLASSE (toutes matières)
        pour un trimestre donné.
        
-    [MODIFIÉ] Correction de la logique.
-    Ne cherche plus les 'Evaluations' (devoirs), mais les 'Grades' (notes).
+    [MODIFIÉ] NOUVELLE LOGIQUE :
+    Calcule la moyenne des "Moyennes Générales" de chaque élève de la classe.
     """
     
-    # 1. Trouver toutes les notes VALIDES pour cette classe et ce trimestre.
-    valid_grades = Grade.objects.filter(
-        evaluation__student_class=student_class,
-        evaluation__term_year=term_year,
-        is_absent=False,
-        grade_value__isnull=False
-    ).select_related('evaluation__teacher_subject') # Optimisation
+    # 1. Récupérer l'année scolaire via le trimestre
+    current_year = term_year.year
 
-    if not valid_grades.exists():
-        return None # Aucune note, donc pas de moyenne
+    # 2. Récupérer tous les élèves inscrits dans cette classe pour cette année
+    students_in_class = ClassStudentYear.objects.filter(
+        student_class=student_class,
+        year=current_year,
+        is_active=True
+    )
 
-    # 2. Identifier les matières uniques (TeacherSubjects) qui ont ces notes.
-    # Nous utilisons un 'set' pour éviter les doublons
-    teacher_subjects = set()
-    for grade in valid_grades:
-        teacher_subjects.add(grade.evaluation.teacher_subject)
+    if not students_in_class.exists():
+        return None
 
-    if not teacher_subjects:
-        return None # Sécurité (ne devrait jamais arriver)
+    valid_student_averages = []
 
-    subject_averages = []
-    
-    # 3. Calculer la moyenne de la classe POUR CHAQUE matière ayant des notes.
-    for ts in teacher_subjects:
-        # Cette fonction est maintenant garantie de trouver des notes.
-        subject_avg = calculate_subject_class_average(
-            student_class, 
-            ts, 
-            term_year
-        )
+    # 3. Pour chaque élève, calculer sa moyenne générale
+    for link in students_in_class:
+        student = link.student
         
-        # Cette vérification est toujours une bonne pratique
-        if subject_avg is not None:
-            subject_averages.append(subject_avg)
+        # On appelle la fonction existante qui calcule la moyenne générale d'un élève
+        # (Celle-ci boucle déjà sur toutes les matières de l'élève)
+        student_avg = calculate_overall_student_average(student, term_year)
+        
+        if student_avg is not None:
+            valid_student_averages.append(student_avg)
 
-    # 4. Calcule la moyenne générale (moyenne des moyennes)
-    if subject_averages:
-        overall_avg = sum(subject_averages) / len(subject_averages)
-        overall_avg_result = round(overall_avg, 2)
-        return overall_avg_result
+    # 4. Faire la moyenne de ces moyennes
+    if valid_student_averages:
+        overall_avg = sum(valid_student_averages) / len(valid_student_averages)
+        return round(overall_avg, 2)
         
     return None
 

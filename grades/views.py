@@ -79,7 +79,6 @@ def view_my_grades_dashboard(request):
         'taught_classes_data': dashboard_data['taught_classes_data'],
     }
 
-    print(context)
 
     return render(request, 'grades/grades_dashboard.html', context)
 
@@ -139,8 +138,6 @@ def view_teacher_grades_as_admin(request, pk_staff):
         'main_class_data': dashboard_data['main_class_data'],
         'taught_classes_data': dashboard_data['taught_classes_data'],
     }
-
-    print(context)
 
     return render(request, 'grades/grades_dashboard.html', context)
 
