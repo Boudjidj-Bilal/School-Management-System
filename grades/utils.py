@@ -388,3 +388,124 @@ def get_grades_data_for_specific_context(teacher_staff, current_year, student_cl
 
     return data_payload
 
+
+
+
+def get_student_grades_view_data(student, current_year):
+    """
+    Récupère toutes les données de notes pour l'interface d'un ÉLÈVE.
+    Retourne un dictionnaire structuré par trimestre.
+    """
+    
+    # 1. Trouver la classe de l'élève pour l'année en cours
+    try:
+        student_class_link = ClassStudentYear.objects.get(
+            student=student,
+            year=current_year,
+            is_active=True
+        )
+        student_class = student_class_link.student_class
+    except ClassStudentYear.DoesNotExist:
+        return None # L'élève n'est pas inscrit cette année
+
+    # 2. Récupérer les trimestres/semestres pour le niveau de cette classe
+    terms = TermYearLevel.objects.filter(
+        year=current_year,
+        level=student_class.level
+    ).order_by('start_date')
+
+    # 3. Récupérer les matières enseignées dans cette classe
+    # On prend les TeacherSubject liés à la classe
+    class_teachers = ClassTeacherYear.objects.filter(
+        student_class=student_class,
+        year=current_year,
+        is_active=True
+    ).select_related('teacher', 'teacher__subject').order_by('teacher__subject__name')
+
+    terms_data = []
+
+    # 4. Boucle sur chaque trimestre pour construire les données
+    for term in terms:
+        term_payload = {
+            'term_id': term.id,
+            'term_name': f"Trimestre {term.counter}" if student_class.level.term_type == "TRIMESTRE" else f"Semestre {term.counter}",
+            'is_active': not term.finished, # Pour info (ex: mettre en gras le trimestre actuel)
+            'subjects': [],
+            'overall_student_average': 'N/A',
+            'overall_class_average': 'N/A'
+        }
+
+        # Calcul des moyennes générales pour ce trimestre
+        stud_overall = calculate_overall_student_average(student, term)
+        class_overall = calculate_overall_class_average(student_class, term)
+        
+        term_payload['overall_student_average'] = stud_overall if stud_overall is not None else "N/A"
+        term_payload['overall_class_average'] = class_overall if class_overall is not None else "N/A"
+
+        # Boucle sur les matières
+        for link in class_teachers:
+            ts = link.teacher # C'est le TeacherSubject
+            
+            # Récupère toutes les évaluations de cette matière pour ce trimestre
+            evaluations = Evaluation.objects.filter(
+                teacher_subject=ts,
+                student_class=student_class,
+                term_year=term
+            ).order_by('date')
+
+            # Si aucune évaluation n'existe et qu'il n'y a pas de moyenne, on peut choisir de masquer la matière
+            # Mais généralement, on affiche la matière même vide.
+            
+            subject_data = {
+                'subject_name': ts.subject.name,
+                'subject_color': ts.subject.color, # Utile pour le CSS (bordures, badges)
+                'teacher_name': f"{ts.teacher.user.last_name} {ts.teacher.user.first_name}",
+                'student_average': 'N/A',
+                'class_average': 'N/A',
+                'grades': []
+            }
+
+            # Calcul des moyennes par matière
+            stud_subj_avg = calculate_student_subject_average(student, ts, term)
+            class_subj_avg = calculate_subject_class_average(student_class, ts, term)
+            
+            if stud_subj_avg is not None:
+                subject_data['student_average'] = stud_subj_avg
+            if class_subj_avg is not None:
+                subject_data['class_average'] = class_subj_avg
+
+            # Détail des notes
+            for evaluation in evaluations:
+                # Cherche la note de l'élève pour cette évaluation
+                grade_obj = Grade.objects.filter(evaluation=evaluation, student=student).first()
+                
+                grade_info = {
+                    'evaluation_name': evaluation.name,
+                    'date': evaluation.date,
+                    'coefficient': evaluation.coefficient,
+                    'max_grade': evaluation.max_grade,
+                    'value': 'N/A',
+                    'is_absent': False,
+                }
+
+                if grade_obj:
+                    if grade_obj.is_absent:
+                        grade_info['value'] = "ABS"
+                        grade_info['is_absent'] = True
+                    elif grade_obj.grade_value is not None:
+                        grade_info['value'] = grade_obj.grade_value
+                else:
+                    # Pas de note saisie pour cet élève sur ce devoir
+                    grade_info['value'] = "-" 
+
+                subject_data['grades'].append(grade_info)
+
+            term_payload['subjects'].append(subject_data)
+        
+        terms_data.append(term_payload)
+
+    return {
+        'student': student,
+        'student_class': student_class,
+        'terms_data': terms_data
+    }

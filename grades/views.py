@@ -18,7 +18,8 @@ from classes.models import Class
 # Importe les 2 fonctions de 'utils.py'
 from .utils import (
     get_grades_dashboard_data, 
-    get_grades_data_for_specific_context
+    get_grades_data_for_specific_context,
+    get_student_grades_view_data
 )
 from users.utils import get_user_type
 from schools.utils import get_current_year_for_school
@@ -380,3 +381,52 @@ def api_manage_evaluation_views(request):
     except Exception as e:
         print(f"Erreur dans api_manage_evaluation: {e}")
         return JsonResponse({"success": False, "message": f"Erreur interne : {str(e)}"}, status=500)
+    
+
+
+@login_required(login_url='login')
+def view_my_grades_student(request):
+    """
+    Affiche le relevé de notes pour l'ÉLÈVE connecté.
+    Lecture seule.
+    """
+    user = request.user
+    user_type = get_user_type(user)
+
+    # 1. Vérification des permissions
+    if user_type != "Student":
+        return HttpResponseForbidden("Accès refusé. Cette page est réservée aux élèves.")
+
+    try:
+        # On récupère le profil Student lié au User
+        student = Student.objects.get(user=user)
+    except Student.DoesNotExist:
+        return HttpResponseForbidden("Erreur : Aucun profil élève associé à ce compte.")
+
+    # 2. Vérification de l'année scolaire
+    current_year = get_current_year_for_school(student.school)
+    if not current_year:
+        return render(request, 'grades/student_grades.html', {
+            'error': "Aucune année scolaire active configurée pour votre école."
+        })
+
+    # 3. Récupération des données via l'utilitaire
+    data = get_student_grades_view_data(student, current_year)
+
+    if data is None:
+        return render(request, 'grades/student_grades.html', {
+            'error': "Vous n'êtes inscrit dans aucune classe pour cette année scolaire."
+        })
+
+    # 4. Construction du contexte
+    context = {
+        'student': data['student'],
+        'student_class': data['student_class'],
+        'terms_data': data['terms_data'], # La liste structurée par trimestre
+        'current_year': current_year,
+    }
+
+    # Note: Nous n'avons pas besoin de 'initial_data_for_script' ici car 
+    # la vue élève est plus simple (pas d'AJAX complexe, tout est chargé au rendu).
+    
+    return render(request, 'grades/student_grades.html', context)

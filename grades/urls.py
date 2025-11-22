@@ -3,7 +3,8 @@ from .views import (
     view_my_grades_dashboard,    
     view_teacher_grades_as_admin,  
     api_get_grades_for_term_views,
-    api_manage_evaluation_views
+    api_manage_evaluation_views,
+    view_my_grades_student
 )
 
 app_name = 'grades'
@@ -22,6 +23,12 @@ urlpatterns = [
         'dashboard/professeur/<int:pk_staff>/',
         view_teacher_grades_as_admin,
         name='view_teacher_grades_as_admin'
+    ),
+    # Parcours 3: L'élève consulte ses propres notes
+    path(
+        'student/',
+        view_my_grades_student,
+        name='student_grades_dashboard'
     ),
     
     # --- APIs ---

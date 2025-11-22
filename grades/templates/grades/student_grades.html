@@ -1,0 +1,168 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Mes Notes{% endblock %}
+
+{% block content %}
+    <!-- En-tête de la page -->
+    <header class="mb-8">
+        <h1 class="text-3xl font-extrabold text-gray-900 flex items-center">
+            <i class="fas fa-graduation-cap text-indigo-600 mr-3"></i>
+            Relevé de Notes
+        </h1>
+        <div class="mt-2 text-lg text-gray-600 font-medium flex flex-col sm:flex-row sm:items-center">
+            <span>{{ student.user.first_name }} {{ student.user.last_name }}</span>
+            <span class="hidden sm:inline mx-2 text-gray-400">|</span>
+            <span class="text-indigo-600">{{ student_class.name }}</span>
+            <span class="hidden sm:inline mx-2 text-gray-400">|</span>
+            <span>Année {{ current_year.name }}</span>
+        </div>
+    </header>
+
+    {% if error %}
+        <div class="bg-red-50 border-l-4 border-red-500 p-4 mb-6 rounded-r-lg shadow-sm">
+            <div class="flex">
+                <div class="flex-shrink-0">
+                    <i class="fas fa-exclamation-circle text-red-500"></i>
+                </div>
+                <div class="ml-3">
+                    <p class="text-sm text-red-700 font-medium">{{ error }}</p>
+                </div>
+            </div>
+        </div>
+    {% else %}
+
+        <!-- Navigation par Trimestre/Semestre -->
+        <div class="mb-8 border-b border-gray-200">
+            <nav class="-mb-px flex space-x-8 overflow-x-auto" aria-label="Tabs">
+                {% for term in terms_data %}
+                <button 
+                    data-action="switch-term" 
+                    data-target="#term-{{ term.term_id }}"
+                    class="term-tab-btn whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm transition-colors duration-200 
+                           {% if term.is_active or forloop.first %}border-indigo-500 text-indigo-600{% else %}border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300{% endif %}">
+                    {{ term.term_name }}
+                    {% if term.is_active %}
+                        <span class="ml-2 bg-green-100 text-green-800 py-0.5 px-2 rounded-full text-xs">En cours</span>
+                    {% endif %}
+                </button>
+                {% endfor %}
+            </nav>
+        </div>
+
+        <!-- Contenu des Trimestres -->
+        {% for term in terms_data %}
+        <div id="term-{{ term.term_id }}" class="term-content space-y-8 {% if not term.is_active and not forloop.first %}hidden{% endif %}">
+            
+            <!-- 1. Résumé des Moyennes Générales -->
+            <section class="bg-white rounded-xl shadow-lg p-6 border border-indigo-50">
+                <h3 class="text-lg font-bold text-gray-800 mb-4 flex items-center">
+                    <i class="fas fa-chart-pie mr-2 text-indigo-500"></i> Synthèse du {{ term.term_name }}
+                </h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <!-- Moyenne Élève -->
+                    <div class="flex items-center p-4 bg-indigo-50 rounded-lg border border-indigo-100">
+                        <div class="p-3 rounded-full bg-indigo-100 text-indigo-600 mr-4">
+                            <i class="fas fa-user-graduate text-2xl"></i>
+                        </div>
+                        <div>
+                            <p class="text-sm font-medium text-gray-500">Moyenne Générale</p>
+                            <p class="text-3xl font-bold text-indigo-700">{{ term.overall_student_average }}</p>
+                        </div>
+                    </div>
+                    <!-- Moyenne Classe -->
+                    <div class="flex items-center p-4 bg-gray-50 rounded-lg border border-gray-200">
+                        <div class="p-3 rounded-full bg-gray-200 text-gray-600 mr-4">
+                            <i class="fas fa-users text-2xl"></i>
+                        </div>
+                        <div>
+                            <p class="text-sm font-medium text-gray-500">Moyenne de la Classe</p>
+                            <p class="text-3xl font-bold text-gray-700">{{ term.overall_class_average }}</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 2. Liste des Matières -->
+            <section class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                {% for subject in term.subjects %}
+                <!-- [CORRECTION LINTER] Utilisation d'une variable CSS pour éviter l'erreur de syntaxe -->
+                <div class="bg-white rounded-xl shadow-md border-l-4 overflow-hidden hover:shadow-lg transition-shadow duration-300"
+                     style="--subject-color: {{ subject.subject_color|default:'#cbd5e1' }}; border-left-color: var(--subject-color);">
+                    
+                    <!-- En-tête Matière -->
+                    <div class="p-4 border-b border-gray-100 bg-gray-50 flex justify-between items-start">
+                        <div>
+                            <h4 class="text-lg font-bold text-gray-800">{{ subject.subject_name }}</h4>
+                            <p class="text-sm text-gray-500 flex items-center mt-1">
+                                <i class="fas fa-chalkboard-teacher mr-2"></i> {{ subject.teacher_name }}
+                            </p>
+                        </div>
+                        <div class="text-right">
+                            <div class="text-sm font-medium text-gray-500">Moyenne</div>
+                            <div class="text-xl font-bold {% if subject.student_average != 'N/A' and subject.student_average >= 10 %}text-green-600{% elif subject.student_average != 'N/A' %}text-red-500{% else %}text-gray-400{% endif %}">
+                                {{ subject.student_average }}
+                            </div>
+                            <div class="text-xs text-gray-400 mt-1">Classe : {{ subject.class_average }}</div>
+                        </div>
+                    </div>
+
+                    <!-- Liste des Devoirs -->
+                    <div class="p-4">
+                        {% if subject.grades %}
+                        <div class="overflow-x-auto">
+                            <table class="min-w-full text-sm text-left">
+                                <thead class="text-xs text-gray-500 uppercase bg-gray-50 border-b">
+                                    <tr>
+                                        <th class="px-2 py-2 font-medium">Devoir</th>
+                                        <th class="px-2 py-2 font-medium text-center">Date</th>
+                                        <th class="px-2 py-2 font-medium text-center">Coeff.</th>
+                                        <th class="px-2 py-2 font-medium text-right">Note</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="divide-y divide-gray-100">
+                                    {% for grade in subject.grades %}
+                                    <tr class="hover:bg-gray-50 transition-colors">
+                                        <td class="px-2 py-2 font-medium text-gray-700">
+                                            {{ grade.evaluation_name }}
+                                        </td>
+                                        <td class="px-2 py-2 text-gray-500 text-center">
+                                            {{ grade.date|date:"d/m" }}
+                                        </td>
+                                        <td class="px-2 py-2 text-gray-500 text-center">
+                                            {{ grade.coefficient }}
+                                        </td>
+                                        <td class="px-2 py-2 text-right font-bold">
+                                            {% if grade.is_absent %}
+                                                <span class="px-2 py-1 bg-red-100 text-red-600 rounded text-xs">ABS</span>
+                                            {% elif grade.value == '-' %}
+                                                <span class="text-gray-300">-</span>
+                                            {% else %}
+                                                <span class="{% if grade.value >= 10 %}text-green-600{% else %}text-orange-500{% endif %}">
+                                                    {{ grade.value }}
+                                                </span>
+                                                <span class="text-xs text-gray-400 font-normal">/{{ grade.max_grade|floatformat:0 }}</span>
+                                            {% endif %}
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                        {% else %}
+                            <p class="text-sm text-gray-400 italic text-center py-4">Aucune note pour le moment.</p>
+                        {% endif %}
+                    </div>
+                </div>
+                {% endfor %}
+            </section>
+        </div>
+        {% endfor %}
+
+    {% endif %}
+{% endblock %}
+
+{% block extra_js %}
+    <!-- Script spécifique pour la gestion des onglets élève -->
+    <script src="{% static 'js/grades/student_grades.js' %}"></script>
+{% endblock %}
