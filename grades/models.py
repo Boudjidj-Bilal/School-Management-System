@@ -69,21 +69,35 @@ class Appreciation(models.Model):
         TeacherSubject, on_delete=models.CASCADE, related_name="appreciations",
         null=True, blank=True
     )  # professeur et matière (facultatif si appréciation globale)
-    content = models.TextField(default="Aucune apréciation.")  # contenus de l'appréciation
+    
+    content = models.TextField(blank=True, default="")  
+    
     is_global = models.BooleanField(default=False)  # True = appréciation générale, False = par matière
+
+    class Meta:
+        # Optionnel mais recommandé : Un couple (élève, trimestre, matière+prof) doit être unique.
+        # Cela empêche techniquement d'avoir 2 appréciations pour le même prof/matière/élève/trimestre.
+        # Note : Pour l'appréciation globale (teacher_subject=None), la contrainte SQL est parfois permissive selon la DB,
+        # mais c'est une bonne sécurité de base.
+        unique_together = ("student", "term_year", "teacher_subject")
 
     def __str__(self):
         if self.is_global:
-            return f"Global appreciation for {self.student} ({self.term_year})"
-        return f"Appreciation {self.teacher_subject} for {self.student} ({self.term_year})"
+            return f"Appréciation Globale pour {self.student} ({self.term_year})"
+        return f"Appréciation {self.teacher_subject} pour {self.student} ({self.term_year})"
 
 
 # --> Représente une mention attribuée à un élève (Assez bien, Bien, Très bien...)
 class Mention(models.Model):
     MENTION_CHOICES = [
-        ("AB", "Assez Bien"),  # assez bien
-        ("B", "Bien"),         # bien
-        ("TB", "Très Bien"),   # très bien
+        ("AB", "Assez Bien"),
+        ("B", "Bien"),
+        ("TB", "Très Bien"),
+        ("EX", "Excellent"),
+        ("FE", "Félicitations"),
+        ("EN", "Encouragements"),
+        ("AV", "Avertissement Travail"),
+        ("AC", "Avertissement Conduite"),
     ]
 
     mention_type = models.CharField(max_length=2, choices=MENTION_CHOICES)  # type de mention
@@ -99,4 +113,5 @@ class Mention(models.Model):
         # un élève ne peut avoir qu'une seule mention par période
 
     def __str__(self):
-        return f"{self.student} - {self.mention_type()} ({self.term_year})"
+        # [CORRIGÉ] Utilisation de get_mention_type_display() pour afficher le libellé
+        return f"{self.student} - {self.get_mention_type_display()} ({self.term_year})"

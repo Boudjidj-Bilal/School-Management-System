@@ -8,7 +8,7 @@ from django.contrib.auth.decorators import login_required
 from django.views.decorators.http import require_http_methods
 
 # Import des modèles
-from .models import Evaluation, Grade
+from .models import Evaluation, Grade, Appreciation, Mention
 from schools.models import TermYearLevel
 from subjects.models import TeacherSubject
 from users.models import Staff, Student
@@ -19,7 +19,9 @@ from classes.models import Class
 from .utils import (
     get_grades_dashboard_data, 
     get_grades_data_for_specific_context,
-    get_student_grades_view_data
+    get_student_grades_view_data,
+    get_appreciations_dashboard_data,
+    get_appreciations_data_for_context
 )
 from users.utils import get_user_type
 from schools.utils import get_current_year_for_school
@@ -430,3 +432,190 @@ def view_my_grades_student(request):
     # la vue élève est plus simple (pas d'AJAX complexe, tout est chargé au rendu).
     
     return render(request, 'grades/student_grades.html', context)
+
+
+
+# ====================================================================
+# VUES POUR LES APPRÉCIATIONS
+# ====================================================================
+
+@login_required(login_url='login')
+def view_appreciations_dashboard(request):
+    """
+    Affiche le tableau de bord de saisie des appréciations pour le PROFESSEUR CONNECTÉ.
+    """
+    user = request.user
+    user_type = get_user_type(user)
+
+    # 1. Permissions
+    if user_type not in ["Teacher"]:
+        return HttpResponseForbidden("Accès refusé.")
+        
+    try:
+        # Le prof connecté
+        teacher_staff = get_object_or_404(Staff, user=user)
+    except Staff.DoesNotExist:
+         return HttpResponseForbidden("Erreur: Profil enseignant non trouvé.")
+
+    # 2. Année scolaire
+    current_year = get_current_year_for_school(teacher_staff.school)
+    if not current_year:
+        return HttpResponseForbidden("Aucune année scolaire courante n'est définie.")
+
+    # 3. Récupération des données
+    dashboard_data = get_appreciations_dashboard_data(teacher_staff, current_year)
+
+    # 4. Contexte
+    context = {
+        'teacher_staff': teacher_staff,
+        'current_year': current_year,
+        'dashboard_data': dashboard_data,
+        'initial_data_for_script': dashboard_data,
+        'can_edit_appreciations': True, 
+    }
+
+    return render(request, 'grades/appreciations_dashboard.html', context)
+
+
+@login_required(login_url='login')
+def view_teacher_appreciations_as_admin(request, pk_staff):
+    """
+    [NOUVEAU] Affiche le tableau de bord des appréciations d'un PROFESSEUR CIBLÉ.
+    Vue réservée aux Admins/Proviseurs (Lecture Seule).
+    """
+    user = request.user
+    user_type = get_user_type(user)
+
+    # 1. Vérification des permissions
+    if user_type not in ["SuperAdministrator", "Principal"]:
+        return HttpResponseForbidden("Accès refusé. Seuls les Proviseurs et Super-Administrateurs peuvent consulter cette page.")
+        
+    try:
+        # C'est le prof qu'on REGARDE
+        teacher_staff = get_object_or_404(Staff, pk=pk_staff) 
+    except Staff.DoesNotExist:
+         return HttpResponseForbidden("Erreur: Profil enseignant cible non trouvé.")
+
+    # 2. Vérification de l'année scolaire
+    current_year = get_current_year_for_school(teacher_staff.school)
+    if not current_year:
+        return HttpResponseForbidden("Aucune année scolaire courante n'est définie.")
+
+    # 3. Récupération des données
+    dashboard_data = get_appreciations_dashboard_data(teacher_staff, current_year)
+
+    # 4. Contexte
+    context = {
+        'teacher_staff': teacher_staff, # Le prof ciblé
+        'current_year': current_year,
+        'dashboard_data': dashboard_data,
+        'initial_data_for_script': dashboard_data,
+        'can_edit_appreciations': False,
+    }
+
+    return render(request, 'grades/appreciations_dashboard.html', context)
+
+
+@require_http_methods(["POST"])
+@csrf_exempt
+@login_required(login_url='login')
+def api_get_appreciations_for_term(request):
+    """
+    API pour récupérer la liste des élèves et leurs appréciations.
+    Utilisée par les deux vues (Prof et Admin).
+    """
+    try:
+        data = json.loads(request.body)
+        term_id = data.get("term_id")
+        class_id = data.get("class_id")
+        ts_id = data.get("ts_id")
+        is_global = data.get("is_global", False)
+
+        term_year = get_object_or_404(TermYearLevel, pk=term_id)
+        student_class = get_object_or_404(Class, pk=class_id)
+        current_year = term_year.year
+
+        context_data = get_appreciations_data_for_context(
+            current_year, 
+            student_class, 
+            teacher_subject_id=ts_id, 
+            selected_term=term_year, 
+            is_global=is_global
+        )
+        
+        return JsonResponse({"success": True, "data": context_data})
+
+    except Exception as e:
+        print(f"Erreur API Appreciations Get: {e}")
+        return JsonResponse({"success": False, "message": str(e)}, status=500)
+
+
+@require_http_methods(["POST"])
+@csrf_exempt
+@login_required(login_url='login')
+def api_save_appreciations(request):
+    """
+    API pour ENREGISTRER les appréciations.
+    Réservée strictement aux professeurs.
+    """
+    user = request.user
+    user_type = get_user_type(user)
+
+    # Sécurité supplémentaire côté API
+    if user_type != "Teacher":
+        return JsonResponse({"success": False, "message": "Seuls les professeurs peuvent saisir des appréciations."}, status=403)
+
+    try:
+        data = json.loads(request.body)
+        
+        term_id = data.get("term_id")
+        ts_id = data.get("ts_id")
+        is_global = data.get("is_global", False)
+        students_data = data.get("students_data", [])
+
+        term_year = get_object_or_404(TermYearLevel, pk=term_id)
+        
+        if term_year.finished:
+             return JsonResponse({"success": False, "message": "Ce trimestre est clos. Modification impossible."}, status=403)
+
+        teacher_subject = None
+        if not is_global and ts_id:
+            teacher_subject = get_object_or_404(TeacherSubject, pk=ts_id)
+            if teacher_subject.teacher.user != user:
+                return JsonResponse({"success": False, "message": "Vous ne pouvez pas modifier les appréciations d'un autre professeur."}, status=403)
+
+        with transaction.atomic():
+            count_updated = 0
+            
+            for item in students_data:
+                student_id = item.get("student_id")
+                content = item.get("content", "").strip()
+                mention_code = item.get("mention", "")
+
+                student = get_object_or_404(Student, pk=student_id)
+
+                Appreciation.objects.update_or_create(
+                    student=student,
+                    term_year=term_year,
+                    teacher_subject=teacher_subject,
+                    is_global=is_global,
+                    defaults={'content': content}
+                )
+
+                if is_global:
+                    if mention_code:
+                        Mention.objects.update_or_create(
+                            student=student,
+                            term_year=term_year,
+                            defaults={'mention_type': mention_code}
+                        )
+                    else:
+                        Mention.objects.filter(student=student, term_year=term_year).delete()
+                
+                count_updated += 1
+
+        return JsonResponse({"success": True, "message": f"{count_updated} appréciations enregistrées."})
+
+    except Exception as e:
+        print(f"Erreur API Appreciations Save: {e}")
+        return JsonResponse({"success": False, "message": str(e)}, status=500)

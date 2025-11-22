@@ -1,0 +1,226 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Saisie des Appréciations{% endblock %}
+
+{% block content %}
+    {% csrf_token %}
+
+    <!-- En-tête -->
+    <header class="mb-6 border-b pb-4 border-gray-200">
+        <h1 class="text-3xl font-extrabold text-gray-900 flex items-center">
+            <i class="fas fa-comment-alt text-indigo-600 mr-3"></i>
+            {% if can_edit_appreciations %}Saisie des Appréciations{% else %}Consultation des Appréciations{% endif %}
+        </h1>
+        <p class="text-lg text-gray-600 font-medium">
+            Professeur : {{ teacher_staff.user.first_name }} {{ teacher_staff.user.last_name }}
+            <span class="mx-2">|</span>
+            Année : {{ current_year.name }}
+        </p>
+    </header>
+
+    <div id="notification-area" class="mb-6 space-y-3"></div>
+
+
+    <div id="appreciations-content-wrapper" class="space-y-8">
+
+        <!-- SECTION 1: PROFESSEUR PRINCIPAL (Appréciations Globales + Mentions) -->
+        {% if dashboard_data.main_classes_data %}
+        <section class="bg-white rounded-xl shadow-xl p-6 border-l-4 border-indigo-500">
+            <h2 class="text-2xl font-bold text-indigo-900 mb-6 flex items-center">
+                Appréciations Globales
+            </h2>
+            
+            <div id="main-class-container" class="space-y-8">
+                {% for class_id, data in dashboard_data.main_classes_data.items %}
+                <div class="appreciation-block bg-gray-50 border border-gray-200 rounded-lg p-4" 
+                     data-context-key="{{ class_id }}" 
+                     data-type="main"
+                     data-class-id="{{ class_id }}">
+                    
+                    <div class="flex justify-between items-center mb-4">
+                        <h3 class="text-xl font-bold text-indigo-800">{{ data.class_name }}</h3>
+                        <span class="text-sm text-gray-500 bg-white px-2 py-1 rounded border">Synthèse du Bulletin</span>
+                    </div>
+
+                    <!-- Navigation Trimestres -->
+                    <nav class="flex space-x-2 border-b border-gray-200 mb-4 pb-2 overflow-x-auto">
+                        {% for term in data.available_terms %}
+                        <button data-action="change-term"
+                                data-term-id="{{ term.id }}"
+                                data-context-key="{{ class_id }}"
+                                class="term-tab px-3 py-1 text-sm font-medium rounded-t-md transition-colors duration-150 
+                                       {% if term.id == data.current_term_id %}bg-white text-indigo-700 border-t border-l border-r border-gray-200 font-bold shadow-sm{% else %}text-gray-500 hover:bg-white hover:text-gray-700{% endif %}">
+                            Trimestre {{ term.counter }}
+                            {% if term.finished %}<i class="fas fa-lock ml-1 text-xs text-gray-400" title="Clos"></i>{% endif %}
+                        </button>
+                        {% endfor %}
+                    </nav>
+
+                    <!-- Conteneur Liste Élèves -->
+                    <form class="student-list-form space-y-3">
+                        <!-- [CORRECTION UX] Ajout de max-h-[600px] et overflow-y-auto pour la barre de défilement -->
+                        <div class="student-list-container space-y-3 max-h-[600px] overflow-y-auto pr-2 custom-scrollbar">
+                            <!-- Rempli initialement par Django, puis mis à jour par JS -->
+                            {% for student_info in data.students_data %}
+                            <div class="student-item bg-white p-4 rounded-lg shadow-sm border border-gray-100 flex flex-col md:flex-row gap-4" data-student-id="{{ student_info.student_id }}">
+                                <!-- Info Élève -->
+                                <div class="md:w-1/4 flex flex-col justify-center">
+                                    <span class="font-bold text-gray-800 text-lg">{{ student_info.name }}</span>
+                                    <div class="mt-2">
+                                        <label class="block text-xs font-semibold text-gray-500 uppercase mb-1">Mention</label>
+                                        <select name="mention_{{ student_info.student_id }}" 
+                                                class="mention-select w-full text-sm border-gray-300 rounded-md shadow-sm focus:border-indigo-500 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 {% if not can_edit_appreciations %}bg-gray-100 cursor-not-allowed{% endif %}"
+                                                {% if not can_edit_appreciations %}disabled{% endif %}>
+                                            <option value="">-- Aucune --</option>
+                                            {% for code, label in data.mentions_choices %}
+                                                <option value="{{ code }}" {% if student_info.mention == code %}selected{% endif %}>{{ label }}</option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+                                </div>
+                                <!-- Zone de Texte -->
+                                <div class="md:w-3/4 relative">
+                                    <label class="block text-xs font-semibold text-gray-500 uppercase mb-1">Appréciation Globale</label>
+                                    <textarea name="content_{{ student_info.student_id }}" 
+                                              rows="3" 
+                                              maxlength="500"
+                                              class="appreciation-input w-full border-gray-300 rounded-md shadow-inner focus:border-indigo-500 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 resize-y {% if not can_edit_appreciations %}bg-gray-100 cursor-not-allowed{% endif %}"
+                                              placeholder="Synthèse générale sur le travail et le comportement..."
+                                              {% if not can_edit_appreciations %}disabled{% endif %}>{{ student_info.appreciation_content }}</textarea>
+                                    <div class="text-right text-xs text-gray-400 mt-1 char-count">
+                                        <span class="current">0</span>/500
+                                    </div>
+                                </div>
+                            </div>
+                            {% empty %}
+                            <p class="text-gray-500 italic text-center py-4">Aucun élève dans cette classe.</p>
+                            {% endfor %}
+                        </div>
+
+                        <!-- Barre d'actions -->
+                        <div class="flex justify-end pt-4 border-t border-gray-200">
+                            <div class="save-status mr-4 flex items-center text-sm font-medium transition-opacity duration-500 opacity-0"></div>
+                            {% if can_edit_appreciations %}
+                            <button type="submit" class="save-btn px-6 py-2 bg-indigo-600 text-white font-bold rounded-lg shadow-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
+                                <i class="fas fa-save mr-2"></i> Enregistrer
+                            </button>
+                            {% endif %}
+                        </div>
+                    </form>
+                </div>
+                {% endfor %}
+            </div>
+        </section>
+        {% endif %}
+
+
+        <!-- SECTION 2: MES MATIÈRES (Appréciations par Matière) -->
+        <section class="bg-white rounded-xl shadow-xl p-6 border-l-4 border-teal-500">
+            <h2 class="text-2xl font-bold text-gray-800 mb-6 flex items-center">
+                <i class="fas fa-book-open text-teal-500 mr-3"></i> 
+                Appréciations par Matière
+            </h2>
+
+            <div id="subject-class-container" class="space-y-8">
+                {% if not dashboard_data.taught_classes_list %}
+                    <p class="text-gray-500 italic">Aucune matière assignée pour cette année.</p>
+                {% endif %}
+
+                {% for data in dashboard_data.taught_classes_list %}
+                <div class="appreciation-block bg-gray-50 border border-gray-200 rounded-lg p-4" 
+                     data-context-key="{{ data.key }}"
+                     data-type="subject"
+                     data-class-id="{{ data.student_class.id }}"
+                     data-ts-id="{{ data.teacher_subject.id }}">
+                    
+                    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4">
+                        <div>
+                            <h3 class="text-xl font-bold text-gray-800">
+                                {{ data.teacher_subject.subject.name }} 
+                                <span class="text-gray-500 text-lg font-normal">- {{ data.student_class.name }}</span>
+                            </h3>
+                        </div>
+                        <!-- Indicateur de couleur de la matière -->
+                        <div class="h-2 w-16 rounded-full mt-2 sm:mt-0" style="background-color: var(--subject-color, #cbd5e1);"></div>
+                    </div>
+
+                    <!-- Navigation Trimestres -->
+                    <nav class="flex space-x-2 border-b border-gray-200 mb-4 pb-2 overflow-x-auto">
+                        {% for term in data.available_terms %}
+                        <button data-action="change-term"
+                                data-term-id="{{ term.id }}"
+                                data-context-key="{{ data.key }}"
+                                class="term-tab px-3 py-1 text-sm font-medium rounded-t-md transition-colors duration-150 
+                                       {% if term.id == data.current_term_id %}bg-white text-teal-700 border-t border-l border-r border-gray-200 font-bold shadow-sm{% else %}text-gray-500 hover:bg-white hover:text-gray-700{% endif %}">
+                            Trimestre {{ term.counter }}
+                            {% if term.finished %}<i class="fas fa-lock ml-1 text-xs text-gray-400" title="Clos"></i>{% endif %}
+                        </button>
+                        {% endfor %}
+                    </nav>
+
+                    <!-- Conteneur Liste Élèves -->
+                    <form class="student-list-form space-y-3">
+                        <!-- [CORRECTION UX] Ajout de max-h-[600px] et overflow-y-auto pour la barre de défilement -->
+                        <div class="student-list-container space-y-2 max-h-[600px] overflow-y-auto pr-2 custom-scrollbar">
+                            {% for student_info in data.students_data %}
+                            <div class="student-item bg-white p-3 rounded-lg shadow-sm border border-gray-100 flex flex-col md:flex-row gap-4 items-start" data-student-id="{{ student_info.student_id }}">
+                                <div class="md:w-1/4 pt-2">
+                                    <span class="font-bold text-gray-700">{{ student_info.name }}</span>
+                                </div>
+                                <div class="md:w-3/4 relative w-full">
+                                    <textarea name="content_{{ student_info.student_id }}" 
+                                              rows="2" 
+                                              maxlength="500"
+                                              class="appreciation-input w-full text-sm border-gray-300 rounded-md focus:border-teal-500 focus:ring focus:ring-teal-200 focus:ring-opacity-50 resize-y {% if not can_edit_appreciations %}bg-gray-100 cursor-not-allowed{% endif %}"
+                                              placeholder="Appréciation pour {{ data.teacher_subject.subject.name }}..."
+                                              {% if not can_edit_appreciations %}disabled{% endif %}>{{ student_info.appreciation_content }}</textarea>
+                                    <div class="text-right text-xs text-gray-400 mt-0.5 char-count">
+                                        <span class="current">0</span>/500
+                                    </div>
+                                </div>
+                            </div>
+                            {% empty %}
+                            <p class="text-gray-500 italic text-center py-4">Aucun élève trouvé.</p>
+                            {% endfor %}
+                        </div>
+
+                        <div class="flex justify-end pt-3 border-t border-gray-200">
+                            <div class="save-status mr-4 flex items-center text-sm font-medium transition-opacity duration-500 opacity-0"></div>
+                            {% if can_edit_appreciations %}
+                            <button type="submit" class="save-btn px-6 py-2 bg-teal-600 text-white font-bold rounded-lg shadow-md hover:bg-teal-700 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:ring-offset-2 transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
+                                <i class="fas fa-save mr-2"></i> Enregistrer
+                            </button>
+                            {% endif %}
+                        </div>
+                    </form>
+                </div>
+                {% endfor %}
+            </div>
+        </section>
+
+    </div>
+
+{% endblock %}
+
+{% block extra_js %}
+    <!-- Passage des données initiales au JS -->
+    {{ initial_data_for_script|json_script:"initial-dashboard-data" }}
+
+    {# URLs des APIs #}
+    {% url 'grades:api_get_appreciations_for_term' as api_get_term_url %}
+    {% url 'grades:api_save_appreciations' as api_save_url %}
+
+    <script>
+        const STAFF_PK = "{{ teacher_staff.pk }}";
+        const CSRF_TOKEN = document.querySelector('[name=csrfmiddlewaretoken]').value;
+        // [CORRECTION LINTER] Conversion explicite en chaîne pour comparaison ou utilisation directe
+        const CAN_EDIT = "{{ can_edit_appreciations|yesno:'true,false' }}" === "true"; 
+        const API_URLS = {
+            GET_TERM_DATA: "{{ api_get_term_url|escapejs }}",
+            SAVE_APPRECIATIONS: "{{ api_save_url|escapejs }}"
+        };
+    </script>
+    
+    <script src="{% static 'js/grades/appreciations_dashboard.js' %}"></script>
+{% endblock %}

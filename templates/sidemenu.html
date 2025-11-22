@@ -123,18 +123,24 @@
                     </a>
                 </li>
             {% endif %}
-            {% if user_is_teacher %}<!-- TODO : ajouter pour le professeur : messagerie, etc. -->
-                <li>
-                    <a href="{% url 'grades:grades_dashboard' %}" class="flex items-center space-x-3 text-gray-300 hover:bg-gray-700 hover:text-white rounded-lg p-2 transition-colors duration-200">
-                        <i class="fas fa-marker text-lg"></i>
-                        <span>Évaluations (Notes)</span>
-                    </a>
-                </li>
+            {% if user_is_teacher %}<!-- TODO : ajouter pour le professeur : messagerie, appréciation, etc. -->
                 <li>
                     <!-- Utilisation de request.user.staff_user.id pour récupérer l'ID du Staff lié -->
                     <a href="{% url 'scheduling:view_teacher_schedule' pk_staff=request.user.staff_user.id %}" class="flex items-center space-x-3 text-gray-300 hover:bg-gray-700 hover:text-white rounded-lg p-2 transition-colors duration-200">
                         <i class="fas fa-calendar-week text-lg"></i>
                         <span>Planning</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="{% url 'grades:grades_dashboard' %}" class="flex items-center space-x-3 text-gray-300 hover:bg-gray-700 hover:text-white rounded-lg p-2 transition-colors duration-200">
+                        <i class="fas fa-marker text-lg"></i>
+                        <span>Notes</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="{% url 'grades:appreciations_dashboard' %}" class="flex items-center space-x-3 text-gray-300 hover:bg-gray-700 hover:text-white rounded-lg p-2 transition-colors duration-200">
+                        <i class="fas fa-comment-alt text-lg"></i>
+                        <span>Appréciations</span>
                     </a>
                 </li>
             {% endif %}

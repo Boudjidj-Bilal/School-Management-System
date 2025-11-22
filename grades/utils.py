@@ -2,7 +2,7 @@ from django.db.models import Sum, F, ExpressionWrapper, FloatField
 from django.utils import timezone
 from django.shortcuts import get_object_or_404 
 
-from .models import Evaluation, Grade
+from .models import Evaluation, Grade, Appreciation, Mention
 from schools.models import TermYearLevel
 from subjects.models import TeacherSubject
 from classes.models import ClassTeacherYear, ClassStudentYear
@@ -509,3 +509,183 @@ def get_student_grades_view_data(student, current_year):
         'student_class': student_class,
         'terms_data': terms_data
     }
+
+
+# ====================================================================
+# FONCTIONS POUR LE TABLEAU DE BORD DES APPRÉCIATIONS
+# ====================================================================
+
+def get_appreciations_dashboard_data(teacher_staff, current_year):
+    """
+    Récupère les données pour le tableau de bord des APPRÉCIATIONS.
+    [MODIFIÉ] Sérialisation manuelle des objets Class et TeacherSubject pour éviter l'erreur JSON.
+    """
+    
+    # 1. Trouver tous les IDs de TeacherSubject que ce Staff enseigne
+    taught_subjects_ids = TeacherSubject.objects.filter(
+        teacher=teacher_staff
+    ).values_list('id', flat=True)
+
+    # 2. Matières/Classes enseignées
+    teacher_subjects_links = ClassTeacherYear.objects.filter(
+        teacher__id__in=taught_subjects_ids,
+        year=current_year,
+        is_active=True
+    ).select_related(
+        'student_class__level',
+        'teacher__subject'
+    ).order_by('student_class__name', 'teacher__subject__name')
+
+    # 3. Classes principales (pour les appréciations globales)
+    main_classes_links = teacher_subjects_links.filter(is_main_teacher=True)
+    main_classes = list(set([link.student_class for link in main_classes_links]))
+
+    # --- A. Données pour "Appréciations par Matière" ---
+    taught_classes_list = []
+
+    for link in teacher_subjects_links:
+        student_class = link.student_class
+        ts = link.teacher # TeacherSubject pré-chargé
+        
+        # Gestion des trimestres
+        terms_for_level = TermYearLevel.objects.filter(
+            year=current_year,
+            level=student_class.level
+        ).order_by('start_date')
+        
+        today = timezone.now().date()
+        editable_term = terms_for_level.filter(
+            start_date__lte=today, end_date__gte=today, finished=False
+        ).first()
+        
+        if not editable_term:
+            editable_term = terms_for_level.filter(finished=False).first()
+        
+        display_term = editable_term if editable_term else terms_for_level.last()
+        editable_term_id = editable_term.id if editable_term else None
+
+        # Récupération des données élèves + appréciations existantes
+        context_data = get_appreciations_data_for_context(
+            current_year, student_class, ts.id, display_term, is_global=False
+        )
+        
+        # [CORRECTION] On convertit les objets modèles en dictionnaires simples
+        # pour qu'ils soient sérialisables en JSON par le template.
+        context_data.update({
+            'key': f"{student_class.id}-{ts.id}",
+            
+            # Conversion manuelle de Class
+            'student_class': {
+                'id': student_class.id,
+                'name': student_class.name
+            },
+            
+            # Conversion manuelle de TeacherSubject
+            'teacher_subject': {
+                'id': ts.id,
+                'subject': {
+                    'name': ts.subject.name,
+                    'color': ts.subject.color
+                }
+            },
+            
+            'available_terms': list(terms_for_level.values('id', 'counter', 'start_date', 'end_date', 'finished')),
+            'current_term_id': editable_term_id
+        })
+        taught_classes_list.append(context_data)
+
+
+    # --- B. Données pour "Appréciations Globales" (Prof Principal) ---
+    main_classes_data = {}
+
+    for main_class in main_classes:
+        terms_for_level = TermYearLevel.objects.filter(
+            year=current_year,
+            level=main_class.level
+        ).order_by('start_date')
+        
+        today = timezone.now().date()
+        editable_term = terms_for_level.filter(
+            start_date__lte=today, end_date__gte=today, finished=False
+        ).first()
+        
+        if not editable_term:
+            editable_term = terms_for_level.filter(finished=False).first()
+        
+        display_term = editable_term if editable_term else terms_for_level.last()
+        editable_term_id = editable_term.id if editable_term else None
+
+        # Récupération des données globales (is_global=True)
+        context_data = get_appreciations_data_for_context(
+            current_year, main_class, None, display_term, is_global=True
+        )
+
+        context_data.update({
+            'class_name': main_class.name,
+            'available_terms': list(terms_for_level.values('id', 'counter', 'start_date', 'end_date', 'finished')),
+            'current_term_id': editable_term_id,
+            'mentions_choices': Mention.MENTION_CHOICES,
+        })
+        
+        main_classes_data[str(main_class.id)] = context_data
+
+    return {
+        'taught_classes_list': taught_classes_list,
+        'main_classes_data': main_classes_data
+    }
+
+
+def get_appreciations_data_for_context(current_year, student_class, teacher_subject_id, selected_term, is_global=False):
+    # ... (fonction inchangée) ...
+    if not selected_term:
+        return {'students_data': []}
+
+    # 1. Récupérer les élèves
+    students_in_class = ClassStudentYear.objects.filter(
+        student_class=student_class, 
+        year=current_year, 
+        is_active=True
+    ).select_related('student', 'student__user').order_by('student__user__last_name')
+
+    students_data = []
+    
+    # 2. Pré-charger les appréciations pour éviter N requêtes
+    appreciations_qs = Appreciation.objects.filter(
+        term_year=selected_term,
+        student__in=[link.student for link in students_in_class],
+        is_global=is_global
+    )
+    
+    if not is_global and teacher_subject_id:
+        appreciations_qs = appreciations_qs.filter(teacher_subject_id=teacher_subject_id)
+    
+    # Dictionnaire pour accès rapide : {student_id: appreciation_obj}
+    appreciations_map = {app.student_id: app for app in appreciations_qs}
+
+    # 3. Pré-charger les mentions (Uniquement si Global)
+    mentions_map = {}
+    if is_global:
+        mentions_qs = Mention.objects.filter(
+            term_year=selected_term,
+            student__in=[link.student for link in students_in_class]
+        )
+        mentions_map = {m.student_id: m.mention_type for m in mentions_qs}
+
+    # 4. Construire la liste finale
+    for link in students_in_class:
+        student = link.student
+        appreciation = appreciations_map.get(student.id)
+        
+        student_info = {
+            'student_id': student.id,
+            'name': f"{student.user.last_name} {student.user.first_name}",
+            'appreciation_content': appreciation.content if appreciation else "",
+            'appreciation_id': appreciation.id if appreciation else None,
+        }
+        
+        if is_global:
+            student_info['mention'] = mentions_map.get(student.id, "")
+
+        students_data.append(student_info)
+
+    return {'students_data': students_data}

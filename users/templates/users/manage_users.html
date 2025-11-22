@@ -16,66 +16,115 @@
             </button>
         </div>
         
-        <div class="space-y-4 max-h-[calc(100vh-250px)] overflow-y-auto">
+        <div class="space-y-4 max-h-[calc(100vh-250px)] overflow-y-auto pr-2">
             <!-- Utilisateurs actifs -->
             <ul id="user-list-active" class="space-y-2">
-                <li class="px-3 py-1 text-sm font-semibold text-gray-500">Actif</li>
+                <li class="px-3 py-1 text-sm font-semibold text-gray-500 sticky top-0 bg-white z-10">Actif</li>
                 {% for user_obj in users %}
                     {% if user_obj.user.is_active %}
                         <li>
-                            <div class="flex items-center justify-between p-3 text-sm font-medium text-gray-700 hover:bg-gray-100 rounded-lg transition-colors duration-200">
-                                <a href="#" 
-                                   data-user-id="{{ user_obj.user.id }}" 
-                                   data-first-name="{{ user_obj.user.first_name }}" 
-                                   data-last-name="{{ user_obj.user.last_name }}" 
-                                   data-email="{{ user_obj.user.email }}" 
-                                   data-user-type="{{ user_type }}" 
-                                   data-staff-type="{{ user_obj.staff_type|default:'' }}" 
-                                   data-address="{{ user_obj.address|default:'' }}"
-                                   data-birth-date="{{ user_obj.birth_date|date:'Y-m-d'|default:'' }}"
-                                   data-gender="{{ user_obj.gender|default:'' }}"
-                                   class="user-link flex items-center flex-grow">
-                                    <i class="fas fa-user-circle mr-3 text-lg text-green-500"></i>
-                                    <span>{{ user_obj.user.username }}</span>
-                                </a>
+                            {% if user_obj.staff_type == 'TEACHER' %}
+                                <!-- [LAYOUT PROFESSEUR] : Colonne (Nom au-dessus, Boutons en dessous) -->
+                                <div class="flex flex-col p-3 text-sm font-medium text-gray-700 hover:bg-gray-50 rounded-lg border border-transparent hover:border-gray-200 transition-all duration-200 group">
+                                    
+                                    <!-- Ligne 1 : Nom (prend toute la largeur) -->
+                                    <a href="#" 
+                                       data-user-id="{{ user_obj.user.id }}" 
+                                       data-first-name="{{ user_obj.user.first_name }}" 
+                                       data-last-name="{{ user_obj.user.last_name }}" 
+                                       data-email="{{ user_obj.user.email }}" 
+                                       data-user-type="{{ user_type }}" 
+                                       data-staff-type="{{ user_obj.staff_type|default:'' }}" 
+                                       data-address="{{ user_obj.address|default:'' }}"
+                                       data-birth-date="{{ user_obj.birth_date|date:'Y-m-d'|default:'' }}"
+                                       data-gender="{{ user_obj.gender|default:'' }}"
+                                       class="user-link flex items-center w-full mb-3"> <!-- mb-3 pour espacer du bas -->
+                                        <div class="w-8 h-8 rounded-full bg-green-100 flex-shrink-0 flex items-center justify-center mr-3 group-hover:bg-green-200 transition-colors">
+                                            <i class="fas fa-user text-green-600"></i>
+                                        </div>
+                                        <span class="break-all group-hover:text-gray-900">{{ user_obj.user.username }}</span>
+                                    </a>
 
-                                {% if user_obj.staff_type == 'TEACHER' %}
-                                <div class="flex items-center space-x-2">
-                                    <!-- [EXISTANT] Lien Planning -->
-                                    <a href="{% url 'scheduling:view_teacher_schedule' pk_staff=user_obj.id %}"
-                                       class="text-blue-600 hover:text-blue-800 p-2 rounded-full hover:bg-gray-100 transition duration-150"
-                                       title="Voir le planning du professeur">
-                                        <i class="fas fa-calendar-check"></i>
+                                    <!-- Ligne 2 : Boutons d'action (Alignés à droite) -->
+                                    <div class="flex items-center justify-end space-x-1 w-full border-t pt-2 border-gray-100">
+                                        <!-- 1. Planning -->
+                                        <a href="{% url 'scheduling:view_teacher_schedule' pk_staff=user_obj.id %}"
+                                           class="w-8 h-8 flex items-center justify-center rounded-full text-blue-600 hover:bg-blue-100 hover:text-blue-700 transition-colors duration-200"
+                                           title="Voir le planning">
+                                            <i class="fas fa-calendar-alt"></i>
+                                        </a>
+                                        
+                                        <!-- 2. Notes (Grades) -->
+                                        <a href="{% url 'grades:view_teacher_grades_as_admin' pk_staff=user_obj.pk %}" 
+                                           class="w-8 h-8 flex items-center justify-center rounded-full text-purple-600 hover:bg-purple-100 hover:text-purple-700 transition-colors duration-200"
+                                           title="Gérer les notes">
+                                            <i class="fas fa-chart-line"></i>
+                                        </a>
+
+                                        <!-- 3. Appréciations -->
+                                        <a href="{% url 'grades:view_teacher_appreciations_as_admin' pk_staff=user_obj.pk %}" 
+                                           class="w-8 h-8 flex items-center justify-center rounded-full text-teal-600 hover:bg-teal-100 hover:text-teal-700 transition-colors duration-200"
+                                           title="Gérer les appréciations">
+                                            <i class="fas fa-comment-dots"></i>
+                                        </a>
+
+                                        <!-- Séparateur -->
+                                        <div class="h-4 w-px bg-gray-300 mx-2"></div>
+
+                                        <!-- 4. Désactiver -->
+                                        <button class="toggle-status-btn w-8 h-8 flex items-center justify-center rounded-full text-red-500 hover:bg-red-100 hover:text-red-700 transition-colors duration-200"
+                                                data-user-id="{{ user_obj.user.id }}" 
+                                                data-action="deactivate"
+                                                title="Désactiver le compte"
+                                                data-user-name="{{ user_obj.user.first_name }} {{ user_obj.user.last_name }}">
+                                            <i class="fas fa-power-off"></i>
+                                        </button>
+                                    </div>
+                                </div>
+
+                            {% else %}
+                                <!-- [LAYOUT STANDARD] : Ligne (Nom à gauche, Bouton à droite) pour les non-profs -->
+                                <div class="flex items-center justify-between p-3 text-sm font-medium text-gray-700 hover:bg-gray-50 rounded-lg border border-transparent hover:border-gray-200 transition-all duration-200 group">
+                                    <a href="#" 
+                                       data-user-id="{{ user_obj.user.id }}" 
+                                       data-first-name="{{ user_obj.user.first_name }}" 
+                                       data-last-name="{{ user_obj.user.last_name }}" 
+                                       data-email="{{ user_obj.user.email }}" 
+                                       data-user-type="{{ user_type }}" 
+                                       data-staff-type="{{ user_obj.staff_type|default:'' }}" 
+                                       data-address="{{ user_obj.address|default:'' }}"
+                                       data-birth-date="{{ user_obj.birth_date|date:'Y-m-d'|default:'' }}"
+                                       data-gender="{{ user_obj.gender|default:'' }}"
+                                       class="user-link flex items-center flex-grow min-w-0 mr-4">
+                                        <div class="w-8 h-8 rounded-full bg-green-100 flex-shrink-0 flex items-center justify-center mr-3 group-hover:bg-green-200 transition-colors">
+                                            <i class="fas fa-user text-green-600"></i>
+                                        </div>
+                                        <span class="break-all group-hover:text-gray-900">{{ user_obj.user.username }}</span>
                                     </a>
                                     
-                                    <!-- [AJOUTÉ] Lien Notes -->
-                                    <a href="{% url 'grades:view_teacher_grades_as_admin' pk_staff=user_obj.pk %}" 
-                                       title="Consulter le tableau de bord des notes"
-                                       class="px-2 py-1 text-xs bg-indigo-600 text-white rounded-md shadow-sm hover:bg-indigo-700 transition duration-300">
-                                        <i class="fas fa-chart-line"></i>
-                                    </a>
-
-                                    <button class="toggle-status-btn px-2 py-1 text-xs bg-red-500 text-white rounded-md shadow-sm hover:bg-red-600 transition duration-300"
-                                            data-user-id="{{ user_obj.user.id }}" 
-                                            data-action="deactivate"
-                                            data-user-name="{{ user_obj.user.first_name }} {{ user_obj.user.last_name }}">
-                                        Désactiver
-                                    </button>
+                                    <div class="flex-shrink-0">
+                                        <button class="toggle-status-btn w-8 h-8 flex items-center justify-center rounded-full text-red-500 hover:bg-red-100 hover:text-red-700 transition-colors duration-200"
+                                                data-user-id="{{ user_obj.user.id }}" 
+                                                data-action="deactivate"
+                                                title="Désactiver le compte"
+                                                data-user-name="{{ user_obj.user.first_name }} {{ user_obj.user.last_name }}">
+                                            <i class="fas fa-power-off"></i>
+                                        </button>
+                                    </div>
                                 </div>
-                                {% endif %}
-                            </div>
+                            {% endif %}
                         </li>
                     {% endif %}
                 {% endfor %}
             </ul>
-
+        
             <!-- Utilisateurs inactifs -->
-            <ul id="user-list-inactive" class="space-y-2">
-                <li class="px-3 py-1 text-sm font-semibold text-gray-500">Inactif</li>
+            <ul id="user-list-inactive" class="space-y-2 mt-6">
+                <li class="px-3 py-1 text-sm font-semibold text-gray-500 sticky top-0 bg-white z-10">Inactif</li>
                 {% for user_obj in users %}
                     {% if not user_obj.user.is_active %}
                         <li>
-                            <div class="flex items-center justify-between p-3 text-sm font-medium text-gray-400 hover:bg-gray-100 rounded-lg transition-colors duration-200">
+                            <div class="flex items-center justify-between p-3 text-sm font-medium text-gray-400 hover:bg-gray-100 rounded-lg border border-transparent hover:border-gray-200 transition-colors duration-200 group">
                                 <a href="#" 
                                    data-user-id="{{ user_obj.user.id }}" 
                                    data-first-name="{{ user_obj.user.first_name }}" 
@@ -86,17 +135,25 @@
                                    data-address="{{ user_obj.address|default:'' }}"
                                    data-birth-date="{{ user_obj.birth_date|date:'Y-m-d'|default:'' }}"
                                    data-gender="{{ user_obj.gender|default:'' }}"
-                                   class="user-link flex items-center flex-grow">
-                                    <i class="fas fa-user-slash mr-3 text-lg text-gray-400"></i>
-                                    <span>{{ user_obj.user.username }}</span>
+                                   class="user-link flex items-center flex-grow min-w-0 mr-4">
+                                    <!-- Icone harmonisée (gris) -->
+                                    <div class="w-8 h-8 rounded-full bg-gray-100 flex-shrink-0 flex items-center justify-center mr-3 group-hover:bg-gray-200 transition-colors">
+                                        <i class="fas fa-user-slash text-gray-400"></i>
+                                    </div>
+                                    <!-- [CORRECTION] Affichage complet du nom -->
+                                    <span class="break-all group-hover:text-gray-600">{{ user_obj.user.username }}</span>
                                 </a>
-                                <div class="flex items-center space-x-2">
+                                
+                                <div class="flex items-center space-x-1 flex-shrink-0">
+                                    <!-- [RETRAIT] Suppression des liens Notes/Appréciations pour les inactifs -->
                                     
-                                    <button class="toggle-status-btn px-2 py-1 text-xs bg-green-500 text-white rounded-md shadow-sm hover:bg-green-600 transition duration-300"
+                                    <!-- Bouton Activer (Icône) -->
+                                    <button class="toggle-status-btn w-8 h-8 flex items-center justify-center rounded-full text-green-600 hover:bg-green-100 hover:text-green-700 transition-colors duration-200"
                                             data-user-id="{{ user_obj.user.id }}" 
                                             data-action="activate"
+                                            title="Activer le compte"
                                             data-user-name="{{ user_obj.user.first_name }} {{ user_obj.user.last_name }}">
-                                        Activer
+                                        <i class="fas fa-check"></i>
                                     </button>
                                 </div>
                             </div>
