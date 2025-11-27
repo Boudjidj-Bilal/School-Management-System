@@ -34,6 +34,7 @@ urlpatterns = [
     path('classes/', include('classes.urls', namespace='classes')), 
     path('grades/', include('grades.urls', namespace='grades')), 
     path('scheduling/', include(('scheduling.urls', 'scheduling'), namespace='scheduling')),
+    path('attendance/', include('attendance.urls', namespace='attendance')),
 
     
 ]

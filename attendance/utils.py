@@ -1,130 +1,100 @@
-"""
-    Ce fichier centralise les fonctions utilitaires de l'application 'attendance'.
+from django.db.models import Count, Q
 
-    Il agit comme une couche de service entre les vues et les modèles/managers.
-    Cela permet de séparer la logique métier de la logique de l'API,
-    rendant le code plus propre, plus maintenable et plus facile à tester.
-"""
-
-from django.core.exceptions import ObjectDoesNotExist
+from classes.models import Class, ClassStudentYear
 from schools.models import TermYearLevel
-from users.models import Student
-from scheduling.models import ScheduledCourse
-from .models import Attendance
+from .models import Attendance, AttendanceSession
 
-"""
-=======================
-GESTION DES PRESENCES :
-=======================
-"""
-
-# --- Fonctions CRUD pour la classe Attendance ---
-
-def create_attendance(student_id, course_id, term_year_id, attendance_type, justified=True):
+def get_attendance_classes_for_user(user, current_year, user_type):
     """
-    Crée et enregistre une nouvelle entrée de présence (absence ou retard) pour un élève.
-
-    Args:
-        student_id (int): L'ID de l'élève.
-        course_id (int): L'ID du cours.
-        term_year_id (int): L'ID du trimestre/semestre.
-        attendance_type (str): Le type de présence ('ABSENCE' ou 'DELAY').
-        justified (bool, optional): Indique si l'absence ou le retard est justifié. 
-                                    Par défaut, True.
-
-    Returns:
-        tuple: (Attendance, str) - L'objet Attendance créé ou un message d'erreur.
+    Récupère la liste des classes visibles pour l'utilisateur connecté
+    dans le contexte du module d'appel.
+    
+    [CORRECTION] Utilisation de Class.objects.filter(...).distinct() 
+    pour garantir l'unicité des classes (sans doublons) quelle que soit la DB.
     """
-    try:
-        student = Student.objects.get(id=student_id)
-        course = ScheduledCourse.objects.get(id=course_id)
-        term_year = TermYearLevel.objects.get(id=term_year_id)
 
-        attendance = Attendance.objects.create(
-            student=student,
-            course=course,
-            term_year=term_year,
-            type=attendance_type,
-            justified=justified
-        )
-        return attendance, None
-    except ObjectDoesNotExist as e:
-        return None, f"Erreur: L'objet spécifié n'existe pas. Détails: {str(e)}"
-    except Exception as e:
-        return None, f"Erreur lors de la création de la présence : {str(e)}"
+    classes_list = []
 
-def get_attendance_by_id(attendance_id):
+    if user_type == "Teacher":
+        staff = user.staff_user
+
+        # Requête inversée : On cherche les Classes qui ont une liaison ClassTeacherYear
+        # correspondant à ce prof et cette année.
+        # .distinct() garantit qu'une classe n'apparait qu'une fois même si le prof y a 3 matières.
+        classes_list = Class.objects.filter(
+            teacher_years__teacher__teacher=staff,
+            teacher_years__year=current_year,
+            teacher_years__is_active=True
+        ).distinct().order_by('level__level', 'name')
+
+    elif user_type in ["CPE", "Principal", "SuperAdministrator"]:
+        # Toutes les classes actives de l'école
+        classes_list = Class.objects.filter(
+            level__school=current_year.school,
+            is_valid=True
+        ).distinct().order_by('level__level', 'name')
+        
+    return classes_list
+
+def get_student_attendance_stats(student, term_year=None, current_year=None):
     """
-    Récupère une entrée de présence par son ID.
-
-    Args:
-        attendance_id (int): L'ID de l'entrée de présence.
-
-    Returns:
-        Attendance: L'objet Attendance ou None si non trouvé.
+    Calcule les statistiques d'absence et de retard pour un élève.
     """
-    try:
-        return Attendance.objects.get(id=attendance_id)
-    except Attendance.DoesNotExist:
-        return None
+    qs = Attendance.objects.filter(student=student)
 
-def get_attendance_by_student_and_term(student_id, term_year_id):
+    if term_year:
+        qs = qs.filter(session__term_year=term_year)
+    elif current_year:
+        qs = qs.filter(session__term_year__year=current_year)
+
+    stats = qs.aggregate(
+        total_delays=Count('id', filter=Q(status='DELAY')),
+        total_absences=Count('id', filter=Q(status='ABSENCE')),
+        justified_absences=Count('id', filter=Q(status='ABSENCE', justified=True)),
+        unjustified_absences=Count('id', filter=Q(status='ABSENCE', justified=False)),
+        unjustified_delays=Count('id', filter=Q(status='DELAY', justified=False))
+    )
+    return stats
+
+
+def get_class_attendance_stats(student_class, term_year):
     """
-    Récupère toutes les présences (absences et retards) pour un élève 
-    pendant un trimestre/semestre donné.
-
-    Args:
-        student_id (int): L'ID de l'élève.
-        term_year_id (int): L'ID du trimestre/semestre.
-
-    Returns:
-        QuerySet: Un QuerySet des objets Attendance correspondants.
+    Calcule les statistiques globales pour une classe entière sur un trimestre.
     """
-    try:
-        return Attendance.objects.filter(
-            student_id=student_id,
-            term_year_id=term_year_id
-        )
-    except Exception:
-        return Attendance.objects.none()
+    qs = Attendance.objects.filter(
+        session__student_class=student_class,
+        session__term_year=term_year
+    )
 
-def update_attendance(attendance_id, **kwargs):
+    stats = qs.aggregate(
+        total_absences=Count('id', filter=Q(status='ABSENCE')),
+        unjustified_absences=Count('id', filter=Q(status='ABSENCE', justified=False)),
+        total_delays=Count('id', filter=Q(status='DELAY')),
+        unjustified_delays=Count('id', filter=Q(status='DELAY', justified=False))
+    )
+    return stats
+
+def get_class_students_for_attendance(student_class, current_year):
     """
-    Met à jour les informations d'une entrée de présence.
-
-    Args:
-        attendance_id (int): L'ID de l'entrée de présence à mettre à jour.
-        **kwargs: Champs à mettre à jour (ex: justified=False).
-
-    Returns:
-        tuple: (Attendance, str) - L'objet mis à jour ou un message d'erreur.
+    Récupère la liste des élèves actifs d'une classe pour la feuille d'appel.
+    Retourne les objets ClassStudentYear (qui lient Student et Class).
     """
-    try:
-        attendance = Attendance.objects.get(id=attendance_id)
-        for key, value in kwargs.items():
-            setattr(attendance, key, value)
-        attendance.save()
-        return attendance, None
-    except Attendance.DoesNotExist:
-        return None, "Erreur: L'entrée de présence spécifiée n'existe pas."
-    except Exception as e:
-        return None, f"Erreur lors de la mise à jour de la présence : {str(e)}"
+    return ClassStudentYear.objects.filter(
+        student_class=student_class,
+        year=current_year,
+        is_active=True
+    ).select_related('student', 'student__user').order_by('student__user__last_name', 'student__user__first_name')
 
-def delete_attendance(attendance_id):
+
+def get_teacher_attendance_history(teacher_staff, student_class, current_year):
     """
-    Supprime une entrée de présence par son ID.
-
-    Args:
-        attendance_id (int): L'ID de l'entrée de présence à supprimer.
-
-    Returns:
-        bool: True si la suppression est réussie, False sinon.
+    Récupère l'historique complet des appels faits par CE professeur,
+    pour CETTE classe, durant CETTE année.
     """
-    try:
-        attendance = Attendance.objects.get(id=attendance_id)
-        attendance.delete()
-        return True
-    except Attendance.DoesNotExist:
-        return False
-    except Exception:
-        return False
+    return AttendanceSession.objects.filter(
+        teacher=teacher_staff,
+        student_class=student_class,
+        # On remonte via term_year pour filtrer sur l'année globale
+        term_year__year=current_year
+    ).order_by('-date', '-start_time')
+

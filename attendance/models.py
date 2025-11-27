@@ -1,31 +1,61 @@
 from django.db import models
 from schools.models import TermYearLevel
-from users.models import Student
-from scheduling.models import ScheduledCourse
+from users.models import Student, Staff
+from classes.models import Class
 
-
-# --> Représente les absences et les retards d'un élève
-class Attendance(models.Model):
-    ATTENDANCE_CHOICES = [
-        ("DELAY", "delay"), # Retard
-        ("ABSENCE", "absence"), # Absence
-    ]  # liste des présences possibles
-
-    type = models.CharField(max_length=40, choices=ATTENDANCE_CHOICES)  # couleur associée
-    justified = models.BooleanField(default=True)         # Absence ou retard justifié ou non
+# --> 1. La Feuille d'Appel (Le contenant)
+class AttendanceSession(models.Model):
+    teacher = models.ForeignKey(
+        Staff, on_delete=models.CASCADE, related_name="attendance_sessions"
+    ) # Le prof qui fait l'appel
+    
+    student_class = models.ForeignKey(
+        Class, on_delete=models.CASCADE, related_name="attendance_sessions"
+    ) # La classe concernée
+    
     term_year = models.ForeignKey(
-        TermYearLevel, on_delete=models.CASCADE, related_name="term_year_attendance"
-    )  # lien vers le trimestre/semestre/année
-    student = models.ForeignKey(
-        Student, on_delete=models.CASCADE, related_name="student_attendance"
-    )  # lien vers l'élève
-    course = models.ForeignKey(
-        ScheduledCourse, on_delete=models.CASCADE, related_name="course_attendance"
-    )  # lien vers le cours
+        TermYearLevel, on_delete=models.CASCADE, related_name="attendance_sessions"
+    ) # Pour filtrer par trimestre facilement
+
+    date = models.DateField() # Date du cours
+    start_time = models.TimeField() # Heure début
+    end_time = models.TimeField()   # Heure fin
+
+    date_created = models.DateTimeField(auto_now_add=True) # Pour savoir quand l'appel a été saisi
 
     class Meta:
-        unique_together = ("student", "course")  
-        # un élève ne peut avoir qu'une seule absence ou qu'un seul retard par cours
+        # On trie par date décroissante (le plus récent en haut)
+        ordering = ['-date', '-start_time']
 
     def __str__(self):
-        return f"{self.type} ({self.student.user.username} / {self.course.day})"
+        return f"Appel {self.student_class} - {self.teacher} ({self.date})"
+
+
+# --> 2. L'Absence ou le Retard (Le contenu)
+class Attendance(models.Model):
+    ATTENDANCE_CHOICES = [
+        ("DELAY", "Retard"),
+        ("ABSENCE", "Absence"),
+    ]
+
+    session = models.ForeignKey(
+        AttendanceSession, on_delete=models.CASCADE, related_name="attendances"
+    ) # Lien vers la feuille d'appel
+    
+    student = models.ForeignKey(
+        Student, on_delete=models.CASCADE, related_name="attendances"
+    ) # L'élève concerné
+
+    status = models.CharField(max_length=10, choices=ATTENDANCE_CHOICES) # Type (Absence ou Retard)
+    
+    # Gestion de la justification (CPE)
+    justified = models.BooleanField(default=False) # Par défaut, injustifié
+    justification_reason = models.TextField(blank=True, null=True, help_text="Motif donné par le CPE")
+    justification_date = models.DateField(blank=True, null=True) # Date de la justification
+
+    class Meta:
+        # Un élève ne peut avoir qu'un seul statut (soit absent, soit en retard) pour une même session d'appel
+        unique_together = ("session", "student")
+
+    def __str__(self):
+        return f"{self.get_status_display()} - {self.student} ({self.session.date})"
