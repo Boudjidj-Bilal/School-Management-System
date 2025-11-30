@@ -20,6 +20,8 @@ from .utils import (
     get_attendance_classes_for_user,
     get_class_students_for_attendance,
     get_teacher_attendance_history,
+    get_class_attendance_records,
+    get_active_term_for_class
 )
 from schools.models import School
 
@@ -71,11 +73,6 @@ def attendance_hub_view(request):
     }
 
     return render(request, 'attendance/class_hub.html', context)
-
-
-#                     <!-- TODO: Remplacer '#' par {% url 'attendance:create_attendance_session' class_id=student_class.id %} quand la vue existera -->
-#                     <!-- TODO: Remplacer '#' par {% url 'attendance:manage_attendance' class_id=student_class.id %} quand la vue existera -->
-#                     <!-- TODO: Remplacer '#' par {% url 'attendance:manage_attendance' class_id=student_class.id %} quand la vue existera -->
 
 
 @login_required(login_url='login')
@@ -266,6 +263,107 @@ def api_get_session_details(request):
                 "end_time": session.end_time.strftime('%H:%M'),
                 "attendances": attendance_map
             }
+        })
+
+    except Exception as e:
+        return JsonResponse({"success": False, "message": str(e)}, status=500)
+    
+
+
+
+@login_required(login_url='login')
+def manage_attendance_view(request, class_id):
+    """
+    Page 3 : Tableau de bord de gestion des absences pour une classe.
+    - CPE : Peut justifier (si trimestre actif).
+    - Admin/Proviseur : Lecture seule.
+    """
+    user = request.user
+    user_type = get_user_type(user)
+
+    # 1. Permissions d'accès à la page
+    if user_type not in ["CPE", "Principal", "SuperAdministrator"]:
+        return HttpResponseForbidden("Accès refusé. Réservé à la Vie Scolaire et à l'Administration.")
+
+    # 2. Récupération du contexte
+    try:
+        if user_type == "SuperAdministrator":
+            school_id = request.session.get('selected_school_id')
+            student_class = get_object_or_404(Class, pk=class_id, level__school_id=school_id)
+            current_year = get_current_year_for_school(student_class.level.school)
+        else:
+            staff = user.staff_user
+            student_class = get_object_or_404(Class, pk=class_id, level__school=staff.school)
+            current_year = get_current_year_for_school(staff.school)
+            
+    except Exception:
+        return HttpResponseForbidden("Erreur de récupération de la classe ou de l'école.")
+
+    if not current_year or not current_year.running:
+        return HttpResponseForbidden("Année scolaire non active.")
+
+    # 3. Récupération des incidents (Absences/Retards)
+    attendance_records = get_class_attendance_records(student_class, current_year)
+
+    # 4. Vérification des droits d'édition (Justification)
+    # Seul le CPE peut modifier, et seulement si le trimestre est actif.
+    active_term = get_active_term_for_class(student_class)
+    
+    can_edit = False
+    if user_type == "CPE":
+        # Le CPE peut éditer si un trimestre est actif
+        can_edit = (active_term is not None)
+
+    context = {
+        'student_class': student_class,
+        'attendance_records': attendance_records,
+        'can_edit': can_edit,
+        'active_term': active_term,
+        'user_type': user_type
+    }
+
+    return render(request, 'attendance/manage_attendance.html', context)
+
+
+@require_http_methods(["POST"])
+@csrf_exempt
+@login_required(login_url='login')
+def api_justify_attendance(request):
+    """
+    API pour Justifier (ou dé-justifier) une absence/retard.
+    Accessible uniquement au CPE.
+    """
+    user = request.user
+    user_type = get_user_type(user)
+
+    if user_type != "CPE":
+        return JsonResponse({"success": False, "message": "Seul le CPE peut justifier les absences."}, status=403)
+
+    try:
+        data = json.loads(request.body)
+        attendance_id = data.get('attendance_id')
+        justified = data.get('justified') # True ou False
+        reason = data.get('reason', '').strip()
+
+        attendance = get_object_or_404(Attendance, pk=attendance_id)
+        
+        # Vérification du trimestre
+        term_year = attendance.session.term_year
+        if term_year.finished:
+            return JsonResponse({"success": False, "message": "Impossible de modifier : le trimestre de cette absence est clos."}, status=403)
+
+        # Mise à jour
+        attendance.justified = justified
+        attendance.justification_reason = reason if justified else "" # On vide la raison si on dé-justifie
+        
+        # La date de justification est gérée automatiquement par la méthode save() du modèle
+        attendance.save()
+
+        status_text = "Justifié" if justified else "Non justifié"
+        return JsonResponse({
+            "success": True, 
+            "message": f"Statut mis à jour : {status_text}.",
+            "justification_date": attendance.justification_date.strftime('%d/%m/%Y') if attendance.justification_date else None
         })
 
     except Exception as e:

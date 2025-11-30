@@ -3,7 +3,9 @@ from .views import (
     attendance_hub_view, 
     create_attendance_session_view,
     api_save_attendance_session,
-    api_get_session_details
+    api_get_session_details,
+    manage_attendance_view,
+    api_justify_attendance
 )
 app_name = 'attendance'
 
@@ -18,12 +20,17 @@ urlpatterns = [
         name='create_attendance_session'
     ),
     # Page 3 : Gestion (CPE/Admin) - À implémenter
-    # path('manage/<int:class_id>/', ..., name='manage_attendance'),
+    path(
+        'manage/<int:class_id>/', 
+        manage_attendance_view, 
+        name='manage_attendance'
+    ),
     
     # Page 4 : Vue Élève - À implémenter
     # path('my-attendance/', ..., name='student_attendance'),
 
     path('api/session/save/', api_save_attendance_session, name='api_save_attendance_session'),
     path('api/session/details/', api_get_session_details, name='api_get_session_details'),
+    path('api/justify/', api_justify_attendance, name='api_justify_attendance'),
 
 ]

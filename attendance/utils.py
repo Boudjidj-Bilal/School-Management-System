@@ -1,4 +1,6 @@
 from django.db.models import Count, Q
+from django.utils import timezone 
+
 
 from classes.models import Class, ClassStudentYear
 from schools.models import TermYearLevel
@@ -98,3 +100,45 @@ def get_teacher_attendance_history(teacher_staff, student_class, current_year):
         term_year__year=current_year
     ).order_by('-date', '-start_time')
 
+def get_class_attendance_records(student_class, current_year):
+    """
+    Récupère la liste complète des absences et retards d'une classe pour l'année.
+    Optimisé pour l'affichage en liste (CPE/Admin).
+    Trie par date décroissante (le plus récent en haut).
+    """
+    return Attendance.objects.filter(
+        session__student_class=student_class,
+        session__term_year__year=current_year
+    ).select_related(
+        'student', 
+        'student__user', 
+        'session', 
+        'session__teacher', 
+        'session__teacher__user',
+        'session__term_year'
+    ).order_by('-session__date', 'student__user__last_name')
+
+
+def get_active_term_for_class(student_class):
+    """
+    Récupère le trimestre ACTIF (en cours) pour une classe donnée.
+    Utilisé pour savoir si le CPE a le droit de modifier/justifier.
+    """
+    today = timezone.now().date()
+    
+    # Cherche un trimestre actif par date et non fini
+    term = TermYearLevel.objects.filter(
+        level=student_class.level,
+        start_date__lte=today,
+        end_date__gte=today,
+        finished=False
+    ).first()
+    
+    # Si on ne trouve pas par date (ex: vacances), on cherche le premier non fini
+    if not term:
+        term = TermYearLevel.objects.filter(
+            level=student_class.level,
+            finished=False
+        ).order_by('start_date').first()
+        
+    return term

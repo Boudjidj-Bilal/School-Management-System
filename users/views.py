@@ -8,7 +8,7 @@ from django.db.models import F
 import json
 from .utils import *
 from schools.models import School
-from schools.utils import get_all_schools, get_user_school
+from schools.utils import get_all_schools, get_user_school, get_current_school_year
 from django.contrib.auth.decorators import login_required
 from django.db import IntegrityError, transaction
 from django.views.decorators.http import require_http_methods, require_POST
@@ -326,15 +326,18 @@ def create_user_view(request):
 
             user_to_update.save()
 
-            # TODO Au cours de l'année, on ne peut pas changer les types des staffs car sinon, les professeurs perdrais leur matière etc.
-            if user_type == 'student':
-                specific_user = Student.objects.get(user=user_to_update)
-            elif user_type == 'parent':
-                specific_user = Parent.objects.get(user=user_to_update)
-            elif user_type == 'staff':
-                specific_user = Staff.objects.get(user=user_to_update)
-                if staff_type:
-                    specific_user.staff_type = staff_type
+            year = get_current_school_year(school_id)
+            if year.running == False:
+                if user_type == 'student':
+                    specific_user = Student.objects.get(user=user_to_update)
+                elif user_type == 'parent':
+                    specific_user = Parent.objects.get(user=user_to_update)
+                elif user_type == 'staff':
+                    specific_user = Staff.objects.get(user=user_to_update)
+                    if staff_type:
+                        specific_user.staff_type = staff_type
+            else:
+                return JsonResponse({"success": False, "message": "Impossible de modifier le statut d'un utilisateur lorsque l'année est en cours de déroulement."}, status=404)
 
             if gender:
                 specific_user.gender = gender
