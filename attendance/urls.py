@@ -5,7 +5,8 @@ from .views import (
     api_save_attendance_session,
     api_get_session_details,
     manage_attendance_view,
-    api_justify_attendance
+    api_justify_attendance,
+    student_attendance_dashboard_view
 )
 app_name = 'attendance'
 
@@ -27,7 +28,7 @@ urlpatterns = [
     ),
     
     # Page 4 : Vue Élève - À implémenter
-    # path('my-attendance/', ..., name='student_attendance'),
+    path('my-attendance/', student_attendance_dashboard_view, name='student_attendance_dashboard'),
 
     path('api/session/save/', api_save_attendance_session, name='api_save_attendance_session'),
     path('api/session/details/', api_get_session_details, name='api_get_session_details'),

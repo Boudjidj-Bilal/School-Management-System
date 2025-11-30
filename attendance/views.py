@@ -21,8 +21,10 @@ from .utils import (
     get_class_students_for_attendance,
     get_teacher_attendance_history,
     get_class_attendance_records,
-    get_active_term_for_class
+    get_active_term_for_class,
+    get_student_attendance_view_data
 )
+
 from schools.models import School
 
 @login_required(login_url='login')
@@ -368,3 +370,45 @@ def api_justify_attendance(request):
 
     except Exception as e:
         return JsonResponse({"success": False, "message": str(e)}, status=500)
+    
+
+@login_required(login_url='login')
+def student_attendance_dashboard_view(request):
+    """
+    Page 4 : Tableau de bord d'assiduité pour l'ÉLÈVE connecté.
+    """
+    user = request.user
+    user_type = get_user_type(user)
+
+    if user_type != "Student":
+        return HttpResponseForbidden("Accès refusé. Réservé aux élèves.")
+
+    try:
+        student = user.student_user
+    except:
+        return HttpResponseForbidden("Profil élève non trouvé.")
+
+    current_year = get_current_year_for_school(student.school)
+    if not current_year:
+        return render(request, 'attendance/student_attendance.html', {
+            'error_message': "Aucune année scolaire active."
+        })
+
+    data = get_student_attendance_view_data(student, current_year)
+
+    if not data:
+        return render(request, 'attendance/student_attendance.html', {
+            'error_message': "Vous n'êtes inscrit dans aucune classe pour cette année."
+        })
+
+    context = {
+        'student': student,
+        'current_year': current_year,
+        'student_class': data['student_class'],
+        'terms_data': data['terms_data'],
+        'global_stats': data['global_stats'],
+        'current_term_stats': data.get('current_term_stats'), 
+        'user_type': user_type
+    }
+
+    return render(request, 'attendance/student_attendance.html', context)

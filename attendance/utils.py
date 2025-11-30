@@ -142,3 +142,90 @@ def get_active_term_for_class(student_class):
         ).order_by('start_date').first()
         
     return term
+
+def get_student_attendance_view_data(student, current_year):
+    """
+    Prépare les données pour le tableau de bord d'assiduité de l'élève.
+    [CORRIGÉ] Détermine un SEUL trimestre actif par défaut pour l'UI.
+    """
+    
+    # 1. Récupérer la classe
+    try:
+        class_link = ClassStudentYear.objects.get(
+            student=student,
+            year=current_year,
+            is_active=True
+        )
+        student_class = class_link.student_class
+    except ClassStudentYear.DoesNotExist:
+        return None
+
+    # 2. Récupérer les trimestres
+    terms = TermYearLevel.objects.filter(
+        year=current_year,
+        level=student_class.level
+    ).order_by('start_date')
+
+    # --- [LOGIQUE DE SÉLECTION DU TRIMESTRE PAR DÉFAUT] ---
+    today = timezone.now().date()
+    
+    # A. Priorité : Celui qui correspond à la date d'aujourd'hui
+    default_term = terms.filter(start_date__lte=today, end_date__gte=today).first()
+    
+    # B. Sinon : Le premier qui n'est pas fini (ex: début d'année ou vacances)
+    if not default_term:
+        default_term = terms.filter(finished=False).first()
+        
+    # C. Sinon : Le dernier de la liste (ex: fin d'année, tout est clos)
+    if not default_term:
+        default_term = terms.last()
+        
+    default_term_id = default_term.id if default_term else None
+    # -----------------------------------------------------
+
+    terms_data = []
+    
+    # On calcule les stats du trimestre par défaut pour les cartes du haut
+    current_term_stats = {
+        'total_absences': 0, 'unjustified_absences': 0, 'total_delays': 0, 
+        'total_unjustified': 0, 'name': "Aucune période"
+    }
+
+    # 3. Boucle sur les trimestres
+    for term in terms:
+        stats = get_student_attendance_stats(student, term_year=term)
+        
+        # Si c'est le trimestre par défaut, on met à jour les stats du haut
+        is_default_tab = (term.id == default_term_id)
+        
+        if is_default_tab:
+            current_term_stats = stats
+            current_term_stats['name'] = f"{term.level.term_type.capitalize()} {term.counter}"
+            current_term_stats['total_unjustified'] = (
+                stats['unjustified_absences'] + stats['unjustified_delays']
+            )
+
+        records = Attendance.objects.filter(
+            student=student,
+            session__term_year=term
+        ).select_related(
+            'session', 
+            'session__teacher', 
+            'session__teacher__user'
+        ).order_by('-session__date', '-session__start_time')
+
+        terms_data.append({
+            'term': term,
+            'stats': stats,
+            'records': records,
+            'is_default_tab': is_default_tab # [CLEF UTILISÉE PAR LE HTML]
+        })
+
+    global_stats = get_student_attendance_stats(student, current_year=current_year)
+
+    return {
+        'student_class': student_class,
+        'terms_data': terms_data,
+        'global_stats': global_stats,
+        'current_term_stats': current_term_stats
+    }

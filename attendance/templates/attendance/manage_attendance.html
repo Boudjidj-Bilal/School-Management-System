@@ -40,7 +40,7 @@
     <!-- Tableau des incidents -->
     <div class="bg-white rounded-xl shadow-lg border border-gray-200 overflow-hidden">
         
-        <!-- Filtres rapides (Visuels uniquement pour l'instant, gérés via JS si besoin de tri) -->
+        <!-- Filtres rapides -->
         <div class="p-4 border-b border-gray-200 bg-gray-50 flex justify-between items-center">
             <h3 class="font-bold text-gray-700">Historique des incidents</h3>
             <div class="text-xs text-gray-500">
@@ -53,7 +53,7 @@
             <table class="min-w-full divide-y divide-gray-200">
                 <thead class="bg-gray-50">
                     <tr>
-                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date / Période</th>
                         <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Élève</th>
                         <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Type</th>
                         <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Professeur</th>
@@ -65,10 +65,23 @@
                     {% for record in attendance_records %}
                     <tr class="hover:bg-gray-50 transition-colors record-row" data-id="{{ record.id }}">
                         
-                        <!-- Date -->
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                            {{ record.session.date|date:"d/m/Y" }}
-                            <div class="text-xs text-gray-500">{{ record.session.start_time|time:"H:i" }}</div>
+                        <!-- Date et Période -->
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="text-sm font-medium text-gray-900">
+                                {{ record.session.date|date:"d/m/Y" }}
+                                <span class="text-gray-400 mx-1">|</span>
+                                <span class="text-xs text-gray-500">{{ record.session.start_time|time:"H:i" }}</span>
+                            </div>
+                            <!-- [AJOUT] Affichage du Trimestre/Semestre -->
+                            <div class="mt-1">
+                                <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium 
+                                    {% if record.session.term_year.finished %}bg-gray-100 text-gray-500{% else %}bg-blue-50 text-blue-700{% endif %}">
+                                    {{ record.session.term_year.level.term_type|title }} {{ record.session.term_year.counter }}
+                                    {% if record.session.term_year.finished %}
+                                        <i class="fas fa-lock ml-1" title="Période close"></i>
+                                    {% endif %}
+                                </span>
+                            </div>
                         </td>
 
                         <!-- Élève -->
@@ -116,7 +129,8 @@
 
                         <!-- Actions -->
                         <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                            {% if can_edit %}
+                            <!-- [CORRECTION LOGIQUE] On vérifie SI l'utilisateur est CPE (can_edit) ET SI le trimestre spécifique n'est PAS fini -->
+                            {% if can_edit and not record.session.term_year.finished %}
                                 <button class="btn-justify text-indigo-600 hover:text-indigo-900 bg-indigo-50 hover:bg-indigo-100 px-3 py-1 rounded transition-colors"
                                         data-id="{{ record.id }}"
                                         data-student="{{ record.student.user.first_name }} {{ record.student.user.last_name }}"
@@ -127,7 +141,9 @@
                                     {% if record.justified %}Modifier{% else %}Justifier{% endif %}
                                 </button>
                             {% else %}
-                                <span class="text-gray-400 cursor-not-allowed" title="Modification interdite"><i class="fas fa-ban"></i></span>
+                                <span class="text-gray-400 cursor-not-allowed" title="Modification interdite (Période close ou droits insuffisants)">
+                                    <i class="fas fa-ban"></i>
+                                </span>
                             {% endif %}
                         </td>
                     </tr>
