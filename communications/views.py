@@ -350,7 +350,7 @@ def announcement_dashboard_view(request):
         'announcement_types': Announcement.TYPE_CHOICES,
     }
 
-    return render(request, 'announcements/dashboard.html', context)
+    return render(request, 'communications/dashboard_announcements.html', context)
 
 
 # ====================================================================
