@@ -5,7 +5,11 @@ from .views import (
     api_get_messages,
     api_send_message,
     api_get_contacts,
-    api_create_conversation
+    api_create_conversation,
+    announcement_dashboard_view,
+    api_create_announcement,
+    api_get_announcements,
+    api_mark_as_read
 )
 
 app_name = 'communications'
@@ -13,6 +17,8 @@ app_name = 'communications'
 urlpatterns = [
     # Vue principale (HTML)
     path('', messaging_dashboard_view, name='dashboard'),
+    path('Annonces/', announcement_dashboard_view, name='dashboard'),
+
 
     # APIs JSON
     path('api/conversations/', api_get_conversations, name='api_get_conversations'),
@@ -21,4 +27,7 @@ urlpatterns = [
     
     path('api/messages/<int:conversation_id>/', api_get_messages, name='api_get_messages'),
     path('api/send/', api_send_message, name='api_send_message'),
+    path('api/list/', api_get_announcements, name='api_list'),
+    path('api/create/', api_create_announcement, name='api_create'),
+    path('api/read/', api_mark_as_read, name='api_mark_as_read'),
 ]
