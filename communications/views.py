@@ -4,19 +4,20 @@ from django.contrib.auth.decorators import login_required
 from django.http import HttpResponseForbidden, JsonResponse
 from django.views.decorators.http import require_http_methods
 from django.views.decorators.csrf import csrf_exempt
-from django.db import transaction
-from django.db.models import Q
 
 # Modèles
-from .models import Messaging, Message
-from users.models import User, Staff, Student, Parent
-from schools.utils import get_current_year_for_school
+from .models import Messaging, Message, Announcement, AnnouncementRecipient
+from users.models import Staff, Student, Parent
 
 # Utilitaires
+from schools.utils import get_current_year_for_school
+from users.utils import get_user_type
 from .utils import (
     get_user_conversations,
     get_available_contacts,
     is_conversation_active,
+    create_announcement_logic,
+    get_available_targets,
 )
 
 # --- HELPER: Identifier le rôle de l'utilisateur connecté ---
@@ -302,3 +303,212 @@ def get_interlocutor_name(conversation, current_user):
         # Je suis l'élève ou le parent, je parle au prof
         return f"{conversation.teacher.user.first_name} {conversation.teacher.user.last_name}"
     return "Inconnu"
+
+
+
+@login_required(login_url='login')
+def announcement_dashboard_view(request):
+    """
+    Page principale des annonces.
+    Affiche la boîte de réception et, pour le personnel, le formulaire d'envoi.
+    """
+    user = request.user
+    user_type = get_user_type(user)
+    
+    # Détermination du contexte (École / Année)
+    # (Logique similaire aux autres modules pour trouver l'année active)
+    current_year = None
+    school = None
+
+    if hasattr(user, 'staff_user'):
+        school = user.staff_user.school
+    elif hasattr(user, 'student_user'):
+        school = user.student_user.school
+    elif hasattr(user, 'parent_user'):
+        # Pour un parent, on prend l'école du premier enfant par défaut
+        from users.models import Child
+        child = Child.objects.filter(parent=user.parent_user).first()
+        if child: school = child.student.school
+    
+    if school:
+        current_year = get_current_year_for_school(school)
+
+    # Permissions d'envoi
+    can_send = user_type in ['Teacher', 'CPE', 'Principal', 'SuperAdministrator', 'Administrator']
+    
+    # Chargement des cibles possibles (Classes, Groupes) si droit d'envoi
+    available_targets = {}
+    if can_send and current_year:
+        available_targets = get_available_targets(user, current_year)
+
+    context = {
+        'user_type': user_type,
+        'can_send': can_send,
+        'available_targets': json.dumps(available_targets), # Pour le JS
+        'current_year': current_year,
+        'announcement_types': Announcement.TYPE_CHOICES,
+    }
+
+    return render(request, 'announcements/dashboard.html', context)
+
+
+# ====================================================================
+# APIs (JSON)
+# ====================================================================
+
+@require_http_methods(["GET"])
+@login_required(login_url='login')
+def api_get_announcements(request):
+    """
+    Récupère les annonces :
+    1. 'inbox': Celles reçues par l'utilisateur.
+    2. 'sent': Celles envoyées par l'utilisateur (si staff).
+    """
+    user = request.user
+    data = {'inbox': [], 'sent': []}
+
+    # --- 1. BOÎTE DE RÉCEPTION (INBOX) ---
+    received_qs = AnnouncementRecipient.objects.filter(user=user)\
+        .select_related('announcement', 'announcement__sender', 'announcement__sender__staff_user')\
+        .prefetch_related('announcement__attachments')\
+        .order_by('-announcement__created_at')
+
+    for recipient in received_qs:
+        ann = recipient.announcement
+        sender_name = "Inconnu"
+        # Essayer de récupérer le nom du staff, sinon username
+        if hasattr(ann.sender, 'staff_user'):
+            sender_name = f"{ann.sender.staff_user.staff_type.capitalize()} {ann.sender.last_name}"
+        else:
+            sender_name = ann.sender.username # Cas SuperAdmin hors staff
+
+        data['inbox'].append({
+            'id': ann.id,
+            'title': ann.title,
+            'content': ann.content,
+            'type': ann.get_announcement_type_display(), # Label lisible (ex: "Devoir")
+            'type_code': ann.announcement_type,         # Code (ex: "HOMEWORK")
+            'sender': sender_name,
+            'date': ann.created_at.strftime('%d/%m/%Y %H:%M'),
+            'is_read': recipient.is_read,
+            'read_at': recipient.read_at.strftime('%d/%m/%Y %H:%M') if recipient.read_at else None,
+            'attachments': [{
+                'url': a.file.url, 
+                'type': a.file_type, 
+                'name': a.file.name.split('/')[-1]
+            } for a in ann.attachments.all()]
+        })
+
+    # --- 2. ÉLÉMENTS ENVOYÉS (SENT) ---
+    # Uniquement si l'utilisateur a déjà envoyé des choses
+    sent_qs = Announcement.objects.filter(sender=user)\
+        .prefetch_related('recipients', 'attachments')\
+        .order_by('-created_at')
+
+    for ann in sent_qs:
+        # Stats de lecture pour l'expéditeur
+        total_recipients = ann.recipients.count()
+        read_count = ann.recipients.filter(is_read=True).count()
+        read_percentage = int((read_count / total_recipients * 100)) if total_recipients > 0 else 0
+
+        data['sent'].append({
+            'id': ann.id,
+            'title': ann.title,
+            'content': ann.content,
+            'type': ann.get_announcement_type_display(),
+            'date': ann.created_at.strftime('%d/%m/%Y %H:%M'),
+            'targets_summary': ann.target_display,
+            'stats': {
+                'total': total_recipients,
+                'read': read_count,
+                'percent': read_percentage
+            },
+            'attachments': [{
+                'url': a.file.url, 
+                'type': a.file_type, 
+                'name': a.file.name.split('/')[-1]
+            } for a in ann.attachments.all()]
+        })
+
+    return JsonResponse({'success': True, 'data': data})
+
+
+@require_http_methods(["POST"])
+@csrf_exempt # On gérera le CSRF via JS mais multipart peut être tricky
+@login_required(login_url='login')
+def api_create_announcement(request):
+    """
+    Création d'une annonce avec pièces jointes.
+    Reçoit un FormData (pas du JSON pur à cause des fichiers).
+    """
+    user = request.user
+    
+    # Vérif permissions basique (redondant avec utils mais sécure)
+    if get_user_type(user) in ['Student', 'Parent']:
+         return JsonResponse({'success': False, 'message': "Non autorisé."}, status=403)
+
+    try:
+        # Récupération des données du formulaire
+        # Les données complexes (listes d'IDs) sont envoyées sous forme de chaîne JSON dans 'targets'
+        targets_json = request.POST.get('targets') 
+        if not targets_json:
+             return JsonResponse({'success': False, 'message': "Aucun destinataire sélectionné."}, status=400)
+        
+        targets = json.loads(targets_json)
+        
+        form_data = {
+            'title': request.POST.get('title'),
+            'content': request.POST.get('content'),
+            'announcement_type': request.POST.get('type'),
+            'targets': targets
+        }
+
+        # Récupération des fichiers
+        files = request.FILES.getlist('attachments') # 'attachments' est le name du input file multiple
+
+        # Récupération de l'année (nécessaire pour utils)
+        # On refait la logique rapide pour avoir l'année courante
+        school = user.staff_user.school if hasattr(user, 'staff_user') else None
+        current_year = get_current_year_for_school(school) if school else None
+
+        if not current_year:
+             return JsonResponse({'success': False, 'message': "Année scolaire introuvable."}, status=400)
+
+        # Appel de la logique métier (utils.py)
+        create_announcement_logic(user, form_data, files, current_year)
+
+        return JsonResponse({'success': True, 'message': "Annonce envoyée avec succès."})
+
+    except Exception as e:
+        print(f"Erreur création annonce: {e}")
+        return JsonResponse({'success': False, 'message': str(e)}, status=500)
+
+
+@require_http_methods(["POST"])
+@csrf_exempt
+@login_required(login_url='login')
+def api_mark_as_read(request):
+    """
+    Marquer une annonce comme lue (Case à cocher).
+    """
+    try:
+        data = json.loads(request.body)
+        announcement_id = data.get('announcement_id')
+        is_read = data.get('is_read', True)
+
+        recipient = AnnouncementRecipient.objects.get(
+            user=request.user, 
+            announcement_id=announcement_id
+        )
+        
+        if is_read:
+            recipient.mark_as_read()
+        # On ne gère généralement pas le "marquer comme non lu" pour des raisons légales/suivi,
+        # mais si besoin, on pourrait reset ici.
+
+        return JsonResponse({'success': True})
+
+    except AnnouncementRecipient.DoesNotExist:
+        return JsonResponse({'success': False, 'message': "Annonce introuvable."}, status=404)
+    except Exception as e:
+        return JsonResponse({'success': False, 'message': str(e)}, status=500)
