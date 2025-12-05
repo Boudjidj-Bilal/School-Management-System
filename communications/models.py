@@ -2,52 +2,103 @@ from django.db import models
 from django.db.models import Q
 from users.models import Staff, Parent
 from schools.models import School
-from django.contrib.contenttypes.fields import GenericForeignKey
-from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import ValidationError
+from django.utils import timezone
 
 
 from users.models import User, Staff, Student
 
-# --> Représente une annonce (devoir, contrôle, cours ou message) envoyée dans l'école
+
+# --> Le cœur de l'annonce (Contenu unique)
 class Announcement(models.Model):
-    ANNOUNCEMENT_TYPE_CHOICES = [
-        ("HOMEWORK", "homework"),   # devoir
-        ("TEST", "test"),           # contrôle
-        ("COURSE", "course"),       # cours
-        ("MESSAGE", "message"),     # message
+    TYPE_CHOICES = [
+        ("HOMEWORK", "Devoir"),
+        ("TEST", "Contrôle"),
+        ("COURSE", "Cours"),
+        ("MESSAGE", "Message Global"),
     ]
 
-    type = models.CharField(max_length=20, choices=ANNOUNCEMENT_TYPE_CHOICES)  # type d'annonce
-    content = models.TextField()                     # contenu du message/annonce
-    photo = models.ImageField(upload_to="announcements/photos/", blank=True, null=True)  # photo éventuelle
-    video = models.FileField(upload_to="announcements/videos/", blank=True, null=True)   # vidéo éventuelle
-    date = models.DateTimeField(auto_now_add=True)   # date de publication
+    title = models.CharField(max_length=255)
+    content = models.TextField()
+    announcement_type = models.CharField(max_length=20, choices=TYPE_CHOICES, default="MESSAGE")
+    
+    # L'expéditeur est un User pour permettre au SuperAdmin (qui n'est pas Staff) d'envoyer
     sender = models.ForeignKey(
-        Staff, on_delete=models.CASCADE, related_name="sent_announcements"
-    )  # personnel qui a créé l’annonce
+        User, on_delete=models.CASCADE, related_name="sent_announcements"
+    )
+    
+    # L'école concernée (Facultatif si c'est une annonce globale du SuperAdmin)
     school = models.ForeignKey(
-        School, on_delete=models.CASCADE, related_name="announcements"
-    )  # école concernée
-    is_active = models.BooleanField(default=True)    # statut actif
+        School, on_delete=models.CASCADE, related_name="school_announcements",
+        null=True, blank=True
+    )
+
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    # Champ purement informatif pour l'historique (ex: "Envoyé à : 1ère A, 1ère B")
+    # La vraie liste technique des destinataires est dans la table AnnouncementRecipient
+    target_display = models.CharField(max_length=255, blank=True, help_text="Résumé des destinataires pour affichage")
+
+    class Meta:
+        ordering = ['-created_at']
 
     def __str__(self):
-        return f"{self.type} - {self.sender}"
+        return f"[{self.get_announcement_type_display()}] {self.title} - {self.sender}"
 
-class Recipient(models.Model):
-    """
-    Représente un destinataire unique pour une annonce, qu'il soit un membre du personnel
-    ou un élève, en utilisant une clé étrangère générique.
-    """
-    content_type = models.ForeignKey(ContentType, on_delete=models.CASCADE) # Le type de model : Staff ou Student
-    object_id = models.PositiveIntegerField() # L'id de l'étudiant ou du membre du personnel
-    recipient = GenericForeignKey('content_type', 'object_id') # Stock les deux informations dans un champs
+
+# --> Pièces jointes (Multiples par annonce)
+class Attachment(models.Model):
+    FILE_TYPE_CHOICES = [
+        ("IMAGE", "Image"),
+        ("VIDEO", "Vidéo"),
+        ("DOCUMENT", "Document"),
+    ]
+
+    announcement = models.ForeignKey(
+        Announcement, on_delete=models.CASCADE, related_name="attachments"
+    )
+    file = models.FileField(upload_to="announcements_files/%Y/%m/")
+    file_type = models.CharField(max_length=10, choices=FILE_TYPE_CHOICES, default="DOCUMENT")
+    
+    def __str__(self):
+        return f"Fichier ({self.file_type}) pour {self.announcement.title}"
+
+
+# --> Table de liaison : Gestion des destinataires et de la lecture
+class AnnouncementRecipient(models.Model):
     announcement = models.ForeignKey(
         Announcement, on_delete=models.CASCADE, related_name="recipients"
     )
+    
+    # Le destinataire (Élève, Prof, Parent, etc.)
+    # On lie directement à User pour simplifier les requêtes "Mes annonces"
+    user = models.ForeignKey(
+        User, on_delete=models.CASCADE, related_name="received_announcements"
+    )
+
+    # État de lecture (La case à cocher)
+    is_read = models.BooleanField(default=False)
+    read_at = models.DateTimeField(null=True, blank=True)
+
+    class Meta:
+        # Un utilisateur ne reçoit qu'une fois la même annonce
+        unique_together = ("announcement", "user")
+        indexes = [
+            models.Index(fields=['user', 'is_read']), # Optimisation pour filtrer "Non lues"
+        ]
+
+    def mark_as_read(self):
+        """Marque l'annonce comme lue avec la date actuelle"""
+        if not self.is_read:
+            self.is_read = True
+            self.read_at = timezone.now()
+            self.save()
 
     def __str__(self):
-        return f"{self.recipient} -> {self.announcement}"
+        state = "Lu" if self.is_read else "Non lu"
+        return f"{self.user.username} -> {self.announcement.title} ({state})"
+
 
 
 # --> Représente une conversation (Fil de discussion)
