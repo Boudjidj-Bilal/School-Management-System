@@ -4,7 +4,7 @@ from django.contrib.auth.decorators import login_required
 from django.http import HttpResponseForbidden, JsonResponse
 from django.views.decorators.http import require_http_methods
 from django.views.decorators.csrf import csrf_exempt
-
+ 
 # Modèles
 from .models import Messaging, Message, Announcement, AnnouncementRecipient
 from users.models import Staff, Student, Parent
@@ -19,6 +19,7 @@ from .utils import (
     create_announcement_logic,
     get_available_targets,
 )
+
 
 # --- HELPER: Identifier le rôle de l'utilisateur connecté ---
 def get_user_role_profile(user):
