@@ -1,8 +1,13 @@
 from django.db import models
+from django.db.models import Q
 from users.models import Staff, Parent
 from schools.models import School
 from django.contrib.contenttypes.fields import GenericForeignKey
 from django.contrib.contenttypes.models import ContentType
+from django.core.exceptions import ValidationError
+
+
+from users.models import User, Staff, Student
 
 # --> Représente une annonce (devoir, contrôle, cours ou message) envoyée dans l'école
 class Announcement(models.Model):
@@ -45,44 +50,101 @@ class Recipient(models.Model):
         return f"{self.recipient} -> {self.announcement}"
 
 
-# --> Représente une messagerie entre un parent et un professeur
+# --> Représente une conversation (Fil de discussion)
 class Messaging(models.Model):
-    parent = models.ForeignKey(
-        Parent, on_delete=models.CASCADE, related_name="messagings"
-    )  # parent concerné
+    """
+    Une conversation lie TOUJOURS un Professeur (Teacher) à :
+    - SOIT un Parent
+    - SOIT un Élève
+    """
     teacher = models.ForeignKey(
         Staff, on_delete=models.CASCADE, related_name="messagings"
-    )  # professeur concerné
-    is_active = models.BooleanField(default=True)    # statut actif (True par défaut)
+    )
+    
+    # Destinataire A : Le Parent (Optionnel)
+    parent = models.ForeignKey(
+        Parent, on_delete=models.CASCADE, related_name="messagings",
+        null=True, blank=True
+    )
+    
+    # Destinataire B : L'Élève (Optionnel) - [NOUVEAU]
+    student = models.ForeignKey(
+        Student, on_delete=models.CASCADE, related_name="messagings",
+        null=True, blank=True
+    )
+
+    # Statut global de la conversation (pour soft delete / archivage manuel)
+    # Note : Le blocage par année se fera via la logique métier (utils), pas ce champ.
+    is_active = models.BooleanField(default=True)
+    
+    # Pour le tri : date du dernier message (mis à jour à chaque envoi)
+    last_message_date = models.DateTimeField(auto_now_add=True)
 
     class Meta:
+        ordering = ['-last_message_date'] # Les conversations récentes en premier
         constraints = [
-            # Un parent et un professeur ne peuvent avoir qu’une seule messagerie active en même temps
+            # Unicité Professeur <-> Parent
             models.UniqueConstraint(
-                fields=["parent", "teacher"],
-                condition=models.Q(is_active=True),
-                name="unique_active_messaging_parent_teacher"
+                fields=["teacher", "parent"],
+                condition=Q(student__isnull=True),
+                name="unique_messaging_teacher_parent"
+            ),
+            # Unicité Professeur <-> Élève
+            models.UniqueConstraint(
+                fields=["teacher", "student"],
+                condition=Q(parent__isnull=True),
+                name="unique_messaging_teacher_student"
             )
         ]
 
+    def clean(self):
+        """Validation pour s'assurer qu'on a soit un parent, soit un élève, mais pas les deux."""
+        if self.parent and self.student:
+            raise ValidationError("Une conversation ne peut pas lier un professeur à un parent ET un élève en même temps.")
+        if not self.parent and not self.student:
+            raise ValidationError("Une conversation doit avoir un interlocuteur (Parent ou Élève).")
+
+    def save(self, *args, **kwargs):
+        self.clean()
+        super().save(*args, **kwargs)
+
     def __str__(self):
-        return f"Messaging {self.parent} <-> {self.teacher}"
+        if self.parent:
+            return f"Discussion : {self.teacher.user.last_name} <-> {self.parent.user.last_name} (Parent)"
+        elif self.student:
+            return f"Discussion : {self.teacher.user.last_name} <-> {self.student.user.last_name} (Élève)"
+        return f"Discussion {self.id}"
 
 
-# --> Représente un message dans une messagerie
+# --> Représente un message individuel dans une conversation
 class Message(models.Model):
-    SENDER_TYPE_CHOICES = [
-        ("PARENT", "parent"),       # message envoyé par un parent
-        ("TEACHER", "teacher"),     # message envoyé par un professeur
-    ]
-
-    sender_type = models.CharField(max_length=20, choices=SENDER_TYPE_CHOICES)  # type d’expéditeur
-    content = models.TextField()                     # contenu du message
-    date = models.DateTimeField(auto_now_add=True)   # date d’envoi
     messaging = models.ForeignKey(
         Messaging, on_delete=models.CASCADE, related_name="messages"
-    )  # messagerie liée
-    is_active = models.BooleanField(default=True)    # statut actif
+    )
+    
+    # [MODIFIÉ] On lie directement à l'User pour savoir exactement qui écrit (Prof, Parent ou Élève)
+    sender = models.ForeignKey(
+        User, on_delete=models.CASCADE, related_name="sent_messages"
+    )
+    
+    content = models.TextField()
+    date = models.DateTimeField(auto_now_add=True)
+    
+    # [AJOUT] Pour la fonctionnalité "Message non lu" (couleur différente)
+    is_read = models.BooleanField(default=False)
+    
+    # Pour le "Soft Delete" individuel d'un message
+    is_active = models.BooleanField(default=True)
+
+    class Meta:
+        ordering = ['date'] # Chronologique pour l'affichage du chat
 
     def __str__(self):
-        return f"{self.sender_type} - {self.messaging} ({self.date})"
+        return f"Message de {self.sender.username} le {self.date}"
+    
+    def save(self, *args, **kwargs):
+        # À chaque nouveau message, on met à jour la date de la conversation pour le tri
+        if not self.pk: # Seulement à la création
+            self.messaging.last_message_date = self.date or models.functions.Now()
+            self.messaging.save()
+        super().save(*args, **kwargs)

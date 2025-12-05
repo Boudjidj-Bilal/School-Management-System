@@ -327,17 +327,18 @@ def create_user_view(request):
             user_to_update.save()
 
             year = get_current_school_year(school_id)
-            if year.running == False:
-                if user_type == 'student':
-                    specific_user = Student.objects.get(user=user_to_update)
-                elif user_type == 'parent':
-                    specific_user = Parent.objects.get(user=user_to_update)
-                elif user_type == 'staff':
-                    specific_user = Staff.objects.get(user=user_to_update)
-                    if staff_type:
-                        specific_user.staff_type = staff_type
-            else:
-                return JsonResponse({"success": False, "message": "Impossible de modifier le statut d'un utilisateur lorsque l'année est en cours de déroulement."}, status=404)
+
+            modif_status = False
+
+            if user_type == 'student':
+                specific_user = Student.objects.get(user=user_to_update)
+            elif user_type == 'parent':
+                specific_user = Parent.objects.get(user=user_to_update)
+            elif user_type == 'staff':
+                specific_user = Staff.objects.get(user=user_to_update)
+                if staff_type != specific_user.staff_type :
+                    modif_status = True
+                    specific_user.staff_type = staff_type
 
             if gender:
                 specific_user.gender = gender
@@ -345,7 +346,15 @@ def create_user_view(request):
                 specific_user.address = address
             if birth_date:
                 specific_user.birth_date = birth_date
-            specific_user.save()
+
+                
+            if modif_status == True:
+                if year.running == False:
+                    specific_user.save()
+                else:
+                    return JsonResponse({"success": False, "message": "Impossible de modifier le statut d'un utilisateur lorsque l'année est en cours de déroulement."}, status=404)
+            else:
+                specific_user.save()
 
             return JsonResponse({"success": True, "message": "L'utilisateur a bien été modifié."})
 

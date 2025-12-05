@@ -1,0 +1,135 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Messagerie{% endblock %}
+
+{% block content %}
+<!-- Token CSRF nécessaire pour les requêtes AJAX -->
+{% csrf_token %}
+
+<!-- Conteneur principal -->
+<div class="w-full max-w-full h-[calc(100vh-220px)] bg-white rounded-xl shadow-lg border border-gray-200 overflow-hidden relative flex">
+    
+    <!-- COLONNE GAUCHE : LISTE DES CONVERSATIONS -->
+    <!-- Visible par défaut (w-full), cachée par JS quand une conv est ouverte -->
+    <div id="left-col" class="w-full flex flex-col bg-gray-50 h-full transition-all duration-300">
+        
+        <!-- En-tête Sidebar -->
+        <div class="p-4 border-b border-gray-200 bg-white flex justify-between items-center flex-shrink-0">
+            <h2 class="font-bold text-gray-800 text-lg">Discussions</h2>
+            <button id="btn-new-conversation" class="text-white bg-indigo-600 hover:bg-indigo-700 rounded-full w-8 h-8 flex items-center justify-center shadow transition-colors cursor-pointer" title="Nouvelle discussion">
+                <i class="fas fa-plus"></i>
+            </button>
+        </div>
+
+        <!-- Liste des conversations -->
+        <div id="conversations-list" class="flex-1 overflow-y-auto overflow-x-hidden custom-scrollbar">
+            <div class="flex justify-center items-center h-20 text-gray-400">
+                <i class="fas fa-spinner fa-spin mr-2"></i> Chargement...
+            </div>
+        </div>
+    </div>
+
+    <!-- COLONNE DROITE : ZONE DE CHAT -->
+    <!-- Cachée par défaut (hidden), devient visible (flex w-full) par JS -->
+    <div id="right-col" class="hidden flex-col bg-white relative h-full w-full min-w-0 transition-all duration-300">
+        
+        <!-- En-tête Chat -->
+        <div id="chat-header" class="p-3 border-b border-gray-200 bg-white flex justify-between items-center flex-shrink-0 shadow-sm z-10">
+            <div class="flex items-center min-w-0">
+                <!-- Bouton Retour (Toujours visible maintenant) -->
+                <button id="btn-back-list" class="mr-3 text-gray-500 hover:text-indigo-600 p-2 rounded-full hover:bg-gray-100 transition-colors" title="Retour à la liste">
+                    <i class="fas fa-arrow-left"></i>
+                </button>
+
+                <div class="w-10 h-10 rounded-full bg-indigo-100 text-indigo-600 flex-shrink-0 flex items-center justify-center font-bold mr-3" id="header-avatar">
+                    ?
+                </div>
+                <div class="min-w-0 overflow-hidden">
+                    <h3 class="font-bold text-gray-800 truncate" id="header-name">Nom Contact</h3>
+                    <p class="text-xs text-gray-500 flex items-center truncate">
+                        <span id="header-status-indicator" class="w-2 h-2 rounded-full bg-green-500 mr-1 flex-shrink-0"></span>
+                        <span id="header-role">Rôle</span>
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Zone des messages -->
+        <div id="messages-container" class="flex-1 overflow-y-auto p-4 space-y-4 bg-gray-50 custom-scrollbar">
+            <!-- Messages ici -->
+        </div>
+
+        <!-- Zone de saisie -->
+        <div id="input-area" class="p-3 border-t border-gray-200 bg-white hidden flex-shrink-0">
+            <form id="message-form" class="flex items-end gap-2">
+                <div class="flex-grow relative min-w-0">
+                    <textarea id="message-input" rows="1" class="w-full border-gray-300 rounded-2xl pl-4 pr-10 py-3 focus:border-indigo-500 focus:ring focus:ring-indigo-200 resize-none overflow-hidden text-sm" placeholder="Écrivez votre message..." style="min-height: 44px; max-height: 100px;"></textarea>
+                </div>
+                <button type="submit" id="send-btn" class="bg-indigo-600 text-white rounded-full w-11 h-11 flex-shrink-0 flex items-center justify-center hover:bg-indigo-700 transition-transform transform active:scale-95 shadow-md disabled:opacity-50 disabled:cursor-not-allowed">
+                    <i class="fas fa-paper-plane"></i>
+                </button>
+            </form>
+            <div id="blocked-message" class="hidden text-center text-sm text-gray-500 py-2 bg-gray-100 rounded-lg">
+                <i class="fas fa-lock mr-2"></i> Conversation archivée.
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<!-- MODALE : NOUVELLE CONVERSATION -->
+<div id="new-conversation-modal" class="fixed inset-0 bg-gray-900 bg-opacity-50 flex items-center justify-center z-[100] hidden opacity-0 transition-opacity duration-300 p-4">
+    <div class="bg-white rounded-xl shadow-2xl w-full max-w-md p-0 overflow-hidden transform scale-95 transition-transform duration-300 flex flex-col max-h-[80vh]">
+        
+        <div class="p-4 border-b border-gray-200 flex justify-between items-center bg-indigo-600 text-white flex-shrink-0">
+            <h3 class="text-lg font-bold"><i class="fas fa-edit mr-2"></i> Nouveau message</h3>
+            <button id="close-modal-btn" class="text-indigo-100 hover:text-white transition-colors">
+                <i class="fas fa-times text-xl"></i>
+            </button>
+        </div>
+
+        <div class="p-2 border-b border-gray-200 bg-gray-50 flex-shrink-0">
+            <input type="text" id="contact-search" class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-indigo-500" placeholder="Rechercher un contact...">
+        </div>
+
+        <div id="contacts-list" class="flex-1 overflow-y-auto p-0 divide-y divide-gray-100 custom-scrollbar">
+            <div class="p-8 text-center text-gray-500">
+                <i class="fas fa-spinner fa-spin mr-2"></i> Chargement de l'annuaire...
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+    {# URLs des APIs pour le JS #}
+    {% url 'communications:api_get_conversations' as api_list_url %}
+    {% url 'communications:api_get_contacts' as api_contacts_url %}
+    {% url 'communications:api_create_conversation' as api_create_url %}
+    
+    <script>
+        // [CORRECTION] Variables attachées à window
+        window.USER_ID = "{{ user_id }}";
+        
+        // [CORRECTION CRITIQUE] Récupération sécurisée du token CSRF
+        // On vérifie si l'élément existe avant de prendre sa valeur pour éviter le crash "Cannot read properties of null"
+        const csrfElement = document.querySelector('[name=csrfmiddlewaretoken]');
+        window.CSRF_TOKEN = csrfElement ? csrfElement.value : "";
+        
+        if (!window.CSRF_TOKEN) {
+            console.error("Attention: Token CSRF introuvable dans le DOM.");
+        }
+        
+        window.API_URLS = {
+            LIST_CONVERSATIONS: "{{ api_list_url|escapejs }}",
+            LIST_CONTACTS: "{{ api_contacts_url|escapejs }}",
+            CREATE_CONVERSATION: "{{ api_create_url|escapejs }}",
+            GET_MESSAGES_BASE: "/communications/api/messages/", 
+            SEND_MESSAGE: "/communications/api/send/"
+        };
+    </script>
+    
+    <script src="{% static 'js/communications/messaging.js' %}"></script>
+{% endblock %}

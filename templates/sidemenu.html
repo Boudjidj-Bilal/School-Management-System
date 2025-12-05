@@ -131,14 +131,7 @@
                     </a>
                 </li>
             {% endif %}
-            {% if user_is_teacher %}<!-- TODO : ajouter pour le professeur : messagerie, appréciation, etc. -->
-                <li>
-                    <!-- Utilisation de request.user.staff_user.id pour récupérer l'ID du Staff lié -->
-                    <a href="{% url 'scheduling:view_teacher_schedule' pk_staff=request.user.staff_user.id %}" class="flex items-center space-x-3 text-gray-300 hover:bg-gray-700 hover:text-white rounded-lg p-2 transition-colors duration-200">
-                        <i class="fas fa-calendar-week text-lg"></i>
-                        <span>Planning</span>
-                    </a>
-                </li>
+            {% if user_is_teacher %}
                 <li>
                     <a href="{% url 'grades:grades_dashboard' %}" class="flex items-center space-x-3 text-gray-300 hover:bg-gray-700 hover:text-white rounded-lg p-2 transition-colors duration-200">
                         <i class="fas fa-marker text-lg"></i>
@@ -157,19 +150,32 @@
                         <span>Absences & Retards</span>
                     </a>
                 </li>
+                <li>
+                    <a href="{% url 'communications:dashboard' %}" class="flex items-center space-x-3 text-gray-300 hover:bg-gray-700 hover:text-white rounded-lg p-2 transition-colors duration-200">
+                        <i class="fas fa-comments text-lg"></i>
+                        <span>Messagerie</span>
+                    </a>
+                </li>
+                <li>
+                    <!-- Utilisation de request.user.staff_user.id pour récupérer l'ID du Staff lié -->
+                    <a href="{% url 'scheduling:view_teacher_schedule' pk_staff=request.user.staff_user.id %}" class="flex items-center space-x-3 text-gray-300 hover:bg-gray-700 hover:text-white rounded-lg p-2 transition-colors duration-200">
+                        <i class="fas fa-calendar-week text-lg"></i>
+                        <span>Planning</span>
+                    </a>
+                </li>
             {% endif %}
             {% if user_is_student %}
                 <li>
                     <!-- Récupère la classe de l'étudiant via la relation User -> Student -> ClassStudentYear -> Class -->
                     <a href="{% url 'scheduling:view_class_schedule_page' pk_class=request.user.student_user.class_years.last.student_class.id %}" class="flex items-center space-x-3 text-gray-300 hover:bg-gray-700 hover:text-white rounded-lg p-2 transition-colors duration-200">
                         <i class="fas fa-calendar-alt text-lg"></i>
-                        <span>Planning</span>
+                        <span>Mon Planning</span>
                     </a>
                 </li>
                 <li>
                     <a href="{% url 'grades:student_grades_dashboard' %}" class="flex items-center space-x-3 text-gray-300 hover:bg-gray-700 hover:text-white rounded-lg p-2 transition-colors duration-200">
                         <i class="fas fa-clipboard-list text-lg"></i>
-                        <span>Notes</span>
+                        <span>Mes Notes</span>
                     </a>
                 </li>
                 <li>
@@ -178,11 +184,25 @@
                         <span>Absences & Retards</span>
                     </a>
                 </li>
+                <li>
+                    <a href="{% url 'communications:dashboard' %}" class="flex items-center space-x-3 text-gray-300 hover:bg-gray-700 hover:text-white rounded-lg p-2 transition-colors duration-200">
+                        <i class="fas fa-comments text-lg"></i>
+                        <span>Messagerie</span>
+                    </a>
+                </li>
+            {% endif %}
+            {% if user_is_parent %}
+            <li>
+                <a href="{% url 'communications:dashboard' %}" class="flex items-center space-x-3 text-gray-300 hover:bg-gray-700 hover:text-white rounded-lg p-2 transition-colors duration-200">
+                    <i class="fas fa-comments text-lg"></i>
+                    <span>Messagerie</span>
+                </a>
+            </li>
             {% endif %}
             <li>
                 <a href="#" class="flex items-center space-x-3 text-gray-300 hover:bg-gray-700 hover:text-white rounded-lg p-2 transition-colors duration-200">
                     <i class="fas fa-book text-lg"></i>
-                    <span>Profil</span>
+                    <span>Cours</span>
                 </a>
             </li>
         </ul>
