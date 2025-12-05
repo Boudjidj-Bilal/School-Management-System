@@ -38,6 +38,13 @@
                 <i class="fas fa-paper-plane mr-2"></i> Envoyés
             </button>
             {% endif %}
+
+            <!-- [AJOUT] Nouvel onglet pour Proviseur/SuperAdmin -->
+            {% if can_view_all %}
+            <button data-tab="all" class="tab-btn border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm flex items-center">
+                <i class="fas fa-globe mr-2"></i> Toutes les annonces
+            </button>
+            {% endif %}
         </nav>
     </div>
 
@@ -50,14 +57,13 @@
         </div>
 
         <!-- Liste : Boîte de réception -->
-        <div id="tab-content-inbox" class="tab-content space-y-4 hidden">
-            <!-- Rempli par JS -->
-        </div>
+        <div id="tab-content-inbox" class="tab-content space-y-4 hidden"></div>
 
         <!-- Liste : Éléments envoyés -->
-        <div id="tab-content-sent" class="tab-content space-y-4 hidden">
-            <!-- Rempli par JS -->
-        </div>
+        <div id="tab-content-sent" class="tab-content space-y-4 hidden"></div>
+
+        <!-- [AJOUT] Liste : Toutes les annonces -->
+        <div id="tab-content-all" class="tab-content space-y-4 hidden"></div>
 
         <!-- État vide (Template) -->
         <template id="empty-state-template">
@@ -77,39 +83,26 @@
 <div id="modal-view" class="fixed inset-0 z-50 flex items-center justify-center bg-gray-900 bg-opacity-50 hidden opacity-0 transition-opacity duration-300">
     <div class="bg-white rounded-xl shadow-2xl w-full max-w-2xl mx-4 flex flex-col max-h-[90vh] transform scale-95 transition-transform duration-300">
         
-        <!-- Header -->
         <div class="p-5 border-b border-gray-100 flex justify-between items-start">
             <div>
-                <span id="view-type-badge" class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800 mb-2">
-                    Info
-                </span>
-                <h3 id="view-title" class="text-xl font-bold text-gray-900 leading-tight">Titre de l'annonce</h3>
-                <p class="text-sm text-gray-500 mt-1">
-                    Par <span id="view-sender" class="font-medium text-gray-800">Expéditeur</span> • <span id="view-date">Date</span>
-                </p>
+                <span id="view-type-badge" class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800 mb-2">Info</span>
+                <h3 id="view-title" class="text-xl font-bold text-gray-900 leading-tight">Titre</h3>
+                <p class="text-sm text-gray-500 mt-1">Par <span id="view-sender" class="font-medium text-gray-800">Expéditeur</span> • <span id="view-date">Date</span></p>
             </div>
             <button class="btn-close-modal text-gray-400 hover:text-gray-600 transition-colors">
                 <i class="fas fa-times text-xl"></i>
             </button>
         </div>
 
-        <!-- Corps (Scrollable) -->
         <div class="p-6 overflow-y-auto custom-scrollbar space-y-6 flex-1">
+            <div id="view-content" class="prose prose-sm max-w-none text-gray-700"></div>
             
-            <!-- Contenu Texte -->
-            <div id="view-content" class="prose prose-sm max-w-none text-gray-700">
-                <!-- Inséré par JS -->
-            </div>
-
-            <!-- Pièces jointes -->
             <div id="view-attachments-container" class="hidden pt-4 border-t border-gray-100">
                 <h4 class="text-sm font-semibold text-gray-900 mb-3"><i class="fas fa-paperclip mr-2"></i> Pièces jointes</h4>
-                <div id="view-attachments-list" class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    <!-- Cartes de fichiers -->
-                </div>
+                <div id="view-attachments-list" class="grid grid-cols-1 sm:grid-cols-2 gap-3"></div>
             </div>
 
-            <!-- Stats de lecture (Visible uniquement pour l'expéditeur) -->
+            <!-- [CORRECTION] Restauration des éléments de statistiques manquants -->
             <div id="view-stats-container" class="hidden p-4 bg-indigo-50 rounded-lg border border-indigo-100">
                 <h4 class="text-sm font-bold text-indigo-900 mb-2">Suivi de lecture</h4>
                 <div class="flex items-center justify-between text-sm">
@@ -122,36 +115,36 @@
             </div>
         </div>
 
-        <!-- Footer : Action de lecture -->
         <div id="view-footer-action" class="p-4 border-t border-gray-100 bg-gray-50 rounded-b-xl flex justify-end items-center">
-            <label class="flex items-center space-x-3 cursor-pointer select-none">
+            <label class="flex items-center space-x-3 cursor-pointer select-none" id="label-check-read">
                 <input type="checkbox" id="check-read" class="form-checkbox h-5 w-5 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500 transition duration-150 ease-in-out">
-                <span id="check-read-label" class="text-gray-700 font-medium">J'ai bien lu cette information</span>
+                <span class="text-gray-700 font-medium">J'ai bien lu cette information</span>
             </label>
             <div id="read-confirmation" class="hidden text-green-600 font-medium flex items-center">
                 <i class="fas fa-check-circle mr-2"></i> Lu le <span id="read-date" class="ml-1"></span>
+            </div>
+            <!-- Message pour les non-destinataires -->
+            <div id="read-only-msg" class="hidden text-gray-500 italic text-sm">
+                <i class="fas fa-eye mr-1"></i> Mode consultation (Vous n'êtes pas destinataire)
             </div>
         </div>
     </div>
 </div>
 
 {% if can_send %}
-<!-- MODALE : CRÉATION D'ANNONCE -->
+<!-- MODALE CRÉATION (Inchangée) -->
 <div id="modal-create" class="fixed inset-0 z-50 flex items-center justify-center bg-gray-900 bg-opacity-50 hidden opacity-0 transition-opacity duration-300">
     <div class="bg-white rounded-xl shadow-2xl w-full max-w-3xl mx-4 flex flex-col max-h-[90vh] transform scale-95 transition-transform duration-300">
-        
-        <!-- Header -->
+         <!-- Header -->
         <div class="p-4 border-b border-gray-200 bg-indigo-600 text-white rounded-t-xl flex justify-between items-center">
             <h3 class="text-lg font-bold"><i class="fas fa-pen-nib mr-2"></i> Rédiger une annonce</h3>
             <button class="btn-close-modal text-indigo-100 hover:text-white transition-colors">
                 <i class="fas fa-times text-xl"></i>
             </button>
         </div>
-
         <!-- Formulaire -->
         <form id="create-announcement-form" class="flex flex-col flex-1 overflow-hidden">
-            <div class="p-6 overflow-y-auto custom-scrollbar space-y-6 flex-1">
-                
+             <div class="p-6 overflow-y-auto custom-scrollbar space-y-6 flex-1">
                 <!-- Titre et Type -->
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <div class="md:col-span-2">
@@ -171,10 +164,7 @@
                 <!-- Destinataires (Dynamique selon JS) -->
                 <div class="bg-gray-50 p-4 rounded-lg border border-gray-200">
                     <label class="block text-sm font-medium text-gray-700 mb-2">Destinataires <span class="text-red-500">*</span></label>
-                    
-                    <!-- Sélecteur de Cibles (Généré par JS) -->
                     <div id="targets-container" class="space-y-3">
-                        <!-- Les checkboxes Classes / Groupes / Élèves seront injectés ici -->
                         <p class="text-sm text-gray-400 italic">Chargement des listes...</p>
                     </div>
                     <div id="targets-summary" class="mt-2 text-xs text-indigo-600 font-medium hidden">
@@ -195,20 +185,16 @@
                         <input type="file" name="attachments" multiple class="absolute inset-0 w-full h-full opacity-0 cursor-pointer" id="file-input">
                         <div class="text-gray-500">
                             <i class="fas fa-cloud-upload-alt text-2xl mb-2 block"></i>
-                            <span class="text-sm">Cliquez ou glissez des fichiers ici (PDF, Images, Vidéos)</span>
+                            <span class="text-sm">Cliquez ou glissez des fichiers ici</span>
                         </div>
                     </div>
-                    <!-- Liste des fichiers sélectionnés -->
                     <div id="file-list" class="mt-2 space-y-2"></div>
                 </div>
-
             </div>
 
             <!-- Footer Actions -->
             <div class="p-4 border-t border-gray-200 bg-gray-50 flex justify-end space-x-3">
-                <button type="button" class="btn-close-modal px-4 py-2 bg-white border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50">
-                    Annuler
-                </button>
+                <button type="button" class="btn-close-modal px-4 py-2 bg-white border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50">Annuler</button>
                 <button type="submit" id="btn-submit-announcement" class="px-6 py-2 bg-indigo-600 text-white font-bold rounded-lg shadow hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition-colors flex items-center">
                     <span class="btn-text">Envoyer</span>
                     <i class="fas fa-paper-plane ml-2"></i>
@@ -222,20 +208,16 @@
 {% endblock %}
 
 {% block extra_js %}
-    {# URLs des APIs pour le JS #}
-    {% url 'announcements:api_list' as api_list_url %}
-    {% url 'announcements:api_create' as api_create_url %}
-    {% url 'announcements:api_mark_as_read' as api_read_url %}
+    {% url 'communications:api_announcement_list' as api_list_url %}
+    {% url 'communications:api_announcement_create' as api_create_url %}
+    {% url 'communications:api_announcement_read' as api_read_url %}
     
     <script>
-        // Configuration globale
-        const CSRF_TOKEN = document.querySelector('[name=csrfmiddlewaretoken]').value;
+        const csrfEl = document.querySelector('[name=csrfmiddlewaretoken]');
+        window.CSRF_TOKEN = csrfEl ? csrfEl.value : "";
+        window.AVAILABLE_TARGETS = JSON.parse('{{ available_targets|escapejs|default:"{}" }}');
         
-        // Données de ciblage (passées par la vue si expéditeur)
-        // On utilise safe pour que le JSON soit valide
-        const AVAILABLE_TARGETS = '{{ available_targets|safe|default:"{}" }}'; 
-        
-        const API_URLS = {
+        window.API_URLS = {
             LIST: "{{ api_list_url|escapejs }}",
             CREATE: "{{ api_create_url|escapejs }}",
             READ: "{{ api_read_url|escapejs }}"

@@ -1,20 +1,25 @@
 // ====================================================================
-// LOGIQUE JAVASCRIPT POUR LES ANNONCES (dashboard.js)
+// LOGIQUE JAVASCRIPT POUR LES ANNONCES (dashboard_announcements.js)
 // ====================================================================
 
 document.addEventListener('DOMContentLoaded', () => {
     
     // --- CONFIGURATION ---
     const API = window.API_URLS;
-    // AVAILABLE_TARGETS est défini dans le HTML via Django
-    // Structure attendue : { classes: [...], staff_groups: [...], can_target_individual_staff: bool }
-    const TARGETS_CONFIG = typeof AVAILABLE_TARGETS !== 'undefined' ? AVAILABLE_TARGETS : {}; 
+    const CSRF = window.CSRF_TOKEN;
+    const TARGETS_CONFIG = window.AVAILABLE_TARGETS || {};
+
+    if (!API) {
+        console.error("ERREUR CRITIQUE : API_URLS non défini dans le HTML.");
+        return;
+    }
 
     // --- ÉLÉMENTS DOM ---
     const tabBtns = document.querySelectorAll('.tab-btn');
     const tabContents = document.querySelectorAll('.tab-content');
     const loader = document.getElementById('loader');
     const badgeInboxUnread = document.getElementById('badge-inbox-unread');
+    const notificationArea = document.getElementById('notification-area');
 
     // Modale Vue
     const modalView = document.getElementById('modal-view');
@@ -28,7 +33,10 @@ document.addEventListener('DOMContentLoaded', () => {
     const viewStatsContainer = document.getElementById('view-stats-container');
     const viewFooterAction = document.getElementById('view-footer-action');
     const checkRead = document.getElementById('check-read');
+    const checkReadLabel = document.getElementById('label-check-read'); // Le parent label
     const readConfirmation = document.getElementById('read-confirmation');
+    const readOnlyMsg = document.getElementById('read-only-msg'); // [AJOUT]
+    
     let currentAnnouncementId = null;
 
     // Modale Création
@@ -42,27 +50,45 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
     // =================================================================
+    // 0. UTILITAIRE NOTIFICATIONS
+    // =================================================================
+
+    function showNotification(message, type = 'success') {
+        if (!notificationArea) return;
+        const notif = document.createElement('div');
+        let colors = 'bg-white border-l-4 border-green-500 text-gray-800';
+        let icon = '<i class="fas fa-check-circle text-green-500 text-xl"></i>';
+        if (type === 'error') {
+            colors = 'bg-white border-l-4 border-red-500 text-gray-800';
+            icon = '<i class="fas fa-exclamation-circle text-red-500 text-xl"></i>';
+        }
+        notif.className = `${colors} shadow-lg rounded-r-lg p-4 flex items-center space-x-3 transform transition-all duration-300 translate-x-full pointer-events-auto min-w-[300px]`;
+        notif.innerHTML = `<div>${icon}</div><div class="font-medium text-sm">${message}</div><button class="ml-auto text-gray-400 hover:text-gray-600 focus:outline-none" onclick="this.parentElement.remove()"><i class="fas fa-times"></i></button>`;
+        notificationArea.appendChild(notif);
+        requestAnimationFrame(() => notif.classList.remove('translate-x-full'));
+        setTimeout(() => { notif.classList.add('translate-x-full', 'opacity-0'); setTimeout(() => notif.remove(), 300); }, 4000);
+    }
+
+
+    // =================================================================
     // 1. NAVIGATION & LISTING
     // =================================================================
 
-    // Initialisation
     loadAnnouncements();
 
-    // Gestion des onglets
     tabBtns.forEach(btn => {
         btn.addEventListener('click', () => {
-            // UI Switch
             tabBtns.forEach(b => b.classList.remove('active-tab', 'border-indigo-500', 'text-indigo-600'));
             tabBtns.forEach(b => b.classList.add('border-transparent', 'text-gray-500'));
             
             btn.classList.add('active-tab', 'border-indigo-500', 'text-indigo-600');
             btn.classList.remove('border-transparent', 'text-gray-500');
 
-            const tabName = btn.dataset.tab; // 'inbox' ou 'sent'
+            const tabName = btn.dataset.tab;
             
-            // Content Switch
             tabContents.forEach(c => c.classList.add('hidden'));
-            document.getElementById(`tab-content-${tabName}`).classList.remove('hidden');
+            const targetContent = document.getElementById(`tab-content-${tabName}`);
+            if(targetContent) targetContent.classList.remove('hidden');
         });
     });
 
@@ -73,49 +99,78 @@ document.addEventListener('DOMContentLoaded', () => {
             
             if (data.success) {
                 renderList('inbox', data.data.inbox);
-                renderList('sent', data.data.sent);
+                if (document.getElementById('tab-content-sent')) {
+                    renderList('sent', data.data.sent);
+                }
+                // [AJOUT] Rendu de l'onglet 'all' s'il existe
+                if (document.getElementById('tab-content-all')) {
+                    renderList('all', data.data.all);
+                }
                 
-                // Mise à jour du badge non-lu
                 const unreadCount = data.data.inbox.filter(a => !a.is_read).length;
-                if (unreadCount > 0) {
+                if (unreadCount > 0 && badgeInboxUnread) {
                     badgeInboxUnread.textContent = unreadCount;
                     badgeInboxUnread.classList.remove('hidden');
-                } else {
+                } else if (badgeInboxUnread) {
                     badgeInboxUnread.classList.add('hidden');
                 }
             }
             
-            loader.classList.add('hidden');
-            // Affiche l'onglet par défaut (inbox)
-            document.getElementById('tab-content-inbox').classList.remove('hidden');
+            if (loader) loader.classList.add('hidden');
+            
+            const activeBtn = document.querySelector('.tab-btn.active-tab');
+            const activeTabName = activeBtn ? activeBtn.dataset.tab : 'inbox';
+            
+            tabContents.forEach(c => c.classList.add('hidden'));
+            const activeContent = document.getElementById(`tab-content-${activeTabName}`);
+            if (activeContent) activeContent.classList.remove('hidden');
 
         } catch (e) {
             console.error(e);
-            loader.innerHTML = '<p class="text-red-500">Erreur de chargement.</p>';
+            if (loader) loader.innerHTML = '<p class="text-red-500">Erreur de chargement.</p>';
+            showNotification("Impossible de charger les annonces.", 'error');
         }
     }
 
     function renderList(type, items) {
         const container = document.getElementById(`tab-content-${type}`);
+        if (!container) return;
+        
         container.innerHTML = '';
 
-        if (items.length === 0) {
-            const template = document.getElementById('empty-state-template').content.cloneNode(true);
-            container.appendChild(template);
+        if (!items || items.length === 0) {
+            const template = document.getElementById('empty-state-template');
+            if (template) {
+                const clone = template.content.cloneNode(true);
+                container.appendChild(clone);
+            } else {
+                container.innerHTML = '<p class="text-center text-gray-500 py-8">Aucune annonce.</p>';
+            }
             return;
         }
 
         items.forEach(item => {
             const el = document.createElement('div');
-            // Style différent si non lu (pour inbox)
-            const isUnread = (type === 'inbox' && !item.is_read);
+            // Pour 'all', on affiche comme 'inbox' mais sans bordure bleue si non lu (sauf si destinataire)
+            const isUnread = (type === 'inbox' && !item.is_read) || (type === 'all' && item.is_recipient && !item.is_read);
+            
             el.className = `bg-white p-4 rounded-lg border ${isUnread ? 'border-l-4 border-l-indigo-500 border-gray-200 bg-indigo-50' : 'border-gray-200 hover:border-indigo-300'} shadow-sm cursor-pointer transition-all hover:shadow-md`;
             
-            // Icône selon le type
             let iconClass = 'fa-info-circle text-blue-500';
             if (item.type_code === 'HOMEWORK') iconClass = 'fa-book text-orange-500';
             if (item.type_code === 'TEST') iconClass = 'fa-file-alt text-red-500';
             if (item.type_code === 'COURSE') iconClass = 'fa-graduation-cap text-green-500';
+
+            // Cible affichée : pour 'inbox' c'est "De:", pour 'sent' et 'all' c'est "Pour:" ou "De:" selon contexte
+            let infoLine = "";
+            if (type === 'inbox') {
+                infoLine = `De : <span class="font-medium">${item.sender}</span>`;
+            } else if (type === 'sent') {
+                infoLine = `Pour : ${item.targets_summary || 'Destinataires multiples'}`;
+            } else if (type === 'all') {
+                // Dans la vue globale, on affiche l'expéditeur
+                infoLine = `De : <span class="font-medium">${item.sender}</span>`;
+            }
 
             el.innerHTML = `
                 <div class="flex justify-between items-start">
@@ -126,7 +181,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         <div class="min-w-0">
                             <h4 class="text-base font-bold text-gray-900 truncate pr-2">${item.title}</h4>
                             <p class="text-sm text-gray-500">
-                                ${type === 'inbox' ? `De : <span class="font-medium">${item.sender}</span>` : `Pour : ${item.targets_summary || 'Destinataires multiples'}`}
+                                ${infoLine}
                                 <span class="mx-1">•</span> ${item.date}
                             </p>
                             <p class="text-sm text-gray-600 mt-1 line-clamp-2">${item.content.substring(0, 150)}...</p>
@@ -145,7 +200,6 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function renderSentStats(stats) {
-        // Petite barre de progression pour l'expéditeur
         let color = 'bg-indigo-600';
         if (stats.percent < 30) color = 'bg-red-500';
         else if (stats.percent < 70) color = 'bg-orange-500';
@@ -169,92 +223,96 @@ document.addEventListener('DOMContentLoaded', () => {
     function openViewModal(type, item) {
         currentAnnouncementId = item.id;
         
-        // Remplissage
-        viewTitle.textContent = item.title;
-        viewSender.textContent = item.sender || "Moi"; // Si c'est 'sent', sender n'est pas toujours rempli, on adapte
-        viewDate.textContent = item.date;
+        if(viewTitle) viewTitle.textContent = item.title;
+        if(viewSender) viewSender.textContent = item.sender || "Moi";
+        if(viewDate) viewDate.textContent = item.date;
+        if(viewContent) viewContent.innerHTML = item.content.replace(/\n/g, '<br>');
+        if(viewTypeBadge) viewTypeBadge.textContent = item.type;
         
-        // Contenu avec sauts de ligne
-        viewContent.innerHTML = item.content.replace(/\n/g, '<br>');
-        
-        // Badge Type
-        viewTypeBadge.textContent = item.type;
-        
-        // Gestion Pièces Jointes
+        // Pièces jointes
         if (item.attachments && item.attachments.length > 0) {
-            viewAttachmentsContainer.classList.remove('hidden');
-            viewAttachmentsList.innerHTML = item.attachments.map(file => `
-                <a href="${file.url}" target="_blank" class="flex items-center p-3 rounded border border-gray-200 hover:bg-gray-50 group transition-colors">
-                    <div class="p-2 bg-indigo-50 text-indigo-600 rounded mr-3 group-hover:bg-indigo-100">
-                        <i class="fas ${getFileIcon(file.type)}"></i>
-                    </div>
-                    <div class="min-w-0">
-                        <p class="text-sm font-medium text-gray-700 truncate">${file.name}</p>
-                        <p class="text-xs text-gray-500">Télécharger</p>
-                    </div>
-                </a>
-            `).join('');
-        } else {
-            viewAttachmentsContainer.classList.add('hidden');
-        }
-
-        // Gestion Footer (Action de lecture)
-        if (type === 'inbox') {
-            viewFooterAction.classList.remove('hidden');
-            viewStatsContainer.classList.add('hidden');
-            
-            if (item.is_read) {
-                // Déjà lu -> Mode lecture seule
-                checkRead.checked = true;
-                checkRead.disabled = true;
-                document.getElementById('check-read-label').classList.add('text-gray-400');
-                readConfirmation.classList.remove('hidden');
-                document.getElementById('read-date').textContent = item.read_at || '';
-            } else {
-                // Pas lu -> Actif
-                checkRead.checked = false;
-                checkRead.disabled = false;
-                document.getElementById('check-read-label').classList.remove('text-gray-400');
-                readConfirmation.classList.add('hidden');
+            if(viewAttachmentsContainer) viewAttachmentsContainer.classList.remove('hidden');
+            if(viewAttachmentsList) {
+                viewAttachmentsList.innerHTML = item.attachments.map(file => `
+                    <a href="${file.url}" target="_blank" class="flex items-center p-3 rounded border border-gray-200 hover:bg-gray-50 group transition-colors">
+                        <div class="p-2 bg-indigo-50 text-indigo-600 rounded mr-3 group-hover:bg-indigo-100">
+                            <i class="fas ${getFileIcon(file.type)}"></i>
+                        </div>
+                        <div class="min-w-0">
+                            <p class="text-sm font-medium text-gray-700 truncate">${file.name}</p>
+                            <p class="text-xs text-gray-500">Télécharger</p>
+                        </div>
+                    </a>
+                `).join('');
             }
         } else {
-            // Mode 'sent' -> On affiche les stats, on cache l'action de lecture
-            viewFooterAction.classList.add('hidden');
-            viewStatsContainer.classList.remove('hidden');
-            
+            if(viewAttachmentsContainer) viewAttachmentsContainer.classList.add('hidden');
+        }
+
+        // --- GESTION DU FOOTER SELON LE TYPE ET LE RÔLE ---
+        if (type === 'sent') {
+            // Mode Expéditeur : Stats uniquement
+            if(viewFooterAction) viewFooterAction.classList.add('hidden');
+            if(viewStatsContainer) viewStatsContainer.classList.remove('hidden');
             document.getElementById('view-stats-read').textContent = item.stats.read;
             document.getElementById('view-stats-total').textContent = item.stats.total;
             document.getElementById('view-stats-percent').textContent = item.stats.percent + '%';
             document.getElementById('view-stats-bar').style.width = item.stats.percent + '%';
+        } else {
+            // Mode Inbox ou All
+            if(viewFooterAction) viewFooterAction.classList.remove('hidden');
+            if(viewStatsContainer) viewStatsContainer.classList.add('hidden');
+            
+            // Si c'est 'all' et que je ne suis PAS destinataire -> Lecture seule
+            if (type === 'all' && !item.is_recipient) {
+                if(checkReadLabel) checkReadLabel.classList.add('hidden');
+                if(readConfirmation) readConfirmation.classList.add('hidden');
+                if(readOnlyMsg) readOnlyMsg.classList.remove('hidden'); // Affiche "Mode consultation"
+            } else {
+                // Je suis destinataire (ou inbox normal)
+                if(readOnlyMsg) readOnlyMsg.classList.add('hidden');
+                
+                if (item.is_read) {
+                    // Déjà lu
+                    if(checkReadLabel) checkReadLabel.classList.add('hidden');
+                    if(readConfirmation) readConfirmation.classList.remove('hidden');
+                    document.getElementById('read-date').textContent = item.read_at || '';
+                } else {
+                    // Pas encore lu
+                    if(checkReadLabel) checkReadLabel.classList.remove('hidden');
+                    if(checkRead) {
+                        checkRead.checked = false;
+                        checkRead.disabled = false;
+                    }
+                    if(readConfirmation) readConfirmation.classList.add('hidden');
+                }
+            }
         }
 
-        // Affichage Modale
         openModal(modalView);
     }
 
-    // Action "Marquer comme lu"
     if (checkRead) {
         checkRead.addEventListener('change', async (e) => {
             if (e.target.checked) {
                 try {
                     const response = await fetch(API.READ, {
                         method: 'POST',
-                        headers: { 'Content-Type': 'application/json', 'X-CSRFToken': CSRF_TOKEN },
+                        headers: { 'Content-Type': 'application/json', 'X-CSRFToken': CSRF },
                         body: JSON.stringify({ announcement_id: currentAnnouncementId, is_read: true })
                     });
                     if (response.ok) {
-                        // UI Feedback immédiat
                         e.target.disabled = true;
-                        readConfirmation.classList.remove('hidden');
+                        e.target.parentElement.classList.add('hidden'); // Cache la case
+                        if(readConfirmation) readConfirmation.classList.remove('hidden');
                         document.getElementById('read-date').textContent = "à l'instant";
-                        
-                        // Recharger la liste en fond pour mettre à jour le badge
                         loadAnnouncements(); 
+                        showNotification("Annonce marquée comme lue.", 'success');
                     }
                 } catch (err) {
                     console.error(err);
-                    e.target.checked = false; // Revert
-                    alert("Erreur lors de la validation.");
+                    e.target.checked = false;
+                    showNotification("Erreur lors de la validation.", 'error');
                 }
             }
         });
@@ -267,32 +325,28 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if (btnCreate) {
         btnCreate.addEventListener('click', () => {
-            renderTargetSelectors(); // Génère les checkboxes
+            renderTargetSelectors(); 
             openModal(modalCreate);
         });
 
-        // Gestionnaire de soumission
         formCreate.addEventListener('submit', async (e) => {
             e.preventDefault();
             
-            // 1. Récupération des cibles
             const targets = {
                 classes: getCheckedValues('target-class'),
                 staff_groups: getCheckedValues('target-group'),
-                students: [], // TODO: Si on implémente la sélection élève par élève plus tard
+                students: [],
                 staff_individuals: []
             };
 
-            if (targets.classes.length === 0 && targets.staff_groups.length === 0 && targets.students.length === 0) {
-                alert("Veuillez sélectionner au moins un destinataire.");
+            if (targets.classes.length === 0 && targets.staff_groups.length === 0) {
+                showNotification("Veuillez sélectionner au moins un destinataire.", "error");
                 return;
             }
 
-            // 2. Construction FormData (pour les fichiers)
             const formData = new FormData(formCreate);
-            formData.append('targets', JSON.stringify(targets)); // On passe les cibles en JSON string
+            formData.append('targets', JSON.stringify(targets));
 
-            // UI Loading
             const submitBtn = document.getElementById('btn-submit-announcement');
             const originalText = submitBtn.innerHTML;
             submitBtn.disabled = true;
@@ -301,7 +355,7 @@ document.addEventListener('DOMContentLoaded', () => {
             try {
                 const response = await fetch(API.CREATE, {
                     method: 'POST',
-                    headers: { 'X-CSRFToken': CSRF_TOKEN }, // Pas de Content-Type pour FormData !
+                    headers: { 'X-CSRFToken': CSRF },
                     body: formData
                 });
                 
@@ -310,45 +364,48 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (json.success) {
                     closeModal(modalCreate);
                     formCreate.reset();
-                    fileList.innerHTML = ''; // Reset fichiers
-                    targetsSummary.classList.add('hidden');
-                    loadAnnouncements(); // Rafraichir la liste 'Envoyés'
-                    alert("Annonce envoyée avec succès !");
+                    if(fileList) fileList.innerHTML = '';
+                    if(targetsSummary) targetsSummary.classList.add('hidden');
+                    loadAnnouncements();
+                    
+                    showNotification("Annonce envoyée avec succès !", 'success');
                 } else {
-                    alert("Erreur : " + json.message);
+                    showNotification("Erreur : " + json.message, 'error');
                 }
 
             } catch (err) {
                 console.error(err);
-                alert("Erreur technique lors de l'envoi.");
+                showNotification("Erreur technique lors de l'envoi.", 'error');
             } finally {
                 submitBtn.disabled = false;
                 submitBtn.innerHTML = originalText;
             }
         });
 
-        // Gestion input fichier
-        fileInput.addEventListener('change', (e) => {
-            fileList.innerHTML = '';
-            Array.from(e.target.files).forEach(file => {
-                const div = document.createElement('div');
-                div.className = 'flex items-center justify-between p-2 bg-gray-50 rounded border border-gray-200 text-sm';
-                div.innerHTML = `
-                    <span class="truncate"><i class="fas fa-file mr-2 text-gray-400"></i> ${file.name}</span>
-                    <span class="text-xs text-gray-500">${(file.size / 1024).toFixed(0)} KB</span>
-                `;
-                fileList.appendChild(div);
+        if(fileInput) {
+            fileInput.addEventListener('change', (e) => {
+                if(fileList) {
+                    fileList.innerHTML = '';
+                    Array.from(e.target.files).forEach(file => {
+                        const div = document.createElement('div');
+                        div.className = 'flex items-center justify-between p-2 bg-gray-50 rounded border border-gray-200 text-sm';
+                        div.innerHTML = `
+                            <span class="truncate"><i class="fas fa-file mr-2 text-gray-400"></i> ${file.name}</span>
+                            <span class="text-xs text-gray-500">${(file.size / 1024).toFixed(0)} KB</span>
+                        `;
+                        fileList.appendChild(div);
+                    });
+                }
             });
-        });
+        }
     }
 
     function renderTargetSelectors() {
-        // Si déjà rendu, on ne refait pas (sauf si on veut reset)
+        if (!targetsContainer) return;
         if (targetsContainer.innerHTML.trim() !== '' && targetsContainer.querySelector('input')) return;
         
         targetsContainer.innerHTML = '';
 
-        // A. Classes
         if (TARGETS_CONFIG.classes && TARGETS_CONFIG.classes.length > 0) {
             const section = document.createElement('div');
             section.className = 'mb-3';
@@ -369,7 +426,6 @@ document.addEventListener('DOMContentLoaded', () => {
             targetsContainer.appendChild(section);
         }
 
-        // B. Groupes Staff (Admin seulement)
         if (TARGETS_CONFIG.staff_groups && TARGETS_CONFIG.staff_groups.length > 0) {
             const section = document.createElement('div');
             section.className = 'mb-3 pt-3 border-t border-gray-100';
@@ -386,13 +442,13 @@ document.addEventListener('DOMContentLoaded', () => {
             targetsContainer.appendChild(section);
         }
 
-        // Listeners pour le résumé
         targetsContainer.querySelectorAll('input[type="checkbox"]').forEach(cb => {
             cb.addEventListener('change', updateTargetsSummary);
         });
     }
 
     function updateTargetsSummary() {
+        if(!targetsSummary) return;
         const count = targetsContainer.querySelectorAll('input[type="checkbox"]:checked').length;
         targetsSummary.textContent = `${count} destinataire(s) sélectionné(s)`;
         targetsSummary.classList.remove('hidden');
@@ -406,6 +462,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- UTILITAIRES UI ---
 
     function openModal(modalEl) {
+        if(!modalEl) return;
         modalEl.classList.remove('hidden');
         setTimeout(() => {
             modalEl.classList.remove('opacity-0');
@@ -418,6 +475,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function closeModal(modalEl) {
+        if(!modalEl) return;
         modalEl.classList.add('opacity-0');
         const card = modalEl.querySelector('div[class*="transform"]');
         if(card) {
@@ -426,13 +484,12 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         setTimeout(() => {
             modalEl.classList.add('hidden');
-        }, 300);
+        }, 300); 
     }
 
-    // Fermeture générique
     document.querySelectorAll('.btn-close-modal').forEach(btn => {
         btn.addEventListener('click', (e) => {
-            const modal = e.target.closest('.fixed'); // Trouve la modale parente
+            const modal = e.target.closest('.fixed');
             closeModal(modal);
         });
     });

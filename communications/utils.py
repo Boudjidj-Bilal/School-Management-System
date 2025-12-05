@@ -271,13 +271,12 @@ def get_available_contacts(user, current_year):
 def get_available_targets(user, current_year):
     """
     Retourne les cibles disponibles (Classes, Groupes, etc.) pour un expéditeur donné.
-    Utilisé pour remplir les sélecteurs dans le formulaire d'envoi (Front-end).
     """
     user_type = get_user_type(user)
     data = {
         'classes': [],
         'staff_groups': [],
-        'can_target_individual_students': True, # Vrai pour tous les expéditeurs autorisés
+        'can_target_individual_students': True, 
         'can_target_individual_staff': False,
     }
 
@@ -285,7 +284,6 @@ def get_available_targets(user, current_year):
     if user_type == 'Teacher':
         try:
             staff = user.staff_user
-            # Récupère les classes où le prof enseigne cette année
             classes = Class.objects.filter(
                 teacher_years__teacher__teacher=staff,
                 teacher_years__year=current_year,
@@ -313,14 +311,12 @@ def get_available_targets(user, current_year):
     elif user_type in ['Principal', 'SuperAdministrator']:
         data['can_target_individual_staff'] = True
         
-        # Groupes de Staff prédéfinis
         data['staff_groups'] = [
             {'code': 'ALL_STAFF', 'name': 'Tout le personnel'},
             {'code': 'TEACHERS', 'name': 'Tous les professeurs'},
-            {'code': 'ADMINISTRATION', 'name': 'Administration (CPE, Secrétariat...)'},
+            {'code': 'ADMINISTRATION', 'name': 'Administration'},
         ]
         
-        # Pour le SuperAdmin, on prend l'école du contexte ou la sienne
         school = None
         if hasattr(user, 'staff_user'):
             school = user.staff_user.school
@@ -340,20 +336,12 @@ def get_available_targets(user, current_year):
 def create_announcement_logic(sender, form_data, files, current_year):
     """
     Logique métier pour créer l'annonce et distribuer aux destinataires.
-    
-    Args:
-        sender: User object (l'expéditeur)
-        form_data: Dict contenant title, content, type, et 'targets' (dict de listes d'IDs)
-        files: List of UploadedFile objects
-        current_year: Year object
     """
-    
     title = form_data.get('title')
     content = form_data.get('content')
     announcement_type = form_data.get('announcement_type')
-    targets = form_data.get('targets', {}) # {'classes': [], 'students': [], 'staff_groups': []}
+    targets = form_data.get('targets', {}) 
 
-    # Détermination de l'école (pour le filtrage futur)
     school = None
     if hasattr(sender, 'staff_user'):
         school = sender.staff_user.school
@@ -361,21 +349,17 @@ def create_announcement_logic(sender, form_data, files, current_year):
         school = current_year.school
 
     with transaction.atomic():
-        # 1. Création de l'annonce
         announcement = Announcement.objects.create(
             title=title,
             content=content,
             announcement_type=announcement_type,
             sender=sender,
             school=school,
-            # On génère un résumé textuel des destinataires pour l'affichage rapide dans l'historique
             target_display=generate_target_summary(targets) 
         )
 
-        # 2. Gestion des fichiers joints
         if files:
             for f in files:
-                # Détection simple du type
                 mime = getattr(f, 'content_type', '')
                 f_type = 'DOCUMENT'
                 if mime.startswith('image/'):
@@ -389,10 +373,8 @@ def create_announcement_logic(sender, form_data, files, current_year):
                     file_type=f_type
                 )
 
-        # 3. Résolution des destinataires (User IDs uniques)
-        recipient_users = set() # Set pour éviter les doublons (ex: un élève ciblé par sa classe ET individuellement)
+        recipient_users = set()
 
-        # A. Classes entières -> On récupère tous les élèves de ces classes
         class_ids = targets.get('classes', [])
         if class_ids:
             students_in_classes = ClassStudentYear.objects.filter(
@@ -400,18 +382,15 @@ def create_announcement_logic(sender, form_data, files, current_year):
                 year=current_year,
                 is_active=True
             ).select_related('student__user')
-            
             for link in students_in_classes:
                 recipient_users.add(link.student.user)
 
-        # B. Élèves individuels
         student_ids = targets.get('students', [])
         if student_ids:
             students = Student.objects.filter(id__in=student_ids).select_related('user')
             for s in students:
                 recipient_users.add(s.user)
 
-        # C. Groupes de Staff (Seulement si autorisé et école définie)
         staff_groups = targets.get('staff_groups', [])
         if staff_groups and school:
             if 'ALL_STAFF' in staff_groups:
@@ -422,21 +401,17 @@ def create_announcement_logic(sender, form_data, files, current_year):
                     staff_members = Staff.objects.filter(school=school, staff_type='TEACHER').select_related('user')
                     for s in staff_members: recipient_users.add(s.user)
                 if 'ADMINISTRATION' in staff_groups:
-                    # Tout ce qui n'est pas PROF
                     staff_members = Staff.objects.filter(school=school).exclude(staff_type='TEACHER').select_related('user')
                     for s in staff_members: recipient_users.add(s.user)
 
-        # D. Staff individuel
         staff_ids = targets.get('staff_individuals', [])
         if staff_ids:
             staffs = Staff.objects.filter(id__in=staff_ids).select_related('user')
             for s in staffs:
                 recipient_users.add(s.user)
 
-        # 4. Création des liaisons (Bulk Create pour la performance)
         recipients_to_create = []
         for user in recipient_users:
-            # On évite de s'envoyer à soi-même
             if user != sender:
                 recipients_to_create.append(
                     AnnouncementRecipient(
@@ -451,7 +426,6 @@ def create_announcement_logic(sender, form_data, files, current_year):
 
 
 def generate_target_summary(targets):
-    """Génère une chaîne lisible résumant les destinataires."""
     summary_parts = []
     
     class_ids = targets.get('classes', [])
@@ -466,7 +440,6 @@ def generate_target_summary(targets):
         
     staff_groups = targets.get('staff_groups', [])
     if staff_groups:
-        # On pourrait mapper les codes vers des noms plus jolis, ici on garde simple
         summary_parts.append(f"Groupes: {', '.join(staff_groups)}")
         
     staff_ids = targets.get('staff_individuals', [])

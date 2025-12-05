@@ -8,9 +8,10 @@ from django.views.decorators.csrf import csrf_exempt
 # Modèles
 from .models import Messaging, Message, Announcement, AnnouncementRecipient
 from users.models import Staff, Student, Parent
+from schools.models import School
 
 # Utilitaires
-from schools.utils import get_current_year_for_school
+from schools.utils import get_current_year_for_school, get_user_school
 from users.utils import get_user_type
 from .utils import (
     get_user_conversations,
@@ -48,15 +49,18 @@ def messaging_dashboard_view(request):
     school = profile.school
 
     if school:
-        if school.is_active == False : 
+        if not school.is_active: 
             return HttpResponseForbidden("Accès refusé. L'école est inactive.")
     else:
         return HttpResponseForbidden("Accès refusé. Aucune école trouvé.")
 
     current_year = get_current_year_for_school(school)
 
-    if not current_year.running == True or current_year.finished == True:
-        return HttpResponseForbidden("Accès refusé. L'année n'es ni en cours, ni à l'état fini.")
+    if current_year:
+        if not current_year.running or current_year.finished:
+            return HttpResponseForbidden("Accès refusé. L'année n'es ni en cours, ni à l'état fini.")
+    else: 
+        return HttpResponseForbidden("Accès refusé. L'année est introuvable.")
 
 
     if not role:
@@ -319,24 +323,27 @@ def announcement_dashboard_view(request):
     # Détermination du contexte (École / Année)
     # (Logique similaire aux autres modules pour trouver l'année active)
     current_year = None
-    school = None
 
-    if hasattr(user, 'staff_user'):
-        school = user.staff_user.school
-    elif hasattr(user, 'student_user'):
-        school = user.student_user.school
-    elif hasattr(user, 'parent_user'):
-        # Pour un parent, on prend l'école du premier enfant par défaut
-        from users.models import Child
-        child = Child.objects.filter(parent=user.parent_user).first()
-        if child: school = child.student.school
+    # 1. Déterminer l'école de l'utilisateur
+    if user_type == "SuperAdministrator":
+        school_id_filter = request.session.get('selected_school_id')
+        school = School.objects.get(id=school_id_filter)
+    else:
+        school = get_user_school(request.user)
     
     if school:
-        current_year = get_current_year_for_school(school)
+        if school.is_active:
+            current_year = get_current_year_for_school(school)
+        else:
+            return JsonResponse({'success': False, 'message': 'Ecole désactivé.'}, status=400)
+    else: 
+        return JsonResponse({'success': False, 'message': 'Ecole introuvable.'}, status=400)
 
     # Permissions d'envoi
     can_send = user_type in ['Teacher', 'CPE', 'Principal', 'SuperAdministrator', 'Administrator']
-    
+
+    can_view_all = user_type in ['Principal', 'SuperAdministrator']
+
     # Chargement des cibles possibles (Classes, Groupes) si droit d'envoi
     available_targets = {}
     if can_send and current_year:
@@ -345,10 +352,13 @@ def announcement_dashboard_view(request):
     context = {
         'user_type': user_type,
         'can_send': can_send,
+        'can_view_all': can_view_all,
         'available_targets': json.dumps(available_targets), # Pour le JS
         'current_year': current_year,
         'announcement_types': Announcement.TYPE_CHOICES,
     }
+
+    print(context)
 
     return render(request, 'communications/dashboard_announcements.html', context)
 
@@ -361,57 +371,78 @@ def announcement_dashboard_view(request):
 @login_required(login_url='login')
 def api_get_announcements(request):
     """
-    Récupère les annonces :
-    1. 'inbox': Celles reçues par l'utilisateur.
-    2. 'sent': Celles envoyées par l'utilisateur (si staff).
+    API Principale : Récupère Inbox, Sent et All.
+    [CORRIGÉ] Réintégration de la logique 'All' pour les admins.
     """
     user = request.user
-    data = {'inbox': [], 'sent': []}
+    user_type = get_user_type(user)
+    
+    # Détermination du contexte (École / Année)
+    # (Logique similaire aux autres modules pour trouver l'année active)
+    current_year = None
 
-    # --- 1. BOÎTE DE RÉCEPTION (INBOX) ---
-    received_qs = AnnouncementRecipient.objects.filter(user=user)\
-        .select_related('announcement', 'announcement__sender', 'announcement__sender__staff_user')\
-        .prefetch_related('announcement__attachments')\
-        .order_by('-announcement__created_at')
-
-    for recipient in received_qs:
-        ann = recipient.announcement
-        sender_name = "Inconnu"
-        # Essayer de récupérer le nom du staff, sinon username
-        if hasattr(ann.sender, 'staff_user'):
-            sender_name = f"{ann.sender.staff_user.staff_type.capitalize()} {ann.sender.last_name}"
+    # 1. Déterminer l'école de l'utilisateur
+    if user_type == "SuperAdministrator":
+        school_id_filter = request.session.get('selected_school_id')
+        school = School.objects.get(id=school_id_filter)
+    else:
+        school = get_user_school(request.user)
+    
+    if school:
+        if school.is_active:
+            current_year = get_current_year_for_school(school)
         else:
-            sender_name = ann.sender.username # Cas SuperAdmin hors staff
+            return JsonResponse({'success': False, 'message': 'Ecole désactivé.'}, status=400)
+    else: 
+        return JsonResponse({'success': False, 'message': 'Ecole introuvable.'}, status=400)
 
-        data['inbox'].append({
+    if current_year:
+        if not current_year.running or current_year.finished:
+            return JsonResponse({'success': False, 'message': "L'année n'est pas à l'état en cours ou fini."}, status=400)
+    else: 
+        return JsonResponse({'success': False, 'message': "Impossible de trouver l'année."}, status=400)
+
+    data = {'inbox': [], 'sent': [], 'all': []}
+
+    # --- Helper de formatage (DRY) ---
+    def format_announcement(ann, recipient=None):
+        sender_name = ann.sender.username
+        try:
+            if hasattr(ann.sender, 'staff_user'):
+                sender_name = f"{ann.sender.staff_user.staff_type.capitalize()} {ann.sender.last_name}"
+        except: pass
+        
+        return {
             'id': ann.id,
             'title': ann.title,
             'content': ann.content,
-            'type': ann.get_announcement_type_display(), # Label lisible (ex: "Devoir")
-            'type_code': ann.announcement_type,         # Code (ex: "HOMEWORK")
+            'type': ann.get_announcement_type_display(),
+            'type_code': ann.announcement_type,
             'sender': sender_name,
             'date': ann.created_at.strftime('%d/%m/%Y %H:%M'),
-            'is_read': recipient.is_read,
-            'read_at': recipient.read_at.strftime('%d/%m/%Y %H:%M') if recipient.read_at else None,
-            'attachments': [{
-                'url': a.file.url, 
-                'type': a.file_type, 
-                'name': a.file.name.split('/')[-1]
-            } for a in ann.attachments.all()]
-        })
+            'is_read': recipient.is_read if recipient else False,
+            'read_at': recipient.read_at.strftime('%d/%m/%Y %H:%M') if (recipient and recipient.read_at) else None,
+            'is_recipient': (recipient is not None),
+            'attachments': [{'url': a.file.url, 'type': a.file_type, 'name': a.file.name.split('/')[-1]} for a in ann.attachments.all()]
+        }
 
-    # --- 2. ÉLÉMENTS ENVOYÉS (SENT) ---
-    # Uniquement si l'utilisateur a déjà envoyé des choses
-    sent_qs = Announcement.objects.filter(sender=user)\
-        .prefetch_related('recipients', 'attachments')\
-        .order_by('-created_at')
+    # --- 1. INBOX (Reçus) ---
+    received_qs = AnnouncementRecipient.objects.filter(user=user)\
+        .select_related('announcement', 'announcement__sender')\
+        .prefetch_related('announcement__attachments')\
+        .order_by('-announcement__created_at')
 
+    for rec in received_qs:
+        data['inbox'].append(format_announcement(rec.announcement, rec))
+
+    # --- 2. SENT (Envoyés) ---
+    # Seulement si le user a le droit d'envoyer
+    sent_qs = Announcement.objects.filter(sender=user).prefetch_related('recipients', 'attachments').order_by('-created_at')
     for ann in sent_qs:
-        # Stats de lecture pour l'expéditeur
-        total_recipients = ann.recipients.count()
-        read_count = ann.recipients.filter(is_read=True).count()
-        read_percentage = int((read_count / total_recipients * 100)) if total_recipients > 0 else 0
-
+        total = ann.recipients.count()
+        read = ann.recipients.filter(is_read=True).count()
+        percent = int((read/total)*100) if total > 0 else 0
+        
         data['sent'].append({
             'id': ann.id,
             'title': ann.title,
@@ -419,17 +450,34 @@ def api_get_announcements(request):
             'type': ann.get_announcement_type_display(),
             'date': ann.created_at.strftime('%d/%m/%Y %H:%M'),
             'targets_summary': ann.target_display,
-            'stats': {
-                'total': total_recipients,
-                'read': read_count,
-                'percent': read_percentage
-            },
-            'attachments': [{
-                'url': a.file.url, 
-                'type': a.file_type, 
-                'name': a.file.name.split('/')[-1]
-            } for a in ann.attachments.all()]
+            'stats': {'total': total, 'read': read, 'percent': percent},
+            'attachments': []
         })
+
+    # --- 3. ALL (Global École - Proviseur/SuperAdmin) ---
+    # [C'est cette partie qui manquait dans votre fichier]
+    if user_type in ['Principal', 'SuperAdministrator']:
+        
+        # Récupérer toutes les annonces de l'école
+        all_qs = Announcement.objects.filter(school=school)\
+            .select_related('sender')\
+            .prefetch_related('attachments')\
+            .order_by('-created_at')
+
+        # Optimisation : Récupérer mes propres statuts de lecture pour ces annonces
+        # pour savoir si je dois afficher la case à cocher ou le mode lecture seule
+        my_receipts = {
+            r.announcement_id: r 
+            for r in AnnouncementRecipient.objects.filter(user=user, announcement__in=all_qs)
+        }
+
+        for ann in all_qs:
+            recipient_record = my_receipts.get(ann.id)
+            # On utilise le même format que inbox
+            data['all'].append(format_announcement(ann, recipient_record))
+    
+    # Debug print pour vérifier
+    # print(data)
 
     return JsonResponse({'success': True, 'data': data})
 
@@ -443,10 +491,14 @@ def api_create_announcement(request):
     Reçoit un FormData (pas du JSON pur à cause des fichiers).
     """
     user = request.user
-    
+    user_type = get_user_type(user)
+
     # Vérif permissions basique (redondant avec utils mais sécure)
-    if get_user_type(user) in ['Student', 'Parent']:
-         return JsonResponse({'success': False, 'message': "Non autorisé."}, status=403)
+    if user_type: 
+        if user_type in ['Student', 'Parent']:
+            return JsonResponse({'success': False, 'message': "Non autorisé."}, status=403)
+    else:
+        return JsonResponse({'success': False, 'message': "Non autorisé."}, status=403)
 
     try:
         # Récupération des données du formulaire
@@ -467,14 +519,27 @@ def api_create_announcement(request):
         # Récupération des fichiers
         files = request.FILES.getlist('attachments') # 'attachments' est le name du input file multiple
 
-        # Récupération de l'année (nécessaire pour utils)
-        # On refait la logique rapide pour avoir l'année courante
-        school = user.staff_user.school if hasattr(user, 'staff_user') else None
-        current_year = get_current_year_for_school(school) if school else None
+        # 1. Déterminer l'école de l'utilisateur
+        if user_type == "SuperAdministrator":
+            school_id_filter = request.session.get('selected_school_id')
+            school = School.objects.get(id=school_id_filter)
+        else:
+            school = get_user_school(request.user)
+        
+        if school:
+            if school.is_active:
+                current_year = get_current_year_for_school(school)
+            else:
+                return JsonResponse({'success': False, 'message': 'Ecole désactivé.'}, status=400)
+        else: 
+            return JsonResponse({'success': False, 'message': 'Ecole introuvable.'}, status=400)
 
-        if not current_year:
-             return JsonResponse({'success': False, 'message': "Année scolaire introuvable."}, status=400)
-
+        if current_year:
+            if not current_year.running or current_year.finished:
+                return JsonResponse({'success': False, 'message': "L'année n'est pas à l'état en cours ou fini."}, status=400)
+        else: 
+            return JsonResponse({'success': False, 'message': "Impossible de trouver l'année."}, status=400)
+        
         # Appel de la logique métier (utils.py)
         create_announcement_logic(user, form_data, files, current_year)
 
