@@ -1,4 +1,5 @@
 {% extends 'base.html' %}
+{% load static %}
 {% block title %}Tableau de bord{% endblock %}
 
 {% block content %}
@@ -22,6 +23,49 @@
                 <p class="text-lg text-purple-600 font-semibold mb-4">Bienvenue, Proviseur ! Vous avez accès à la gestion et aux rapports de l'école.</p>
             {% elif user_type == 'Parent' %}
                 <p class="text-lg text-blue-600 font-semibold mb-4">Bienvenue, Parent ! Vous pouvez consulter les informations et le suivi de vos enfants.</p>
+                <!-- SECTION PARENT -->
+                <div class="bg-white p-6 rounded-xl shadow-md border border-blue-100">
+                    <p class="text-lg text-blue-600 font-semibold mb-4">
+                        <i class="fas fa-user-friends mr-2"></i> Espace Parent
+                    </p>
+                    
+                    <div class="mb-6">
+                        <p class="text-gray-600 mb-2">Sélectionnez l'enfant pour lequel vous souhaitez consulter les informations :</p>
+                        
+                        {% if children %}
+                            <div class="flex items-center space-x-4">
+                                <div class="relative w-full md:w-1/3">
+                                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                        <i class="fas fa-child text-gray-400"></i>
+                                    </div>
+                                    <select id="child-selector" class="pl-10 block w-full py-2 px-3 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm transition duration-150 ease-in-out">
+                                        {% for child in children %}
+                                            <option value="{{ child.id }}" {% if child.id == selected_child_id %}selected{% endif %}>
+                                                {{ child.user.first_name }} {{ child.user.last_name }}
+                                            </option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                            </div>
+                            <p class="text-xs text-gray-500 mt-2">
+                                <i class="fas fa-info-circle mr-1"></i> Ce choix s'appliquera aux menus : Notes, Absences, Planning et Annonces.
+                            </p>
+                        {% else %}
+                            <div class="bg-yellow-50 border-l-4 border-yellow-400 p-4">
+                                <div class="flex">
+                                    <div class="flex-shrink-0">
+                                        <i class="fas fa-exclamation-triangle text-yellow-400"></i>
+                                    </div>
+                                    <div class="ml-3">
+                                        <p class="text-sm text-yellow-700">
+                                            Aucun enfant n'est associé à votre compte pour le moment. Veuillez contacter l'établissement.
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
             {% elif user_type == 'Student' %}
                 <p class="text-lg text-indigo-600 font-semibold mb-4">Bienvenue, Étudiant ! Vous pouvez accéder à votre emploi du temps et à vos notes.</p>
             {% elif user_type == 'Teacher' %}
@@ -38,34 +82,15 @@
 {% endblock %}
 
 {% block extra_js %}
-<script>
-    document.addEventListener('DOMContentLoaded', () => {
-        const schoolSelector = document.getElementById('school-selector');
-        if (schoolSelector) {
-            schoolSelector.addEventListener('change', async (event) => {
-                const schoolId = event.target.value;
-                try {
-                    const response = await fetch('{% url "select_school" %}', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'X-CSRFToken': '{{ csrf_token }}',
-                        },
-                        body: JSON.stringify({ school_id: schoolId })
-                    });
-                    const result = await response.json();
-                    if (result.success) {
-                        alert("L'école a été changée avec succès. Les pages seront maintenant filtrées par cette école.");
-                        window.location.reload();
-                    } else {
-                        alert("Erreur lors de la sélection de l'école : " + result.message);
-                    }
-                } catch (error) {
-                    console.error("Erreur de communication:", error);
-                    alert("Une erreur de communication est survenue.");
-                }
-            });
-        }
-    });
-</script>
+    <!-- Configuration pour le JS externe -->
+    <script>
+        window.DASHBOARD_CONFIG = {
+            csrfToken: "{{ csrf_token }}",
+            selectSchoolUrl: "{% url 'select_school' %}",
+            selectChildUrl: "{% url 'select_child' %}"
+        };
+    </script>
+
+    <!-- Appel du fichier JS externe -->
+    <script src="{% static 'js/users/dashboard.js' %}"></script>
 {% endblock %}

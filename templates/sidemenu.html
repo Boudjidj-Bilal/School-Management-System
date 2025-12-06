@@ -194,13 +194,13 @@
                 <li>
                     <a href="{% url 'scheduling:view_class_schedule_page' pk_class=request.user.student_user.class_years.last.student_class.id %}" class="flex items-center space-x-3 text-gray-300 hover:bg-gray-700 hover:text-white rounded-lg p-2 transition-colors duration-200">
                         <i class="fas fa-calendar-alt text-lg"></i>
-                        <span>Mon Planning</span>
+                        <span>Planning</span>
                     </a>
                 </li>
                 <li>
                     <a href="{% url 'grades:student_grades_dashboard' %}" class="flex items-center space-x-3 text-gray-300 hover:bg-gray-700 hover:text-white rounded-lg p-2 transition-colors duration-200">
                         <i class="fas fa-clipboard-list text-lg"></i>
-                        <span>Mes Notes</span>
+                        <span>Notes</span>
                     </a>
                 </li>
                 <li>
@@ -215,7 +215,6 @@
                         <span>Messagerie</span>
                     </a>
                 </li>
-                <!-- [AJOUT] Annonces pour Élève -->
                 <li>
                     <a href="{% url 'communications:dashboard_annonce' %}" class="flex items-center space-x-3 text-gray-300 hover:bg-gray-700 hover:text-white rounded-lg p-2 transition-colors duration-200">
                         <i class="fas fa-bullhorn text-lg"></i>
@@ -231,6 +230,30 @@
                     <a href="{% url 'communications:dashboard' %}" class="flex items-center space-x-3 text-gray-300 hover:bg-gray-700 hover:text-white rounded-lg p-2 transition-colors duration-200">
                         <i class="fas fa-comments text-lg"></i>
                         <span>Messagerie</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="{% url 'scheduling:redirect_to_my_schedule' %}" class="flex items-center space-x-3 text-gray-300 hover:bg-gray-700 hover:text-white rounded-lg p-2 transition-colors duration-200">
+                        <i class="fas fa-calendar-alt text-lg"></i>
+                        <span>Planning</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="{% url 'grades:student_grades_dashboard' %}" class="flex items-center space-x-3 text-gray-300 hover:bg-gray-700 hover:text-white rounded-lg p-2 transition-colors duration-200">
+                        <i class="fas fa-clipboard-list text-lg"></i>
+                        <span>Notes</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="{% url 'attendance:student_attendance_dashboard' %}" class="flex items-center space-x-3 text-gray-300 hover:bg-gray-700 hover:text-white rounded-lg p-2 transition-colors duration-200">
+                        <i class="fas fa-user-clock text-lg"></i>
+                        <span>Absences & Retards</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="{% url 'communications:dashboard_annonce' %}" class="flex items-center space-x-3 text-gray-300 hover:bg-gray-700 hover:text-white rounded-lg p-2 transition-colors duration-200">
+                        <i class="fas fa-bullhorn text-lg"></i>
+                        <span>Annonces</span>
                     </a>
                 </li>
             {% endif %}

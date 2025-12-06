@@ -12,7 +12,7 @@ from schools.models import School
 
 # Utilitaires
 from schools.utils import get_current_year_for_school, get_user_school
-from users.utils import get_user_type
+from users.utils import get_user_type, get_student_context
 from .utils import (
     get_user_conversations,
     get_available_contacts,
@@ -358,8 +358,6 @@ def announcement_dashboard_view(request):
         'announcement_types': Announcement.TYPE_CHOICES,
     }
 
-    print(context)
-
     return render(request, 'communications/dashboard_announcements.html', context)
 
 
@@ -372,10 +370,16 @@ def announcement_dashboard_view(request):
 def api_get_announcements(request):
     """
     API Principale : Récupère Inbox, Sent et All.
-    [CORRIGÉ] Réintégration de la logique 'All' pour les admins.
+    Intégration de la logique 'All' pour les admins.
     """
     user = request.user
     user_type = get_user_type(user)
+
+    student = None
+    
+    if user_type == "Parent":
+        student = get_student_context(request)
+        user = student.user
     
     # Détermination du contexte (École / Année)
     # (Logique similaire aux autres modules pour trouver l'année active)
@@ -558,6 +562,12 @@ def api_mark_as_read(request):
     Marquer une annonce comme lue (Case à cocher).
     """
     try:
+        user = request.user
+        user_type = get_user_type(user)
+        
+        if user_type == "Parent":
+            return JsonResponse({'success': False, 'message': "Le parent ne peut pas afficher l'annonce comme lu."}, status=404)
+
         data = json.loads(request.body)
         announcement_id = data.get('announcement_id')
         is_read = data.get('is_read', True)

@@ -1,7 +1,7 @@
 import json
 import datetime
 from django.http import JsonResponse, HttpResponseForbidden
-from django.shortcuts import get_object_or_404, render
+from django.shortcuts import get_object_or_404, render, redirect
 from django.views.decorators.csrf import csrf_exempt
 from django.db import IntegrityError, transaction
 from django.contrib.auth.decorators import login_required
@@ -12,13 +12,13 @@ from django.utils import timezone
 # Import des modèles
 from scheduling.models import WeeklyScheduleTemplate, CourseTemplate, ScheduledCourse
 from schools.models import Year, ExceptionDay, ExceptionTime
-from classes.models import Class, Classroom, ClassTeacherYear
+from classes.models import Class, Classroom, ClassTeacherYear, ClassStudentYear
 from users.models import Staff 
 
 
 # Import des utilitaires
 from .utils import check_course_conflicts, get_week_schedule_data, get_week_schedule_data_for_teacher
-from users.utils import get_user_type
+from users.utils import get_user_type, get_student_context
 from schools.utils import get_current_year_for_school
 
 
@@ -771,3 +771,39 @@ def api_manage_teacher_course_status_views(request):
         return JsonResponse({"success": False, "message": "Cours introuvable."}, status=404)
     except Exception as e:
         return JsonResponse({"success": False, "message": f"Erreur interne : {str(e)}"}, status=500)
+
+
+
+@login_required(login_url='login')
+def redirect_to_my_schedule(request):
+    """
+    Vue intermédiaire qui détermine la classe de l'élève (ou de l'enfant sélectionné)
+    et redirige vers la page d'affichage du planning correspondante.
+    """
+    # 1. Récupérer le contexte étudiant (Élève connecté OU Enfant du parent)
+    student = get_student_context(request)
+    
+    if not student:
+        # Si ce n'est ni un élève ni un parent avec enfant sélectionné
+        return HttpResponseForbidden("Accès refusé. Aucun profil élève identifié.")
+
+    # 2. Trouver l'année en cours pour son école
+    current_year = get_current_year_for_school(student.school)
+    if not current_year:
+        return HttpResponseForbidden("Aucune année scolaire active.")
+
+    # 3. Trouver la classe de l'élève pour cette année
+    try:
+        link = ClassStudentYear.objects.get(
+            student=student,
+            year=current_year,
+            is_active=True
+        )
+        # 4. Redirection vers la vue existante avec le bon ID
+        return redirect('scheduling:view_class_schedule_page', pk_class=link.student_class.id)
+        
+    except ClassStudentYear.DoesNotExist:
+        return HttpResponseForbidden("L'élève n'est inscrit dans aucune classe pour l'année en cours.")
+    except Exception as e:
+        print(f"Erreur redirection planning: {e}")
+        return HttpResponseForbidden("Erreur lors de la redirection.")

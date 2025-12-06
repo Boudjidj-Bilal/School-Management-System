@@ -126,6 +126,37 @@ def dashboard_page(request):
             'selected_school': selected_school,
             'user_school': selected_school
         })
+    elif user_type == 'Parent':
+        user_school = get_user_school(request.user)
+        context = {
+            'user_type': user_type,
+            'user_school': user_school,
+            'username': request.user.username
+        }
+        
+        try:
+            parent = request.user.parent_user
+            # Récupérer les enfants via la table de liaison Child
+            children_links = Child.objects.filter(parent=parent).select_related('student', 'student__user')
+            children = [link.student for link in children_links]
+            
+            context['children'] = children
+            
+            # Récupérer l'enfant sélectionné en session
+            selected_child_id = request.session.get('selected_child_id')
+            
+            # Si aucun sélectionné mais qu'il y en a, on prend le premier par défaut
+            if not selected_child_id and children:
+                selected_child_id = children[0].id
+                request.session['selected_child_id'] = selected_child_id
+            
+            context['selected_child_id'] = selected_child_id
+            
+        except Exception as e:
+            print(f"Erreur dashboard parent: {e}")
+            context['children'] = []
+
+        return render(request, 'users/dashboard_page.html', context)
     
     # Cas pour les autres utilisateurs
     user_school = get_user_school(request.user)
@@ -133,8 +164,6 @@ def dashboard_page(request):
         'user_type': user_type,
         'user_school': user_school
     })
-
-
 
 def password_reset(request):
     """
@@ -661,3 +690,30 @@ def toggle_child_assignment_api(request):
         # Gère toutes les autres erreurs imprévues
         return JsonResponse({'success': False, 'message': f'Erreur interne du serveur: {str(e)}'}, status=500)
 
+
+
+@login_required
+def select_child_view(request):
+    """
+    API pour permettre au parent de changer d'enfant actif (Session).
+    """
+    if request.method == 'POST':
+        try:
+            data = json.loads(request.body)
+            child_id = data.get('child_id')
+            
+            if get_user_type(request.user) != 'Parent':
+                return JsonResponse({'success': False, 'message': "Action réservée aux parents."}, status=403)
+                
+            parent = request.user.parent_user
+            
+            if Child.objects.filter(parent=parent, student__id=child_id).exists():
+                request.session['selected_child_id'] = int(child_id)
+                return JsonResponse({'success': True})
+            else:
+                return JsonResponse({'success': False, 'message': "Cet enfant n'est pas lié à votre compte."}, status=403)
+                
+        except Exception as e:
+            return JsonResponse({'success': False, 'message': str(e)}, status=500)
+    
+    return JsonResponse({'success': False, 'message': "Méthode non autorisée"}, status=405)

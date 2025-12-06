@@ -23,7 +23,7 @@ from .utils import (
     get_appreciations_dashboard_data,
     get_appreciations_data_for_context
 )
-from users.utils import get_user_type
+from users.utils import get_user_type, get_student_context
 from schools.utils import get_current_year_for_school
 
 # ---
@@ -395,15 +395,20 @@ def view_my_grades_student(request):
     user = request.user
     user_type = get_user_type(user)
 
+    student = None
+    
+    if user_type == "Parent":
+        student = get_student_context(request)
     # 1. Vérification des permissions
-    if user_type != "Student":
+    elif user_type == "Student":
+        try:
+            # On récupère le profil Student lié au User
+            student = Student.objects.get(user=user)
+        except Student.DoesNotExist:
+            return HttpResponseForbidden("Erreur : Aucun profil élève associé à ce compte.")
+    else:
         return HttpResponseForbidden("Accès refusé. Cette page est réservée aux élèves.")
 
-    try:
-        # On récupère le profil Student lié au User
-        student = Student.objects.get(user=user)
-    except Student.DoesNotExist:
-        return HttpResponseForbidden("Erreur : Aucun profil élève associé à ce compte.")
 
     # 2. Vérification de l'année scolaire
     current_year = get_current_year_for_school(student.school)

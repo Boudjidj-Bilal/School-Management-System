@@ -1,5 +1,17 @@
 from django.urls import path
-from .views import schedul_management_view, manage_weekly_schedule_template_view, manage_course_template_view, create_scheduled_courses_view, view_class_schedule_page, api_get_week_schedule_views, api_manage_course_status_views, view_teacher_schedule_page, api_get_teacher_week_schedule_views, api_manage_teacher_course_status_views
+from .views import (
+    schedul_management_view, 
+    manage_weekly_schedule_template_view, 
+    manage_course_template_view, 
+    create_scheduled_courses_view, 
+    view_class_schedule_page, 
+    api_get_week_schedule_views, 
+    api_manage_course_status_views, 
+    view_teacher_schedule_page, 
+    api_get_teacher_week_schedule_views, 
+    api_manage_teacher_course_status_views, 
+    redirect_to_my_schedule
+    )
 
 app_name = 'scheduling' 
 
@@ -58,6 +70,11 @@ urlpatterns = [
         'api/schedule/professeur/manage-status/',
         api_manage_teacher_course_status_views,
         name='api_manage_teacher_course_status'
+    ),
+    path(
+        'my-planning/',
+        redirect_to_my_schedule,
+        name='redirect_to_my_schedule'
     ),
 ]
 

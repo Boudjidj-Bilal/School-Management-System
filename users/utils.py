@@ -1257,3 +1257,46 @@ class CustomDjangoJSONEncoder(DjangoJSONEncoder):
                 'last_name': getattr(o, 'last_name', ''),
             }
         return super().default(o)
+    
+    
+def get_student_context(request):
+    """
+    Récupère le profil 'Student' actif pour le contexte actuel.
+    
+    - Si l'utilisateur est un Étudiant : Retourne son propre profil.
+    - Si l'utilisateur est un Parent : 
+        1. Cherche l'ID de l'enfant dans la session.
+        2. Vérifie que cet enfant appartient bien au parent (Sécurité).
+        3. Retourne l'objet Student correspondant.
+        4. Si aucun enfant en session (ou ID invalide), retourne le premier enfant trouvé par défaut.
+    
+    Retourne None si aucun profil étudiant valide n'est trouvé.
+    """
+    user = request.user
+
+    # CAS 2 : L'utilisateur EST un Parent
+    if hasattr(user, 'parent_user'):
+        parent = user.parent_user
+        selected_child_id = request.session.get('selected_child_id')
+
+        # A. Essai avec l'ID en session
+        if selected_child_id:
+            try:
+                # VÉRIFICATION DE SÉCURITÉ CRUCIALE
+                # On vérifie que l'enfant est bien lié à ce parent via la table Child
+                child_link = Child.objects.get(parent=parent, student__id=selected_child_id)
+                return child_link.student
+            except Child.DoesNotExist:
+                # L'ID en session ne correspond pas à un enfant de ce parent (ou n'existe plus)
+                # On continue vers le fallback
+                pass
+
+        # B. Fallback (Premier chargement ou ID invalide) : On prend le premier enfant
+        first_child_link = Child.objects.filter(parent=parent).first()
+        if first_child_link:
+            # On met à jour la session pour la prochaine fois
+            request.session['selected_child_id'] = first_child_link.student.id
+            return first_child_link.student
+
+    # CAS 3 : Autre (Prof, Admin...) -> Pas d'accès en tant qu'élève
+    return None

@@ -14,7 +14,7 @@ from classes.models import Class
 from schools.models import TermYearLevel
 from .models import AttendanceSession, Attendance
 
-from users.utils import get_user_type
+from users.utils import get_user_type, get_student_context
 from schools.utils import get_current_year_for_school, get_user_school
 from .utils import (
     get_attendance_classes_for_user,
@@ -380,13 +380,19 @@ def student_attendance_dashboard_view(request):
     user = request.user
     user_type = get_user_type(user)
 
-    if user_type != "Student":
-        return HttpResponseForbidden("Accès refusé. Réservé aux élèves.")
-
-    try:
-        student = user.student_user
-    except:
-        return HttpResponseForbidden("Profil élève non trouvé.")
+    student = None
+    
+    if user_type == "Parent":
+        student = get_student_context(request)
+    # 1. Vérification des permissions
+    elif user_type == "Student":
+        try:
+            # On récupère le profil Student lié au User
+            student = Student.objects.get(user=user)
+        except Student.DoesNotExist:
+            return HttpResponseForbidden("Erreur : Aucun profil élève associé à ce compte.")
+    else:
+        return HttpResponseForbidden("Accès refusé. Cette page est réservée aux élèves.")
 
     current_year = get_current_year_for_school(student.school)
     if not current_year:
