@@ -717,3 +717,66 @@ def select_child_view(request):
             return JsonResponse({'success': False, 'message': str(e)}, status=500)
     
     return JsonResponse({'success': False, 'message': "Méthode non autorisée"}, status=405)
+
+
+
+@login_required(login_url='login')
+def profile_view(request):
+    """
+    Affiche la page de profil de l'utilisateur.
+    Permet principalement de changer le mot de passe.
+    """
+    user = request.user
+    user_type = get_user_type(user)
+    
+    context = {
+        'user': user,
+        'user_type': user_type,
+    }
+    return render(request, 'users/profile.html', context)
+
+
+@login_required(login_url='login')
+def api_change_password(request):
+    """
+    API pour changer le mot de passe de l'utilisateur connecté.
+    """
+    if request.method != 'POST':
+        return JsonResponse({'success': False, 'message': "Méthode non autorisée."}, status=405)
+
+    try:
+        data = json.loads(request.body)
+        current_password = data.get('current_password')
+        new_password = data.get('new_password')
+        confirm_password = data.get('confirm_password')
+
+        # 1. Validation basique
+        if not current_password or not new_password or not confirm_password:
+            return JsonResponse({'success': False, 'message': "Tous les champs sont obligatoires."}, status=400)
+
+        if new_password != confirm_password:
+            return JsonResponse({'success': False, 'message': "Les nouveaux mots de passe ne correspondent pas."}, status=400)
+
+        # 2. Vérification de l'ancien mot de passe
+        user = request.user
+        if not user.check_password(current_password):
+            return JsonResponse({'success': False, 'message': "Votre mot de passe actuel est incorrect."}, status=400)
+
+        # 3. Changement du mot de passe
+        if len(new_password) < 4:
+             return JsonResponse({'success': False, 'message': "Le nouveau mot de passe doit contenir au moins 4 caractères."}, status=400)
+
+        user.set_password(new_password)
+        user.save()
+
+        # 4. Maintien de la session (IMPORTANT)
+        # Sans cela, changer le mot de passe déconnecterait l'utilisateur immédiatement
+        update_session_auth_hash(request, user)
+
+        return JsonResponse({'success': True, 'message': "Votre mot de passe a été modifié avec succès."})
+
+    except json.JSONDecodeError:
+        return JsonResponse({'success': False, 'message': "Données JSON invalides."}, status=400)
+    except Exception as e:
+        print(f"Erreur changement mot de passe: {e}")
+        return JsonResponse({'success': False, 'message': "Une erreur serveur est survenue."}, status=500)

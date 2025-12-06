@@ -13,6 +13,9 @@ urlpatterns = [
     path('assign-children/', views.assign_children_view, name='assign_children'),
     path('toggle-child-assignment/', views.toggle_child_assignment_api, name='toggle_child_assignment_api'),
     path('select-child/', views.select_child_view, name='select_child'),
+    path('profile/', views.profile_view, name='user_profile'),
+    path('api/change-password/', views.api_change_password, name='api_change_password'),
+
 
     re_path(r'^reset/(?P<uidb64>[0-9A-Za-z_\-]+)/(?P<token>[0-9A-Za-z]{1,32}-[0-9A-Za-z]{1,32})/$', 
             views.password_reset_confirm, name='password_reset_confirm'),

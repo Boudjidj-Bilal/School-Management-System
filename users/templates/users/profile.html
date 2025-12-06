@@ -1,0 +1,175 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Mon Profil{% endblock %}
+
+{% block content %}
+<div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
+    
+    <!-- En-tête -->
+    <div class="mb-8">
+        <h1 class="text-3xl font-bold text-gray-900">Mon Profil</h1>
+        <p class="mt-1 text-sm text-gray-500">Gérez vos informations personnelles et votre sécurité.</p>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        
+        <!-- COLONNE GAUCHE : Infos Utilisateur -->
+        <div class="lg:col-span-1">
+            <div class="bg-white shadow rounded-lg overflow-hidden">
+                <div class="bg-indigo-600 h-24"></div>
+                <div class="px-6 pb-6">
+                    <div class="relative flex justify-center -mt-12">
+                        <div class="w-24 h-24 rounded-full bg-white p-1 shadow-lg">
+                            <div class="w-full h-full rounded-full bg-indigo-100 flex items-center justify-center text-3xl font-bold text-indigo-600 uppercase">
+                                {{ user.username|slice:":1" }}
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="text-center mt-4">
+                        {% if user.first_name and user.last_name %}
+                            <h2 class="text-xl font-bold text-gray-900">{{ user.first_name }} {{ user.last_name }}</h2>
+                            <p class="text-sm text-gray-500">@{{ user.username }}</p>
+                        {% else %}
+                            <h2 class="text-xl font-bold text-gray-900">{{ user.username }}</h2>
+                        {% endif %}
+
+                        
+                        <div class="mt-4">
+                            <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-indigo-100 text-indigo-800">
+                                {% if user_type == 'Teacher' %}Professeur
+                                {% elif user_type == 'Student' %}Élève
+                                {% elif user_type == 'Parent' %}Parent
+                                {% elif user_type == 'Principal' %}Proviseur
+                                {% elif user_type == 'SuperAdministrator' %}Super Admin
+                                {% elif user_type == 'Administrator' %}Administrateur
+                                {% else %}{{ user_type }}{% endif %}
+                            </span>
+                        </div>
+                    </div>
+
+                    <div class="mt-6 border-t border-gray-100 pt-6 space-y-3">
+                        <div class="flex items-center text-sm text-gray-600">
+                            <i class="fas fa-envelope w-5 text-gray-400 text-center mr-2"></i>
+                            <span class="truncate">{{ user.email }}</span>
+                        </div>
+                        {% if user.phone_number %}
+                        <div class="flex items-center text-sm text-gray-600">
+                            <i class="fas fa-phone w-5 text-gray-400 text-center mr-2"></i>
+                            <span>{{ user.phone_number }}</span>
+                        </div>
+                        {% endif %}
+                        
+                        {% if user.staff_user.school %}
+                        <div class="flex items-center text-sm text-gray-600">
+                            <i class="fas fa-school w-5 text-gray-400 text-center mr-2"></i>
+                            <span>{{ user.staff_user.school.name }}</span>
+                        </div>
+                        {% elif user.student_user.school %}
+                        <div class="flex items-center text-sm text-gray-600">
+                            <i class="fas fa-school w-5 text-gray-400 text-center mr-2"></i>
+                            <span>{{ user.student_user.school.name }}</span>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- COLONNE DROITE : Sécurité -->
+        <div class="lg:col-span-2 space-y-6">
+            
+            <!-- Carte Changement Mot de Passe -->
+            <div class="bg-white shadow rounded-lg">
+                <div class="px-6 py-5 border-b border-gray-200">
+                    <h3 class="text-lg font-medium leading-6 text-gray-900">
+                        <i class="fas fa-lock mr-2 text-indigo-500"></i> Sécurité
+                    </h3>
+                    <p class="mt-1 text-sm text-gray-500">Mettre à jour votre mot de passe.</p>
+                </div>
+                
+                <div class="p-6">
+                    <!-- Zone de messages (Succès/Erreur) -->
+                    <div id="message-area" class="hidden mb-6 rounded-md p-4"></div>
+
+                    <form id="change-password-form" class="space-y-6">
+                        {% csrf_token %}
+                        
+                        <!-- Mot de passe actuel -->
+                        <div>
+                            <label for="current_password" class="block text-sm font-medium text-gray-700">Mot de passe actuel</label>
+                            <div class="mt-1 relative rounded-md shadow-sm">
+                                <input type="password" name="current_password" id="current_password" required
+                                        class="block w-full pr-10 border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm p-2.5 border"
+                                        placeholder="••••••••">
+                                <div class="absolute inset-y-0 right-0 pr-3 flex items-center cursor-pointer toggle-password" data-target="current_password">
+                                    <i class="far fa-eye text-gray-400 hover:text-gray-600"></i>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="border-t border-gray-100 my-4"></div>
+
+                        <!-- Nouveau mot de passe -->
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div>
+                                <label for="new_password" class="block text-sm font-medium text-gray-700">Nouveau mot de passe</label>
+                                <div class="mt-1 relative rounded-md shadow-sm">
+                                    <input type="password" name="new_password" id="new_password" required minlength="4"
+                                            class="block w-full pr-10 border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm p-2.5 border"
+                                            placeholder="4 caractères min.">
+                                    <div class="absolute inset-y-0 right-0 pr-3 flex items-center cursor-pointer toggle-password" data-target="new_password">
+                                        <i class="far fa-eye text-gray-400 hover:text-gray-600"></i>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div>
+                                <label for="confirm_password" class="block text-sm font-medium text-gray-700">Confirmer le mot de passe</label>
+                                <div class="mt-1 relative rounded-md shadow-sm">
+                                    <input type="password" name="confirm_password" id="confirm_password" required minlength="4"
+                                            class="block w-full pr-10 border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm p-2.5 border"
+                                            placeholder="Répétez le mot de passe">
+                                    <div class="absolute inset-y-0 right-0 pr-3 flex items-center cursor-pointer toggle-password" data-target="confirm_password">
+                                        <i class="far fa-eye text-gray-400 hover:text-gray-600"></i>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Critères de mot de passe (Indicatif) -->
+                        <div class="text-xs text-gray-500 bg-gray-50 p-3 rounded border border-gray-100">
+                            <p class="font-medium mb-1">Le mot de passe doit contenir :</p>
+                            <ul class="list-disc list-inside space-y-1 pl-1">
+                                <li>Au moins 4 caractères</li>
+                                <li>Ne doit pas être trop similaire à vos informations personnelles</li>
+                            </ul>
+                        </div>
+
+                        <div class="flex justify-end">
+                            <button type="submit" id="btn-save-password" class="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-all">
+                                Enregistrer le nouveau mot de passe
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+    <script>
+        // Configuration pour le script JS externe
+        window.PROFILE_CONFIG = {
+            csrfToken: "{{ csrf_token }}",
+            apiChangePasswordUrl: "{% url 'api_change_password' %}"
+        };
+    </script>
+    
+    <!-- Le fichier JS sera créé à la prochaine étape -->
+    <script src="{% static 'js/users/profile.js' %}"></script>
+{% endblock %}
