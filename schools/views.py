@@ -86,8 +86,6 @@ def create_school_view(request):
                     last_name=last_name
                 )
 
-                print(principal_user)
-
                 if not message_error:
                     return JsonResponse({'success': False, 'message': message_error}, status=400)
 
@@ -102,8 +100,6 @@ def create_school_view(request):
                     address=principal_data['address'],
                     birth_date=principal_data.get('birth_date')
                 )
-                print(principal_staff)
-
 
                 if message_error:
                     return JsonResponse({'success': False, 'message': message_error}, status=400)
@@ -794,3 +790,84 @@ def manage_term(request):
     }
     
     return render(request, 'schools/manage_term.html', context)
+
+@login_required(login_url='login')
+def edit_school_view(request, school_id):
+    """
+    Affiche le formulaire de modification pour une école spécifique.
+    Accessible uniquement au Super Administrateur.
+    """
+    user_type = get_user_type(request.user)
+
+    if not user_type == "SuperAdministrator":
+        return HttpResponseForbidden("Accès refusé. Seuls les Super Administrateurs peuvent modifier une école.")
+
+    try:
+        # On récupère l'école ou on renvoie une 404
+        school = get_object_or_404(School, pk=school_id)
+        
+        context = {
+            'school': school,
+            'school_types': School.SCHOOL_TYPE_CHOICES, # Pour le select du type
+        }
+        return render(request, 'schools/edit_school.html', context)
+        
+    except Exception as e:
+        return HttpResponseForbidden(f"Erreur lors du chargement de l'école : {str(e)}")
+
+
+@require_http_methods(["POST"])
+@csrf_exempt
+@login_required(login_url='login')
+def api_update_school(request, school_id):
+    """
+    API pour mettre à jour les informations d'une école.
+    """
+    user_type = get_user_type(request.user)
+
+    if not user_type == "SuperAdministrator":
+        return JsonResponse({'success': False, 'message': 'Action non autorisée.'}, status=403)
+
+    try:
+        school = get_object_or_404(School, pk=school_id)
+        data = json.loads(request.body)
+        
+        # Récupération des données
+        name = data.get('name')
+        address = data.get('address')
+        school_type = data.get('type')
+        phone_number = data.get('phone_number')
+        email = data.get('email')
+        is_active = data.get('is_active') # Booléen
+
+        # Validation basique
+        if not name or not address or not school_type or not email:
+             return JsonResponse({'success': False, 'message': 'Veuillez remplir tous les champs obligatoires.'}, status=400)
+
+        # Vérification unicité email (en excluant l'école actuelle)
+        if School.objects.filter(email=email).exclude(pk=school_id).exists():
+            return JsonResponse({'success': False, 'message': 'Une autre école utilise déjà cet email.'}, status=400)
+
+        # Mise à jour des champs autorisés
+        school.name = name
+        school.address = address
+        school.type = school_type
+        school.phone_number = phone_number
+        school.email = email
+        
+        # Gestion explicite du booléen is_active
+        if is_active is not None:
+            school.is_active = bool(is_active)
+
+        # On ne touche PAS à created_at ni super_administrator
+        school.save()
+
+        return JsonResponse({
+            'success': True, 
+            'message': f"L'école '{school.name}' a été mise à jour avec succès."
+        })
+
+    except json.JSONDecodeError:
+        return JsonResponse({'success': False, 'message': 'Données JSON invalides.'}, status=400)
+    except Exception as e:
+        return JsonResponse({'success': False, 'message': str(e)}, status=500)

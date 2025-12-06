@@ -22,15 +22,15 @@
             <!-- SECTION SUPER ADMIN -->
             {% if user_is_super_admin %}
                 <li>
-                    <a href="#" class="flex items-center space-x-3 text-gray-300 hover:text-white transition duration-200">
-                        <i class="fas fa-graduation-cap text-lg"></i>
-                        <span>Écoles</span>
-                    </a>
-                </li>
-                <li>
                     <a href="{% url 'create_school' %}" class="flex items-center space-x-3 text-gray-300 hover:bg-gray-700 hover:text-white rounded-lg p-2 transition-colors duration-200">
                         <i class="fas fa-plus-circle"></i>
                         <span>Créer une école</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="{% url 'edit_school' school_id=request.session.selected_school_id %}" class="flex items-center space-x-3 text-gray-300 hover:bg-gray-700 hover:text-white rounded-lg p-2 transition-colors duration-200">
+                        <i class="fas fa-edit"></i>
+                        <span>Modifier l'école</span>
                     </a>
                 </li>
             {% endif %}
