@@ -487,9 +487,6 @@ def api_get_announcements(request):
             # On utilise le même format que inbox
             data['all'].append(format_announcement(ann, recipient_record))
     
-    # Debug print pour vérifier
-    # print(data)
-
     return JsonResponse({'success': True, 'data': data})
 
 
