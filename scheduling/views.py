@@ -13,7 +13,7 @@ from django.utils import timezone
 from scheduling.models import WeeklyScheduleTemplate, CourseTemplate, ScheduledCourse
 from schools.models import Year, ExceptionDay, ExceptionTime
 from classes.models import Class, Classroom, ClassTeacherYear, ClassStudentYear
-from users.models import Staff 
+from users.models import Staff, Student
 
 
 # Import des utilitaires
@@ -577,7 +577,6 @@ def api_manage_course_status_views(request):
         return JsonResponse({"success": False, "message": f"Erreur interne : {str(e)}"}, status=500)
 
 
-
 @login_required(login_url='login')
 def view_teacher_schedule_page(request, pk_staff):
     """
@@ -780,9 +779,19 @@ def redirect_to_my_schedule(request):
     Vue intermédiaire qui détermine la classe de l'élève (ou de l'enfant sélectionné)
     et redirige vers la page d'affichage du planning correspondante.
     """
-    # 1. Récupérer le contexte étudiant (Élève connecté OU Enfant du parent)
-    student = get_student_context(request)
-    
+
+    user = request.user
+    user_type = get_user_type(user)
+
+    if user_type not in ["Parent", "Student"]:
+        return JsonResponse({"success": False, "message": "Accès refusé."}, status=403)
+
+    # 1. Récupérer le contexte étudiant (Enfant du parent)
+    if user_type == "Parent":
+        student = get_student_context(request)
+    else: 
+        student = Student.objects.get(user=user)
+
     if not student:
         # Si ce n'est ni un élève ni un parent avec enfant sélectionné
         return HttpResponseForbidden("Accès refusé. Aucun profil élève identifié.")

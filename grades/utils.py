@@ -5,7 +5,7 @@ from django.shortcuts import get_object_or_404
 from .models import Evaluation, Grade, Appreciation, Mention
 from schools.models import TermYearLevel
 from subjects.models import TeacherSubject
-from classes.models import ClassTeacherYear, ClassStudentYear
+from classes.models import ClassTeacherYear, ClassStudentYear, Class, Level
 
 # ====================================================================
 # FONCTIONS DE CALCUL DE MOYENNE
@@ -197,132 +197,6 @@ def calculate_overall_student_average(student, term_year):
 # FONCTIONS DE RÉCUPÉRATION DE DONNÉES (Pour les Vues)
 # ====================================================================
 
-def get_grades_dashboard_data(teacher_staff, current_year):
-    """
-    Fonction principale pour récupérer TOUTES les données du tableau de bord.
-    
-    [MODIFIÉ] Supprime le rechargement de l'objet TeacherSubject qui cassait 
-    le filtrage des évaluations dans le contexte Admin/Proviseur.
-    """
-    
-    # 1. Trouver tous les IDs de TeacherSubject que ce Staff enseigne.
-    taught_subjects_ids = TeacherSubject.objects.filter(
-        teacher=teacher_staff
-    ).values_list('id', flat=True)
-
-    # 2. Matières/Classes enseignées (en utilisant les IDs trouvés)
-    teacher_subjects_links = ClassTeacherYear.objects.filter(
-        teacher__id__in=taught_subjects_ids,
-        year=current_year,
-        is_active=True
-    ).select_related(
-        'student_class__level',
-        'teacher__subject'
-    ).order_by('student_class__name', 'teacher__subject__name')
-
-    # 3. Classes principales
-    main_classes_links = teacher_subjects_links.filter(is_main_teacher=True)
-    main_classes = list(set([link.student_class for link in main_classes_links]))
-
-    # 4. Données pour la vue "Prof de Matière"
-    taught_classes_data = {} 
-    taught_classes_list_for_template = []
-
-    for link in teacher_subjects_links:
-        student_class = link.student_class
-        
-        ts = link.teacher # <-- Utilisation de l'objet ORM pré-chargé
-        
-        # Récupère les trimestres/semestres pour le NIVEAU de cette classe
-        terms_for_level = TermYearLevel.objects.filter(
-            year=current_year,
-            level=student_class.level
-        ).order_by('start_date') 
-        
-        # --- [LOGIQUE DE DÉTECTION DU TRIMESTRE] ---
-        today = timezone.now().date()
-        editable_term = terms_for_level.filter(
-            start_date__lte=today, 
-            end_date__gte=today,
-            finished=False
-        ).first()
-        
-        if not editable_term:
-            editable_term = terms_for_level.filter(finished=False).first()
-        
-        display_term = editable_term
-        if not display_term:
-            display_term = terms_for_level.last() 
-        
-        editable_term_id = editable_term.id if editable_term else None
-        
-        # Récupère les données pour le trimestre à AFFICHER PAR DÉFAUT
-        # Utilise ts.id
-        context_data = get_grades_data_for_specific_context(
-            teacher_staff, current_year, student_class, ts.id, display_term
-        )
-        
-        # ... (le reste du code est inchangé) ...
-        context_data['available_terms'] = list(terms_for_level.values('id', 'counter', 'start_date', 'end_date', 'finished'))
-        context_data['current_term_id'] = editable_term_id
-        
-        key = f"{student_class.id}-{ts.id}"
-        taught_classes_data[key] = context_data
-
-        list_item = context_data.copy()
-        list_item.update({
-            'key': key,
-            'student_class': student_class,
-            'teacher_subject': ts,
-        })
-        taught_classes_list_for_template.append(list_item)
-
-
-    # 5. Données pour la vue "Prof Principal"
-    main_class_data = {}
-    
-    for main_class in main_classes:
-        # ... (Logique de détection du trimestre et chargement du contexte inchangés) ...
-        terms_for_level = TermYearLevel.objects.filter(
-            year=current_year,
-            level=main_class.level
-        ).order_by('start_date')
-        
-        today = timezone.now().date()
-        editable_term = terms_for_level.filter(
-            start_date__lte=today, 
-            end_date__gte=today,
-            finished=False
-        ).first()
-        
-        if not editable_term:
-            editable_term = terms_for_level.filter(finished=False).first()
-        
-        display_term = editable_term
-        if not display_term:
-            display_term = terms_for_level.last() 
-        
-        editable_term_id = editable_term.id if editable_term else None
-        
-        # Récupère les données pour le trimestre à afficher
-        context_data = get_grades_data_for_specific_context(
-            teacher_staff, current_year, main_class, None, display_term
-        )
-        
-        context_data['class_name'] = main_class.name
-        context_data['available_terms'] = list(terms_for_level.values('id', 'counter', 'start_date', 'end_date', 'finished'))
-        context_data['current_term_id'] = editable_term_id
-
-        main_class_data[str(main_class.id)] = context_data
-
-    # 6. Retourne toutes les données compilées
-    return {
-        'taught_classes_data': taught_classes_data,
-        'main_class_data': main_class_data,
-        'taught_classes_list_for_template': taught_classes_list_for_template
-    }
-
-
 def get_grades_data_for_specific_context(teacher_staff, current_year, student_class, teacher_subject_id, selected_term):
     """
     [MODIFIÉ] Récupère les données (évals, moyennes) pour UN SEUL CONTEXTE
@@ -349,13 +223,12 @@ def get_grades_data_for_specific_context(teacher_staff, current_year, student_cl
         
         evaluations = get_evaluations_for_subject(ts, student_class, selected_term)
         
-        # [MODIFICATION] Ajout de 'max_grade' pour la modale JS
         data_payload['evaluations'] = list(evaluations.values(
             'id', 
             'name', 
             'date', 
             'coefficient',
-            'max_grade' # <-- AJOUTÉ ICI
+            'max_grade'
         ))
         
         avg = calculate_subject_class_average(student_class, ts, selected_term)
@@ -515,126 +388,6 @@ def get_student_grades_view_data(student, current_year):
 # FONCTIONS POUR LE TABLEAU DE BORD DES APPRÉCIATIONS
 # ====================================================================
 
-def get_appreciations_dashboard_data(teacher_staff, current_year):
-    """
-    Récupère les données pour le tableau de bord des APPRÉCIATIONS.
-    [MODIFIÉ] Sérialisation manuelle des objets Class et TeacherSubject pour éviter l'erreur JSON.
-    """
-    
-    # 1. Trouver tous les IDs de TeacherSubject que ce Staff enseigne
-    taught_subjects_ids = TeacherSubject.objects.filter(
-        teacher=teacher_staff
-    ).values_list('id', flat=True)
-
-    # 2. Matières/Classes enseignées
-    teacher_subjects_links = ClassTeacherYear.objects.filter(
-        teacher__id__in=taught_subjects_ids,
-        year=current_year,
-        is_active=True
-    ).select_related(
-        'student_class__level',
-        'teacher__subject'
-    ).order_by('student_class__name', 'teacher__subject__name')
-
-    # 3. Classes principales (pour les appréciations globales)
-    main_classes_links = teacher_subjects_links.filter(is_main_teacher=True)
-    main_classes = list(set([link.student_class for link in main_classes_links]))
-
-    # --- A. Données pour "Appréciations par Matière" ---
-    taught_classes_list = []
-
-    for link in teacher_subjects_links:
-        student_class = link.student_class
-        ts = link.teacher # TeacherSubject pré-chargé
-        
-        # Gestion des trimestres
-        terms_for_level = TermYearLevel.objects.filter(
-            year=current_year,
-            level=student_class.level
-        ).order_by('start_date')
-        
-        today = timezone.now().date()
-        editable_term = terms_for_level.filter(
-            start_date__lte=today, end_date__gte=today, finished=False
-        ).first()
-        
-        if not editable_term:
-            editable_term = terms_for_level.filter(finished=False).first()
-        
-        display_term = editable_term if editable_term else terms_for_level.last()
-        editable_term_id = editable_term.id if editable_term else None
-
-        # Récupération des données élèves + appréciations existantes
-        context_data = get_appreciations_data_for_context(
-            current_year, student_class, ts.id, display_term, is_global=False
-        )
-        
-        # [CORRECTION] On convertit les objets modèles en dictionnaires simples
-        # pour qu'ils soient sérialisables en JSON par le template.
-        context_data.update({
-            'key': f"{student_class.id}-{ts.id}",
-            
-            # Conversion manuelle de Class
-            'student_class': {
-                'id': student_class.id,
-                'name': student_class.name
-            },
-            
-            # Conversion manuelle de TeacherSubject
-            'teacher_subject': {
-                'id': ts.id,
-                'subject': {
-                    'name': ts.subject.name,
-                    'color': ts.subject.color
-                }
-            },
-            
-            'available_terms': list(terms_for_level.values('id', 'counter', 'start_date', 'end_date', 'finished')),
-            'current_term_id': editable_term_id
-        })
-        taught_classes_list.append(context_data)
-
-
-    # --- B. Données pour "Appréciations Globales" (Prof Principal) ---
-    main_classes_data = {}
-
-    for main_class in main_classes:
-        terms_for_level = TermYearLevel.objects.filter(
-            year=current_year,
-            level=main_class.level
-        ).order_by('start_date')
-        
-        today = timezone.now().date()
-        editable_term = terms_for_level.filter(
-            start_date__lte=today, end_date__gte=today, finished=False
-        ).first()
-        
-        if not editable_term:
-            editable_term = terms_for_level.filter(finished=False).first()
-        
-        display_term = editable_term if editable_term else terms_for_level.last()
-        editable_term_id = editable_term.id if editable_term else None
-
-        # Récupération des données globales (is_global=True)
-        context_data = get_appreciations_data_for_context(
-            current_year, main_class, None, display_term, is_global=True
-        )
-
-        context_data.update({
-            'class_name': main_class.name,
-            'available_terms': list(terms_for_level.values('id', 'counter', 'start_date', 'end_date', 'finished')),
-            'current_term_id': editable_term_id,
-            'mentions_choices': Mention.MENTION_CHOICES,
-        })
-        
-        main_classes_data[str(main_class.id)] = context_data
-
-    return {
-        'taught_classes_list': taught_classes_list,
-        'main_classes_data': main_classes_data
-    }
-
-
 def get_appreciations_data_for_context(current_year, student_class, teacher_subject_id, selected_term, is_global=False):
     # ... (fonction inchangée) ...
     if not selected_term:
@@ -689,3 +442,244 @@ def get_appreciations_data_for_context(current_year, student_class, teacher_subj
         students_data.append(student_info)
 
     return {'students_data': students_data}
+
+
+def get_grades_dashboard_data(teacher_staff, current_year):
+    # ... (Code existant pour le dashboard notes prof) ...
+    teacher_subjects_links = ClassTeacherYear.objects.filter(
+        teacher__teacher=teacher_staff,
+        year=current_year,
+        is_active=True
+    ).select_related('student_class__level', 'teacher__subject').order_by('student_class__name', 'teacher__subject__name')
+
+    main_classes_links = teacher_subjects_links.filter(is_main_teacher=True)
+    main_classes = list(set([link.student_class for link in main_classes_links]))
+
+    taught_classes_data = {}
+    taught_classes_list_for_template = []
+
+    for link in teacher_subjects_links:
+        student_class = link.student_class
+        ts = link.teacher
+        
+        terms_for_level = TermYearLevel.objects.filter(year=current_year, level=student_class.level).order_by('start_date')
+        
+        today = timezone.now().date()
+        current_term = terms_for_level.filter(start_date__lte=today, end_date__gte=today).first()
+        if not current_term: current_term = terms_for_level.first()
+        
+        context_data = get_grades_data_for_specific_context(teacher_staff, current_year, student_class, ts.id, current_term)
+        context_data['available_terms'] = list(terms_for_level.values('id', 'counter', 'start_date', 'end_date'))
+        context_data['current_term_id'] = current_term.id if current_term else None
+        
+        key = f"{student_class.id}-{ts.id}"
+        taught_classes_data[key] = context_data
+
+        list_item = context_data.copy()
+        list_item.update({'key': key, 'student_class': student_class, 'teacher_subject': ts})
+        taught_classes_list_for_template.append(list_item)
+
+    main_class_data = {}
+    for main_class in main_classes:
+        terms_for_level = TermYearLevel.objects.filter(year=current_year, level=main_class.level).order_by('start_date')
+        today = timezone.now().date()
+        current_term = terms_for_level.filter(start_date__lte=today, end_date__gte=today).first()
+        if not current_term: current_term = terms_for_level.first()
+
+        context_data = get_grades_data_for_specific_context(teacher_staff, current_year, main_class, None, current_term)
+        context_data['class_name'] = main_class.name
+        context_data['available_terms'] = list(terms_for_level.values('id', 'counter', 'start_date', 'end_date'))
+        context_data['current_term_id'] = current_term.id if current_term else None
+
+        main_class_data[str(main_class.id)] = context_data
+
+    return {
+        'taught_classes_data': taught_classes_data,
+        'main_class_data': main_class_data,
+        'taught_classes_list_for_template': taught_classes_list_for_template
+    }
+
+
+def get_appreciations_dashboard_data(teacher_staff, current_year):
+    taught_subjects_ids = TeacherSubject.objects.filter(teacher=teacher_staff).values_list('id', flat=True)
+    teacher_subjects_links = ClassTeacherYear.objects.filter(teacher__id__in=taught_subjects_ids, year=current_year, is_active=True).select_related('student_class__level', 'teacher__subject').order_by('student_class__name', 'teacher__subject__name')
+    main_classes_links = teacher_subjects_links.filter(is_main_teacher=True)
+    main_classes = list(set([link.student_class for link in main_classes_links]))
+
+    taught_classes_list = []
+    for link in teacher_subjects_links:
+        student_class = link.student_class
+        ts = link.teacher
+        terms_for_level = TermYearLevel.objects.filter(year=current_year, level=student_class.level).order_by('start_date')
+        today = timezone.now().date()
+        editable_term = terms_for_level.filter(start_date__lte=today, end_date__gte=today, finished=False).first()
+        if not editable_term: editable_term = terms_for_level.filter(finished=False).first()
+        display_term = editable_term if editable_term else terms_for_level.last()
+        editable_term_id = editable_term.id if editable_term else None
+
+        context_data = get_appreciations_data_for_context(current_year, student_class, ts.id, display_term, is_global=False)
+        context_data.update({
+            'key': f"{student_class.id}-{ts.id}",
+            'student_class': {'id': student_class.id, 'name': student_class.name},
+            'teacher_subject': {'id': ts.id, 'subject': {'name': ts.subject.name, 'color': ts.subject.color}},
+            'available_terms': list(terms_for_level.values('id', 'counter', 'start_date', 'end_date', 'finished')),
+            'current_term_id': editable_term_id
+        })
+        taught_classes_list.append(context_data)
+
+    main_classes_data = {}
+    for main_class in main_classes:
+        terms_for_level = TermYearLevel.objects.filter(year=current_year, level=main_class.level).order_by('start_date')
+        today = timezone.now().date()
+        editable_term = terms_for_level.filter(start_date__lte=today, end_date__gte=today, finished=False).first()
+        if not editable_term: editable_term = terms_for_level.filter(finished=False).first()
+        display_term = editable_term if editable_term else terms_for_level.last()
+        editable_term_id = editable_term.id if editable_term else None
+
+        context_data = get_appreciations_data_for_context(current_year, main_class, None, display_term, is_global=True)
+        context_data.update({
+            'class_name': main_class.name,
+            'available_terms': list(terms_for_level.values('id', 'counter', 'start_date', 'end_date', 'finished')),
+            'current_term_id': editable_term_id,
+            'mentions_choices': Mention.MENTION_CHOICES,
+        })
+        main_classes_data[str(main_class.id)] = context_data
+
+    return {'taught_classes_list': taught_classes_list, 'main_classes_data': main_classes_data}
+
+
+def get_dashboard_grades_summary(student, current_year):
+    """
+    Récupère les données pour le widget Notes (Élève).
+    """
+    if not student or not current_year:
+        return None
+
+    # 1. Dernières notes
+    last_grades_qs = Grade.objects.filter(
+        student=student,
+        evaluation__term_year__year=current_year
+    ).select_related('evaluation', 'evaluation__teacher_subject__subject').order_by('-evaluation__date')[:5]
+
+    last_grades = []
+    for grade in last_grades_qs:
+        val_display = "ABS"
+        if grade.grade_value is not None:
+             val_display = grade.grade_value
+        
+        last_grades.append({
+            'subject': grade.evaluation.teacher_subject.subject.name,
+            'color': grade.evaluation.teacher_subject.subject.color,
+            'value': val_display,
+            'max': grade.evaluation.max_grade,
+            'date': grade.evaluation.date
+        })
+
+    # 2. Moyenne du trimestre ACTIF
+    today = timezone.now().date()
+    
+    # On cherche le niveau de l'élève
+    try:
+        link = ClassStudentYear.objects.get(student=student, year=current_year, is_active=True)
+        level = link.student_class.level
+    except ClassStudentYear.DoesNotExist:
+        return {'last_grades': last_grades, 'average': "N/A", 'term_name': "-"}
+
+    # Cherche trimestre actif
+    active_term = TermYearLevel.objects.filter(year=current_year, level=level, start_date__lte=today, end_date__gte=today).first()
+    if not active_term: active_term = TermYearLevel.objects.filter(year=current_year, level=level, finished=False).order_by('start_date').first()
+    if not active_term: active_term = TermYearLevel.objects.filter(year=current_year, level=level).last()
+
+    overall_average = "N/A"
+    term_name = "Aucune période"
+    
+    if active_term:
+        avg = calculate_overall_student_average(student, active_term)
+        if avg: overall_average = avg
+        term_name = f"{active_term.level.term_type.capitalize()} {active_term.counter}"
+
+    return {
+        'last_grades': last_grades,
+        'average': overall_average,
+        'term_name': term_name
+    }
+
+# --- STATISTIQUES ÉCOLE (KPIs) ---
+
+def get_dashboard_school_grades_stats(school, current_year):
+    """
+    Récupère les statistiques pédagogiques pour le Proviseur/SuperAdmin.
+    Calcule la moyenne globale de l'école et les moyennes par niveau
+    pour le trimestre actif.
+    """
+    if not school or not current_year:
+        return {'by_level': [], 'global_average': "N/A"}
+
+    # 1. Récupérer tous les niveaux de l'école
+    levels = Level.objects.filter(school=school)
+    
+    stats_by_level = []
+    total_school_sum = 0
+    total_classes_count = 0
+
+    today = timezone.now().date()
+
+    for level in levels:
+        # Trouver le trimestre actif pour ce niveau
+        active_term = TermYearLevel.objects.filter(
+            year=current_year,
+            level=level,
+            start_date__lte=today,
+            end_date__gte=today
+        ).first()
+        
+        # Fallback si pas de date active
+        if not active_term:
+            active_term = TermYearLevel.objects.filter(year=current_year, level=level, finished=False).first()
+        if not active_term:
+            active_term = TermYearLevel.objects.filter(year=current_year, level=level).last()
+
+        if not active_term:
+            continue
+
+        # Récupérer les classes de ce niveau
+        classes = Class.objects.filter(level=level, is_valid=True)
+        
+        level_sum = 0
+        valid_classes_in_level = 0
+
+        for student_class in classes:
+            # On utilise TA fonction qui calcule la moyenne de la classe
+            # (basée sur la moyenne des élèves)
+            class_avg = calculate_overall_class_average(student_class, active_term)
+            
+            if class_avg is not None:
+                level_sum += class_avg
+                valid_classes_in_level += 1
+                
+                # Accumulateurs pour la moyenne globale de l'école
+                total_school_sum += class_avg
+                total_classes_count += 1
+
+        if valid_classes_in_level > 0:
+            level_avg = level_sum / valid_classes_in_level
+            stats_by_level.append({
+                'level_name': level.level, # Ex: "6E", "5E"
+                'average': round(level_avg, 2),
+                'term': f"{active_term.level.term_type.capitalize()} {active_term.counter}"
+            })
+
+    # Moyenne Globale de l'École
+    # (On fait la moyenne des moyennes de classes pour ne pas déséquilibrer si une classe a bcp d'élèves)
+    global_average = "N/A"
+    if total_classes_count > 0:
+        global_average = round(total_school_sum / total_classes_count, 2)
+    
+    # Tri par nom de niveau pour un affichage propre (ex: 6E, 5E...)
+    # Note: Le tri alphabétique n'est pas parfait pour les niveaux, mais suffisant pour l'instant
+    stats_by_level.sort(key=lambda x: x['level_name'])
+
+    return {
+        'by_level': stats_by_level,
+        'global_average': global_average
+    }

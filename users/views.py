@@ -3,12 +3,13 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.http import JsonResponse, HttpResponseBadRequest
 
 import datetime
-from django.db.models import F
 
 import json
 from .utils import *
 from schools.models import School
-from schools.utils import get_all_schools, get_user_school, get_current_school_year
+from scheduling.utils import get_dashboard_schedule
+from grades.utils import get_dashboard_grades_summary, get_dashboard_school_grades_stats
+from schools.utils import get_all_schools, get_user_school, get_current_school_year, get_current_year_for_school
 from django.contrib.auth.decorators import login_required
 from django.db import IntegrityError, transaction
 from django.views.decorators.http import require_http_methods, require_POST
@@ -17,16 +18,15 @@ from django.utils.http import urlsafe_base64_decode
 from django.utils.encoding import force_str
 from django.contrib.auth.tokens import PasswordResetTokenGenerator
 
+# Imports des Services (Utils des autres apps)
+from scheduling.models import ScheduledCourse # Pour le planning prof (fait en direct)
+from attendance.utils import get_dashboard_attendance_summary, get_school_attendance_kpis
+from attendance.models import Attendance # Pour les alertes CPE
+from communications.utils import get_dashboard_messaging_stats, get_dashboard_last_announcement
+
+
 from .models import User, STAFF_TYPE_CHOICES, GENDER_CHOICES
 
-""" 
-TODO : 
-    Ajouter les vérification suivante à login : 
-    - Le super Admin n'a aucune restriction
-    - Les membres d'une école ne peuvent pas se connecté si celle ci est inactive
-    - A l'exception du ou des principales, personne ne peut se connecter lorsque l'année actuelle de l'école est à l'étape création ou fini
-    - A l'exception du ou des principales ainsi qu'aux administrateurs, personne ne peut se connecter lorsque l'année actuelle de l'école est à l'étape enregistrement
-"""
 def login(request):
     """
     Rend la page HTML de connexion et gère l'authentification.
@@ -81,8 +81,6 @@ def login(request):
                         # Si on est à l'étape d'enregistrement d'une année, impossible de se connecter
                         if year.registration == True:
                             return JsonResponse({"success": False, "message": "Impossible de vous connecter pour le moment."}, status=400)
-                    
-
 
             user_login = login_user(request, username, password)
             
@@ -103,67 +101,156 @@ def logout(request):
     logout_user(request)
     return redirect('login')
 
+
 @login_required(login_url='login')
 def dashboard_page(request):
     """
-    Rend la page principale (tableau de bord) accessible uniquement aux utilisateurs connectés.
+    Tableau de bord principal agrégateur.
+    Charge les widgets spécifiques selon le rôle de l'utilisateur.
     """
-    user_type = get_user_type(request.user)
+    user = request.user
+    user_type = get_user_type(user)
     
-    # Gestion du sélecteur d'école pour le SuperAdmin
+    # Contexte de base
+    context = {
+        'username': user.username,
+        'user_type': user_type,
+        'widgets': {} # Contiendra toutes les données des cartes
+    }
+
+    # --- 1. Détermination de l'École et de l'Année ---
+    school = None
+    current_year = None
+
+    # Logique SuperAdmin (Sélecteur d'école)
     if user_type == "SuperAdministrator":
-        schools = get_all_schools()
+        schools = School.objects.filter(is_active=True)
+        context['schools'] = schools
+        
         selected_school_id = request.session.get('selected_school_id')
         if not selected_school_id and schools.exists():
             selected_school_id = schools.last().id
             request.session['selected_school_id'] = selected_school_id
         
-        selected_school = get_user_school(request.user, selected_school_id)
-        
-        return render(request, 'users/dashboard_page.html', {
-            'user_type': user_type,
-            'schools': schools,
-            'selected_school': selected_school,
-            'user_school': selected_school
-        })
-    elif user_type == 'Parent':
-        user_school = get_user_school(request.user)
-        context = {
-            'user_type': user_type,
-            'user_school': user_school,
-            'username': request.user.username
-        }
-        
-        try:
-            parent = request.user.parent_user
-            # Récupérer les enfants via la table de liaison Child
-            children_links = Child.objects.filter(parent=parent).select_related('student', 'student__user')
-            children = [link.student for link in children_links]
-            
-            context['children'] = children
-            
-            # Récupérer l'enfant sélectionné en session
-            selected_child_id = request.session.get('selected_child_id')
-            
-            # Si aucun sélectionné mais qu'il y en a, on prend le premier par défaut
-            if not selected_child_id and children:
-                selected_child_id = children[0].id
-                request.session['selected_child_id'] = selected_child_id
-            
-            context['selected_child_id'] = selected_child_id
-            
-        except Exception as e:
-            print(f"Erreur dashboard parent: {e}")
-            context['children'] = []
+        if selected_school_id:
+            try:
+                school = School.objects.get(id=selected_school_id)
+                context['selected_school'] = school
+            except School.DoesNotExist: pass
 
-        return render(request, 'users/dashboard_page.html', context)
+    # Logique Parent (Pas d'école directe, dépend de l'enfant)
+    elif user_type == "Parent":
+        pass 
     
-    # Cas pour les autres utilisateurs
-    user_school = get_user_school(request.user)
-    return render(request, 'users/dashboard_page.html', {
-        'user_type': user_type,
-        'user_school': user_school
-    })
+    # Logique Staff/Student (École liée au profil)
+    else:
+        school = get_user_school(user)
+        context['user_school'] = school
+
+    # Récupération de l'année pour l'école identifiée
+    if school:
+        current_year = get_current_year_for_school(school)
+        context['current_year'] = current_year
+
+
+    # --- 2. Chargement des Widgets par Rôle ---
+
+    # A. ÉTUDIANT (ou PARENT visualisant un enfant)
+    if user_type == 'Student' or user_type == 'Parent':
+        target_student = None
+
+        if user_type == 'Student':
+            target_student = user.student_user
+        
+        elif user_type == 'Parent':
+            # Gestion du sélecteur d'enfant
+            try:
+                parent = user.parent_user
+                children_links = Child.objects.filter(parent=parent).select_related('student', 'student__user')
+                children = [link.student for link in children_links]
+                context['children'] = children
+                
+                # Utilisation de l'utilitaire intelligent pour récupérer l'enfant actif
+                # (ou le premier par défaut)
+                target_student = get_student_context(request)
+                
+                # Mise à jour de l'ID sélectionné pour le template (selecteur)
+                if target_student:
+                    context['selected_child_id'] = target_student.id
+                    # Pour le Parent, l'année dépend de l'école de l'enfant
+                    current_year = get_current_year_for_school(target_student.school)
+                    context['current_year'] = current_year
+            
+            except Exception as e:
+                print(f"Erreur Dashboard Parent: {e}")
+
+        # Si on a un élève valide (Soit le user Student, soit l'enfant du Parent)
+        if target_student and current_year:
+            # 1. Planning
+            context['widgets']['schedule'] = get_dashboard_schedule(request.user, current_year, student_profile=target_student)
+            # 2. Notes
+            context['widgets']['grades'] = get_dashboard_grades_summary(target_student, current_year)
+            # 3. Absences (Alerte)
+            context['widgets']['attendance'] = get_dashboard_attendance_summary(target_student, current_year)
+            # 4. Annonces (Destinataire = User lié à l'élève)
+            context['widgets']['announcement'] = get_dashboard_last_announcement(target_student.user)
+            
+            # 5. Messagerie : 
+            # - Si Student : ses messages
+            # - Si Parent : SES PROPRES messages (pas ceux de l'enfant)
+            msg_user = user if user_type == 'Parent' else target_student.user
+            context['widgets']['messaging'] = get_dashboard_messaging_stats(msg_user)
+
+
+    # B. PROFESSEUR
+    elif user_type == 'Teacher':
+        if current_year:
+            # 1. Planning (Utilise la même fonction utilitaire, adaptée pour le prof)
+            context['widgets']['schedule'] = get_dashboard_schedule(user, current_year)
+
+            # 2. Annonces
+            context['widgets']['announcement'] = get_dashboard_last_announcement(user)
+            
+            # 3. Messagerie
+            context['widgets']['messaging'] = get_dashboard_messaging_stats(user)
+
+
+    # C. CPE
+    elif user_type == 'CPE':
+        if current_year and school:
+            # 1. Alertes Assiduité (Derniers incidents non justifiés de l'école)
+            alerts = Attendance.objects.filter(
+                session__term_year__year=current_year,
+                session__student_class__level__school=school,
+                justified=False
+            ).select_related('student__user', 'session__student_class').order_by('-session__date', '-session__start_time')[:10]
+            
+            context['widgets']['attendance_alerts'] = alerts
+            
+            # 2. Annonces
+            context['widgets']['announcement'] = get_dashboard_last_announcement(user)
+
+
+    # D. PROVISEUR & SUPER ADMIN
+    elif user_type in ['Principal', 'SuperAdministrator']:
+        if current_year and school:
+            # 1. Stats Assiduité (KPIs globaux)
+            context['widgets']['attendance_kpis'] = get_school_attendance_kpis(school, current_year)
+            
+            # 2. Annonces
+            context['widgets']['announcement'] = get_dashboard_last_announcement(user)
+            
+            # 3. Stats
+            context['widgets']['grades_stats'] = get_dashboard_school_grades_stats(school, current_year)
+
+
+    # E. ADMINISTRATEUR (Simple)
+    elif user_type == 'Administrator':
+        context['widgets']['announcement'] = get_dashboard_last_announcement(user)
+
+
+    return render(request, 'users/dashboard_page.html', context)
+
 
 def password_reset(request):
     """
@@ -171,7 +258,7 @@ def password_reset(request):
     """
     if request.method == 'GET':
         return render(request, 'users/password_reset.html')
-        
+    
     if request.method == 'POST':
         try:
             data = json.loads(request.body)
@@ -193,7 +280,6 @@ def password_reset(request):
             return JsonResponse({'success': False, 'message': 'Données JSON invalides.'}, status=400)
         except Exception as e:
             return JsonResponse({'success': False, 'message': str(e)}, status=500)
-
 
 
 def password_reset_confirm(request, uidb64, token):

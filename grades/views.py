@@ -75,7 +75,7 @@ def view_my_grades_dashboard(request):
         'staff_pk_for_js': teacher_staff.pk,
     }
     
-    # [CORRECTION] Ne plus utiliser json.dumps() ici.
+    # Ne plus utiliser json.dumps() ici.
     # On passe le dictionnaire Python brut pour que |json_script| s'en charge.
     context['initial_data_for_script'] = {
         'main_class_data': dashboard_data['main_class_data'],
@@ -135,7 +135,7 @@ def view_teacher_grades_as_admin(request, pk_staff):
         'staff_pk_for_js': teacher_staff.pk,
     }
 
-    # [CORRECTION] Ne plus utiliser json.dumps() ici.
+    # Ne pas utiliser json.dumps() ici.
     # On passe le dictionnaire Python brut pour que |json_script| s'en charge.
     context['initial_data_for_script'] = {
         'main_class_data': dashboard_data['main_class_data'],
@@ -208,15 +208,14 @@ def api_get_grades_for_term_views(request):
 def api_manage_evaluation_views(request):
     """
     API (POST) pour Créer, Modifier ou Supprimer une Évaluation et ses Notes.
-    [MODIFIÉ] Ajout de la validation (note <= max_grade) côté serveur.
+    [CORRIGÉ] Gestion correcte de la note 0 et validations renforcées.
     """
     user = request.user
     user_type = get_user_type(user)
 
-    # 1. Permissions
     if user_type != "Teacher":
-        return JsonResponse({"success": False, "message": "Accès refusé. Seuls les enseignants peuvent gérer les évaluations."}, status=403)
-        
+        return JsonResponse({"success": False, "message": "Accès refusé."}, status=403)
+       
     try:
         teacher_staff = get_object_or_404(Staff, user=user)
     except Staff.DoesNotExist:
@@ -227,7 +226,7 @@ def api_manage_evaluation_views(request):
         action = data.get("action")
 
         with transaction.atomic():
-            
+           
             # --- ACTION: CREATE ---
             if action == "create":
                 class_id = data.get("class_id")
@@ -236,108 +235,103 @@ def api_manage_evaluation_views(request):
                 name = data.get("name")
                 coefficient = float(data.get("coefficient", 1.0))
                 max_grade = float(data.get("max_grade", 20.0))
-                grades_list = data.get("grades", []) 
-
-                # --- [NOUVELLE VALIDATION SERVEUR] ---
-                for grade_data in grades_list:
-                    grade_val_str = grade_data.get("grade")
-                    is_absent = bool(grade_data.get("absent", False))
-                    
-                    if not is_absent and grade_val_str is not None:
-                        try:
-                            grade_val_float = float(grade_val_str)
-                            if grade_val_float > max_grade:
-                                # Essaye de trouver le nom de l'élève pour une erreur claire
-                                try:
-                                    student = Student.objects.get(pk=grade_data.get("student_id"))
-                                    student_name = f"{student.user.first_name} {student.user.last_name}"
-                                except Student.DoesNotExist:
-                                    student_name = f"l'élève ID {grade_data.get('student_id')}"
-                                
-                                return JsonResponse({
-                                    "success": False, 
-                                    "message": f"Validation échouée : La note {grade_val_float} pour {student_name} est supérieure au maximum ({max_grade})."
-                                }, status=400) # 400 Bad Request
-                        except ValueError:
-                             return JsonResponse({"success": False, "message": f"La note '{grade_val_str}' n'est pas un nombre valide."}, status=400)
-                # --- [FIN VALIDATION SERVEUR] ---
+                grades_list = data.get("grades", [])
 
                 student_class = get_object_or_404(Class, pk=class_id)
                 teacher_subject = get_object_or_404(TeacherSubject, pk=ts_id)
                 term_year = get_object_or_404(TermYearLevel, pk=term_id)
 
+                # Validation Trimestre
+                if term_year.finished:
+                    return JsonResponse({"success": False, "message": "Action impossible : ce trimestre est clôturé."}, status=403)
+
+                if term_year.level != student_class.level:
+                    return JsonResponse({"success": False, "message": "Le trimestre ne correspond pas au niveau de la classe."}, status=400)
+
                 if teacher_subject.teacher != teacher_staff:
-                     return JsonResponse({"success": False, "message": "Vous ne pouvez pas créer d'évaluation pour une matière que vous n'enseignez pas."}, status=403)
+                     return JsonResponse({"success": False, "message": "Matière non autorisée."}, status=403)
                 
+                # Validation des notes
+                for grade_data in grades_list:
+                    grade_val = grade_data.get("grade") # Peut être 0, "15", "" ou null
+                    is_absent = bool(grade_data.get("absent", False))
+                   
+                    # On vérifie si la valeur n'est pas vide (0 est valide !)
+                    if not is_absent and grade_val is not None and grade_val != "":
+                        try:
+                            grade_float = float(grade_val)
+                            if grade_float > max_grade:
+                                return JsonResponse({"success": False, "message": f"La note {grade_float} dépasse le maximum ({max_grade})."}, status=400)
+                        except ValueError:
+                             return JsonResponse({"success": False, "message": f"Note invalide : {grade_val}"}, status=400)
+
                 new_evaluation = Evaluation.objects.create(
-                    name=name,
-                    coefficient=coefficient,
-                    max_grade=max_grade,
-                    term_year=term_year,
-                    teacher_subject=teacher_subject,
-                    student_class=student_class
+                    name=name, coefficient=coefficient, max_grade=max_grade,
+                    term_year=term_year, teacher_subject=teacher_subject, student_class=student_class
                 )
-                
+               
                 for grade_data in grades_list:
                     student = get_object_or_404(Student, pk=grade_data.get("student_id"))
+                    
+                    # [CORRECTION] Gestion propre de la valeur (0 inclus)
+                    val = None
+                    raw_val = grade_data.get("grade")
+                    if raw_val is not None and raw_val != "":
+                        val = float(raw_val)
+
                     Grade.objects.create(
                         evaluation=new_evaluation,
                         student=student,
-                        grade_value=float(grade_data.get("grade")) if grade_data.get("grade") else None,
+                        grade_value=val,
                         is_absent=bool(grade_data.get("absent", False))
                     )
-                
-                return JsonResponse({"success": True, "message": "Évaluation créée avec succès."})
+               
+                return JsonResponse({"success": True, "message": "Évaluation créée."})
 
             # --- ACTION: UPDATE ---
             elif action == "update":
                 evaluation_id = data.get("evaluation_id")
+                # ... (Récupération données) ...
                 name = data.get("name")
                 coefficient = float(data.get("coefficient", 1.0))
                 max_grade = float(data.get("max_grade", 20.0))
                 grades_list = data.get("grades", [])
-                
+               
                 evaluation = get_object_or_404(Evaluation, pk=evaluation_id)
 
-                # --- [NOUVELLE VALIDATION SERVEUR] ---
-                for grade_data in grades_list:
-                    grade_val_str = grade_data.get("grade")
-                    is_absent = bool(grade_data.get("absent", False))
-                    
-                    if not is_absent and grade_val_str is not None:
-                        try:
-                            grade_val_float = float(grade_val_str)
-                            # Vérifie si la note est supérieure au max autorisé
-                            # (Utilise max_grade de la *nouvelle* data, pas evaluation.max_grade)
-                            if grade_val_float > max_grade: 
-                                try:
-                                    student = Student.objects.get(pk=grade_data.get("student_id"))
-                                    student_name = f"{student.user.first_name} {student.user.last_name}"
-                                except Student.DoesNotExist:
-                                    student_name = f"l'élève ID {grade_data.get('student_id')}"
-                                
-                                return JsonResponse({
-                                    "success": False, 
-                                    "message": f"Validation échouée : La note {grade_val_float} pour {student_name} est supérieure au maximum ({max_grade})."
-                                }, status=400)
-                        except ValueError:
-                             return JsonResponse({"success": False, "message": f"La note '{grade_val_str}' n'est pas un nombre valide."}, status=400)
-                # --- [FIN VALIDATION SERVEUR] ---
+                if evaluation.term_year.finished:
+                    return JsonResponse({"success": False, "message": "Trimestre clos."}, status=403)
 
                 if evaluation.teacher_subject.teacher != teacher_staff:
-                     return JsonResponse({"success": False, "message": "Vous ne pouvez pas modifier cette évaluation."}, status=403)
+                     return JsonResponse({"success": False, "message": "Non autorisé."}, status=403)
+
+                # Validation (Même logique)
+                for grade_data in grades_list:
+                    grade_val = grade_data.get("grade")
+                    is_absent = bool(grade_data.get("absent", False))
+                    if not is_absent and grade_val is not None and grade_val != "":
+                        try:
+                            if float(grade_val) > max_grade:
+                                return JsonResponse({"success": False, "message": "Note hors limite."}, status=400)
+                        except ValueError:
+                             return JsonResponse({"success": False, "message": "Note invalide."}, status=400)
 
                 evaluation.name = name
                 evaluation.coefficient = coefficient
                 evaluation.max_grade = max_grade
                 evaluation.save()
-                
+               
                 for grade_data in grades_list:
+                    val = None
+                    raw_val = grade_data.get("grade")
+                    if raw_val is not None and raw_val != "":
+                        val = float(raw_val)
+
                     Grade.objects.update_or_create(
                         evaluation=evaluation,
                         student_id=grade_data.get("student_id"),
                         defaults={
-                            'grade_value': float(grade_data.get("grade")) if grade_data.get("grade") else None,
+                            'grade_value': val,
                             'is_absent': bool(grade_data.get("absent", False))
                         }
                     )
@@ -346,45 +340,43 @@ def api_manage_evaluation_views(request):
 
             # --- ACTION: DELETE ---
             elif action == "delete":
-                # ... (non modifié) ...
                 evaluation_id = data.get("evaluation_id")
                 evaluation = get_object_or_404(Evaluation, pk=evaluation_id)
                 
+                if evaluation.term_year.finished:
+                    return JsonResponse({"success": False, "message": "Trimestre clos."}, status=403)
+               
                 if evaluation.teacher_subject.teacher != teacher_staff:
-                     return JsonResponse({"success": False, "message": "Vous ne pouvez pas supprimer cette évaluation."}, status=403)
+                     return JsonResponse({"success": False, "message": "Non autorisé."}, status=403)
 
-                evaluation.delete() 
+                evaluation.delete()
                 return JsonResponse({"success": True, "message": "Évaluation supprimée."})
 
             # --- ACTION: GET_DETAILS ---
             elif action == "get_details":
-                # ... (non modifié) ...
                 evaluation_id = data.get("evaluation_id")
                 evaluation = get_object_or_404(Evaluation, pk=evaluation_id)
                 
                 grades = Grade.objects.filter(evaluation=evaluation)
-                grades_data = list(grades.values(
-                    'student_id', 
-                    'grade_value', 
-                    'is_absent'
-                ))
+                grades_data = list(grades.values('student_id', 'grade_value', 'is_absent'))
                 
-                evaluation_details = {
-                    "name": evaluation.name,
-                    "coefficient": evaluation.coefficient,
-                    "max_grade": evaluation.max_grade
-                }
-                
-                return JsonResponse({"success": True, "grades": grades_data, "details": evaluation_details})
-                
+                return JsonResponse({
+                    "success": True, 
+                    "grades": grades_data, 
+                    "details": {
+                        "name": evaluation.name,
+                        "coefficient": evaluation.coefficient,
+                        "max_grade": evaluation.max_grade
+                    }
+                })
+               
             else:
-                return JsonResponse({"success": False, "message": "Action non reconnue."}, status=400)
+                return JsonResponse({"success": False, "message": "Action inconnue."}, status=400)
 
     except Exception as e:
-        print(f"Erreur dans api_manage_evaluation: {e}")
-        return JsonResponse({"success": False, "message": f"Erreur interne : {str(e)}"}, status=500)
+        print(f"Erreur api_manage_evaluation: {e}")
+        return JsonResponse({"success": False, "message": f"Erreur interne: {str(e)}"}, status=500)
     
-
 
 @login_required(login_url='login')
 def view_my_grades_student(request):

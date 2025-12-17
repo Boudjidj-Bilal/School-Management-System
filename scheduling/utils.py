@@ -3,7 +3,7 @@ from django.utils import timezone
 from scheduling.models import ScheduledCourse
 from schools.models import ExceptionDay, ExceptionTime
 from subjects.models import TeacherSubject 
-from classes.models import Class
+from classes.models import ClassStudentYear
 
 from datetime import datetime
 from datetime import timedelta
@@ -373,3 +373,104 @@ def get_week_schedule_data_for_teacher(teacher_staff, start_of_week):
         })
         
     return courses_data
+
+
+def get_dashboard_schedule(user, current_year, student_profile=None):
+    """
+    Récupère le planning de la journée pour le widget du Dashboard.
+    
+    Args:
+        user: L'utilisateur connecté.
+        current_year: L'objet Year actif.
+        student_profile: (Optionnel) Si c'est un parent qui regarde, l'objet Student de l'enfant.
+    
+    Returns:
+        dict: {
+            'date': date_affichée,
+            'is_today': bool (est-ce la date réelle du jour ?),
+            'courses': liste de dictionnaires (matière, heure, salle...)
+        }
+    """
+    if not current_year:
+        return {'date': timezone.now().date(), 'courses': [], 'is_today': True}
+
+    # 1. Détermination de la date à afficher
+    today = timezone.now().date()
+    target_date = today
+
+    # Normalisation des dates de l'année scolaire
+    year_start = current_year.start_date
+    if hasattr(year_start, 'date'): 
+        year_start = year_start.date()
+        
+    year_end = current_year.end_date
+    if hasattr(year_end, 'date'):
+        year_end = year_end.date()
+
+    # Règle limite : Si on est avant ou après l'année scolaire
+    if year_start and today < year_start:
+        target_date = year_start # Premier jour
+    elif year_end and today > year_end:
+        target_date = year_end # Dernier jour
+
+    # 2. Initialisation de la QuerySet de base
+    courses_qs = ScheduledCourse.objects.filter(
+        start_datetime__date=target_date,
+        year=current_year,
+    ).select_related(
+        'teacher_subject__subject', 
+        'teacher_subject__teacher__user',
+        'classroom',
+        'student_class'
+    ).order_by('start_datetime')
+
+    # 3. Filtrage selon le rôle
+    
+    # CAS A : C'est un PROFESSEUR
+    if hasattr(user, 'staff_user') and user.staff_user.staff_type == 'TEACHER':
+        courses_qs = courses_qs.filter(teacher_subject__teacher=user.staff_user)
+
+    # CAS B : C'est un ÉLÈVE (ou un PARENT visualisant un élève)
+    elif student_profile or hasattr(user, 'student_user'):
+        target_student = student_profile if student_profile else user.student_user
+        
+        try:
+            registration = ClassStudentYear.objects.get(
+                student=target_student,
+                year=current_year,
+                is_active=True
+            )
+            courses_qs = courses_qs.filter(student_class=registration.student_class)
+        except ClassStudentYear.DoesNotExist:
+            courses_qs = courses_qs.none()
+    
+    # Si c'est un autre rôle (Admin, CPE...), on ne retourne rien pour ce widget spécifique
+    else:
+        courses_qs = courses_qs.none()
+
+    # 4. Formatage des données pour le template (Simple et léger)
+    formatted_courses = []
+    for course in courses_qs:
+        # [CORRECTION TIMEZONE]
+        # On convertit l'heure UTC de la BDD vers l'heure locale (Europe/Paris)
+        # AVANT de la transformer en texte.
+        local_start = timezone.localtime(course.start_datetime)
+        local_end = timezone.localtime(course.end_datetime)
+
+        formatted_courses.append({
+            'id': course.id,
+            'subject': course.teacher_subject.subject.name,
+            'color': course.teacher_subject.subject.color,
+            'start_time': local_start.strftime('%H:%M'), # Heure locale correcte
+            'end_time': local_end.strftime('%H:%M'),     # Heure locale correcte
+            'classroom': course.classroom.name if course.classroom else "Salle non définie",
+            'teacher': f"{course.teacher_subject.teacher.user.last_name}",
+            'class_name': course.student_class.name,
+            'status': course.status,
+        })
+
+    return {
+        'date': target_date,
+        'is_today': (target_date == today),
+        'courses': formatted_courses
+    }

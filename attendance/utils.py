@@ -229,3 +229,45 @@ def get_student_attendance_view_data(student, current_year):
         'global_stats': global_stats,
         'current_term_stats': current_term_stats
     }
+
+
+def get_dashboard_attendance_summary(student, current_year):
+    """
+    Récupère un résumé rapide pour le widget ÉLÈVE : 
+    Compteur des absences et retards injustifiés sur l'année en cours.
+    """
+    if not student or not current_year:
+        return {'to_justify': 0, 'total_absences': 0, 'total_delays': 0}
+
+    stats = get_student_attendance_stats(student, current_year=current_year)
+    
+    # Calcul du total "À justifier" (Absences + Retards)
+    to_justify = stats.get('unjustified_absences', 0) + stats.get('unjustified_delays', 0)
+    
+    return {
+        'to_justify': to_justify,
+        'total_absences': stats.get('total_absences', 0),
+        'total_delays': stats.get('total_delays', 0)
+    }
+
+
+def get_school_attendance_kpis(school, current_year):
+    """
+    Récupère les KPIs globaux pour le widget PROVISEUR/ADMIN :
+    Total absences et retards de l'école sur l'année en cours.
+    """
+    if not school or not current_year:
+        return {'total_absences': 0, 'total_delays': 0}
+
+    # On filtre les Attendance liées à des sessions de cette école et année
+    qs = Attendance.objects.filter(
+        session__term_year__year=current_year,
+        session__student_class__level__school=school
+    )
+    
+    stats = qs.aggregate(
+        total_absences=Count('id', filter=Q(status='ABSENCE')),
+        total_delays=Count('id', filter=Q(status='DELAY'))
+    )
+    
+    return stats

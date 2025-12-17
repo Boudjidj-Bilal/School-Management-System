@@ -1,6 +1,6 @@
 from django.db import transaction
 
-from .models import Messaging, AnnouncementRecipient, Announcement, Attachment
+from .models import Messaging, AnnouncementRecipient, Announcement, Attachment, Message
 from users.models import Student, Child, Staff
 from classes.models import Class, ClassStudentYear, ClassTeacherYear
 
@@ -448,3 +448,68 @@ def generate_target_summary(targets):
         summary_parts.append(f"{count} Membre{'s' if count > 1 else ''} du personnel")
         
     return ", ".join(summary_parts)
+
+
+
+def get_dashboard_messaging_stats(user):
+    """
+    Récupère le nombre total de messages non lus pour l'utilisateur.
+    Utilisé pour le widget "Messagerie" du dashboard principal.
+    """
+    try:
+        # 1. Identifier les conversations de l'utilisateur selon son rôle
+        if hasattr(user, 'staff_user') and user.staff_user.staff_type == 'TEACHER':
+            conversations = Messaging.objects.filter(teacher=user.staff_user)
+        elif hasattr(user, 'parent_user'):
+            conversations = Messaging.objects.filter(parent=user.parent_user)
+        elif hasattr(user, 'student_user'):
+            conversations = Messaging.objects.filter(student=user.student_user)
+        else:
+            # Admin, CPE, etc. n'ont pas de messagerie privée
+            return {'unread_count': 0}
+        
+        # 2. Compter les messages non lus reçus (sender != user)
+        unread_count = Message.objects.filter(
+            messaging__in=conversations,
+            is_read=False
+        ).exclude(sender=user).count()
+
+        return {'unread_count': unread_count}
+
+    except Exception:
+        # En cas d'erreur (ex: utilisateur mal configuré), on retourne 0 pour ne pas casser le dashboard
+        return {'unread_count': 0}
+
+
+def get_dashboard_last_announcement(user):
+    """
+    Récupère la toute dernière annonce reçue par l'utilisateur.
+    Utilisé pour le widget "Annonces" du dashboard principal.
+    """
+    try:
+        # On cherche dans la table de liaison Recipient pour voir ce que l'utilisateur a reçu
+        last_recipient = AnnouncementRecipient.objects.filter(user=user)\
+            .select_related('announcement', 'announcement__sender')\
+            .order_by('-announcement__created_at').first()
+        
+        if last_recipient:
+            ann = last_recipient.announcement
+            
+            # Formatage du nom de l'expéditeur
+            sender_name = ann.sender.username
+            # Si c'est un membre du staff, on essaie d'avoir un nom plus joli
+            if hasattr(ann.sender, 'staff_user'):
+                sender_name = f"{ann.sender.staff_user.user.last_name} {ann.sender.staff_user.user.first_name}"
+
+            return {
+                'title': ann.title,
+                'sender': sender_name,
+                'date': ann.created_at, # Le template se chargera du formatage date
+                'type': ann.get_announcement_type_display(),
+                'is_read': last_recipient.is_read
+            }
+            
+        return None # Aucune annonce reçue
+
+    except Exception:
+        return None

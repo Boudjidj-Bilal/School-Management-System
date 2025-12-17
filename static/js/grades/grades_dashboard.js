@@ -130,18 +130,15 @@ function parseInitialData() {
 }
 
 
-
-
 // --- 3. Logique de Rendu ---
 
 /**
  * Met à jour l'état (lecture seule / modifiable) pour un bloc spécifique.
  */
-function updateBlockPermissions(contextKey, newTermId) {
+function updateBlockPermissions(contextKey, activeTermId) {
     const block = document.querySelector(`[data-context-key="${contextKey}"]`);
     if (!block) return;
 
-    // Trouve le `current_term_id` (trimestre actif) pour ce bloc, tel que défini dans le HTML initial
     let dataBlock;
     if (contextKey.includes('-')) {
         dataBlock = STATE.taughtClassesData[contextKey];
@@ -149,34 +146,65 @@ function updateBlockPermissions(contextKey, newTermId) {
         dataBlock = STATE.mainClassData[contextKey];
     }
 
-    // [CORRIGÉ] S'assure que dataBlock existe avant de lire 'current_term_id'
-    if (!dataBlock) {
-        console.warn(`Aucune donnée de bloc trouvée pour la clé ${contextKey} lors de la mise à jour des permissions.`);
-        return; 
+    if (!dataBlock) return;
+
+    // On cherche les infos du trimestre SÉLECTIONNÉ par l'onglet
+    // (activeTermId est passé par handleTermChange ou calculé au chargement)
+    // Si activeTermId n'est pas fourni, on cherche l'onglet actif dans le DOM
+    if (!activeTermId) {
+        const activeTab = block.querySelector('.border-b-2'); // Classe de l'onglet actif
+        if (activeTab) {
+            activeTermId = activeTab.dataset.termId;
+        } else {
+            // Fallback : le current_term_id par défaut
+            activeTermId = dataBlock.current_term_id;
+        }
     }
-
-    const actualCurrentTermId = dataBlock.current_term_id;
+    // Conversion en int pour être sûr de la comparaison avec le JSON
+    activeTermId = parseInt(activeTermId);
     
-    // L'édition est possible SI l'utilisateur a la permission GLOBALE
-    // ET SI le terme sélectionné EST le terme "en cours"
-    const isEditable = CAN_EDIT_GRADES && (parseInt(newTermId) === parseInt(actualCurrentTermId));
+    const termInfo = dataBlock.available_terms.find(t => t.id == activeTermId);
+    
+    // RÈGLE : Modifiable si Admin/Prof ET Trimestre NON FINI
+    // (Note: CAN_EDIT_GRADES est true pour le prof, false pour l'admin/proviseur)
+    const isFinished = termInfo ? termInfo.finished : true;
+    const isEditable = CAN_EDIT_GRADES && !isFinished;
 
-    // Masque/Affiche le bouton "Ajouter Évaluation"
+    // --- MISE À JOUR UI ---
+
+    // 1. Bouton "Ajouter Évaluation"
     const addBtn = block.querySelector('.add-eval-btn');
     if (addBtn) {
         addBtn.disabled = !isEditable;
-        addBtn.style.display = CAN_EDIT_GRADES ? 'inline-block' : 'none';
+
+        if (isEditable) {
+            // État ACTIF (Vert)
+            addBtn.classList.remove('opacity-50', 'cursor-not-allowed', 'bg-gray-400');
+            addBtn.classList.add('bg-teal-600', 'hover:bg-teal-700', 'shadow-md', 'cursor-pointer');
+            addBtn.title = "Ajouter une nouvelle évaluation";
+            addBtn.style.pointerEvents = 'auto'; // Réactive les clics CSS
+        } else {
+            // État DÉSACTIVÉ (Gris)
+            addBtn.classList.add('opacity-50', 'cursor-not-allowed', 'bg-gray-400');
+            addBtn.classList.remove('bg-teal-600', 'hover:bg-teal-700', 'shadow-md', 'hover:bg-gray-500', 'cursor-pointer');
+            addBtn.title = "Ce trimestre est clos ou vous n'avez pas les droits.";
+            addBtn.style.pointerEvents = 'none'; // Bloque les clics au niveau CSS (sécurité visuelle)
+        }
     }
 
-    // Met à jour les boutons "Modifier" et "Supprimer"
+    // 2. Boutons d'édition (Voir/Modifier)
     block.querySelectorAll('.edit-eval-btn').forEach(btn => {
         const textSpan = btn.querySelector('span');
-        if (textSpan) textSpan.textContent = isEditable ? 'Voir / Modifier' : 'Voir les notes';
+        if (textSpan) {
+            textSpan.textContent = isEditable ? 'Voir / Modifier' : 'Voir les notes';
+        }
+        // On ne désactive pas ce bouton, on veut pouvoir VOIR les notes même si clos
     });
     
+    // 3. Boutons Supprimer
     block.querySelectorAll('.delete-eval-btn').forEach(btn => {
         btn.disabled = !isEditable;
-        btn.style.display = CAN_EDIT_GRADES ? 'inline-block' : 'none';
+        btn.style.display = isEditable ? 'inline-block' : 'none';
     });
 }
 
@@ -296,9 +324,9 @@ async function handleTermChange(e) {
 
     const newTermId = parseInt(button.dataset.termId);
     const contextKey = button.dataset.contextKey;
-    const type = button.dataset.type; // "main" ou "subject"
+    const type = button.dataset.type;
     
-    // Met à jour l'UI des onglets
+    // UI Onglets (Reset & Active)
     const tabs = document.querySelectorAll(`.term-tab-${contextKey}`);
     tabs.forEach(tab => {
         tab.classList.remove('border-indigo-500', 'text-indigo-600', 'border-b-2', 'border-teal-500', 'text-teal-600');
@@ -309,17 +337,15 @@ async function handleTermChange(e) {
     button.classList.add(...activeClass);
     button.classList.remove('border-transparent', 'text-gray-500', 'hover:text-gray-700', 'hover:border-gray-300');
 
-    // Appelle l'API pour récupérer les nouvelles données
+    // Appel API
     const result = await apiFetch(API_URLS.GET_TERM_DATA, {
         term_id: newTermId,
-        class_id: contextKey.split('-')[0], // "1"
-        ts_id: (type === 'subject') ? contextKey.split('-')[1] : null // "5" ou null
+        class_id: contextKey.split('-')[0],
+        ts_id: (type === 'subject') ? contextKey.split('-')[1] : null
     });
 
     if (result.success) {
-        // Met à jour l'état global (les données ont déjà la bonne structure)
         if (type === 'main') {
-            // Met à jour les données dans l'état global
             STATE.mainClassData[contextKey] = { ...STATE.mainClassData[contextKey], ...result.data };
             renderMainClassBlock(contextKey, result.data);
         } else {
@@ -327,7 +353,7 @@ async function handleTermChange(e) {
             renderSubjectClassBlock(contextKey, result.data);
         }
         
-        // Met à jour les permissions pour les boutons (Suppr, Modif)
+        // [CORRECTION] Appel explicite de la mise à jour des permissions avec le nouveau terme
         updateBlockPermissions(contextKey, newTermId);
     }
 }
@@ -385,9 +411,12 @@ async function openEvaluationModal(mode, data) {
         return;
     }
 
-    const dataBlock = STATE.taughtClassesData[studentListKey];
-    const actualCurrentTermId = dataBlock ? dataBlock.current_term_id : null;
-    const isReadOnly = !CAN_EDIT_GRADES || (parseInt(activeTermId) !== parseInt(actualCurrentTermId));
+
+    const dataBlock = STATE.taughtClassesData[data.contextKey];
+    const termInfo = dataBlock.available_terms.find(t => t.id == activeTermId);
+    const isFinished = termInfo ? termInfo.finished : true;
+
+    const isReadOnly = !CAN_EDIT_GRADES || isFinished;
 
     if (isReadOnly) {
         evaluationModalSaveBtn.style.display = 'none';
@@ -401,7 +430,7 @@ async function openEvaluationModal(mode, data) {
         evalMaxGradeInput.disabled = false;
     }
 
-    // [MODIFICATION] Variable pour la validation
+    // Variable pour la validation
     let maxGrade;
 
     if (mode === 'add') {
@@ -632,11 +661,11 @@ function handleDeleteEvaluation(button) {
  */
 function initializeUIPermissions() {
     
-    // [CORRIGÉ] Boucle sur tous les blocs de matière en utilisant le bon sélecteur
+    // Boucle sur tous les blocs de matière en utilisant le bon sélecteur
     // Le HTML utilise 'data-context-key' pour les blocs de matière
     document.querySelectorAll('#subject-class-container [data-context-key]').forEach(container => {
         
-        // [CORRIGÉ] Lit 'dataset.contextKey' au lieu de 'id.split'
+        // Lit 'dataset.contextKey' au lieu de 'id.split'
         const contextKey = container.dataset.contextKey; 
         
         const data = STATE.taughtClassesData[contextKey];
@@ -710,7 +739,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const contextKey = container.dataset.contextKey;
             const [classId, tsId] = contextKey.split('-');
             
-            // [MODIFICATION] Récupère toutes les données de l'évaluation, 
+            // Récupère toutes les données de l'évaluation, 
             // y compris 'max_grade' (grâce à utils.py)
             const evalData = STATE.taughtClassesData[contextKey].evaluations.find(ev => ev.id == editBtn.dataset.evalId);
             
@@ -720,12 +749,12 @@ document.addEventListener('DOMContentLoaded', () => {
                 return;
             }
 
-            // [MODIFICATION] Passe 'evalData.max_grade' à la modale
+            // Passe 'evalData.max_grade' à la modale
             openEvaluationModal('edit', {
                 evalId: evalData.id,
                 evalName: evalData.name,
                 evalCoeff: evalData.coefficient,
-                evalMaxGrade: evalData.max_grade, // <-- AJOUTÉ
+                evalMaxGrade: evalData.max_grade,
                 classId: classId,
                 tsId: tsId,
                 // Recherche le nom de la classe et de la matière dans les éléments parents
