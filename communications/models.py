@@ -173,7 +173,7 @@ class Message(models.Model):
         Messaging, on_delete=models.CASCADE, related_name="messages"
     )
     
-    # [MODIFIÉ] On lie directement à l'User pour savoir exactement qui écrit (Prof, Parent ou Élève)
+    # On lie directement à l'User pour savoir exactement qui écrit (Prof, Parent ou Élève)
     sender = models.ForeignKey(
         User, on_delete=models.CASCADE, related_name="sent_messages"
     )

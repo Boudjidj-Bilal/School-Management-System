@@ -4,6 +4,7 @@ from django.contrib.auth.decorators import login_required
 from django.http import HttpResponseForbidden, JsonResponse
 from django.views.decorators.http import require_http_methods
 from django.views.decorators.csrf import csrf_exempt
+from django.utils import timezone
  
 # Modèles
 from .models import Messaging, Message, Announcement, AnnouncementRecipient
@@ -136,10 +137,11 @@ def api_get_messages(request, conversation_id):
         # Formater la date pour le front
         formatted_messages = []
         for msg in messages_data:
+            local_date = timezone.localtime(msg['date'])
             formatted_messages.append({
                 'id': msg['id'],
                 'content': msg['content'],
-                'date': msg['date'].strftime('%d/%m %H:%M'),
+                'date': local_date.strftime('%d/%m %H:%M'),
                 'is_me': (msg['sender__id'] == request.user.id),
                 'sender_name': f"{msg['sender__first_name']} {msg['sender__last_name']}"
             })
@@ -198,12 +200,14 @@ def api_send_message(request):
             content=content
         )
 
+        local_date = timezone.localtime(message.date)
+
         return JsonResponse({
             'success': True,
             'message': {
                 'id': message.id,
                 'content': message.content,
-                'date': message.date.strftime('%d/%m %H:%M'),
+                'date': local_date.strftime('%d/%m %H:%M'),
                 'is_me': True
             }
         })
@@ -235,8 +239,6 @@ def api_get_contacts(request):
     current_year = get_current_year_for_school(school)
     
     contacts = get_available_contacts(request.user, current_year)
-
-    print(contacts)
 
     return JsonResponse({'success': True, 'contacts': contacts})
 
@@ -416,6 +418,9 @@ def api_get_announcements(request):
                 sender_name = f"{ann.sender.staff_user.staff_type.capitalize()} {ann.sender.last_name}"
         except: pass
         
+        local_date = timezone.localtime(ann.created_at)
+        read_date = timezone.localtime(recipient.read_at) if (recipient and recipient.read_at) else None
+
         return {
             'id': ann.id,
             'title': ann.title,
@@ -423,9 +428,9 @@ def api_get_announcements(request):
             'type': ann.get_announcement_type_display(),
             'type_code': ann.announcement_type,
             'sender': sender_name,
-            'date': ann.created_at.strftime('%d/%m/%Y %H:%M'),
+            'date': local_date.strftime('%d/%m/%Y %H:%M'),
             'is_read': recipient.is_read if recipient else False,
-            'read_at': recipient.read_at.strftime('%d/%m/%Y %H:%M') if (recipient and recipient.read_at) else None,
+            'read_at': read_date.strftime('%d/%m/%Y %H:%M') if read_date else None,
             'is_recipient': (recipient is not None),
             'attachments': [{'url': a.file.url, 'type': a.file_type, 'name': a.file.name.split('/')[-1]} for a in ann.attachments.all()]
         }
@@ -446,13 +451,15 @@ def api_get_announcements(request):
         total = ann.recipients.count()
         read = ann.recipients.filter(is_read=True).count()
         percent = int((read/total)*100) if total > 0 else 0
+
+        local_date = timezone.localtime(ann.created_at)
         
         data['sent'].append({
             'id': ann.id,
             'title': ann.title,
             'content': ann.content,
             'type': ann.get_announcement_type_display(),
-            'date': ann.created_at.strftime('%d/%m/%Y %H:%M'),
+            'date': local_date.strftime('%d/%m/%Y %H:%M'),
             'targets_summary': ann.target_display,
             'stats': {'total': total, 'read': read, 'percent': percent},
             'attachments': []
