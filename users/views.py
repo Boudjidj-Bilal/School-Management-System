@@ -1,6 +1,6 @@
 from django.shortcuts import render, redirect, get_object_or_404
 
-from django.http import JsonResponse, HttpResponseBadRequest
+from django.http import JsonResponse
 
 import datetime
 
@@ -19,7 +19,6 @@ from django.utils.encoding import force_str
 from django.contrib.auth.tokens import PasswordResetTokenGenerator
 
 # Imports des Services (Utils des autres apps)
-from scheduling.models import ScheduledCourse # Pour le planning prof (fait en direct)
 from attendance.utils import get_dashboard_attendance_summary, get_school_attendance_kpis
 from attendance.models import Attendance # Pour les alertes CPE
 from communications.utils import get_dashboard_messaging_stats, get_dashboard_last_announcement

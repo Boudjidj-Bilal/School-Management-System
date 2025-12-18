@@ -1,7 +1,7 @@
 <nav class="bg-gray-800 p-4 shadow-lg">
     <div class="container mx-auto flex justify-between items-center">
         <a href="{% url 'dashboard' %}" class="text-white text-2xl font-bold">
-            GONOTE
+            THERANOTES
             {% if user_school %}
                 <span class="ml-4 text-sm font-normal text-gray-300">| {{ user_school.name }}</span>
             {% endif %}

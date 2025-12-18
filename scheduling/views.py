@@ -1,6 +1,6 @@
 import json
 import datetime
-from django.http import JsonResponse, HttpResponseForbidden
+from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, render, redirect
 from django.views.decorators.csrf import csrf_exempt
 from django.db import IntegrityError, transaction
@@ -483,9 +483,8 @@ def view_class_schedule_page(request, pk_class):
         
         return render(request, 'scheduling/view_schedule.html', context)
 
-    except Exception as e:
-        print(f"Erreur dans view_class_schedule_page: {e}")
-        return HttpResponseForbidden("Erreur lors du chargement de la page.")
+    except Exception:
+        return render(request, "404.html", status=404)
 
 
 @require_http_methods(["POST"])

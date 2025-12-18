@@ -1,6 +1,6 @@
 import json
 
-from django.http import JsonResponse, HttpResponseForbidden
+from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, render
 from django.views.decorators.csrf import csrf_exempt
 from django.db import transaction

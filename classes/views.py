@@ -9,7 +9,7 @@ from users.utils import get_user_type
 from schools.utils import get_user_school, get_authorisation_stape_run_year, get_current_year_for_school, get_authorisation_stape_creation_year
 
 from .models import Classroom, Level, Class, ClassStudentYear, ClassTeacherYear
-from schools.models import School, Year
+from schools.models import School
 from users.models import Student 
 from subjects.models import TeacherSubject 
 
