@@ -326,7 +326,7 @@ def manage_users_view(request):
     
     # Vérifie si l'utilisateur a la permission de voir cette page
     if user_type not in ["SuperAdministrator", "Principal", "Administrator"]:
-        return HttpResponseBadRequest("Vous n'avez pas la permission de gérer les utilisateurs.")
+        return render(request, "404.html", status=404)
 
     if user_type == "SuperAdministrator":
         # Le super admin peut gérer les utilisateurs de n'importe quelle école
@@ -395,7 +395,7 @@ def create_user_view(request):
     
     # Vérifie si l'utilisateur a la permission de voir cette page
     if user_type not in ["SuperAdministrator", "Principal", "Administrator"]:
-        return HttpResponseBadRequest("Vous n'avez pas la permission de gérer les utilisateurs.")
+        return render(request, "404.html", status=404)
     
     try:
         data = json.loads(request.body)
@@ -628,7 +628,6 @@ def toggle_user_status_view(request):
         return JsonResponse({"success": False, "message": f"Une erreur est survenue: {str(e)}"}, status=500)
 
 
-# TODO cette views est accessible que pour les types d'utilisateur suivants : super admin, principal et administrateur
 @login_required(login_url='login')
 def assign_children_view(request):
     """
@@ -641,7 +640,7 @@ def assign_children_view(request):
     
     # Vérifie si l'utilisateur a la permission de voir cette page : 
     if user_type not in ["SuperAdministrator", "Principal", "Administrator"]:
-        return HttpResponseBadRequest("Accès refusé. Seuls les Principaux et Administrateurs peuvent accéder à cette page.")
+        return render(request, "404.html", status=404)
 
     user_school = get_user_school(request.user, request.session.get('selected_school_id'))
 
@@ -659,11 +658,6 @@ def assign_children_view(request):
 
         parents_queryset = Parent.objects.select_related('user').filter(user__is_active=True, school=school_filter).order_by('user__first_name', 'user__last_name')
         students_queryset = Student.objects.select_related('user').filter(user__is_active=True, school=school_filter).order_by('user__first_name', 'user__last_name')
-
-
-
-    # parents_queryset = Parent.objects.select_related('user').filter(user__is_active=True).order_by('user__first_name', 'user__last_name')
-    # students_queryset = Student.objects.select_related('user').filter(user__is_active=True).order_by('user__first_name', 'user__last_name')
 
     # 2. Construire la liste des étudiants pour l'objet JSON (pour le JS)
     students_to_serialize = []
@@ -716,7 +710,7 @@ def toggle_child_assignment_api(request):
     
     # Vérifie si l'utilisateur a la permission de voir cette page
     if user_type not in ["SuperAdministrator", "Principal", "Administrator"]:
-        return HttpResponseBadRequest("Vous n'avez pas la permission de gérer les utilisateurs.")
+        return render(request, "404.html", status=404)
     
     try:
         data = json.loads(request.body)
@@ -789,7 +783,7 @@ def select_child_view(request):
             child_id = data.get('child_id')
             
             if get_user_type(request.user) != 'Parent':
-                return JsonResponse({'success': False, 'message': "Action réservée aux parents."}, status=403)
+                return render(request, "404.html", status=404)
                 
             parent = request.user.parent_user
             
@@ -802,7 +796,7 @@ def select_child_view(request):
         except Exception as e:
             return JsonResponse({'success': False, 'message': str(e)}, status=500)
     
-    return JsonResponse({'success': False, 'message': "Méthode non autorisée"}, status=405)
+    return render(request, "404.html", status=404)
 
 
 
@@ -827,8 +821,8 @@ def api_change_password(request):
     """
     API pour changer le mot de passe de l'utilisateur connecté.
     """
-    if request.method != 'POST':
-        return JsonResponse({'success': False, 'message': "Méthode non autorisée."}, status=405)
+    if not request.method == 'POST':
+        return render(request, "404.html", status=404)
 
     try:
         data = json.loads(request.body)
@@ -866,3 +860,10 @@ def api_change_password(request):
     except Exception as e:
         print(f"Erreur changement mot de passe: {e}")
         return JsonResponse({'success': False, 'message': "Une erreur serveur est survenue."}, status=500)
+    
+def custom_page_not_found_view(request, exception=None):
+    """
+    Vue personnalisée pour l'erreur 404 (Page non trouvée).
+    Peut être appelée automatiquement par Django ou manuellement.
+    """
+    return render(request, "404.html", status=404)

@@ -112,15 +112,7 @@ def create_school_view(request):
             except Exception as e:
                 return JsonResponse({'success': False, 'message': str(e)}, status=500)
     else:
-        return JsonResponse({'success': False, 'message': 'Accès non autorisé.'}, status=403)
-
-
-@login_required(login_url='login')
-def update_school_view(request):
-    """
-    Vue pour modifier une école. #TODO
-    """
-    return "" # TODO Accessible pour le super admin et aussi pour le proviseur qui peut changer sa propre école
+        return render(request, "404.html", status=404)
 
 
 @login_required(login_url='login')
@@ -132,7 +124,7 @@ def manage_years_view(request):
     
     # Vérifie si l'utilisateur a la permission : SuperAdministrator, Principal
     if user_type not in ["SuperAdministrator", "Principal"]:
-        return HttpResponseForbidden("Accès refusé. Vous n'avez pas les droits nécessaires pour gérer les années scolaires.")
+        return render(request, "404.html", status=404)
 
     # 1. Déterminer l'école de l'utilisateur
     if user_type == "SuperAdministrator":
@@ -141,13 +133,12 @@ def manage_years_view(request):
     else:
         school = get_user_school(request.user)
 
-    if school.is_active == False:
-        return HttpResponseForbidden("Lécole est inactif.")
-
-    if not school:
-        # Si SuperAdmin n'a pas sélectionné d'école ou si l'utilisateur n'est pas lié
-        return HttpResponseForbidden("Aucune école associée à cet utilisateur ou sélectionnée.")
-
+    if school:
+        if not school.is_active:
+            return render(request, "404.html", status=404)
+    else:
+        return render(request, "404.html", status=404)
+    
     # 2. Récupérer toutes les années scolaires pour cette école, triées par date de début
     all_years = Year.objects.filter(school=school).order_by('-start_date')
 
@@ -172,7 +163,7 @@ def create_or_update_year_api(request):
     """
     user_type = get_user_type(request.user)
     if user_type not in ["SuperAdministrator", "Principal"]:
-        return JsonResponse({"success": False, "message": "Accès refusé."}, status=403)
+        return render(request, "404.html", status=404)
         
     # 1. Déterminer l'école (même logique que dans la vue)
     if user_type == "SuperAdministrator":
@@ -182,13 +173,12 @@ def create_or_update_year_api(request):
         school = get_user_school(request.user)
 
     # Erreur : S'il n'y a pas d'école
-    if not school:
-        return JsonResponse({"success": False, "message": "École non déterminée."}, status=400)
+    if school:
+        if not school.is_active:
+            return render(request, "404.html", status=404)
+    else: 
+        return render(request, "404.html", status=404)
 
-    # Erreur : Si l'école est inactive
-    if not school.is_active:
-            return HttpResponseForbidden("Lécole est inactif.")
-    
     try:
         data = json.loads(request.body)
         year_id = data.get('year_id')
@@ -316,7 +306,7 @@ def change_year_status_api(request, year_id):
         user_type = get_user_type(request.user)
 
         if user_type not in ["SuperAdministrator", "Principal"]:
-            return JsonResponse({"success": False, "message": "Accès refusé."}, status=403)
+            return render(request, "404.html", status=404)
         
         # 1. Charger l'objet Year
         year = get_object_or_404(Year, pk=year_id)
@@ -381,7 +371,7 @@ def change_year_status_api(request, year_id):
 
                 message = f"L'année '{year.name}' est passée à l'étape '{new_status_key.capitalize()}', les premier trimestres ou semestres ont été créer. (Veuillez recharger la page)"
 
-        # TODO Ajouter une vérification dans le js, lorsqu"on clique sur passer à une étape suivante il faut un message de vérfication
+        # TODO Ajouter une vérification dans le js, lorsqu'on clique sur passer à une étape suivante il faut un message de vérfication
         
         # 8. Sauvegarder les modifications
         year.save()
@@ -393,14 +383,13 @@ def change_year_status_api(request, year_id):
         if new_field_name == 'registration':
             send_emails_for_year_stage(school, new_field_name) # Envoie un mail à tous les administrateurs actif de cette école afin de les prévenir que l'étape de l'enregistrement à commencé
         elif new_field_name == 'running': 
-            send_emails_for_year_stage(school, new_field_name)  # TODO Envoie un mail à tous les professeurs et les CPE actif de cette école afin de les prévenir que l'étape du déroulé à commencé
+            send_emails_for_year_stage(school, new_field_name)  # Envoie un mail à tous les professeurs et les CPE actif de cette école afin de les prévenir que l'étape du déroulé à commencé
         
         return JsonResponse({'success': True, 'message': message})
 
     except Year.DoesNotExist:
         return JsonResponse({'success': False, 'message': 'Année scolaire non trouvée ou accès refusé.'}, status=404)
     except Exception as e:
-        print(f"Erreur lors du changement de statut: {e}")
         return JsonResponse({'success': False, 'message': 'Une erreur serveur est survenue lors du changement de statut.'}, status=500)
 
 
@@ -418,21 +407,21 @@ def exception_management(request):
     allowed_roles = ["SuperAdministrator", "Principal"]
     
     if user_type not in allowed_roles:
-        return JsonResponse({"success": False, "message": "Vous n'avez pas la permission de gérer les exceptions."}, status=403)
+        return render(request, "404.html", status=404)
 
     # 2. Détermination du contexte de l'école
     try:
         school_filter = get_user_school(request.user, request.session.get('selected_school_id'))
     except School.DoesNotExist:
-        return JsonResponse({"success": False, "message": "L'école sélectionnée est introuvable."}, status=404)
+        return render(request, "404.html", status=404)
     
     # Vérification de l'état actif de l'école (relecture forcée pour la sécurité)
     # (En se basant sur la correction précédente, nous supposons que school_filter est l'instance fraîche)
-    if not school_filter:
-        return JsonResponse({"success": False, "message": "L'école sélectionnée est introuvable."}, status=404)
-    
-    elif not school_filter.is_active:
-        return JsonResponse({"success": False, "message": "L'école sélectionnée est désactivée. Impossible de procéder."}, status=403)
+    if school_filter:
+        if not school_filter.is_active:
+            return render(request, "404.html", status=404)
+    else:
+        return render(request, "404.html", status=404)
         
     # 3. Détermination de l'année scolaire actuelle
     current_year = get_current_year_for_school(school_filter)
@@ -606,13 +595,13 @@ def manage_term(request):
     allowed_roles = ["SuperAdministrator", "Principal"] 
     
     if user_type not in allowed_roles:
-        return JsonResponse({"success": False, "message": "Vous n'avez pas la permission de gérer l'avancement des trimestres/semestres."}, status=403) 
+        return render(request, "404.html", status=404)
 
     # 2. Détermination du contexte de l'école
     try:
         school_filter = get_user_school(request.user, request.session.get('selected_school_id'))
     except School.DoesNotExist:
-        return JsonResponse({"success": False, "message": "L'école sélectionnée est introuvable."}, status=404)
+        return render(request, "404.html", status=404)
     
     if not school_filter or not school_filter.is_active:
         message = "L'école sélectionnée est introuvable ou désactivée. Impossible de procéder."
@@ -800,7 +789,7 @@ def edit_school_view(request, school_id):
     user_type = get_user_type(request.user)
 
     if not user_type == "SuperAdministrator":
-        return HttpResponseForbidden("Accès refusé. Seuls les Super Administrateurs peuvent modifier une école.")
+        return render(request, "404.html", status=404)
 
     try:
         # On récupère l'école ou on renvoie une 404
@@ -812,8 +801,8 @@ def edit_school_view(request, school_id):
         }
         return render(request, 'schools/edit_school.html', context)
         
-    except Exception as e:
-        return HttpResponseForbidden(f"Erreur lors du chargement de l'école : {str(e)}")
+    except Exception:
+        return render(request, "404.html", status=404)
 
 
 @require_http_methods(["POST"])
@@ -826,7 +815,7 @@ def api_update_school(request, school_id):
     user_type = get_user_type(request.user)
 
     if not user_type == "SuperAdministrator":
-        return JsonResponse({'success': False, 'message': 'Action non autorisée.'}, status=403)
+        return render(request, "404.html", status=404)
 
     try:
         school = get_object_or_404(School, pk=school_id)

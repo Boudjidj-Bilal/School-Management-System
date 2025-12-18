@@ -19,6 +19,9 @@ from django.urls import path, include
 
 from django.conf import settings
 from django.conf.urls.static import static
+from users.views import custom_page_not_found_view
+
+handler404 = 'users.views.custom_page_not_found_view'
 
 urlpatterns = [
     path("admin/", admin.site.urls),
@@ -39,6 +42,8 @@ urlpatterns = [
     path('scheduling/', include(('scheduling.urls', 'scheduling'), namespace='scheduling')),
     path('attendance/', include('attendance.urls', namespace='attendance')),
     path('communications/', include('communications.urls', namespace='communication')),
+
+    path('test-404/', custom_page_not_found_view),
 
 ]
 

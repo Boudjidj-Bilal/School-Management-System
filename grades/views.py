@@ -40,20 +40,20 @@ def view_my_grades_dashboard(request):
 
     # 1. Vérification des permissions
     if not (user_type == "Teacher" or user_type == "Principal" or user_type == "SuperAdministrator"):
-        return HttpResponseForbidden("Accès refusé. Cette page est réservée aux enseignants et à l'administration.")
+        return render(request, "404.html", status=404)
         
     try:
         teacher_staff = get_object_or_404(Staff, user=user)
     except Staff.DoesNotExist:
-         return HttpResponseForbidden("Erreur: Profil enseignant non trouvé pour cet utilisateur.")
+        return render(request, "404.html", status=404)
 
     # 2. Vérification de l'année scolaire
     current_year = get_current_year_for_school(teacher_staff.school)
     if not current_year:
-        return HttpResponseForbidden("Aucune année scolaire courante n'est définie.")
+        return render(request, "404.html", status=404)
         
     if not current_year.running:
-        return HttpResponseForbidden("La gestion des évaluations n'est disponible que lorsqu'une année scolaire est en cours ('running').")
+        return render(request, "404.html", status=404)
 
     # 3. Récupération des données structurées par classe et matière
     # [APPEL UTILS]
@@ -100,18 +100,18 @@ def view_teacher_grades_as_admin(request, pk_staff):
 
     # 1. Vérification des permissions
     if user_type not in ["SuperAdministrator", "Principal"]:
-        return HttpResponseForbidden("Accès refusé. Seuls les Proviseurs et Super-Administrateurs peuvent consulter cette page.")
+        return render(request, "404.html", status=404)
         
     try:
         # C'est le prof qu'on REGARDE
         teacher_staff = get_object_or_404(Staff, pk=pk_staff) 
     except Staff.DoesNotExist:
-         return HttpResponseForbidden("Erreur: Profil enseignant cible non trouvé.")
+        return render(request, "404.html", status=404)
 
     # 2. Vérification de l'année scolaire
     current_year = get_current_year_for_school(teacher_staff.school)
     if not current_year:
-        return HttpResponseForbidden("Aucune année scolaire courante n'est définie.")
+        return render(request, "404.html", status=404)
     
     # (On permet de voir même si l'année n'est pas 'running', car c'est une vue admin)
     
@@ -397,9 +397,9 @@ def view_my_grades_student(request):
             # On récupère le profil Student lié au User
             student = Student.objects.get(user=user)
         except Student.DoesNotExist:
-            return HttpResponseForbidden("Erreur : Aucun profil élève associé à ce compte.")
+            return render(request, "404.html", status=404)
     else:
-        return HttpResponseForbidden("Accès refusé. Cette page est réservée aux élèves.")
+        return render(request, "404.html", status=404)
 
 
     # 2. Vérification de l'année scolaire
@@ -446,18 +446,18 @@ def view_appreciations_dashboard(request):
 
     # 1. Permissions
     if user_type not in ["Teacher"]:
-        return HttpResponseForbidden("Accès refusé.")
+        return render(request, "404.html", status=404)
         
     try:
         # Le prof connecté
         teacher_staff = get_object_or_404(Staff, user=user)
     except Staff.DoesNotExist:
-         return HttpResponseForbidden("Erreur: Profil enseignant non trouvé.")
+        return render(request, "404.html", status=404)
 
     # 2. Année scolaire
     current_year = get_current_year_for_school(teacher_staff.school)
     if not current_year:
-        return HttpResponseForbidden("Aucune année scolaire courante n'est définie.")
+        return render(request, "404.html", status=404)
 
     # 3. Récupération des données
     dashboard_data = get_appreciations_dashboard_data(teacher_staff, current_year)
@@ -477,7 +477,7 @@ def view_appreciations_dashboard(request):
 @login_required(login_url='login')
 def view_teacher_appreciations_as_admin(request, pk_staff):
     """
-    [NOUVEAU] Affiche le tableau de bord des appréciations d'un PROFESSEUR CIBLÉ.
+    Affiche le tableau de bord des appréciations d'un PROFESSEUR CIBLÉ.
     Vue réservée aux Admins/Proviseurs (Lecture Seule).
     """
     user = request.user
@@ -485,18 +485,17 @@ def view_teacher_appreciations_as_admin(request, pk_staff):
 
     # 1. Vérification des permissions
     if user_type not in ["SuperAdministrator", "Principal"]:
-        return HttpResponseForbidden("Accès refusé. Seuls les Proviseurs et Super-Administrateurs peuvent consulter cette page.")
-        
+        return render(request, "404.html", status=404)        
     try:
         # C'est le prof qu'on REGARDE
         teacher_staff = get_object_or_404(Staff, pk=pk_staff) 
     except Staff.DoesNotExist:
-         return HttpResponseForbidden("Erreur: Profil enseignant cible non trouvé.")
+        return render(request, "404.html", status=404)
 
     # 2. Vérification de l'année scolaire
     current_year = get_current_year_for_school(teacher_staff.school)
     if not current_year:
-        return HttpResponseForbidden("Aucune année scolaire courante n'est définie.")
+        return render(request, "404.html", status=404)
 
     # 3. Récupération des données
     dashboard_data = get_appreciations_dashboard_data(teacher_staff, current_year)

@@ -39,7 +39,7 @@ def manage_subjects(request):
     
     # 1. Vérification des permissions
     if user_type not in ["SuperAdministrator", "Principal"]:
-        return HttpResponseBadRequest("Vous n'avez pas la permission de gérer les matières (uniquement Super Admin ou Principal).") # TODO à la place de HttpResponseBadRequest dans le projet, retourner vers une page d'erreur et déconnexion de l'utilisateur
+        return render(request, "404.html", status=404)
 
     # 2. Détermination de l'école cible pour le filtre
     if user_type == "SuperAdministrator":
@@ -62,7 +62,7 @@ def manage_subjects(request):
     # 3. Récupération des matières avec contrôle
     if school_filter:
         if school_filter.is_active == False:
-            return HttpResponseBadRequest("L'école est inactive.") # TODO à la place de HttpResponseBadRequest dans le projet, retourner vers une page d'erreur
+            return render(request, "404.html", status=404)
         else:
             subjects = Subject.objects.filter(school=school_filter).order_by('name')
     else:
@@ -93,7 +93,7 @@ def create_or_update_subject(request):
     
     # 1. Vérification des permissions
     if user_type not in ["SuperAdministrator", "Principal"]:
-        return JsonResponse({"success": False, "message": "Accès refusé. Seuls les Super Admin et Principaux peuvent gérer les matières."}, status=403)
+        return render(request, "404.html", status=404)
 
     try:
         data = json.loads(request.body)
@@ -173,7 +173,7 @@ def toggle_subject_status(request):
     
     # 1. Vérification des permissions
     if user_type not in ["SuperAdministrator", "Principal"]:
-        return JsonResponse({"success": False, "message": "Accès refusé."}, status=403)
+        return render(request, "404.html", status=404)
 
     try:
         data = json.loads(request.body)
@@ -236,7 +236,7 @@ def assign_subjects_view(request):
     
     # 1. Vérification de permission : SuperAdmin ou Principal
     if user_type not in ["SuperAdministrator", "Principal"]:
-        return HttpResponseBadRequest("Accès refusé. Seuls les Principaux et Administrateurs peuvent gérer les attributions.")
+        return render(request, "404.html", status=404)
 
     # 2. Détermination de l'école cible pour le filtre (Sécurité)
     if user_type == "SuperAdministrator":
@@ -245,10 +245,10 @@ def assign_subjects_view(request):
     else: # Principal
         school = get_user_school(request.user, request.session.get('selected_school_id'))
         if not school:
-            return JsonResponse({"success": False, "message": "École utilisateur introuvable."}, status=403)
+            return render(request, "404.html", status=404)
 
     if school.is_active == False:
-        return JsonResponse({"success": False, "message": "École inactive."}, status=403)
+        return render(request, "404.html", status=404)
 
     try:
         # 3. Récupérer les Professeurs actifs (Staff type 'TEACHER') de l'école.
@@ -306,7 +306,7 @@ def assign_subjects_view(request):
         return render(request, 'subjects/assign_subjects.html', context)
 
     except Exception as e:
-        return HttpResponseBadRequest("Erreur interne lors du chargement des données.")
+        return render(request, "404.html", status=404)
 
 
 @require_http_methods(["POST"])
@@ -320,7 +320,7 @@ def toggle_teacher_subject_assignment_api(request):
     user_type = get_user_type(request.user)
     
     if user_type not in ["SuperAdministrator", "Principal"]:
-        return JsonResponse({'success': False, 'message': 'Permission refusée.'}, status=403)
+        return render(request, "404.html", status=404)
     
     try:
         data = json.loads(request.body)

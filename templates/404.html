@@ -1,0 +1,44 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Page introuvable - THERANOTE</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+        body { font-family: 'Inter', sans-serif; }
+    </style>
+</head>
+<body class="bg-gray-100 h-screen flex flex-col justify-center items-center">
+
+    <div class="bg-white p-8 rounded-2xl shadow-xl text-center max-w-lg w-full mx-4">
+        <!-- Illustration / Icone -->
+        <div class="mb-6">
+            <div class="w-24 h-24 bg-indigo-50 rounded-full flex items-center justify-center mx-auto mb-4">
+                <i class="fas fa-compass text-4xl text-indigo-500"></i>
+            </div>
+            <h1 class="text-6xl font-extrabold text-indigo-600">404</h1>
+        </div>
+
+        <h2 class="text-2xl font-bold text-gray-800 mb-2">Oups ! Page introuvable.</h2>
+        <p class="text-gray-500 mb-8">
+            Il semble que le lien que vous avez suivi soit cassé ou que la page ait été déplacée.
+        </p>
+
+        <!-- Bouton de retour intelligent -->
+        <!-- Le lien '/' renverra vers login si pas connecté, ou dashboard si connecté (géré par tes vues existantes) -->
+        <a href="/" class="inline-flex items-center justify-center px-6 py-3 border border-transparent text-base font-medium rounded-lg text-white bg-indigo-600 hover:bg-indigo-700 transition duration-150 ease-in-out shadow-md hover:shadow-lg transform hover:-translate-y-0.5">
+            <i class="fas fa-home mr-2"></i>
+            Retour à l'accueil
+        </a>
+    </div>
+
+    <footer class="mt-8 text-gray-400 text-sm">
+        &copy; 2025 THERANOTE
+    </footer>
+
+</body>
+</html>

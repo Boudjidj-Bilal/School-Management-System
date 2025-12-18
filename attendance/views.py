@@ -45,7 +45,7 @@ def attendance_hub_view(request):
         school_filter = get_user_school(user, request.session.get('selected_school_id'))
 
     else:
-        return HttpResponseForbidden("Accès refusé.")
+        return render(request, "404.html", status=404)
 
     # Vérification Année Scolaire
     current_year = get_current_year_for_school(school_filter)
@@ -86,19 +86,19 @@ def create_attendance_session_view(request, class_id):
     user = request.user
     user_type = get_user_type(user)
 
-    if user_type != "Teacher":
-        return HttpResponseForbidden("Accès refusé. Seuls les professeurs peuvent faire l'appel.")
+    if not user_type == "Teacher":
+        return render(request, "404.html", status=404)
 
     try:
         teacher_staff = user.staff_user
         student_class = get_object_or_404(Class, pk=class_id)
     except Exception:
-        return HttpResponseForbidden("Erreur de profil ou de classe.")
+        return render(request, "404.html", status=404)
 
     current_year = get_current_year_for_school(teacher_staff.school)
     if not current_year or not current_year.running:
-        return HttpResponseForbidden("Année scolaire non active.")
-
+        return render(request, "404.html", status=404)
+    
     # 1. Récupérer les élèves de la classe
     students = get_class_students_for_attendance(student_class, current_year)
 
@@ -151,10 +151,10 @@ def api_save_attendance_session(request):
         try:
             school_filter = get_user_school(request.user, request.session.get('selected_school_id'))
         except School.DoesNotExist:
-            return JsonResponse({"success": False, "message": "L'école sélectionnée est introuvable."}, status=404) # TODO : return une page d'erreur
+            return render(request, "404.html", status=404)
         
         if not school_filter:
-            return JsonResponse({"success": False, "message": "L'école sélectionnée est introuvable."}, status=404) # TODO : return une page d'erreur
+            return render(request, "404.html", status=404)
         
         elif not school_filter.is_active:
             return JsonResponse({"success": False, "message": "L'école sélectionnée est désactivée. Impossible de procéder."}, status=403) # TODO : return une page d'erreur
@@ -285,7 +285,7 @@ def manage_attendance_view(request, class_id):
 
     # 1. Permissions d'accès à la page
     if user_type not in ["CPE", "Principal", "SuperAdministrator"]:
-        return HttpResponseForbidden("Accès refusé. Réservé à la Vie Scolaire et à l'Administration.")
+        return render(request, "404.html", status=404)
 
     # 2. Récupération du contexte
     try:
@@ -299,10 +299,10 @@ def manage_attendance_view(request, class_id):
             current_year = get_current_year_for_school(staff.school)
             
     except Exception:
-        return HttpResponseForbidden("Erreur de récupération de la classe ou de l'école.")
-
+        return render(request, "404.html", status=404)
+    
     if not current_year or not current_year.running:
-        return HttpResponseForbidden("Année scolaire non active.")
+        return render(request, "404.html", status=404)
 
     # 3. Récupération des incidents (Absences/Retards)
     attendance_records = get_class_attendance_records(student_class, current_year)
@@ -390,9 +390,9 @@ def student_attendance_dashboard_view(request):
             # On récupère le profil Student lié au User
             student = Student.objects.get(user=user)
         except Student.DoesNotExist:
-            return HttpResponseForbidden("Erreur : Aucun profil élève associé à ce compte.")
+            return render(request, "404.html", status=404)
     else:
-        return HttpResponseForbidden("Accès refusé. Cette page est réservée aux élèves.")
+        return render(request, "404.html", status=404)
 
     current_year = get_current_year_for_school(student.school)
     if not current_year:

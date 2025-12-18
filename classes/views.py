@@ -1,4 +1,4 @@
-from django.shortcuts import render, get_object_or_404
+from django.shortcuts import render
 from django.http import JsonResponse
 from django.contrib.auth.decorators import login_required
 from django.views.decorators.http import require_http_methods, require_POST
@@ -32,20 +32,20 @@ def classroom_management(request):
     # Les rôles autorisés à gérer les salles de classe
     allowed_roles = ["SuperAdministrator", "Principal"]
     if user_type not in allowed_roles:
-        return JsonResponse({"success": False, "message": "Vous n'avez pas la permission de gérer les salles de classe."}, status=403)
-
+        return render(request, "404.html", status=404)
+    
     # 2. Détermination du contexte de l'école
     try:
         if user_type == "SuperAdministrator" or user_type == "Principal":
             school_filter = get_user_school(request.user, request.session.get('selected_school_id'))
         else:
-            return JsonResponse({"success": False, "message": "Contexte de l'école non défini."}, status=400)
+            return render(request, "404.html", status=404)
     except School.DoesNotExist:
-        return JsonResponse({"success": False, "message": "L'école sélectionnée est introuvable."}, status=404)
+        return render(request, "404.html", status=404)
     
     # Si l'école est désactiver, impossible de continuer
     if not school_filter.is_active:
-        return JsonResponse({"success": False, "message": "L'école sélectionnée est désactivé."}, status=404) # TODO : Retourner une page d'erreur (qui déonnecte l'utilisateur)
+        return render(request, "404.html", status=404)
 
     # --- 3. Gestion des requêtes POST (API CRUD) ---
     if request.method == 'POST':
@@ -158,19 +158,19 @@ def level_management(request):
     allowed_roles = ["SuperAdministrator", "Principal"] 
     
     if user_type not in allowed_roles:
-        return JsonResponse({"success": False, "message": "Vous n'avez pas la permission de gérer les niveaux scolaires."}, status=403) 
+        return render(request, "404.html", status=404)
 
     # 2. Détermination du contexte de l'école
     try:
         school_filter = get_user_school(request.user, request.session.get('selected_school_id'))
     except School.DoesNotExist:
-        return JsonResponse({"success": False, "message": "L'école sélectionnée est introuvable."}, status=404) # TODO : return une page d'erreur
+        return render(request, "404.html", status=404)
     
     if not school_filter:
-        return JsonResponse({"success": False, "message": "L'école sélectionnée est introuvable."}, status=404) # TODO : return une page d'erreur
+        return render(request, "404.html", status=404)
     
     elif not school_filter.is_active:
-        return JsonResponse({"success": False, "message": "L'école sélectionnée est désactivée. Impossible de procéder."}, status=403) # TODO : return une page d'erreur
+        return render(request, "404.html", status=404)
         
     # 3. Détermination de l'année scolaire actuelle
     current_year = get_current_year_for_school(school_filter)
@@ -295,10 +295,6 @@ def level_management(request):
     # Le template pour l'interface utilisateur (à créer)
     return render(request, 'classes/level_management.html', context)
 
-# TODO Lorsqu'on clique sur une classe, possibilité de lui ajouter des élèves et des professeurs 
-# (principal (1 seul) délégués de classe), un élève peut être que dans une seul classe par année, 
-# un prof peut apparaitre dans plusieurs classes mais peut être le professeurs principal d'une seul 
-# classe par année
 @require_http_methods(["GET", "POST"])
 @csrf_exempt 
 @login_required
@@ -306,7 +302,7 @@ def class_management(request):
     """
     Vue unifiée pour la gestion complète (CRUD) des classes académiques (Class)
     pour une école donnée.
-    L'opération est uniquement autorisée lorsque l'année scolaire est en phase de Création.
+    L'opération est uniquement autorisée lorsque l'année scolaire est en phase de Creation.
     """
     
     # 1. Détermination du contexte utilisateur et permission
@@ -314,18 +310,14 @@ def class_management(request):
     allowed_roles = ["SuperAdministrator", "Principal", "Administrator"] 
     
     if user_type not in allowed_roles:
-        return JsonResponse({"success": False, "message": "Vous n'avez pas la permission de gérer les classes."}, status=403) 
-
+        return render(request, "404.html", status=404)
     # 2. Détermination du contexte de l'école
     try:
         school_filter = get_user_school(request.user, request.session.get('selected_school_id'))
     except School.DoesNotExist:
-        return JsonResponse({"success": False, "message": "L'école sélectionnée est introuvable."}, status=404)
-    
+        return render(request, "404.html", status=404)      
     if not school_filter or not school_filter.is_active:
-        message = "L'école sélectionnée est introuvable ou désactivée. Impossible de procéder."
-        return JsonResponse({"success": False, "message": message}, status=404 if not school_filter else 403)
-        
+        return render(request, "404.html", status=404)        
     # 3. Détermination de l'année scolaire actuelle
     current_year = get_current_year_for_school(school_filter)
 
@@ -479,24 +471,24 @@ def class_assignment_main_view(request, pk):
     allowed_roles = ["SuperAdministrator", "Principal", "Administrator"] 
     
     if user_type not in allowed_roles:
-        return JsonResponse({"success": False, "message": "Permission refusée. Rôle non autorisé."}, status=403) 
-
+        return render(request, "404.html", status=404)
+    
     try:
         school_filter = get_user_school(request.user, request.session.get('selected_school_id'))
     except School.DoesNotExist:
-        return JsonResponse({"success": False, "message": "École introuvable. Connexion impossible."}, status=404)
+        return render(request, "404.html", status=404)
         
     try:
         current_class = Class.objects.get(pk=pk)
     except Class.DoesNotExist:
-         return JsonResponse({"success": False, "message": "Classe introuvable."}, status=404)
+        return render(request, "404.html", status=404)
         
     current_year = get_current_year_for_school(school_filter)
     
     # Vérification de la cohérence de l'école
     if current_class.level.school != school_filter:
         # Retourne JSON au lieu de rendre une page 403.html
-        return JsonResponse({"success": False, "message": "Accès classe refusé. La classe n'appartient pas à votre école."}, status=403)
+        return render(request, "404.html", status=404)
 
     # --- 1. Élèves : Données disponibles (Ceux qui n'ont AUCUNE affectation active cette année) ---
     

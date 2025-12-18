@@ -31,22 +31,22 @@ def schedul_management_view(request, pk_class):
     
     # Vérifie si l'utilisateur a la permission de créer des cours
     if user_type not in ["SuperAdministrator", "Principal", "Administrator"]:
-        return HttpResponseForbidden("Accès refusé. Vous n'avez pas les droits nécessaires pour gérer les plannings.")
+        return render(request, "404.html", status=404)
     
     try:
         classe = Class.objects.get(pk=pk_class)
         school = classe.level.school
 
         if not school.is_active:
-            return JsonResponse({"success": False, "message": "L'école sélectionnée est désactivé."}, status=404) # TODO : Retourner une page d'erreur (qui déonnecte l'utilisateur)
+            return render(request, "404.html", status=404)
 
         current_year = get_current_year_for_school(school)
 
         if not current_year:
-            return JsonResponse({"success": False, "message": "Aucune année scolaire courante n'est définie."}, status=404)# TODO : Retourner une page d'erreur (qui déonnecte l'utilisateur)
+            return render(request, "404.html", status=404)
         
         if current_year.creation:
-            return JsonResponse({"success": False, "message": "Impossible de gérer le planning lorsque l'année est à l'étape de création."}, status=404)# TODO : Retourner une page d'erreur (qui déonnecte l'utilisateur)
+            return render(request, "404.html", status=404)
 
 
         # --- 1. Récupération des QuerySets (inchangé) ---
@@ -109,9 +109,7 @@ def schedul_management_view(request, pk_class):
         ))
         
     except Exception as e:
-        # Gérer le cas où l'école ou les relations n'existent pas
-        print(e)
-        return HttpResponseForbidden("Erreur de configuration: impossible de charger les données liées à l'école.")
+        return render(request, "404.html", status=404)
 
     # --- 3. Construction du Contexte ---
     context = {
@@ -427,11 +425,22 @@ def view_class_schedule_page(request, pk_class):
     """
     try:
         classe = get_object_or_404(Class, pk=pk_class)
+
+        if not classe:
+            return render(request, "404.html", status=404)
+        
         school = classe.level.school
+
+        if school:
+            if not school.is_active:
+                return render(request, "404.html", status=404)
+        else:
+            return render(request, "404.html", status=404)
+            
         current_year = get_current_year_for_school(school)
 
         if not current_year:
-            return HttpResponseForbidden("Aucune année scolaire courante n'est définie pour cette école.")
+            return render(request, "404.html", status=404)
 
         # --- 1. Logique de Date ---
         today = timezone.now().date()
@@ -585,11 +594,22 @@ def view_teacher_schedule_page(request, pk_staff):
     try:
         # 1. Récupérer le professeur cible
         teacher_staff = get_object_or_404(Staff, pk=pk_staff)
+
+        if not teacher_staff:
+            return render(request, "404.html", status=404)
+        
         school = teacher_staff.school
+
+        if school:
+            if not school.is_active:
+                return render(request, "404.html", status=404)
+        else:
+            return render(request, "404.html", status=404)
+
         current_year = get_current_year_for_school(school)
 
         if not current_year:
-            return HttpResponseForbidden("Aucune année scolaire courante n'est définie pour cette école.")
+            return render(request, "404.html", status=404)
 
         # --- 2. Logique de Permission ---
         user = request.user
@@ -600,7 +620,7 @@ def view_teacher_schedule_page(request, pk_staff):
 
         # Vérifie si l'utilisateur est Admin/Principal OU s'il consulte son propre planning
         if not (is_admin_or_principal or is_self):
-            return HttpResponseForbidden("Accès refusé. Vous ne pouvez consulter que votre propre planning ou vous n'avez pas les droits suffisants.")
+            return render(request, "404.html", status=404)
 
         # --- 3. Logique de Date ---
         today = timezone.now().date()
@@ -643,8 +663,7 @@ def view_teacher_schedule_page(request, pk_staff):
         return render(request, 'scheduling/view_teacher_schedule.html', context)
 
     except Exception as e:
-        print(f"Erreur dans view_teacher_schedule_page: {e}")
-        return HttpResponseForbidden("Erreur lors du chargement de la page.")
+        return render(request, "404.html", status=404)
 
 
 @require_http_methods(["POST"])
@@ -784,7 +803,7 @@ def redirect_to_my_schedule(request):
     user_type = get_user_type(user)
 
     if user_type not in ["Parent", "Student"]:
-        return JsonResponse({"success": False, "message": "Accès refusé."}, status=403)
+        return render(request, "404.html", status=404)
 
     # 1. Récupérer le contexte étudiant (Enfant du parent)
     if user_type == "Parent":
@@ -794,12 +813,12 @@ def redirect_to_my_schedule(request):
 
     if not student:
         # Si ce n'est ni un élève ni un parent avec enfant sélectionné
-        return HttpResponseForbidden("Accès refusé. Aucun profil élève identifié.")
+        return render(request, "404.html", status=404)
 
     # 2. Trouver l'année en cours pour son école
     current_year = get_current_year_for_school(student.school)
     if not current_year:
-        return HttpResponseForbidden("Aucune année scolaire active.")
+        return render(request, "404.html", status=404)
 
     # 3. Trouver la classe de l'élève pour cette année
     try:
@@ -812,7 +831,6 @@ def redirect_to_my_schedule(request):
         return redirect('scheduling:view_class_schedule_page', pk_class=link.student_class.id)
         
     except ClassStudentYear.DoesNotExist:
-        return HttpResponseForbidden("L'élève n'est inscrit dans aucune classe pour l'année en cours.")
+        return render(request, "404.html", status=404)
     except Exception as e:
-        print(f"Erreur redirection planning: {e}")
-        return HttpResponseForbidden("Erreur lors de la redirection.")
+        return render(request, "404.html", status=404)

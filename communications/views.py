@@ -51,21 +51,20 @@ def messaging_dashboard_view(request):
 
     if school:
         if not school.is_active: 
-            return HttpResponseForbidden("Accès refusé. L'école est inactive.")
+            return render(request, "404.html", status=404)
     else:
-        return HttpResponseForbidden("Accès refusé. Aucune école trouvé.")
+        return render(request, "404.html", status=404)
 
     current_year = get_current_year_for_school(school)
 
     if current_year:
         if not current_year.running or current_year.finished:
-            return HttpResponseForbidden("Accès refusé. L'année n'es ni en cours, ni à l'état fini.")
+            return render(request, "404.html", status=404)
     else: 
-        return HttpResponseForbidden("Accès refusé. L'année est introuvable.")
-
+        return render(request, "404.html", status=404)
 
     if not role:
-        return HttpResponseForbidden("Accès refusé. Messagerie réservée aux Enseignants, Élèves et Parents.")
+        return render(request, "404.html", status=404)
 
     # On passe juste le rôle au template pour adapter l'interface si besoin
     context = {
@@ -337,9 +336,9 @@ def announcement_dashboard_view(request):
         if school.is_active:
             current_year = get_current_year_for_school(school)
         else:
-            return JsonResponse({'success': False, 'message': 'Ecole désactivé.'}, status=400)
+            return render(request, "404.html", status=404)
     else: 
-        return JsonResponse({'success': False, 'message': 'Ecole introuvable.'}, status=400)
+        return render(request, "404.html", status=404)
 
     # Permissions d'envoi
     can_send = user_type in ['Teacher', 'CPE', 'Principal', 'SuperAdministrator', 'Administrator']
