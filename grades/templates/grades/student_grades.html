@@ -122,10 +122,15 @@
                                 </thead>
                                 <tbody class="divide-y divide-gray-100">
                                     {% for grade in subject.grades %}
-                                    <tr class="hover:bg-gray-50 transition-colors">
+                                    <tr class="transition-colors {% if grade.is_main_grade %}bg-amber-50 hover:bg-amber-100{% else %}hover:bg-gray-50{% endif %}">
+                                        
                                         <td class="px-2 py-2 font-medium text-gray-700">
+                                            {% if grade.is_main_grade %}
+                                                <i class="fas fa-star text-amber-500 mr-1 text-xs" title="Note Principale (Examen/Projet)"></i>
+                                            {% endif %}
                                             {{ grade.evaluation_name }}
                                         </td>
+                                        
                                         <td class="px-2 py-2 text-gray-500 text-center">
                                             {{ grade.date|date:"d/m" }}
                                         </td>

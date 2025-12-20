@@ -129,10 +129,18 @@
                                         
                                         <div id="eval-list-container-{{ key }}" class="space-y-2 mt-4">
                                             {% for eval in data.evaluations %}
-                                            <div class="flex justify-between items-center p-2 bg-white border rounded-md">
+                                            <div class="flex justify-between items-center p-2 rounded-md border transition-colors duration-200 
+                                                        {% if eval.is_main_grade %}bg-amber-50 border-amber-200{% else %}bg-white border-gray-200{% endif %}">
                                                 <div class="text-sm">
                                                     <strong class="text-gray-800">{{ eval.name }}</strong>
-                                                    <span class="text-gray-500">(Coeff: {{ eval.coefficient }} / Sur: {{ eval.max_grade }})</span>
+                                                    
+                                                    {% if eval.is_main_grade %}
+                                                    <span class="ml-2 inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-amber-100 text-amber-800 border border-amber-200">
+                                                        <i class="fas fa-star mr-1 text-amber-600"></i> Principale
+                                                    </span>
+                                                    {% endif %}
+
+                                                    <span class="text-gray-500 ml-1">(Coeff: {{ eval.coefficient }} / Sur: {{ eval.max_grade }})</span>
                                                 </div>
                                                 <div>
                                                     <button data-action="view-eval" data-eval-id="{{ eval.id }}" class="edit-eval-btn px-3 py-1 text-sm text-indigo-600 hover:text-indigo-800" title="Voir/Modifier les notes">
@@ -207,19 +215,26 @@
                 <input type="hidden" id="eval-term-id-input">
 
                 <!-- Infos Évaluation -->
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <div>
-                        <label for="eval-name-input" class="block text-sm font-medium text-gray-700">Titre de l'évaluation</label>
-                        <input type="text" id="eval-name-input" class="mt-1 block w-full p-2 border border-gray-300 rounded-lg shadow-sm" required>
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
+                    <div class="md:col-span-1">
+                        <label for="eval-name-input" class="block text-sm font-medium text-gray-700">Titre</label>
+                        <input type="text" id="eval-name-input" class="mt-1 block w-full p-2 border border-gray-300 rounded-lg shadow-sm focus:ring-indigo-500 focus:border-indigo-500" required placeholder="Ex: Examen Final">
                     </div>
                     <div>
                         <label for="eval-coeff-input" class="block text-sm font-medium text-gray-700">Coefficient</label>
-                        <input type="number" id="eval-coeff-input" step="0.5" min="0" value="1.0" class="mt-1 block w-full p-2 border border-gray-300 rounded-lg shadow-sm" required>
+                        <input type="number" id="eval-coeff-input" step="0.5" min="0" value="1.0" class="mt-1 block w-full p-2 border border-gray-300 rounded-lg shadow-sm focus:ring-indigo-500 focus:border-indigo-500" required>
                     </div>
 
                     <div>
                         <label for="eval-max-grade-input" class="block text-sm font-medium text-gray-700">Noté sur</label>
-                        <input type="number" id="eval-max-grade-input" step="1" min="1" value="20.0" class="mt-1 block w-full p-2 border border-gray-300 rounded-lg shadow-sm" required>
+                        <input type="number" id="eval-max-grade-input" step="1" min="1" value="20.0" class="mt-1 block w-full p-2 border border-gray-300 rounded-lg shadow-sm focus:ring-indigo-500 focus:border-indigo-500" required>
+                    </div>
+
+                    <div class="pb-3 flex items-center">
+                        <input id="eval-is-main-input" type="checkbox" class="h-5 w-5 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded cursor-pointer">
+                        <label for="eval-is-main-input" class="ml-2 block text-sm font-medium text-gray-700 cursor-pointer select-none">
+                            Note Principale <i class="fas fa-star text-amber-500 ml-1 text-xs"></i>
+                        </label>
                     </div>
                 </div>
 

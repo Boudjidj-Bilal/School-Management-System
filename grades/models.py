@@ -10,9 +10,12 @@ class Evaluation(models.Model):
     date = models.DateField(auto_now_add=True) # Date de création
     coefficient = models.FloatField(default=1.0)  # coefficient
     
-    # [MODIFICATION] Ajout du champ pour "noté sur :"
+    # Ajout du champ pour "noté sur :"
     # Par défaut, une évaluation est sur 20.
     max_grade = models.FloatField(default=20.0) 
+
+    # Permet de distinguer les examens/projets importants des contrôles classiques
+    is_main_grade = models.BooleanField(default=False, verbose_name="Est une note principale")
 
     # Liens
     term_year = models.ForeignKey(
@@ -29,8 +32,9 @@ class Evaluation(models.Model):
         ordering = ['date'] # Ordonner par date
 
     def __str__(self):
-        # [MODIFICATION] Ajout du max_grade à l'affichage pour plus de clarté
-        return f"{self.name} (/{self.max_grade}) - {self.student_class.name} ({self.teacher_subject.subject.name})"
+        # Petit indicateur visuel dans l'admin si c'est une note principale
+        prefix = "[PRINCIPAL] " if self.is_main_grade else ""
+        return f"{prefix}{self.name} (/{self.max_grade}) - {self.student_class.name} ({self.teacher_subject.subject.name})"
 
 # Représente la note spécifique d'un élève pour une évaluation
 class Grade(models.Model):
@@ -53,7 +57,7 @@ class Grade(models.Model):
     def __str__(self):
         if self.is_absent:
             return f"{self.student} - {self.evaluation.name}: ABSENT"
-        # [MODIFICATION] Affiche aussi le max_grade pour plus de clarté
+        # Affiche aussi le max_grade pour plus de clarté
         return f"{self.student} - {self.evaluation.name}: {self.grade_value} /{self.evaluation.max_grade}"
 
 

@@ -262,8 +262,6 @@ def get_grades_data_for_specific_context(teacher_staff, current_year, student_cl
     return data_payload
 
 
-
-
 def get_student_grades_view_data(student, current_year):
     """
     Récupère toutes les données de notes pour l'interface d'un ÉLÈVE.
@@ -288,7 +286,6 @@ def get_student_grades_view_data(student, current_year):
     ).order_by('start_date')
 
     # 3. Récupérer les matières enseignées dans cette classe
-    # On prend les TeacherSubject liés à la classe
     class_teachers = ClassTeacherYear.objects.filter(
         student_class=student_class,
         year=current_year,
@@ -297,18 +294,18 @@ def get_student_grades_view_data(student, current_year):
 
     terms_data = []
 
-    # 4. Boucle sur chaque trimestre pour construire les données
+    # 4. Boucle sur chaque trimestre
     for term in terms:
         term_payload = {
             'term_id': term.id,
             'term_name': f"Trimestre {term.counter}" if student_class.level.term_type == "TRIMESTRE" else f"Semestre {term.counter}",
-            'is_active': not term.finished, # Pour info (ex: mettre en gras le trimestre actuel)
+            'is_active': not term.finished,
             'subjects': [],
             'overall_student_average': 'N/A',
             'overall_class_average': 'N/A'
         }
 
-        # Calcul des moyennes générales pour ce trimestre
+        # Calcul des moyennes générales
         stud_overall = calculate_overall_student_average(student, term)
         class_overall = calculate_overall_class_average(student_class, term)
         
@@ -317,21 +314,17 @@ def get_student_grades_view_data(student, current_year):
 
         # Boucle sur les matières
         for link in class_teachers:
-            ts = link.teacher # C'est le TeacherSubject
+            ts = link.teacher 
             
-            # Récupère toutes les évaluations de cette matière pour ce trimestre
             evaluations = Evaluation.objects.filter(
                 teacher_subject=ts,
                 student_class=student_class,
                 term_year=term
             ).order_by('date')
-
-            # Si aucune évaluation n'existe et qu'il n'y a pas de moyenne, on peut choisir de masquer la matière
-            # Mais généralement, on affiche la matière même vide.
             
             subject_data = {
                 'subject_name': ts.subject.name,
-                'subject_color': ts.subject.color, # Utile pour le CSS (bordures, badges)
+                'subject_color': ts.subject.color,
                 'teacher_name': f"{ts.teacher.user.last_name} {ts.teacher.user.first_name}",
                 'student_average': 'N/A',
                 'class_average': 'N/A',
@@ -349,7 +342,6 @@ def get_student_grades_view_data(student, current_year):
 
             # Détail des notes
             for evaluation in evaluations:
-                # Cherche la note de l'élève pour cette évaluation
                 grade_obj = Grade.objects.filter(evaluation=evaluation, student=student).first()
                 
                 grade_info = {
@@ -357,6 +349,10 @@ def get_student_grades_view_data(student, current_year):
                     'date': evaluation.date,
                     'coefficient': evaluation.coefficient,
                     'max_grade': evaluation.max_grade,
+                    
+                    # [AJOUT ICI] On passe l'info "Note Principale" au template
+                    'is_main_grade': evaluation.is_main_grade, 
+                    
                     'value': 'N/A',
                     'is_absent': False,
                 }
@@ -368,7 +364,6 @@ def get_student_grades_view_data(student, current_year):
                     elif grade_obj.grade_value is not None:
                         grade_info['value'] = grade_obj.grade_value
                 else:
-                    # Pas de note saisie pour cet élève sur ce devoir
                     grade_info['value'] = "-" 
 
                 subject_data['grades'].append(grade_info)

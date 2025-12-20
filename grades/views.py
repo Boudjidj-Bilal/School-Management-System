@@ -198,7 +198,6 @@ def api_get_grades_for_term_views(request):
         print(f"Erreur dans api_get_grades_for_term: {e}")
         return JsonResponse({"success": False, "message": f"Erreur interne : {str(e)}"}, status=500)
 
-
 # ---
 # Actions (CRUD)
 # ---
@@ -208,7 +207,7 @@ def api_get_grades_for_term_views(request):
 def api_manage_evaluation_views(request):
     """
     API (POST) pour Créer, Modifier ou Supprimer une Évaluation et ses Notes.
-    [CORRIGÉ] Gestion correcte de la note 0 et validations renforcées.
+    Gestion du champ 'is_main_grade' (Note Principale).
     """
     user = request.user
     user_type = get_user_type(user)
@@ -235,6 +234,10 @@ def api_manage_evaluation_views(request):
                 name = data.get("name")
                 coefficient = float(data.get("coefficient", 1.0))
                 max_grade = float(data.get("max_grade", 20.0))
+                
+                # Récupération du booléen
+                is_main_grade = bool(data.get("is_main_grade", False))
+                
                 grades_list = data.get("grades", [])
 
                 student_class = get_object_or_404(Class, pk=class_id)
@@ -253,10 +256,9 @@ def api_manage_evaluation_views(request):
                 
                 # Validation des notes
                 for grade_data in grades_list:
-                    grade_val = grade_data.get("grade") # Peut être 0, "15", "" ou null
+                    grade_val = grade_data.get("grade") 
                     is_absent = bool(grade_data.get("absent", False))
                    
-                    # On vérifie si la valeur n'est pas vide (0 est valide !)
                     if not is_absent and grade_val is not None and grade_val != "":
                         try:
                             grade_float = float(grade_val)
@@ -266,14 +268,18 @@ def api_manage_evaluation_views(request):
                              return JsonResponse({"success": False, "message": f"Note invalide : {grade_val}"}, status=400)
 
                 new_evaluation = Evaluation.objects.create(
-                    name=name, coefficient=coefficient, max_grade=max_grade,
-                    term_year=term_year, teacher_subject=teacher_subject, student_class=student_class
+                    name=name, 
+                    coefficient=coefficient, 
+                    max_grade=max_grade,
+                    is_main_grade=is_main_grade,
+                    term_year=term_year, 
+                    teacher_subject=teacher_subject, 
+                    student_class=student_class
                 )
                
                 for grade_data in grades_list:
                     student = get_object_or_404(Student, pk=grade_data.get("student_id"))
                     
-                    # [CORRECTION] Gestion propre de la valeur (0 inclus)
                     val = None
                     raw_val = grade_data.get("grade")
                     if raw_val is not None and raw_val != "":
@@ -291,10 +297,12 @@ def api_manage_evaluation_views(request):
             # --- ACTION: UPDATE ---
             elif action == "update":
                 evaluation_id = data.get("evaluation_id")
-                # ... (Récupération données) ...
                 name = data.get("name")
                 coefficient = float(data.get("coefficient", 1.0))
                 max_grade = float(data.get("max_grade", 20.0))
+                
+                is_main_grade = bool(data.get("is_main_grade", False))
+                
                 grades_list = data.get("grades", [])
                
                 evaluation = get_object_or_404(Evaluation, pk=evaluation_id)
@@ -319,6 +327,7 @@ def api_manage_evaluation_views(request):
                 evaluation.name = name
                 evaluation.coefficient = coefficient
                 evaluation.max_grade = max_grade
+                evaluation.is_main_grade = is_main_grade
                 evaluation.save()
                
                 for grade_data in grades_list:
@@ -366,7 +375,8 @@ def api_manage_evaluation_views(request):
                     "details": {
                         "name": evaluation.name,
                         "coefficient": evaluation.coefficient,
-                        "max_grade": evaluation.max_grade
+                        "max_grade": evaluation.max_grade,
+                        "is_main_grade": evaluation.is_main_grade # [NOUVEAU]
                     }
                 })
                

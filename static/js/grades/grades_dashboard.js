@@ -35,11 +35,12 @@ const evalTsIdInput = document.getElementById('eval-ts-id-input');
 const evalTermIdInput = document.getElementById('eval-term-id-input');
 const evalNameInput = document.getElementById('eval-name-input');
 const evalCoeffInput = document.getElementById('eval-coeff-input');
-const evalMaxGradeInput = document.getElementById('eval-max-grade-input'); // <-- AJOUTÉ
+const evalMaxGradeInput = document.getElementById('eval-max-grade-input');
 const studentGradesListContainer = document.getElementById('student-grades-list-container');
 const evaluationModalCancelBtn = document.getElementById('evaluation-modal-cancel-btn');
 const evaluationModalSaveBtn = document.getElementById('evaluation-modal-save-btn');
 const evaluationModalFooter = document.getElementById('evaluation-modal-footer');
+const evalIsMainInput = document.getElementById('eval-is-main-input');
 
 
 // --- 2. Fonctions d'Utilité (Helpers) ---
@@ -423,11 +424,13 @@ async function openEvaluationModal(mode, data) {
         evalNameInput.disabled = true;
         evalCoeffInput.disabled = true;
         evalMaxGradeInput.disabled = true;
+        evalIsMainInput.disabled = true; // [NOUVEAU] Désactiver la checkbox
     } else {
         evaluationModalSaveBtn.style.display = 'block';
         evalNameInput.disabled = false;
         evalCoeffInput.disabled = false;
         evalMaxGradeInput.disabled = false;
+        evalIsMainInput.disabled = false; // [NOUVEAU] Activer la checkbox
     }
 
     // Variable pour la validation
@@ -437,9 +440,11 @@ async function openEvaluationModal(mode, data) {
         evaluationModalTitle.textContent = `Ajouter une Évaluation (${data.subjectName} - ${data.className})`;
         evalIdInput.value = ''; 
         evalMaxGradeInput.value = '20.0';
-        maxGrade = 20.0; // Pour le rendu des inputs
+        evalIsMainInput.checked = false; // [NOUVEAU] Par défaut décoché
         
-        renderStudentGradeInputs(studentList, [], isReadOnly, maxGrade); // Passe maxGrade
+        maxGrade = 20.0; 
+        
+        renderStudentGradeInputs(studentList, [], isReadOnly, maxGrade);
         evaluationModal.classList.remove('opacity-0', 'pointer-events-none');
         evaluationModal.querySelector('div').classList.remove('translate-y-4');
     
@@ -449,7 +454,9 @@ async function openEvaluationModal(mode, data) {
         evalNameInput.value = data.evalName;
         evalCoeffInput.value = data.evalCoeff;
         evalMaxGradeInput.value = data.evalMaxGrade;
-        maxGrade = parseFloat(data.evalMaxGrade); // Pour le rendu des inputs
+        // Note: La checkbox est gérée après l'appel API ci-dessous
+        
+        maxGrade = parseFloat(data.evalMaxGrade); 
 
         const result = await apiFetch(API_URLS.MANAGE_EVAL, {
             action: "get_details",
@@ -459,11 +466,17 @@ async function openEvaluationModal(mode, data) {
         let existingGrades = [];
         if (result.success) {
             existingGrades = result.grades;
+            
+            // Mise à jour de la checkbox selon les détails reçus du serveur
+            if (result.details && result.details.is_main_grade !== undefined) {
+                evalIsMainInput.checked = result.details.is_main_grade;
+            }
+            
         } else {
              showNotification("Erreur: impossible de charger les notes existantes.", "error");
         }
 
-        renderStudentGradeInputs(studentList, existingGrades, isReadOnly, maxGrade); // Passe maxGrade
+        renderStudentGradeInputs(studentList, existingGrades, isReadOnly, maxGrade); 
         evaluationModal.classList.remove('opacity-0', 'pointer-events-none');
         evaluationModal.querySelector('div').classList.remove('translate-y-4');
     }
@@ -498,7 +511,6 @@ function renderStudentGradeInputs(studentList, gradesList, isReadOnly = false, m
             <div class="grid grid-cols-3 gap-4 items-center p-2 hover:bg-gray-50 rounded-md">
                 <label for="grade-student-${student.student_id}" class="text-sm font-medium text-gray-700 col-span-1">${student.student_name}</label>
                 <div class="col-span-1">
-                    <!-- [CORRECTION] step="0.5" est remplacé par step="any" pour autoriser 11.3, 12.7, etc. -->
                     <input type="number" step="any" min="0" 
                            max="${maxGrade}"
                            id="grade-student-${student.student_id}"
@@ -596,6 +608,10 @@ async function handleEvaluationFormSubmit(e) {
 
     const action = evalIdInput.value ? 'update' : 'create';
     
+    // [NOUVEAU] Récupération de la case à cocher "Note Principale"
+    // evalIsMainInput a été défini dans la Partie 2 (Section 1 du fichier)
+    const isMainGrade = evalIsMainInput ? evalIsMainInput.checked : false;
+
     const evalData = {
         action: action,
         evaluation_id: evalIdInput.value || null,
@@ -604,8 +620,9 @@ async function handleEvaluationFormSubmit(e) {
         term_id: evalTermIdInput.value,
         name: evalNameInput.value,
         coefficient: evalCoeffInput.value,
-        max_grade: maxGrade, // Utilise la variable déjà parsée
-        grades: gradesList // Utilise la liste validée
+        max_grade: maxGrade,
+        is_main_grade: isMainGrade, // [NOUVEAU] Ajouté à l'objet envoyé
+        grades: gradesList
     };
     
     const result = await apiFetch(API_URLS.MANAGE_EVAL, evalData);
@@ -613,6 +630,8 @@ async function handleEvaluationFormSubmit(e) {
     if (result.success) {
         closeEvaluationModal();
         const contextKey = `${evalData.class_id}-${evalData.ts_id}`;
+        
+        // On recharge les données du trimestre pour voir la nouvelle note
         const termButton = document.querySelector(`.term-tab-${contextKey}[data-term-id="${evalData.term_id}"]`);
         if (termButton) {
             handleTermChange({ target: termButton });
@@ -620,7 +639,6 @@ async function handleEvaluationFormSubmit(e) {
             console.warn("Impossible de trouver l'onglet de rechargement, rechargement annulé.");
         }
     } else {
-        // La vue peut aussi renvoyer une erreur de validation (doubles sécurité)
         showNotification(result.message || "Erreur lors de l'enregistrement.", "error");
     }
 }
