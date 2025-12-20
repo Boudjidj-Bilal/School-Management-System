@@ -1,8 +1,20 @@
 from django.db import models
 from django.contrib.auth.models import AbstractBaseUser, PermissionsMixin
 from .managers import CustomUserManager
-from django.core.exceptions import ObjectDoesNotExist
 
+
+# --- Fonction utilitaire pour le chemin de l'image ---
+def user_profile_image_path(instance, filename):
+    """
+    Génère un chemin unique pour la photo de profil :
+    profile_images/user_<id>/profile_<id>.<ext>
+    """
+    # Récupère l'extension du fichier (ex: .jpg, .png)
+    ext = filename.split('.')[-1]
+    # Renomme le fichier : profile_ID.extension (ex: profile_42.jpg)
+    filename = f"profile_{instance.id}.{ext}"
+    # Retourne le chemin complet relatif à MEDIA_ROOT
+    return f'profile_images/user_{instance.id}/{filename}'
 
 class User(AbstractBaseUser, PermissionsMixin):
     """
@@ -16,6 +28,13 @@ class User(AbstractBaseUser, PermissionsMixin):
     # Ajout manuel des champs de nom
     first_name = models.CharField(max_length=150, blank=True, null=True)
     last_name = models.CharField(max_length=150, blank=True, null=True)
+
+    profile_picture = models.ImageField(
+        upload_to=user_profile_image_path, 
+        null=True, 
+        blank=True,
+        verbose_name="Photo de profil"
+    )
 
     # Permissions / statut
     is_active = models.BooleanField(default=True)

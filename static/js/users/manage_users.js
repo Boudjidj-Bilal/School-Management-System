@@ -16,6 +16,9 @@ document.addEventListener('DOMContentLoaded', function() {
     const genderInput = document.getElementById('gender');
     const birthDateInput = document.getElementById('birth_date');
 
+    const formUserAvatar = document.getElementById('form-user-avatar');
+    const formUserInitials = document.getElementById('form-user-initials');
+
     const toggleStatusButtons = document.querySelectorAll('.toggle-status-btn');
     const confirmationModal = document.getElementById('confirmation-modal');
     const modalMessage = document.getElementById('modal-message');
@@ -34,6 +37,11 @@ document.addEventListener('DOMContentLoaded', function() {
         passwordField.style.display = 'none';
         
         cancelBtn.style.display = 'none'; // Hide cancel button in create mode
+
+        formUserAvatar.classList.add('hidden');
+        formUserAvatar.src = '';
+        formUserInitials.classList.remove('hidden');
+        formUserInitials.innerHTML = '<i class="fas fa-user"></i>';
 
         if (userType === 'staff') {
             staffTypeField.style.display = 'block';
@@ -54,6 +62,21 @@ document.addEventListener('DOMContentLoaded', function() {
         addressInput.value = user.address;
         genderInput.value = user.gender;
         birthDateInput.value = user.birthDate;
+
+        // Gestion de l'affichage Photo vs Initiales
+        if (user.profilePictureUrl && user.profilePictureUrl !== 'None' && user.profilePictureUrl !== '') {
+            // Cas 1 : Il y a une photo
+            formUserAvatar.src = user.profilePictureUrl;
+            formUserAvatar.classList.remove('hidden');
+            formUserInitials.classList.add('hidden');
+        } else {
+            // Cas 2 : Pas de photo, on affiche l'initiale du prénom
+            formUserAvatar.classList.add('hidden');
+            formUserInitials.classList.remove('hidden');
+            // On met la première lettre du prénom en majuscule
+            const initial = user.firstName ? user.firstName.charAt(0).toUpperCase() : '?';
+            formUserInitials.innerHTML = `<span class="text-3xl">${initial}</span>`;
+        }
 
         passwordField.style.display = 'block';
         passwordInput.required = false;
@@ -82,7 +105,8 @@ document.addEventListener('DOMContentLoaded', function() {
                 staffType: this.getAttribute('data-staff-type'),
                 address: this.getAttribute('data-address'),
                 gender: this.getAttribute('data-gender'),
-                birthDate: this.getAttribute('data-birth-date')
+                birthDate: this.getAttribute('data-birth-date'),
+                profilePictureUrl: this.getAttribute('data-profile-picture-url')
             };
             showEditMode(user);
         });

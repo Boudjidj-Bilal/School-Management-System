@@ -2,14 +2,13 @@ from django.shortcuts import render, redirect, get_object_or_404
 
 from django.http import JsonResponse
 
-import datetime
+import datetime, json
 
-import json
 from .utils import *
 from schools.models import School
 from scheduling.utils import get_dashboard_schedule
 from grades.utils import get_dashboard_grades_summary, get_dashboard_school_grades_stats
-from schools.utils import get_all_schools, get_user_school, get_current_school_year, get_current_year_for_school
+from schools.utils import get_user_school, get_current_school_year, get_current_year_for_school
 from django.contrib.auth.decorators import login_required
 from django.db import IntegrityError, transaction
 from django.views.decorators.http import require_http_methods, require_POST
@@ -812,7 +811,7 @@ def profile_view(request):
         'user': user,
         'user_type': user_type,
     }
-    return render(request, 'users/profile.html', context)
+    return render(request, 'users/profil.html', context)
 
 
 @login_required(login_url='login')
@@ -866,3 +865,63 @@ def custom_page_not_found_view(request, exception=None):
     Peut être appelée automatiquement par Django ou manuellement.
     """
     return render(request, "404.html", status=404)
+
+
+@login_required
+@require_http_methods(["POST", "DELETE"])
+def api_manage_profile_picture(request):
+    """
+    API pour gérer la photo de profil :
+    - POST : Upload et remplace la photo.
+    - DELETE : Supprime la photo.
+    """
+    user = request.user
+
+    # --- CAS 1 : UPLOAD D'UNE NOUVELLE PHOTO ---
+    if request.method == "POST":
+        # Vérifie si un fichier a été envoyé
+        if 'profile_picture' not in request.FILES:
+            return JsonResponse({'success': False, 'message': 'Aucun fichier reçu.'}, status=400)
+
+        image_file = request.FILES['profile_picture']
+
+        # Optionnel : Vérification basique du type de fichier
+        if not image_file.content_type.startswith('image'):
+            return JsonResponse({'success': False, 'message': 'Le fichier doit être une image.'}, status=400)
+
+        try:
+            # 1. Supprimer l'ancienne image physiquement
+            remove_old_profile_image(user)
+
+            # 2. Sauvegarder la nouvelle
+            user.profile_picture = image_file
+            user.save()
+
+            # 3. Retourner l'URL de la nouvelle image pour l'affichage JS immédiat
+            return JsonResponse({
+                'success': True,
+                'message': 'Photo mise à jour avec succès.',
+                'new_image_url': user.profile_picture.url
+            })
+
+        except Exception as e:
+            return JsonResponse({'success': False, 'message': f'Erreur serveur : {str(e)}'}, status=500)
+
+    # --- CAS 2 : SUPPRESSION DE LA PHOTO ---
+    elif request.method == "DELETE":
+        try:
+            if user.profile_picture:
+                # 1. Supprimer l'ancienne image physiquement
+                remove_old_profile_image(user)
+                
+                # 2. Mettre le champ à None en base de données
+                user.profile_picture = None
+                user.save()
+
+            return JsonResponse({
+                'success': True, 
+                'message': 'Photo supprimée.'
+            })
+            
+        except Exception as e:
+            return JsonResponse({'success': False, 'message': f'Erreur lors de la suppression : {str(e)}'}, status=500)

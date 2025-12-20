@@ -1,3 +1,5 @@
+import os
+from django.conf import settings
 from .models import User, SuperAdministrator, Staff, Student, Parent, Child
 from django.core.exceptions import ObjectDoesNotExist
 from django.db import IntegrityError
@@ -5,6 +7,7 @@ from django.contrib.auth import authenticate, login, logout, update_session_auth
 import string
 import secrets
 from django.core.serializers.json import DjangoJSONEncoder
+
 
 
 # Gestion des emails automatique :
@@ -1300,3 +1303,20 @@ def get_student_context(request):
 
     # CAS 3 : Autre (Prof, Admin...) -> Pas d'accès en tant qu'élève
     return None
+
+
+def remove_old_profile_image(user):
+    """
+    Supprime physiquement l'ancienne image de profil du disque dur
+    si elle existe.
+    """
+    if user.profile_picture and user.profile_picture.name:
+        # Construit le chemin absolu du fichier
+        file_path = os.path.join(settings.MEDIA_ROOT, user.profile_picture.name)
+        
+        # Vérifie si le fichier existe et le supprime
+        if os.path.exists(file_path):
+            try:
+                os.remove(file_path)
+            except Exception as e:
+                print(f"Erreur lors de la suppression de l'image : {e}")

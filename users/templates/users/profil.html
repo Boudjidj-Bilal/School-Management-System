@@ -6,7 +6,6 @@
 {% block content %}
 <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
     
-    <!-- En-tête -->
     <div class="mb-8">
         <h1 class="text-3xl font-bold text-gray-900">Mon Profil</h1>
         <p class="mt-1 text-sm text-gray-500">Gérez vos informations personnelles et votre sécurité.</p>
@@ -14,19 +13,38 @@
 
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
         
-        <!-- COLONNE GAUCHE : Infos Utilisateur -->
         <div class="lg:col-span-1">
             <div class="bg-white shadow rounded-lg overflow-hidden">
                 <div class="bg-indigo-600 h-24"></div>
                 <div class="px-6 pb-6">
-                    <div class="relative flex justify-center -mt-12">
-                        <div class="w-24 h-24 rounded-full bg-white p-1 shadow-lg">
-                            <div class="w-full h-full rounded-full bg-indigo-100 flex items-center justify-center text-3xl font-bold text-indigo-600 uppercase">
+                    
+                    <div class="relative flex justify-center -mt-12 group">
+                        
+                        <div class="relative w-32 h-32 rounded-full bg-white p-1 shadow-lg overflow-hidden">
+                            
+                            <img id="profile-image-display" 
+                                 src="{% if user.profile_picture %}{{ user.profile_picture.url }}{% else %}#{% endif %}" 
+                                 alt="Photo de profil" 
+                                 class="w-full h-full rounded-full object-cover {% if not user.profile_picture %}hidden{% endif %}">
+
+                            <div id="profile-initials-display" class="w-full h-full rounded-full bg-indigo-100 flex items-center justify-center text-4xl font-bold text-indigo-600 uppercase {% if user.profile_picture %}hidden{% endif %}">
                                 {{ user.username|slice:":1" }}
                             </div>
+
+                            <div onclick="document.getElementById('profile-image-input').click()" 
+                                 class="absolute inset-0 bg-black bg-opacity-40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer rounded-full">
+                                <i class="fas fa-camera text-white text-2xl"></i>
+                            </div>
                         </div>
+
+                        <button id="btn-delete-photo" 
+                                class="absolute bottom-0 right-1/2 translate-x-10 translate-y-2 bg-red-500 text-white rounded-full p-2 shadow-md hover:bg-red-600 transition-colors {% if not user.profile_picture %}hidden{% endif %}"
+                                title="Supprimer la photo">
+                            <i class="fas fa-trash-alt text-xs"></i>
+                        </button>
+
+                        <input type="file" id="profile-image-input" accept="image/*" class="hidden">
                     </div>
-                    
                     <div class="text-center mt-4">
                         {% if user.first_name and user.last_name %}
                             <h2 class="text-xl font-bold text-gray-900">{{ user.first_name }} {{ user.last_name }}</h2>
@@ -77,10 +95,8 @@
             </div>
         </div>
 
-        <!-- COLONNE DROITE : Sécurité -->
         <div class="lg:col-span-2 space-y-6">
             
-            <!-- Carte Changement Mot de Passe -->
             <div class="bg-white shadow rounded-lg">
                 <div class="px-6 py-5 border-b border-gray-200">
                     <h3 class="text-lg font-medium leading-6 text-gray-900">
@@ -90,13 +106,11 @@
                 </div>
                 
                 <div class="p-6">
-                    <!-- Zone de messages (Succès/Erreur) -->
                     <div id="message-area" class="hidden mb-6 rounded-md p-4"></div>
 
                     <form id="change-password-form" class="space-y-6">
                         {% csrf_token %}
                         
-                        <!-- Mot de passe actuel -->
                         <div>
                             <label for="current_password" class="block text-sm font-medium text-gray-700">Mot de passe actuel</label>
                             <div class="mt-1 relative rounded-md shadow-sm">
@@ -111,7 +125,6 @@
 
                         <div class="border-t border-gray-100 my-4"></div>
 
-                        <!-- Nouveau mot de passe -->
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <div>
                                 <label for="new_password" class="block text-sm font-medium text-gray-700">Nouveau mot de passe</label>
@@ -138,7 +151,6 @@
                             </div>
                         </div>
 
-                        <!-- Critères de mot de passe (Indicatif) -->
                         <div class="text-xs text-gray-500 bg-gray-50 p-3 rounded border border-gray-100">
                             <p class="font-medium mb-1">Le mot de passe doit contenir :</p>
                             <ul class="list-disc list-inside space-y-1 pl-1">
@@ -159,6 +171,44 @@
         </div>
     </div>
 </div>
+<div id="delete-photo-modal" class="fixed inset-0 z-50 hidden overflow-y-auto" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+    <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+        
+        <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" aria-hidden="true"></div>
+
+        <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
+
+        <div class="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg w-full">
+            <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
+                <div class="sm:flex sm:items-start">
+                    <div class="mx-auto flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-red-100 sm:mx-0 sm:h-10 sm:w-10">
+                        <i class="fas fa-exclamation-triangle text-red-600"></i>
+                    </div>
+                    
+                    <div class="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left">
+                        <h3 class="text-lg leading-6 font-medium text-gray-900" id="modal-title">
+                            Supprimer la photo de profil
+                        </h3>
+                        <div class="mt-2">
+                            <p class="text-sm text-gray-500">
+                                Êtes-vous sûr de vouloir supprimer votre photo actuelle ?
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
+                <button type="button" id="confirm-delete-btn" class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-red-600 text-base font-medium text-white hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 sm:ml-3 sm:w-auto sm:text-sm">
+                    Supprimer
+                </button>
+                <button type="button" onclick="document.getElementById('delete-photo-modal').classList.add('hidden')" class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm">
+                    Annuler
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
 {% endblock %}
 
 {% block extra_js %}
@@ -166,10 +216,12 @@
         // Configuration pour le script JS externe
         window.PROFILE_CONFIG = {
             csrfToken: "{{ csrf_token }}",
-            apiChangePasswordUrl: "{% url 'api_change_password' %}"
+            // Tes URLs existantes...
+            apiChangePasswordUrl: "{% url 'api_change_password' %}",
+            // ...Ajoute ici l'URL pour gérer la photo
+            apiProfilePictureUrl: "{% url 'api_manage_profile_picture' %}"
         };
     </script>
     
-    <!-- Le fichier JS sera créé à la prochaine étape -->
     <script src="{% static 'js/users/profile.js' %}"></script>
 {% endblock %}
