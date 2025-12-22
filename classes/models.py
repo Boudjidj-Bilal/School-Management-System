@@ -47,7 +47,7 @@ class Class(models.Model):
     level = models.ForeignKey(
         Level, on_delete=models.CASCADE, related_name="classes_level"
     )  # relation Many-to-One avec Level
-    is_valid = models.BooleanField(default=True)  # classe validée pour enregistrement
+    is_valid = models.BooleanField(default=True) # classe validée pour enregistrement
 
     def __str__(self):
         return f"{self.name} - {self.level}"

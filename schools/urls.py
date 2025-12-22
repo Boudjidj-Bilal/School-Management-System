@@ -10,4 +10,5 @@ urlpatterns = [
     path('api/years/<int:year_id>/change_status/', views.change_year_status_api, name='change_year_status_api'),
     path('exceptions/', views.exception_management, name='exception_management'),
     path('manage-terms/', views.manage_term, name='manage_terms'),
+    path('parametres/', views.update_school_settings, name='settings'),
 ]

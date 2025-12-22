@@ -7,9 +7,9 @@ from schools.models import TermYearLevel
 from subjects.models import TeacherSubject
 from classes.models import ClassTeacherYear, ClassStudentYear, Class, Level
 
-# ====================================================================
+# ==============================
 # FONCTIONS DE CALCUL DE MOYENNE
-# ====================================================================
+# ==============================
 
 def get_evaluations_for_subject(teacher_subject, student_class, term_year):
     """
@@ -29,7 +29,7 @@ def calculate_student_subject_average(student, teacher_subject, term_year):
     """
     2. Calcule la moyenne PONDÉRÉE d'un ÉLÈVE pour UNE matière 
        dans un trimestre donné.
-       [MODIFIÉ] Gère la normalisation des notes (max_grade).
+       Gère la normalisation des notes (max_grade).
     """
     # Récupère toutes les notes valides (non-absent, non-nul)
     grades = Grade.objects.filter(
@@ -76,7 +76,7 @@ def calculate_subject_class_average(student_class, teacher_subject, term_year):
     """
     3. Calcule la moyenne PONDÉRÉE d'une CLASSE pour UNE matière 
        dans un trimestre donné.
-       [MODIFIÉ] Gère la normalisation des notes (max_grade).
+       Gère la normalisation des notes (max_grade).
     """
     # C'est la même logique que pour l'élève, mais filtrée sur la classe
     grades = Grade.objects.filter(
@@ -120,7 +120,6 @@ def calculate_overall_class_average(student_class, term_year):
     4. Calcule la moyenne GÉNÉRALE d'une CLASSE (toutes matières)
        pour un trimestre donné.
        
-    [MODIFIÉ] NOUVELLE LOGIQUE :
     Calcule la moyenne des "Moyennes Générales" de chaque élève de la classe.
     """
     
@@ -384,7 +383,7 @@ def get_student_grades_view_data(student, current_year):
 # ====================================================================
 
 def get_appreciations_data_for_context(current_year, student_class, teacher_subject_id, selected_term, is_global=False):
-    # ... (fonction inchangée) ...
+    
     if not selected_term:
         return {'students_data': []}
 
@@ -440,7 +439,7 @@ def get_appreciations_data_for_context(current_year, student_class, teacher_subj
 
 
 def get_grades_dashboard_data(teacher_staff, current_year):
-    # ... (Code existant pour le dashboard notes prof) ...
+
     teacher_subjects_links = ClassTeacherYear.objects.filter(
         teacher__teacher=teacher_staff,
         year=current_year,
@@ -496,6 +495,7 @@ def get_grades_dashboard_data(teacher_staff, current_year):
 
 
 def get_appreciations_dashboard_data(teacher_staff, current_year):
+    
     taught_subjects_ids = TeacherSubject.objects.filter(teacher=teacher_staff).values_list('id', flat=True)
     teacher_subjects_links = ClassTeacherYear.objects.filter(teacher__id__in=taught_subjects_ids, year=current_year, is_active=True).select_related('student_class__level', 'teacher__subject').order_by('student_class__name', 'teacher__subject__name')
     main_classes_links = teacher_subjects_links.filter(is_main_teacher=True)

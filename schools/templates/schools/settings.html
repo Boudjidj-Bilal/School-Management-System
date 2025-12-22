@@ -1,0 +1,139 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+
+    <div class="mb-8">
+        <h1 class="text-2xl font-bold text-gray-900 flex items-center">
+            <i class="fas fa-sliders-h mr-3 text-indigo-600"></i>
+            Paramètres de l'établissement
+        </h1>
+        <p class="mt-2 text-sm text-gray-600">
+            Ces éléments sont utilisés pour générer les bulletins scolaires et les documents officiels.
+            Toute modification est immédiate.
+        </p>
+    </div>
+
+    {% if messages %}
+        <div class="mb-6">
+            {% for message in messages %}
+                <div class="p-4 rounded-md {% if message.tags == 'success' %}bg-green-50 text-green-700{% else %}bg-red-50 text-red-700{% endif %}">
+                    {{ message }}
+                </div>
+            {% endfor %}
+        </div>
+    {% endif %}
+
+    <div class="bg-white shadow rounded-lg overflow-hidden">
+        <form method="post" enctype="multipart/form-data" class="p-6 space-y-8">
+            {% csrf_token %}
+
+            <div class="border-b border-gray-200 pb-8">
+                <h3 class="text-lg font-medium leading-6 text-gray-900 mb-4">
+                    1. Charte Graphique
+                </h3>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6 items-center">
+                    <div class="col-span-2">
+                        <label for="{{ form.primary_color.id_for_label }}" class="block text-sm font-medium text-gray-700">
+                            Couleur Principale
+                        </label>
+                        <p class="text-xs text-gray-500 mt-1">
+                            Cette couleur sera utilisée pour les titres, les bordures et les accents sur les bulletins PDF.
+                        </p>
+                    </div>
+                    <div>
+                        <div class="flex items-center space-x-3">
+                            {{ form.primary_color }}
+                            <span class="text-sm text-gray-500" id="color-code">
+                                {{ form.primary_color.value|default:"#4f46e5" }}
+                            </span>
+                        </div>
+                    </div>
+                </div>
+                {% if form.primary_color.errors %}
+                    <p class="text-red-500 text-xs mt-1">{{ form.primary_color.errors }}</p>
+                {% endif %}
+            </div>
+
+            <div>
+                <h3 class="text-lg font-medium leading-6 text-gray-900 mb-6">
+                    2. Images Officielles
+                </h3>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-10">
+                    
+                    <div class="bg-gray-50 p-4 rounded-lg border border-gray-200">
+                        <label class="block text-sm font-bold text-gray-700 mb-3">
+                            Logo de l'établissement
+                        </label>
+
+                        <div class="mb-4 flex justify-center items-center h-32 bg-white border border-gray-300 border-dashed rounded-md">
+                            {% if school.logo %}
+                                <img src="{{ school.logo.url }}" alt="Logo actuel" class="h-24 object-contain">
+                            {% else %}
+                                <span class="text-gray-400 text-sm">Aucun logo</span>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="mt-2">
+                            {{ form.logo }}
+                        </div>
+                        <p class="text-xs text-gray-500 mt-2">
+                            Format recommandé : PNG (fond transparent).<br>Idéalement carré ou rectangulaire.
+                        </p>
+                        {% if form.logo.errors %}
+                            <p class="text-red-500 text-xs mt-1">{{ form.logo.errors }}</p>
+                        {% endif %}
+                    </div>
+
+                    <div class="bg-gray-50 p-4 rounded-lg border border-gray-200">
+                        <label class="block text-sm font-bold text-gray-700 mb-3">
+                            Signature du Chef d'établissement
+                        </label>
+
+                        <div class="mb-4 flex justify-center items-center h-32 bg-white border border-gray-300 border-dashed rounded-md">
+                            {% if school.principal_signature %}
+                                <img src="{{ school.principal_signature.url }}" alt="Signature actuelle" class="h-20 object-contain">
+                            {% else %}
+                                <span class="text-gray-400 text-sm">Aucune signature</span>
+                            {% endif %}
+                        </div>
+
+                        <div class="mt-2">
+                            {{ form.principal_signature }}
+                        </div>
+                        <p class="text-xs text-gray-500 mt-2">
+                            Cette image apparaîtra au bas des bulletins.<br>Format recommandé : PNG ou JPG (fond blanc/transparent).
+                        </p>
+                        {% if form.principal_signature.errors %}
+                            <p class="text-red-500 text-xs mt-1">{{ form.principal_signature.errors }}</p>
+                        {% endif %}
+                    </div>
+
+                </div>
+            </div>
+
+            <div class="pt-5 border-t border-gray-200 flex justify-end space-x-3">
+                <a href="{% url 'dashboard' %}" class="bg-white py-2 px-4 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none">
+                    Annuler
+                </a>
+                <button type="submit" class="inline-flex justify-center py-2 px-6 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors">
+                    <i class="fas fa-save mr-2"></i> Enregistrer les modifications
+                </button>
+            </div>
+
+        </form>
+    </div>
+</div>
+
+<script>
+    const colorInput = document.querySelector('input[type="color"]');
+    const colorCode = document.getElementById('color-code');
+    
+    if(colorInput && colorCode) {
+        colorInput.addEventListener('input', (e) => {
+            colorCode.textContent = e.target.value;
+        });
+    }
+</script>
+{% endblock %}

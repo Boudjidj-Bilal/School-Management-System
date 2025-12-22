@@ -124,6 +124,20 @@
                                     <td class="px-4 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{{ class_obj.name }}</td>
                                     <td class="px-4 py-4 whitespace-nowrap text-sm text-gray-500" data-level-id="{{ class_obj.level.id }}">{{ class_obj.level.get_level_display }}</td>
                                     <td class="px-4 py-4 whitespace-nowrap text-right text-sm font-medium flex justify-end items-center space-x-2">
+                                        {% load school_extras %}
+    
+                                            {% get_current_term_id class_obj as dyn_term_id %}
+
+                                            {% if dyn_term_id %}
+                                                <a href="{% url 'documents:manage_class_report_cards' class_id=class_obj.id term_id=dyn_term_id %}" 
+                                                class="text-sky-600 hover:text-sky-900 ml-3 p-2"
+                                                title="Gérer les bulletins (Trimestre actuel)">
+                                                    <i class="fas fa-file-invoice"></i>
+                                                </a>
+                                            {% else %}
+                                                <span class="text-gray-400 ml-3" title="Aucun trimestre configuré pour ce niveau"><i class="fas fa-ban"></i></span>
+                                            {% endif %}
+
                                         <a 
                                             {% if not is_creation_stape %}
                                                 href="{% url 'scheduling:view_class_schedule_page' pk_class=class_obj.id %}"
@@ -158,7 +172,7 @@
                                             title="Affecter Élèves et Professeurs">
                                             <i class="fas fa-user-check"></i>
                                         </a>
-
+                                        
                                         <!-- Bouton Modifier - utilise des attributs data-* pour le JS -->
                                         <button type="button"
                                                 data-action="edit"

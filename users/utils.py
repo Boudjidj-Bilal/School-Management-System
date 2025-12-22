@@ -9,10 +9,9 @@ import secrets
 from django.core.serializers.json import DjangoJSONEncoder
 
 
-
 # Gestion des emails automatique :
 from django.core.mail import send_mail
-from ProjectSchool.settingsCopy import EMAIL_HOST_USER
+from ProjectSchool.settings import EMAIL_HOST_USER
 from smtplib import SMTPException
 
 

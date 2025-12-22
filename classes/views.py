@@ -7,13 +7,14 @@ import json
 
 from users.utils import get_user_type
 from schools.utils import get_user_school, get_authorisation_stape_run_year, get_current_year_for_school, get_authorisation_stape_creation_year
-
 from .models import Classroom, Level, Class, ClassStudentYear, ClassTeacherYear
-from schools.models import School
+from schools.models import School, TermYearLevel
 from users.models import Student 
 from subjects.models import TeacherSubject 
 
 from django.db import IntegrityError, transaction
+
+from datetime import date
 
 
 @require_http_methods(["GET", "POST"])
@@ -330,6 +331,18 @@ def class_management(request):
              "message": "Opération non autorisée. La gestion des classes (Création/Modification/Suppression) n'est possible que lorsque l'année scolaire est à l'étape de Création."}, 
             status=403
         )
+    
+    current_term = TermYearLevel.objects.filter(
+        year__running=True,  # Année active
+        start_date__lte=date.today(), # Commencé avant aujourd'hui
+        end_date__gte=date.today()    # Fini après aujourd'hui
+    ).first()
+
+    # Si on ne trouve pas par date (ex: vacances), on prend le dernier actif ou le premier
+    if not current_term:
+        current_term = TermYearLevel.objects.filter(year__running=True).first()
+
+    current_term_id = current_term.id if current_term else None
 
     # --- 5. Gestion des requêtes POST (API CRUD) ---
     if request.method == 'POST':
@@ -451,6 +464,7 @@ def class_management(request):
         'levels': school_levels,
         'existing_classes': existing_classes,
         'user_type': user_type,
+        'current_term_id': current_term_id,
         'is_creation_stape': stape_creation_year_html, # Pour l'affichage conditionnel dans le template
     }
     

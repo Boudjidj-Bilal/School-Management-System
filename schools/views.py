@@ -1,4 +1,4 @@
-from django.shortcuts import render, get_object_or_404
+from django.shortcuts import render, get_object_or_404, redirect
 from django.http import JsonResponse
 
 import json
@@ -7,6 +7,8 @@ from datetime import date, time, datetime
 
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth import get_user_model
+from django.contrib import messages
+
 from users.utils import create_user, create_staff, get_user_type, generate_unique_username, send_email_create_compte, get_user_by_username, generate_random_password, send_emails_for_year_stage
 from .utils import create_school, get_user_school, get_current_year_for_school, get_authorisation_stape_creation_year, create_term_year_level, check_first_terms_for_school_year
 
@@ -19,6 +21,8 @@ from django.core.exceptions import ValidationError
 from .models import School, Year, ExceptionDay, ExceptionTime, TermYearLevel
 from classes.utils import get_levels_by_school
 from classes.models import Level
+
+from .forms import SchoolUpdateForm
 
 # --- Constantes pour la logique de gestion des trimestres ---
 TERM_TYPE_TRIMESTRE = "TRIMESTRE"
@@ -860,3 +864,59 @@ def api_update_school(request, school_id):
         return JsonResponse({'success': False, 'message': 'Données JSON invalides.'}, status=400)
     except Exception as e:
         return JsonResponse({'success': False, 'message': str(e)}, status=500)
+    
+
+@login_required
+def update_school_settings(request):
+    """
+    Permet au proviseur de modifier uniquement le logo, la signature et la couleur.
+    """
+    # 1. Récupération de l'école liée à l'utilisateur
+    # ADAPTATION REQUISE : Vérifie comment ton User est lié à School.
+    # Ici, je suppose que l'utilisateur est un Staff et qu'il a un attribut 'school'
+    # ou que le staff est lié à l'école.
+
+    user = request.user
+    type = get_user_type(user) 
+
+    if type not in ("SuperAdministrator", "Principal"):
+        messages.error(request, "Vous n'avez pas accès à cette fonctionnalité.")
+        return redirect('dashboard')
+    
+    try:
+        school = get_user_school(request.user, request.session.get('selected_school_id'))
+    except AttributeError:
+        # Fallback pour superuser sans lien staff direct (pour le dev)
+        if request.user.is_superuser:
+            school = School.objects.first()
+        else:
+            messages.error(request, "Aucune école associée à votre compte.")
+            return redirect('dashboard')
+
+    if not school:
+        messages.error(request, "École introuvable.")
+        return redirect('dashboard')
+    elif not school.is_active:
+        messages.error(request, "École non active.")
+        return redirect('dashboard')
+        
+
+    # 2. Gestion du formulaire
+    if request.method == 'POST':
+        # IMPORTANT : request.FILES est obligatoire pour uploader des images
+        form = SchoolUpdateForm(request.POST, request.FILES, instance=school)
+        if form.is_valid():
+            form.save()
+            messages.success(request, "Les paramètres de l'école ont été mis à jour.")
+            # On redirige vers la même page pour voir les changements
+            return redirect('settings')
+        else:
+            messages.error(request, "Veuillez corriger les erreurs ci-dessous.")
+    else:
+        form = SchoolUpdateForm(instance=school)
+
+    context = {
+        'form': form,
+        'school': school,
+    }
+    return render(request, 'schools/settings.html', context)

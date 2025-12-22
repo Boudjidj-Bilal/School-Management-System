@@ -11,7 +11,7 @@ def get_attendance_classes_for_user(user, current_year, user_type):
     Récupère la liste des classes visibles pour l'utilisateur connecté
     dans le contexte du module d'appel.
     
-    [CORRECTION] Utilisation de Class.objects.filter(...).distinct() 
+    Utilisation de Class.objects.filter(...).distinct() 
     pour garantir l'unicité des classes (sans doublons) quelle que soit la DB.
     """
 
@@ -146,7 +146,7 @@ def get_active_term_for_class(student_class):
 def get_student_attendance_view_data(student, current_year):
     """
     Prépare les données pour le tableau de bord d'assiduité de l'élève.
-    [CORRIGÉ] Détermine un SEUL trimestre actif par défaut pour l'UI.
+    Détermine un SEUL trimestre actif par défaut pour l'UI.
     """
     
     # 1. Récupérer la classe

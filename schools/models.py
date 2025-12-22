@@ -22,6 +22,33 @@ class School(models.Model): # TODO : Pour gérer l'internationalisation, ajouter
         on_delete=models.CASCADE, related_name="schools"
     )  # relation Many-to-One avec SuperAdministrator
 
+    # Le Logo de l'école
+    logo = models.ImageField(
+        upload_to='schools/logos/', 
+        null=True, 
+        blank=True,
+        verbose_name="Logo de l'école"
+    )
+
+    # La couleur principale (pour les titres, les bordures du bulletin)
+    # On stocke un code Hexadécimal (ex: #2563EB pour du bleu)
+    # On met une valeur par défaut (Gris foncé) pour éviter les bugs si vide
+    primary_color = models.CharField(
+        max_length=7, 
+        default="#374151", 
+        verbose_name="Couleur principale (Hex)",
+        help_text="Code couleur hexadécimal pour le bulletin (ex: #2563EB)"
+    )
+
+    # La signature du proviseur
+    # Format Image (PNG/JPG) recommandé pour l'intégration WeasyPrint
+    principal_signature = models.ImageField(
+        upload_to='schools/signatures/', 
+        null=True, 
+        blank=True,
+        verbose_name="Signature du Proviseur (Image)"
+    )
+
     def __str__(self):
         return self.name
 
