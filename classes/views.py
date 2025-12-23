@@ -308,10 +308,16 @@ def class_management(request):
     
     # 1. Détermination du contexte utilisateur et permission
     user_type = get_user_type(request.user)
-    allowed_roles = ["SuperAdministrator", "Principal", "Administrator"] 
+    allowed_roles = ["SuperAdministrator", "Principal", "Administrator"]
+
+    can_access_bulletin = False
     
     if user_type not in allowed_roles:
         return render(request, "404.html", status=404)
+    
+    if user_type == "Principal" or user_type == "SuperAdministrator": 
+        can_access_bulletin = True
+
     # 2. Détermination du contexte de l'école
     try:
         school_filter = get_user_school(request.user, request.session.get('selected_school_id'))
@@ -464,6 +470,7 @@ def class_management(request):
         'levels': school_levels,
         'existing_classes': existing_classes,
         'user_type': user_type,
+        'can_access_bulletin' : can_access_bulletin,
         'current_term_id': current_term_id,
         'is_creation_stape': stape_creation_year_html, # Pour l'affichage conditionnel dans le template
     }

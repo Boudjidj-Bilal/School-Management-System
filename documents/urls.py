@@ -10,6 +10,8 @@ urlpatterns = [
 
     # GED (Upload Admin)
     path('upload/', views.upload_document, name='upload_document'),
+    
+    path('download/<int:report_card_id>/', views.download_report_card, name='download_report_card'),
 
     # Vue Élève / Parent
     path('my-documents/', views.my_documents, name='my_documents'),

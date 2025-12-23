@@ -4,10 +4,12 @@ from django.shortcuts import render
 
 from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib.auth.decorators import login_required
-from django.http import HttpResponseForbidden
+from django.http import HttpResponseForbidden, Http404, FileResponse
 from django.template.loader import render_to_string
 from django.core.files.base import ContentFile
 from django.contrib import messages
+
+from django.shortcuts import get_object_or_404
 
 # Librairie PDF
 try:
@@ -19,6 +21,7 @@ except ImportError:
 from .models import ReportCard, StudentDocument
 from .utils import get_report_card_context
 from schools.models import TermYearLevel
+from schools.utils import get_user_school
 from classes.models import Class
 from users.models import Student
 from users.utils import get_user_type, get_student_context
@@ -307,3 +310,42 @@ def my_documents(request):
         'student': student
     }
     return render(request, 'documents/student_documents.html', context)
+
+
+@login_required
+def download_report_card(request, report_card_id):
+    # 1. On récupère l'objet en base de données
+    rc = get_object_or_404(ReportCard, pk=report_card_id)
+
+    user = request.user
+    type = get_user_type(user) 
+
+    # 2. VÉRIFICATION DES DROITS (Le Portier)
+    is_owner = (user == rc.student.user)
+
+    if not is_owner:
+        if type not in ("SuperAdministrator", "Principal", "Parent"):
+            return render(request, "404.html", status=404)
+
+        
+        school = get_user_school(request.user, request.session.get('selected_school_id'))
+        if not school == rc.student.school:
+            return render(request, "404.html", status=404)
+
+        
+        if type == "Parent":
+            student = get_student_context(request)
+            if not student == rc.student:
+                return render(request, "404.html", status=404)
+
+
+    # 3. Si tout est OK, on envoie le fichier manuellement
+    if not rc.file:
+        raise Http404("Le fichier n'existe pas.")
+
+    # On ouvre le fichier depuis le dossier privé et on l'envoie
+    response = FileResponse(rc.file.open('rb'), content_type='application/pdf')
+    
+    # Optionnel : Forcer le téléchargement ou l'affichage (ici 'inline' pour afficher dans le navigateur)
+    response['Content-Disposition'] = f'inline; filename="Bulletin_{rc.student.user.last_name}.pdf"'
+    return response

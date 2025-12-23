@@ -2,9 +2,17 @@ from django.db import models
 from users.models import Student, User
 from schools.models import TermYearLevel
 
+from django.core.files.storage import FileSystemStorage
+from django.conf import settings
+import os
+
 # ======================================
 # MODÈLE BULLETIN SCOLAIRE (Généré auto)
 # ======================================
+
+# On définit un stockage privé (hors de l'URL publique)
+# On crée un dossier 'private_files' à la racine du projet (au même niveau que 'manage.py')
+PRIVATE_STORAGE = FileSystemStorage(location=os.path.join(settings.BASE_DIR, 'private_files'))
 
 class ReportCard(models.Model):
     student = models.ForeignKey(
@@ -19,7 +27,12 @@ class ReportCard(models.Model):
     )
     
     # Le fichier PDF généré (Snapshot)
-    file = models.FileField(upload_to='report_cards/%Y/%m/')
+    file = models.FileField(
+        storage=PRIVATE_STORAGE, # <--- C'est ici que la magie opère
+        upload_to='report_cards/%Y/%m/', # L'organisation des dossiers reste la même à l'intérieur
+        null=True, 
+        blank=True
+    )
     
     # Pour savoir si l'élève/parent peut le voir
     is_published = models.BooleanField(default=False, verbose_name="Publié")

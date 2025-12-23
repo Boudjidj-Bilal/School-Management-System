@@ -127,15 +127,16 @@
                                         {% load school_extras %}
     
                                             {% get_current_term_id class_obj as dyn_term_id %}
-
-                                            {% if dyn_term_id %}
-                                                <a href="{% url 'documents:manage_class_report_cards' class_id=class_obj.id term_id=dyn_term_id %}" 
-                                                class="text-sky-600 hover:text-sky-900 ml-3 p-2"
-                                                title="Gérer les bulletins (Trimestre actuel)">
-                                                    <i class="fas fa-file-invoice"></i>
-                                                </a>
-                                            {% else %}
-                                                <span class="text-gray-400 ml-3" title="Aucun trimestre configuré pour ce niveau"><i class="fas fa-ban"></i></span>
+                                            {% if can_access_bulletin %}
+                                                {% if dyn_term_id %}
+                                                    <a href="{% url 'documents:manage_class_report_cards' class_id=class_obj.id term_id=dyn_term_id %}" 
+                                                    class="text-sky-600 hover:text-sky-900 ml-3 p-2"
+                                                    title="Gérer les bulletins (Trimestre actuel)">
+                                                        <i class="fas fa-file-invoice"></i>
+                                                    </a>
+                                                {% else %}
+                                                    <span class="text-gray-400 ml-3" title="Aucun trimestre configuré pour ce niveau"><i class="fas fa-ban"></i></span>
+                                                {% endif %}
                                             {% endif %}
 
                                         <a 

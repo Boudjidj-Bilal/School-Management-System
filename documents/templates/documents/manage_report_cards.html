@@ -209,7 +209,10 @@
                             {% if item.report_card %}
                                 
                                 {% if item.report_card.file %}
-                                    <a href="{{ item.report_card.file.url }}" target="_blank" class="text-indigo-600 hover:text-indigo-900 bg-indigo-50 hover:bg-indigo-100 px-3 py-1 rounded transition" title="Télécharger le PDF">
+                                    <a href="{% url 'documents:download_report_card' report_card_id=item.report_card.id %}" 
+                                        target="_blank" 
+                                        class="text-indigo-600 hover:text-indigo-900 bg-indigo-50 hover:bg-indigo-100 px-3 py-1 rounded transition" 
+                                        title="Télécharger le PDF">
                                         <i class="fas fa-download"></i>
                                     </a>
                                 {% else %}
