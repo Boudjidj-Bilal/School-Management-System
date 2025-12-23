@@ -328,6 +328,9 @@ def class_management(request):
     # 3. Détermination de l'année scolaire actuelle
     current_year = get_current_year_for_school(school_filter)
 
+    if current_year.creation or current_year.registration:
+        can_access_bulletin = False
+
     # 4. Vérification du stade de l'année scolaire (Condition clé pour le CRUD)
     stape_creation_year = current_year and current_year.creation
     
@@ -339,14 +342,13 @@ def class_management(request):
         )
     
     current_term = TermYearLevel.objects.filter(
-        year__running=True,  # Année active
-        start_date__lte=date.today(), # Commencé avant aujourd'hui
-        end_date__gte=date.today()    # Fini après aujourd'hui
+        year__school=school_filter,
+        year__current=True
     ).first()
 
     # Si on ne trouve pas par date (ex: vacances), on prend le dernier actif ou le premier
     if not current_term:
-        current_term = TermYearLevel.objects.filter(year__running=True).first()
+        current_term = TermYearLevel.objects.filter(year=current_year)
 
     current_term_id = current_term.id if current_term else None
 
