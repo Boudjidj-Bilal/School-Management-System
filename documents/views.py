@@ -1,6 +1,9 @@
 from django.shortcuts import render
 
 # Create your views here.
+# ... imports existants ...
+from .export import generate_statistics_excel 
+from schools.utils import get_user_school 
 
 from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib.auth.decorators import login_required
@@ -349,3 +352,42 @@ def download_report_card(request, report_card_id):
     # Optionnel : Forcer le téléchargement ou l'affichage (ici 'inline' pour afficher dans le navigateur)
     response['Content-Disposition'] = f'inline; filename="Bulletin_{rc.student.user.last_name}.pdf"'
     return response
+
+
+@login_required
+def download_school_statistics(request):
+    """
+    Vue pour télécharger le fichier Excel des statistiques.
+    """
+    user = request.user
+    user_type = get_user_type(user)
+
+    # 1. Cas SUPER ADMIN : Il a le choix (Tout ou une école spécifique)
+    if user_type == "SuperAdministrator":
+        # On regarde s'il y a un paramètre 'school_id' dans l'URL (ex: ?school_id=2)
+        school_id = request.GET.get('school_id')
+        
+        if school_id and school_id == 'all':
+            # Export GLOBAL (Toutes les écoles)
+            return generate_statistics_excel(school=None)
+        else:
+            # Export d'une école spécifique
+            school_super_admin = get_user_school(request.user, request.session.get('selected_school_id'))
+
+            return generate_statistics_excel(school=school_super_admin)
+        
+    # 2. Cas PROVISEUR (Principal) : Uniquement SON école
+    elif user_type == "Principal":
+        # On récupère son école
+        # Ta fonction utilitaire get_user_school est parfaite pour ça
+        school = get_user_school(user) 
+        
+        if not school:
+            messages.error(request, "Aucune école associée à votre compte.")
+            return redirect('home')
+            
+        return generate_statistics_excel(school=school)
+
+    else:
+        # Les autres (Profs, Élèves) n'ont pas le droit
+        return render(request, "404.html", status=403)

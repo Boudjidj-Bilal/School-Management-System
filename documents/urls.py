@@ -15,4 +15,6 @@ urlpatterns = [
 
     # Vue Élève / Parent
     path('my-documents/', views.my_documents, name='my_documents'),
+
+    path('statistiques/download/', views.download_school_statistics, name='download_stats'),
 ]

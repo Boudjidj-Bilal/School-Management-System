@@ -425,8 +425,51 @@
                             {% endif %}
                         </div>
                     </div>
-                {% endif %}
+                    <div class="lg:col-span-4 md:col-span-4 bg-white rounded-2xl shadow-sm border border-gray-100 p-6 flex flex-col justify-center">
+                        
+                        <div class="flex items-center mb-4">
+                            <div class="bg-indigo-50 p-2 rounded-lg mr-3">
+                                <i class="fas fa-file-export text-indigo-600"></i>
+                            </div>
+                            <h3 class="font-bold text-gray-700 text-lg">Centre de Rapports</h3>
+                        </div>
 
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            
+                            <a href="{% url 'documents:download_stats' %}" 
+                               class="group flex items-center justify-between px-5 py-4 bg-green-50 border border-green-100 rounded-xl hover:bg-green-100 hover:border-green-200 transition-all duration-200 cursor-pointer">
+                                <div class="flex items-center">
+                                    <div class="bg-white p-2 rounded-full shadow-sm text-green-600 mr-4 group-hover:scale-110 transition-transform">
+                                        <i class="fas fa-file-excel text-xl"></i>
+                                    </div>
+                                    <div class="text-left">
+                                        <p class="font-bold text-green-800 text-sm">Statistiques Établissement</p>
+                                        <p class="text-xs text-green-600">Format Excel (.xlsx)</p>
+                                    </div>
+                                </div>
+                                <i class="fas fa-download text-green-400 group-hover:text-green-600"></i>
+                            </a>
+
+                            {% if user_type == 'SuperAdministrator' %}
+                                <a href="{% url 'documents:download_stats' %}?school_id=all" 
+                                   class="group flex items-center justify-between px-5 py-4 bg-amber-50 border border-amber-100 rounded-xl hover:bg-amber-100 hover:border-amber-200 transition-all duration-200 cursor-pointer">
+                                    <div class="flex items-center">
+                                        <div class="bg-white p-2 rounded-full shadow-sm text-amber-600 mr-4 group-hover:scale-110 transition-transform">
+                                            <i class="fas fa-database text-xl"></i>
+                                        </div>
+                                        <div class="text-left">
+                                            <p class="font-bold text-amber-800 text-sm">Export Global (Toutes Écoles)</p>
+                                            <p class="text-xs text-amber-600">Données complètes système</p>
+                                        </div>
+                                    </div>
+                                    <i class="fas fa-download text-amber-400 group-hover:text-amber-600"></i>
+                                </a>
+                            {% endif %}
+                            
+                        </div>
+                    </div>
+                    
+                {% endif %}
 
                 <!-- ======================================================= -->
                 <!-- G. WIDGETS ADMINISTRATEUR                               -->
