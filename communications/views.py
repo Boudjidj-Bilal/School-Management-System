@@ -311,7 +311,6 @@ def get_interlocutor_name(conversation, current_user):
     return "Inconnu"
 
 
-
 @login_required(login_url='login')
 def announcement_dashboard_view(request):
     """
@@ -402,8 +401,10 @@ def api_get_announcements(request):
         return JsonResponse({'success': False, 'message': 'Ecole introuvable.'}, status=400)
 
     if current_year:
-        if not current_year.running or current_year.finished:
-            return JsonResponse({'success': False, 'message': "L'année n'est pas à l'état en cours ou fini."}, status=400)
+        if not current_year.running:
+            if not current_year.finished:
+                if not current_year.registration:
+                    return JsonResponse({'success': False, 'message': "L'année n'est pas à l'état d'enregistrement, en cours ou fini."}, status=400)
     else: 
         return JsonResponse({'success': False, 'message': "Impossible de trouver l'année."}, status=400)
 
@@ -542,8 +543,10 @@ def api_create_announcement(request):
             return JsonResponse({'success': False, 'message': 'Ecole introuvable.'}, status=400)
 
         if current_year:
-            if not current_year.running or current_year.finished:
-                return JsonResponse({'success': False, 'message': "L'année n'est pas à l'état en cours ou fini."}, status=400)
+            if not current_year.running:
+                if not current_year.finished:
+                    if not current_year.registration:
+                        return JsonResponse({'success': False, 'message': "L'année n'est pas à l'état en cours ou fini."}, status=400)
         else: 
             return JsonResponse({'success': False, 'message': "Impossible de trouver l'année."}, status=400)
         
