@@ -16,8 +16,7 @@ def get_current_term_id(school_class):
         # 1. On récupère tous les trimestres du niveau pour l'année en cours
         # On trie par 'counter' (1, 2, 3) pour respecter l'ordre chronologique
         terms = TermYearLevel.objects.filter(
-            level=school_class.level,
-            year__running=True
+            level=school_class.level
         ).order_by('counter')
 
         # S'il n'y a pas de trimestres configurés, on ne renvoie rien
