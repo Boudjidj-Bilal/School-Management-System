@@ -117,8 +117,11 @@ def manage_class_report_cards(request, class_id, term_id):
     is_main_teacher = False
     
     if user_type == "Teacher" and hasattr(user, 'staff_user'):
-        if student_class.main_teacher == user.staff_user:
-            is_main_teacher = True
+        is_main_teacher = student_class.teacher_years.filter(
+            teacher__teacher=user.staff_user,  # On compare le Staff (via TeacherSubject)
+            is_main_teacher=True,              # La case Prof Principal doit être cochée
+            is_active=True                     # (Optionnel) On vérifie que le lien est actif
+        ).exists() # Renvoie True si trouvé, False sinon
     
     if not (is_admin or is_main_teacher):
         return render(request, "404.html", status=403)
@@ -215,7 +218,7 @@ def regenerate_single_report_card(request, report_card_id):
 def upload_document(request):
     """
     Page pour déposer un document administratif pour un élève.
-    CORRIGÉ : Filtre par école et Design amélioré.
+    Filtre par école et Design amélioré.
     """
     user_type = get_user_type(request.user)
     if user_type not in ["SuperAdministrator", "Principal", "Administrator", "CPE"]:
@@ -276,6 +279,72 @@ def upload_document(request):
     
     return render(request, 'documents/upload_document.html', {'classes': classes})
 
+
+@login_required
+def download_student_document(request, document_id):
+    """
+    Vue sécurisée pour télécharger un document administratif (GED).
+    Vérifie que l'utilisateur est le propriétaire, un parent, ou un staff de la MÊME école.
+    """
+    # 1. On récupère le document
+    doc = get_object_or_404(StudentDocument, pk=document_id)
+    user = request.user
+    user_type = get_user_type(user)
+
+    # 2. DÉFINITION DES DROITS D'ACCÈS
+    
+    # A. SuperAdmin : Accès total
+    if user_type == "SuperAdministrator":
+        access_granted = True
+        
+    # B. L'élève concerné (Propriétaire)
+    elif user == doc.student.user:
+        access_granted = True
+        
+    # C. Le Parent de l'élève
+    elif user_type == "Parent":
+        # On vérifie si l'enfant sélectionné est bien celui du document
+        current_student = get_student_context(request)
+        if current_student == doc.student:
+            access_granted = True
+        else:
+            access_granted = False
+
+    # D. Le Staff (Proviseur, CPE, Admin) de la MÊME école
+    elif user_type in ["Principal", "Administrator"]:
+        try:
+            staff_school = user.staff_user.school
+            if staff_school == doc.student.school:
+                access_granted = True
+            else:
+                access_granted = False
+        except AttributeError:
+            access_granted = False
+            
+    # E. Autres (Profs, CPE, etc.) -> Refusé
+    else:
+        access_granted = False
+
+    # 3. VERDICT
+    if not access_granted:
+        return render(request, "404.html", status=403) # Ou HttpResponseForbidden
+
+    # 4. ENVOI DU FICHIER
+    if not doc.file:
+        raise Http404("Le fichier physique est introuvable.")
+
+    try:
+        response = FileResponse(doc.file.open('rb'), content_type='application/pdf')
+        # On nettoie le titre pour le nom de fichier
+        clean_title = doc.title.replace(" ", "_")
+        response['Content-Disposition'] = f'inline; filename="{clean_title}.pdf"'
+        return response
+    except FileNotFoundError:
+        raise Http404("Erreur de lecture du fichier.")
+    
+
+
+
 # ==============================================================================
 # 4. VUE ÉLÈVE / PARENT (Mes Documents)
 # ==============================================================================
@@ -316,6 +385,51 @@ def my_documents(request):
 
 
 @login_required
+def admin_view_student_documents(request, student_id):
+    """
+    Permet au Proviseur/Admin/SuperAdmin de voir les documents d'un élève spécifique.
+    """
+    user = request.user
+    user_type = get_user_type(user)
+
+    # 1. Vérification des permissions globales
+    if user_type not in ["SuperAdministrator", "Principal", "Administrator", "CPE"]:
+        return render(request, "404.html", status=403)
+
+    # 2. Récupération de l'élève cible
+    target_student = get_object_or_404(Student, pk=student_id)
+
+    # 3. Vérification de l'école (Sauf pour SuperAdmin)
+    if user_type != "SuperAdministrator":
+        try:
+            staff_school = user.staff_user.school
+            if staff_school != target_student.school:
+                 return render(request, "404.html", status=403) # Pas la même école
+        except AttributeError:
+            return render(request, "404.html", status=403)
+
+    # 4. Récupération des données (Comme pour la vue élève, mais on voit TOUT, même non publié si besoin)
+    # Ici on affiche les bulletins publiés pour être cohérent avec ce que voit l'élève, 
+    # mais tu peux retirer is_published=True si tu veux que l'admin voit aussi les brouillons.
+    report_cards = ReportCard.objects.filter(
+        student=target_student
+    ).select_related('term', 'term__year').order_by('-term__year__start_date', '-term__counter')
+
+    documents = StudentDocument.objects.filter(
+        student=target_student
+    ).order_by('-created_at')
+
+    context = {
+        'report_cards': report_cards,
+        'documents': documents,
+        'student': target_student,
+        'is_admin_view': True # Petit flag utile si tu veux adapter le template
+    }
+    # On réutilise le même template d'affichage
+    return render(request, 'documents/student_documents.html', context)
+
+
+@login_required
 def download_report_card(request, report_card_id):
     # 1. On récupère l'objet en base de données
     rc = get_object_or_404(ReportCard, pk=report_card_id)
@@ -327,7 +441,7 @@ def download_report_card(request, report_card_id):
     is_owner = (user == rc.student.user)
 
     if not is_owner:
-        if type not in ("SuperAdministrator", "Principal", "Parent"):
+        if type not in ("SuperAdministrator", "Principal", "Parent", "Administrator"):
             return render(request, "404.html", status=404)
 
         
@@ -391,3 +505,65 @@ def download_school_statistics(request):
     else:
         # Les autres (Profs, Élèves) n'ont pas le droit
         return render(request, "404.html", status=403)
+    # documents/views.py
+
+
+@login_required
+def teacher_main_classes_dashboard(request):
+    user = request.user
+    user_type = get_user_type(user)
+
+    if user_type != "Teacher":
+        return render(request, "404.html", status=403)
+
+    try:
+        staff = user.staff_user
+    except AttributeError:
+        messages.error(request, "Profil enseignant introuvable.")
+        return redirect('home')
+
+    # 1. Récupération des classes principales
+    main_classes = Class.objects.filter(
+        teacher_years__teacher__teacher=staff,
+        teacher_years__is_main_teacher=True,
+        teacher_years__year__current=True
+    ).distinct()
+
+    classes_data = []
+
+    for school_class in main_classes:
+        active_year = school_class.student_years.filter(year__current=True).first().year
+
+        # 2. Trimestre actif
+        current_term = TermYearLevel.objects.filter(
+            year=active_year,
+            level=school_class.level,
+            finished=False
+        ).order_by('start_date').first()
+
+        if not current_term:
+            current_term = TermYearLevel.objects.filter(
+                year=active_year,
+                level=school_class.level
+            ).order_by('-counter').first()
+
+        # 3. Récupération de la LISTE des élèves (Triés par nom)
+        # On utilise select_related pour optimiser les requêtes DB
+        students_list = Student.objects.filter(
+            class_years__student_class=school_class,
+            class_years__year=active_year,
+            class_years__is_active=True
+        ).select_related('user').order_by('user__last_name', 'user__first_name')
+
+        classes_data.append({
+            'obj': school_class,
+            'term': current_term,
+            'student_count': students_list.count(), # On compte la liste directement
+            'year_name': active_year.name,
+            'students': students_list # <--- AJOUT : On passe la liste au template
+        })
+
+    context = {
+        'classes_data': classes_data,
+    }
+    return render(request, 'documents/teacher_main_classes.html', context)

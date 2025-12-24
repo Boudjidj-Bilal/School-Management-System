@@ -80,7 +80,10 @@ class StudentDocument(models.Model):
     title = models.CharField(max_length=255, verbose_name="Titre du document")
     category = models.CharField(max_length=20, choices=CATEGORIES, default='ADMIN')
     
-    file = models.FileField(upload_to='student_documents/%Y/%m/')
+    file = models.FileField(
+        storage=PRIVATE_STORAGE, 
+        upload_to='student_documents/%Y/%m/'
+    )
     
     created_at = models.DateTimeField(auto_now_add=True)
 
