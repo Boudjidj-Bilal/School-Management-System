@@ -275,7 +275,7 @@ def send_email_create_compte(request, email, username, password):
         password (str): Le mot de passe temporaire généré.
     """
     # Sujet de l'email
-    subject = "Votre compte Gonote a été créé"
+    subject = "Votre compte a été créé"
     domain = request.get_host()
     protocol = 'https' if request.is_secure() else 'http'
     reset_url = ""
@@ -489,7 +489,7 @@ def send_emails_for_year_stage(school, year_stape):
         # Cible : Tous les administrateurs actifs (STAFF_TYPE: PRINCIPAL, ADMINISTRATOR)
         
         # Sujet et message pour l'enregistrement
-        subject = f"Année Scolaire: L'étape d'enregistrement commence : {school.name}"
+        subject = f"Année Scolaire. L'étape d'enregistrement commence : {school.name}"
         message = f"""
 Cher Administrateur,
 
@@ -524,7 +524,7 @@ L'Équipe de Gestion.
         # Cible : Tous les profs et CPE actifs (STAFF_TYPE: TEACHER, CPE) ainsi que les principal et les administrateurs
 
         # Sujet et message pour le déroulement en cours
-        subject = f"Année Scolaire: Le déroulement normal commence : {school.name}"
+        subject = f"Année Scolaire. Le déroulement normal commence : {school.name}"
         message = f"""
 Cher Membre du Personnel (Professeur / CPE / Administrateur),
 
@@ -538,7 +538,7 @@ La plateforme est pleinement opérationnelle pour :
 Nous vous souhaitons une excellente année !
 
 Cordialement,
-L'Administration de {school.name}.
+L'Administration {school.name}.
         """
         
         # Détermination des types de personnel à cibler pour l'étape en cours
