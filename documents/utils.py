@@ -3,7 +3,6 @@
 # Import des modèles nécessaires
 from classes.models import ClassTeacherYear, ClassStudentYear
 from grades.models import Evaluation, Grade, Appreciation, Mention
-from attendance.models import Attendance # Si besoin direct, sinon via ton utils
 
 # Import des fonctions existantes
 from grades.utils import (

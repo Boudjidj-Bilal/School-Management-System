@@ -1,41 +1,26 @@
-# --- Framework principal ---
-Django
-djangorestframework
-dj-rest-auth
-django-allauth
-django-multiupload
-
-# --- cors -----
-django-cors-headers
-
-# --- Gestion de configuration ---
-python-decouple  # pour lire les fichiers .env
-
-# --- Base scientifique / utilitaires ---
-# numpy
-# pandas
-# scipy
-
-# --- Authentification / API ---
-requests
-requests-oauthlib
-oauthlib
-
-# --- Fichiers et formats ---
-openpyxl
-Pillow
-
-# --- Outils de développement (optionnels mais utiles) ---
-autopep8
-python-dotenv
-
-# --- Outils IA / OpenAI ---
-# openai
-
-# --- Autres éventuels (selon ton projet) ---
-# matplotlib
-
-
-# --- postgres -----
-gunicorn
-psycopg2-binary
+asgiref==3.11.0
+brotli==1.2.0
+cffi==2.0.0
+cssselect2==0.8.0
+Django==4.2.27
+fonttools==4.60.2
+numpy==2.0.2
+pandas==2.3.3
+pandas-stubs==2.2.2.240807
+pillow==11.3.0
+pycparser==2.23
+pydyf==0.11.0
+pyphen==0.17.2
+python-dateutil==2.9.0.post0
+python-decouple==3.8
+pytz==2025.2
+six==1.17.0
+sqlparse==0.5.5
+tinycss2==1.4.0
+tinyhtml5==2.0.0
+types-pytz==2025.2.0.20251108
+typing_extensions==4.15.0
+tzdata==2025.3
+weasyprint==66.0
+webencodings==0.5.1
+zopfli==0.2.3.post1
