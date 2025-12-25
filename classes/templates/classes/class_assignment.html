@@ -47,20 +47,18 @@
                 <!-- Formulaire d'ajout d'élève -->
                 <div class="mb-6 p-4 border rounded-lg bg-indigo-50">
                     <label for="student-select" class="block text-sm font-semibold text-gray-700 mb-2">Ajouter un élève (non affecté à une classe)</label>
-                    <div class="flex space-x-2">
-                        <select id="student-select" 
-                                class="flex-grow px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-indigo-500 focus:border-indigo-500 transition duration-150">
+                    <div class="flex space-x-2 w-full">
+                        <select id="student-select" class="flex-1 w-0 min-w-0 px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-indigo-500 focus:border-indigo-500 transition duration-150 text-ellipsis">
                             <option value="" disabled selected>-- Sélectionnez --</option>
-                            <!-- Parcours de la liste JSON injectée par la vue -->
                             {% for student_data in available_students_json %}
                                 <option value="{{ student_data.pk }}">
-                                    <!-- Afficher Nom Prénom (Username) -->
                                     {{ student_data.user__last_name }} {{ student_data.user__first_name }} ({{ student_data.user__username }})
                                 </option>
                             {% endfor %}
                         </select>
+                    
                         <button id="add-student-btn" 
-                                class="bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-2 px-4 rounded-lg shadow-md transition duration-150 ease-in-out"
+                                class="flex-shrink-0 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-2 px-4 rounded-lg shadow-md transition duration-150 ease-in-out"
                                 disabled>
                             <i class="fas fa-plus"></i>
                         </button>
@@ -85,20 +83,20 @@
                 <!-- Formulaire d'ajout de professeur -->
                 <div class="mb-6 p-4 border rounded-lg bg-teal-50">
                     <label for="teacher-select" class="block text-sm font-semibold text-gray-700 mb-2">Ajouter un professeur (Matière)</label>
-                    <div class="flex space-x-2">
+                    <div class="flex space-x-2 w-full">
+    
                         <select id="teacher-select" 
-                                class="flex-grow px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-teal-500 focus:border-teal-500 transition duration-150">
+                                class="flex-1 w-0 min-w-0 px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-teal-500 focus:border-teal-500 transition duration-150 text-ellipsis">
                             <option value="" disabled selected>-- Sélectionnez --</option>
-                            <!-- Parcours de la liste JSON injectée par la vue -->
                             {% for ts_data in available_teacher_subjects_json %}
                                 <option value="{{ ts_data.pk }}">
-                                    <!-- Afficher Nom Prénom (Matière) -->
                                     {{ ts_data.teacher__user__last_name }} {{ ts_data.teacher__user__first_name }} ({{ ts_data.subject__name }})
                                 </option>
                             {% endfor %}
                         </select>
+                        
                         <button id="add-teacher-btn" 
-                                class="bg-teal-600 hover:bg-teal-700 text-white font-semibold py-2 px-4 rounded-lg shadow-md transition duration-150 ease-in-out"
+                                class="flex-shrink-0 bg-teal-600 hover:bg-teal-700 text-white font-semibold py-2 px-4 rounded-lg shadow-md transition duration-150 ease-in-out"
                                 disabled>
                             <i class="fas fa-plus"></i>
                         </button>

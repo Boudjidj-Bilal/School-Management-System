@@ -382,10 +382,10 @@ def get_authorisation_stape_run_year(school):
 
         # Si l'année est en cours de déroulement
         if current_year:
-            if current_year.running:
-                return False
-            else: 
+            if current_year.creation:
                 return True
+            else:
+                return False
         else: 
             return False
     except:

@@ -14,8 +14,6 @@ from subjects.models import TeacherSubject
 
 from django.db import IntegrityError, transaction
 
-from datetime import date
-
 
 @require_http_methods(["GET", "POST"])
 @csrf_exempt
