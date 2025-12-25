@@ -149,6 +149,7 @@ def get_report_card_context(student, term_year):
         'student_photo_url': student.user.profile_picture.url if student.user.profile_picture else None,
         'class_name': student_class.name,
         'main_teacher_name': main_teacher_name,
+        'is_delegate': class_link.is_delegate,
         'birth_date': student.birth_date,
         'student_gender': student_gender, 
         'student_address': student.address,

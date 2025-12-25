@@ -41,6 +41,15 @@ document.addEventListener('DOMContentLoaded', () => {
     const modalMessage = document.getElementById('modal-message');
     const modalCloseBtn = document.getElementById('modal-close-btn');
 
+    // Modal de Cycle de Vie
+    const lifecycleModal = document.getElementById('lifecycle-modal');
+    const lifecycleTitle = document.getElementById('lifecycle-modal-title');
+    const lifecycleMessage = document.getElementById('lifecycle-modal-message');
+    const lifecycleConfirmBtn = document.getElementById('lifecycle-confirm-btn');
+    const lifecycleCancelBtn = document.getElementById('lifecycle-cancel-btn');
+    
+    let pendingDirection = 0; // Pour stocker si on avance (+1) ou recule (-1)
+
     // URL de l'API
     const apiUrl = '/schools/api/years/'; 
     const schoolId = yearForm.getAttribute('data-school-id');
@@ -244,9 +253,68 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // Écouteurs pour les boutons de statut
-    prevStatusBtn.addEventListener('click', () => handleStatusChange(-1));
-    nextStatusBtn.addEventListener('click', () => handleStatusChange(1));
+    /**
+     * Ouvre le modal de confirmation pour le cycle de vie
+     * @param {number} direction - -1 (précédent) ou 1 (suivant)
+     */
+    function openLifecycleModal(direction) {
+        pendingDirection = direction;
+        lifecycleModal.classList.remove('hidden');
+
+        if (direction === 1) {
+            // Configuration pour AVANCER
+            lifecycleTitle.textContent = "Passer à l'étape suivante ?";
+            lifecycleTitle.className = "text-lg font-bold leading-6 text-indigo-900";
+            lifecycleMessage.innerHTML = `
+                Vous êtes sur le point d'avancer dans le cycle de vie de l'année. 
+                <br><br>
+                <ul class="list-disc pl-5 text-left text-xs text-gray-500">
+                    <li>Assurez-vous que toutes les tâches de l'étape actuelle sont terminées.</li>
+                    <li>Cette action peut ouvrir l'accès aux utilisateurs.</li>
+                </ul>`;
+            
+            lifecycleConfirmBtn.className = "inline-flex w-full justify-center rounded-md bg-indigo-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 sm:ml-3 sm:w-auto transition-colors";
+            lifecycleConfirmBtn.innerHTML = 'Confirmer et Avancer <i class="fas fa-arrow-right ml-2"></i>';
+        
+        } else {
+            // Configuration pour RECULER
+            lifecycleTitle.textContent = "Revenir à l'étape précédente ?";
+            lifecycleTitle.className = "text-lg font-bold leading-6 text-orange-800";
+            lifecycleMessage.innerHTML = `
+                <strong class="text-orange-600">Attention :</strong> Vous allez reculer dans le cycle de vie.
+                <br><br>
+                Cela peut avoir des conséquences sur les données enregistrées ou les permissions d'accès. 
+                Êtes-vous sûr de vouloir continuer ?`;
+
+            lifecycleConfirmBtn.className = "inline-flex w-full justify-center rounded-md bg-orange-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-orange-500 sm:ml-3 sm:w-auto transition-colors";
+            lifecycleConfirmBtn.innerHTML = '<i class="fas fa-undo mr-2"></i> Confirmer le retour';
+        }
+    }
+
+    function closeLifecycleModal() {
+        lifecycleModal.classList.add('hidden');
+        pendingDirection = 0;
+    }
+
+    // Écouteurs INTERNES au modal
+    lifecycleCancelBtn.addEventListener('click', closeLifecycleModal);
+    
+    lifecycleConfirmBtn.addEventListener('click', () => {
+        // C'est ici qu'on lance la vraie action
+        handleStatusChange(pendingDirection);
+        closeLifecycleModal();
+    });
+
+    // Écouteurs pour les boutons de statut (Déclenchent le MODAL maintenant)
+    prevStatusBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        openLifecycleModal(-1);
+    });
+
+    nextStatusBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        openLifecycleModal(1);
+    });
 
     // Gestion de la sélection d'une année
     document.querySelectorAll('.year-link').forEach(link => {

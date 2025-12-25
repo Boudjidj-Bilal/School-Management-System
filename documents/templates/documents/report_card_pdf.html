@@ -180,7 +180,13 @@
                 <td class="st-info">
                     <div class="student-name">{{ student_name }}</div>
                     
-                    <div><strong>Classe :</strong> {{ class_name }}</div>
+                    <div>
+                        <strong>Classe :</strong> {{ class_name }}
+                        {% if is_delegate %}
+                            <span style="font-weight: bold; margin-left: 5px;">(Délégué)</span>
+                        {% endif %}
+                    </div>
+                    
                     <div><strong>Prof. Principal :</strong> {{ main_teacher_name }}</div>
                     
                     <div style="margin-top: 4px;">
