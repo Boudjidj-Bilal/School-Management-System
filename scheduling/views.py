@@ -543,9 +543,6 @@ def api_manage_course_status_views(request):
         with transaction.atomic():
             course = get_object_or_404(ScheduledCourse, pk=course_id)
             
-            # [TODO] Vérification de sécurité :
-            # Vérifier si l'utilisateur a le droit d'agir sur un cours de CETTE école ?
-            # (Pour l'instant, on fait confiance au rôle)
 
             if action == "DELETE":
                 course.delete()

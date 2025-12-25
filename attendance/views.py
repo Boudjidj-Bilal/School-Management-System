@@ -157,7 +157,7 @@ def api_save_attendance_session(request):
             return render(request, "404.html", status=404)
         
         elif not school_filter.is_active:
-            return JsonResponse({"success": False, "message": "L'école sélectionnée est désactivée. Impossible de procéder."}, status=403) # TODO : return une page d'erreur
+            return JsonResponse({"success": False, "message": "L'école sélectionnée est désactivée. Impossible de procéder."}, status=403) 
             
         current_year = get_current_year_for_school(school_filter)
 
@@ -171,9 +171,9 @@ def api_save_attendance_session(request):
                 if term_year.finished:
                     return JsonResponse({"success": False, "message": "Ce trimestre est clos. Impossible de modifier ou créer un appel."}, status=403)
             else:
-                return JsonResponse({"success": False, "message": "L'année scolaire n'est pas active ou non définie."}, status=403) # TODO : return une page d'erreur
+                return JsonResponse({"success": False, "message": "L'année scolaire n'est pas active ou non définie."}, status=403) 
         except:
-            return JsonResponse({"success": False, "message": "L'année scolaire n'est pas active ou non définie."}, status=403) # TODO : return une page d'erreur
+            return JsonResponse({"success": False, "message": "L'année scolaire n'est pas active ou non définie."}, status=403) 
 
         
         with transaction.atomic():

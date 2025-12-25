@@ -371,7 +371,6 @@ def toggle_teacher_subject_assignment_api(request):
                 if not authorisation:
                     return JsonResponse({'success': False, 'message': "Vous ne pouvez pas désactiver une matière lorsque l'école est dans sa phase de déroulement."}, status=500)
 
-                # TODO : Avant de suprimer vérifier si le professeur/matière n'a pas des cours dans le planning car sinon cela les supprimera en même temps, faire un message de vérification, puis suprimer quand même si l'utilisateur valide.
                 deleted_count, _ = TeacherSubject.objects.filter(teacher=teacher, subject=subject).delete()
 
                 if deleted_count > 0:

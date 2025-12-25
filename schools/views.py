@@ -359,7 +359,6 @@ def change_year_status_api(request, year_id):
 
         message = f"L'année '{year.name}' est passée à l'étape '{new_status_key.capitalize()}'. (Veuillez recharger la page)"
 
-        # TODO Ajouter une condition, si on veut passer l'année à fini, il faut que tous les trimestres/semestres soit terminé
         if new_field_name == "running":
             # On récupère l'id de l'école :
             school_id = year.school.id
@@ -374,8 +373,6 @@ def change_year_status_api(request, year_id):
                     create_term_year_level(1, year_id, level.id)
 
                 message = f"L'année '{year.name}' est passée à l'étape '{new_status_key.capitalize()}', les premier trimestres ou semestres ont été créer. (Veuillez recharger la page)"
-
-        # TODO Ajouter une vérification dans le js, lorsqu'on clique sur passer à une étape suivante il faut un message de vérfication
         
         # 8. Sauvegarder les modifications
         year.save()
