@@ -107,10 +107,10 @@ def get_report_card_context(student, term_year):
     except ClassStudentYear.DoesNotExist:
         return None # L'élève n'est pas inscrit dans une classe pour cette année
 
-    # [CORRECTION] L'école est liée à l'Année (Year), pas directement à la Classe
+    # L'école est liée à l'Année (Year), pas directement à la Classe
     school = year.school
     
-    # [CORRECTION] Le Prof Principal est dans ClassTeacherYear, pas dans Class
+    # Le Prof Principal est dans ClassTeacherYear, pas dans Class
     main_teacher_name = "Non défini"
     main_teacher_rel = ClassTeacherYear.objects.filter(
         student_class=student_class,

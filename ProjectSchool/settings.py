@@ -35,6 +35,8 @@ INSTALLED_APPS = [
     "rest_framework.authtoken",
     "dj_rest_auth",
     "dj_rest_auth.registration",
+    "crispy_forms",
+    "crispy_bootstrap5",
 
     # Local apps
     "api",
@@ -105,6 +107,7 @@ REST_FRAMEWORK = {
 MIDDLEWARE = [
     "corsheaders.middleware.CorsMiddleware",  # Doit être en premier pour CORS
     "django.middleware.security.SecurityMiddleware",
+    'whitenoise.middleware.WhiteNoiseMiddleware',
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
@@ -313,3 +316,6 @@ API_COOKIE_SAMESITE = "Lax" if DEBUG else "None"
 
 # Durée de vie des sessions
 SESSION_COOKIE_AGE = 86400  # 24 heures
+
+
+STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'

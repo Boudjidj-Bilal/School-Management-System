@@ -3,7 +3,7 @@ from django.shortcuts import render
 # Create your views here.
 # ... imports existants ...
 from .export import generate_statistics_excel 
-from schools.utils import get_user_school 
+from schools.utils import get_user_school, get_current_year_for_school
 
 from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib.auth.decorators import login_required
@@ -103,7 +103,29 @@ def manage_class_report_cards(request, class_id, term_id):
     user_type = get_user_type(user)
 
     student_class = get_object_or_404(Class, pk=class_id)
-    current_term = get_object_or_404(TermYearLevel, pk=term_id)
+    requested_term = get_object_or_404(TermYearLevel, pk=term_id)
+
+    # 1. On récupère la vraie année scolaire active de l'école
+    school = student_class.level.school
+    active_year = get_current_year_for_school(school)
+
+    # 2. Si le trimestre demandé est d'une ancienne année (ex: 2024) 
+    # alors que l'année active est (ex: 2026), on redirige vers le bon !
+    if requested_term.year != active_year:
+        
+        # On cherche le trimestre équivalent dans l'année en cours (ex: le "Trimestre 1" de 2026)
+        real_current_term = TermYearLevel.objects.filter(
+            year=active_year,
+            level=student_class.level, # Même niveau
+            counter=requested_term.counter # Même numéro (1, 2 ou 3)
+        ).first()
+
+        if real_current_term:
+            messages.warning(request, f"Redirection : Vous tentiez d'accéder à une archive ({requested_term.year}). Vous avez été redirigé vers l'année en cours.")
+            return redirect('documents:manage_class_report_cards', class_id=class_id, term_id=real_current_term.id)
+            
+    # Si on est bon, on continue
+    current_term = requested_term
 
     can_generate = current_term.finished
 

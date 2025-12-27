@@ -1,6 +1,8 @@
 from django import template
 from schools.models import TermYearLevel
 
+from schools.utils import get_current_year_for_school
+
 register = template.Library()
 
 @register.simple_tag
@@ -13,10 +15,14 @@ def get_current_term_id(school_class):
     3. Si tous sont finished=True, retourne le dernier (fin d'année).
     """
     try:
+        school = school_class.level.school
+        current_year = get_current_year_for_school(school) 
+
         # 1. On récupère tous les trimestres du niveau pour l'année en cours
         # On trie par 'counter' (1, 2, 3) pour respecter l'ordre chronologique
         terms = TermYearLevel.objects.filter(
-            level=school_class.level
+            level=school_class.level,
+            year=current_year
         ).order_by('counter')
 
         # S'il n'y a pas de trimestres configurés, on ne renvoie rien
