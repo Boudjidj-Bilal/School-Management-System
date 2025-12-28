@@ -3,7 +3,7 @@
 # ----------------- Fichiers générés par Django ------------------
 *.log
 *.sqlite3
-db.sqlite3
+
 /media/
 /private_files/
 
