@@ -5,7 +5,7 @@
 *.sqlite3
 db.sqlite3
 /media/
-private_files/
+/private_files/
 
 # Fichiers de cache de Django
 __pycache__/
