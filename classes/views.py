@@ -8,7 +8,7 @@ import json
 from users.utils import get_user_type
 from schools.utils import get_user_school, get_authorisation_stape_run_year, get_current_year_for_school, get_authorisation_stape_creation_year
 from .models import Classroom, Level, Class, ClassStudentYear, ClassTeacherYear
-from schools.models import School, TermYearLevel
+from schools.models import School, TermYearLevel, Year
 from users.models import Student 
 from subjects.models import TeacherSubject 
 
@@ -37,6 +37,8 @@ def classroom_management(request):
     try:
         if user_type == "SuperAdministrator" or user_type == "Principal":
             school_filter = get_user_school(request.user, request.session.get('selected_school_id'))
+            if not school_filter:
+                return render(request, "404.html", status=404)
         else:
             return render(request, "404.html", status=404)
     except School.DoesNotExist:
@@ -106,7 +108,15 @@ def classroom_management(request):
 
                     # Si l'année de la classe est à l'étape de déroulement, impossible de la modifier.
                     if not new_status:
-                        authorisation = get_authorisation_stape_run_year(classroom.school)
+                        school = classroom.school
+
+                        all_years = Year.objects.filter(school=school).order_by('-start_date')
+                        current_year = all_years.filter(current=True).first()
+                        authorisation = True
+
+                        if current_year:
+                            authorisation = get_authorisation_stape_run_year(school)
+
                         if not authorisation: 
                             return JsonResponse({'success': False, 'message': "Vous ne pouvez pas désactiver une salle de classe lorsque l'école est dans sa phase de déroulement."}, status=404)
 
@@ -174,6 +184,9 @@ def level_management(request):
     # 3. Détermination de l'année scolaire actuelle
     current_year = get_current_year_for_school(school_filter)
 
+    if not current_year:
+        return render(request, "404.html", status=404)
+
     # --- 4. Gestion des requêtes POST (API CRUD) ---
     if request.method == 'POST':
         try:
@@ -216,22 +229,27 @@ def level_management(request):
                     return JsonResponse({'success': False, 'message': f'Le niveau {Level.objects.get(level=level_code).get_level_display()} est déjà défini pour cette école.'}, status=409) # 409 Conflict
 
                 if action == 'create':
-                    Level.objects.create(
+                    level = Level.objects.create(
                         level=level_code,
                         term_type=term_type,
                         school=school_filter
                     )
-                    # return JsonResponse({'success': True, 'message': f'Niveau "{Level.LEVEL_CHOICES[Level.LEVEL_CHOICES.index((level_code, Level.LEVEL_CHOICES[Level.LEVEL_CHOICES.index((level_code, ""))[1]])[1])]}" créé avec succès.'}, status=201)
-                    return JsonResponse({'success': True, 'message': f'Niveau "{next((display for code, display in Level.LEVEL_CHOICES if code == level_code), level_code)}" créé avec succès.'}, status=201)
+                    # On récupère le nom d'affichage pour le renvoyer au JS aussi
+                    level_display_name = next((display for code, display in Level.LEVEL_CHOICES if code == level_code), level_code)
 
+                    return JsonResponse({
+                        'success': True, 
+                        'message': f'Niveau "{level_display_name}" créé avec succès.',
+                        'level_id': level.id, 
+                        'level_display': level_display_name # Utile pour le JS
+                    }, status=201)
                 elif action == 'update':
                     if not level_id:
                         return JsonResponse({'success': False, 'message': 'ID du niveau manquant pour la mise à jour.'}, status=400)
                     
                     try:
-                        # Assurez-vous que l'objet Level appartient bien à l'école de l'utilisateur
                         level_obj = Level.objects.get(pk=level_id, school=school_filter)
-                        
+
                         # Si l'utilisateur change le code de niveau, vérifiez si le nouveau code existe déjà
                         if level_obj.level != level_code and Level.objects.filter(school=school_filter, level=level_code).exclude(pk=level_id).exists():
                             # return JsonResponse({'success': False, 'message': f'Le niveau {Level.LEVEL_CHOICES[Level.LEVEL_CHOICES.index((level_code, Level.LEVEL_CHOICES[Level.LEVEL_CHOICES.index((level_code, ""))[1]])[1])]} existe déjà pour cette école.'}, status=409)
@@ -320,11 +338,16 @@ def class_management(request):
     try:
         school_filter = get_user_school(request.user, request.session.get('selected_school_id'))
     except School.DoesNotExist:
-        return render(request, "404.html", status=404)      
+        return render(request, "404.html", status=404)  
+        
     if not school_filter or not school_filter.is_active:
-        return render(request, "404.html", status=404)        
+        return render(request, "404.html", status=404)   
+         
     # 3. Détermination de l'année scolaire actuelle
     current_year = get_current_year_for_school(school_filter)
+
+    if not current_year:
+        return render(request, "404.html", status=404)   
 
     if current_year.creation or current_year.registration:
         can_access_bulletin = False
@@ -450,8 +473,7 @@ def class_management(request):
             return JsonResponse({'success': False, 'message': 'Données JSON invalides.'}, status=400)
         except IntegrityError:
              return JsonResponse({'success': False, 'message': 'Erreur d\'intégrité de la base de données. Opération annulée.'}, status=400)
-        except Exception as e:
-            print(f"Erreur lors de la gestion de la classe : {e}")
+        except Exception:
             return JsonResponse({'success': False, 'message': f'Une erreur interne du serveur est survenue: {str(e)}'}, status=500)
 
     # --- 6. Gestion des requêtes GET (Affichage de la page) ---

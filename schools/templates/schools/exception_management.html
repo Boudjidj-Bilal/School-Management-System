@@ -154,6 +154,34 @@
             </div>
         </div>
     </div>
+    <div id="delete-modal" class="fixed inset-0 bg-gray-900 bg-opacity-75 z-50 flex items-center justify-center hidden" onclick="if(event.target.id === 'delete-modal') closeDeleteModal()">
+        <div class="bg-white rounded-xl shadow-2xl w-full max-w-md p-6 m-4 transform transition-all" onclick="event.stopPropagation()">
+            <div class="text-center">
+                <div class="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-red-100 mb-4">
+                    <i class="fas fa-exclamation-triangle text-red-600 text-xl"></i>
+                </div>
+                
+                <h3 class="text-lg leading-6 font-bold text-gray-900" id="modal-title">Confirmer la suppression</h3>
+                
+                <div class="mt-2">
+                    <p class="text-sm text-gray-500" id="delete-confirmation-text">
+                        Êtes-vous sûr de vouloir supprimer cette exception ? Cette action est irréversible.
+                    </p>
+                </div>
+            </div>
+
+            <div class="mt-6 flex gap-3 justify-center">
+                <button type="button" onclick="closeDeleteModal()" 
+                    class="w-full inline-flex justify-center rounded-lg border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:text-sm transition-colors">
+                    Annuler
+                </button>
+                <button type="button" id="confirm-delete-btn"
+                    class="w-full inline-flex justify-center rounded-lg border border-transparent shadow-sm px-4 py-2 bg-red-600 text-base font-medium text-white hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 sm:text-sm transition-colors">
+                    Supprimer
+                </button>
+            </div>
+        </div>
+    </div>
 {% endblock %}
 
 {% block extra_js %}

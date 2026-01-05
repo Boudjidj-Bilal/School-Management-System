@@ -238,13 +238,9 @@ def assign_subjects_view(request):
         return render(request, "404.html", status=404)
 
     # 2. Détermination de l'école cible pour le filtre (Sécurité)
-    if user_type == "SuperAdministrator":
-        school_id_filter = request.session.get('selected_school_id')
-        school = get_object_or_404(School, id=school_id_filter)
-    else: # Principal
-        school = get_user_school(request.user, request.session.get('selected_school_id'))
-        if not school:
-            return render(request, "404.html", status=404)
+    school = get_user_school(request.user, request.session.get('selected_school_id'))
+    if not school:
+        return render(request, "404.html", status=404)
 
     if school.is_active == False:
         return render(request, "404.html", status=404)
@@ -365,7 +361,17 @@ def toggle_teacher_subject_assignment_api(request):
         elif action == 'unlink':
             # Suppression du lien
             try:
-                authorisation = get_authorisation_stape_run_year(subject.school)
+                school = subject.school
+
+                if not school:
+                    return render(request, "404.html", status=404)
+
+                all_years = Year.objects.filter(school=school).order_by('-start_date')
+                current_year = all_years.filter(current=True).first()
+                authorisation = True
+
+                if current_year:
+                    authorisation = get_authorisation_stape_run_year(school)
 
                 # Si l'année est en cours de déroulement, impossible d'enlever une matière d'un professeurs
                 if not authorisation:

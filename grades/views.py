@@ -39,16 +39,21 @@ def view_my_grades_dashboard(request):
     user_type = get_user_type(user)
 
     # 1. Vérification des permissions
-    if not (user_type == "Teacher" or user_type == "Principal" or user_type == "SuperAdministrator"):
+    if not user_type == "Teacher":
         return render(request, "404.html", status=404)
         
     try:
         teacher_staff = get_object_or_404(Staff, user=user)
     except Staff.DoesNotExist:
         return render(request, "404.html", status=404)
+    
+    school = teacher_staff.school
+    
+    if not school:
+        return render(request, "404.html", status=404)
 
     # 2. Vérification de l'année scolaire
-    current_year = get_current_year_for_school(teacher_staff.school)
+    current_year = get_current_year_for_school(school)
     if not current_year:
         return render(request, "404.html", status=404)
         
@@ -107,9 +112,14 @@ def view_teacher_grades_as_admin(request, pk_staff):
         teacher_staff = get_object_or_404(Staff, pk=pk_staff) 
     except Staff.DoesNotExist:
         return render(request, "404.html", status=404)
+    
+    school = teacher_staff.school
+
+    if not school:
+        return render(request, "404.html", status=404)
 
     # 2. Vérification de l'année scolaire
-    current_year = get_current_year_for_school(teacher_staff.school)
+    current_year = get_current_year_for_school(school)
     if not current_year:
         return render(request, "404.html", status=404)
     
@@ -463,9 +473,15 @@ def view_appreciations_dashboard(request):
         teacher_staff = get_object_or_404(Staff, user=user)
     except Staff.DoesNotExist:
         return render(request, "404.html", status=404)
+    
+    school = teacher_staff.school
+    
+    if not school:
+        return render(request, "404.html", status=404)
 
     # 2. Année scolaire
-    current_year = get_current_year_for_school(teacher_staff.school)
+    current_year = get_current_year_for_school(school)
+    
     if not current_year:
         return render(request, "404.html", status=404)
 

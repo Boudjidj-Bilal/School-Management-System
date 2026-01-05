@@ -7,6 +7,7 @@ let exceptionTimes = [];
 let currentExceptionType = null;
 let currentAction = 'create';
 let reloadRequired = false;
+let itemToDelete = null;
 
 // --- UTILITIES ---
 
@@ -22,6 +23,32 @@ function formatTime(isoTime) {
     if (!isoTime) return 'N/A';
     const parts = isoTime.split(':');
     return `${parts[0]}:${parts[1]}`;
+}
+
+/** Ouvre le modal de confirmation de suppression */
+function openDeleteModal(id, type) {
+    itemToDelete = { id: id, type: type };
+    
+    // Mise à jour du texte (optionnel, pour le détail)
+    const textElement = document.getElementById('delete-confirmation-text');
+    const label = type === 'day' ? "ce jour d'exception" : "cet horaire d'exception";
+    if(textElement) textElement.textContent = `Êtes-vous sûr de vouloir supprimer ${label} ? Cette action est irréversible.`;
+
+    // Affichage du modal
+    const modal = document.getElementById('delete-modal');
+    modal.classList.remove('hidden');
+    // Animation simple
+    setTimeout(() => {
+        const content = modal.querySelector('div'); 
+        if(content) content.classList.remove('scale-95', 'opacity-0');
+    }, 10);
+}
+
+/** Ferme le modal de suppression */
+function closeDeleteModal() {
+    const modal = document.getElementById('delete-modal');
+    modal.classList.add('hidden');
+    itemToDelete = null; 
 }
 
 
@@ -50,9 +77,7 @@ function renderDayExceptions() {
 
     exceptionDays.forEach(day => {
         const editButton = createActionButton('Modifier', 'text-blue-600 hover:text-blue-800 bg-blue-100 hover:bg-blue-200', `openCrudModal('day', ${day.id})`, '<i class="fas fa-edit"></i>');
-        const deleteButton = createActionButton('Supprimer', 'text-red-600 hover:text-red-800 bg-red-100 hover:bg-red-200', `handleDelete('${day.id}', 'day')`, '<i class="fas fa-trash-alt"></i>');
-        
-        const element = document.createElement('div');
+        const deleteButton = createActionButton('Supprimer', 'text-red-600 hover:text-red-800 bg-red-100 hover:bg-red-200', `openDeleteModal('${day.id}', 'day')`, '<i class="fas fa-trash-alt"></i>');        const element = document.createElement('div');
         element.className = 'flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 bg-gray-50 rounded-lg shadow-sm hover:bg-gray-100 transition';
         element.innerHTML = `
             <div class="mb-2 sm:mb-0">
@@ -82,8 +107,7 @@ function renderTimeExceptions() {
 
     exceptionTimes.forEach(time => {
         const editButton = createActionButton('Modifier', 'text-blue-600 hover:text-blue-800 bg-blue-100 hover:bg-blue-200', `openCrudModal('time', ${time.id})`, '<i class="fas fa-edit"></i>');
-        const deleteButton = createActionButton('Supprimer', 'text-red-600 hover:text-red-800 bg-red-100 hover:bg-red-200', `handleDelete('${time.id}', 'time')`, '<i class="fas fa-trash-alt"></i>');
-
+        const deleteButton = createActionButton('Supprimer', 'text-red-600 hover:text-red-800 bg-red-100 hover:bg-red-200', `openDeleteModal('${time.id}', 'time')`, '<i class="fas fa-trash-alt"></i>');
         const element = document.createElement('div');
         element.className = 'flex items-center justify-between p-4 bg-gray-50 rounded-lg shadow-sm hover:bg-gray-100 transition';
         element.innerHTML = `
@@ -261,10 +285,8 @@ async function handleApiCall(data) {
 
 /** Gestionnaire de suppression (DELETE) */
 function handleDelete(id, type) {
-    // NOTE: Utilisation temporaire de confirm(). Remplacer par une modal de confirmation personnalisée.
-    if (!confirm(`Êtes-vous sûr de vouloir supprimer cette exception ${type === 'day' ? 'journalière' : 'horaire'}? Cette action est irréversible.`)) {
-        return;
-    }
+    // --- SUPPRIME LE BLOC IF(CONFIRM) ---
+    // On passe directement à la suppression car le modal a déjà validé l'action.
 
     const deleteData = {
         action: 'delete',
@@ -308,8 +330,19 @@ window.addEventListener('load', function() {
 
         // 2. Initialisation du rendu
         renderAll();
+
+        // 3. Listener pour le bouton de confirmation de suppression (AJOUT)
+        const confirmDeleteBtn = document.getElementById('confirm-delete-btn');
+        if (confirmDeleteBtn) {
+            confirmDeleteBtn.addEventListener('click', function() {
+                if (itemToDelete) {
+                    handleDelete(itemToDelete.id, itemToDelete.type);
+                    closeDeleteModal();
+                }
+            });
+        }
         
-        // 3. Attachement du listener de soumission de formulaire
+        // 4. Attachement du listener de soumission de formulaire
         document.getElementById('exception-form').addEventListener('submit', handleFormSubmit);
 
     } catch (e) {

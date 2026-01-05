@@ -257,7 +257,7 @@ def upload_document(request):
             # (Sauf pour le SuperAdmin qui a tous les droits)
             student_qs = Student.objects.filter(pk=student_id)
             
-            if user_type != "SuperAdministrator":
+            if not user_type == "SuperAdministrator":
                 try:
                     # On s'assure que le staff existe
                     current_school = request.user.staff_user.school
@@ -285,12 +285,19 @@ def upload_document(request):
             messages.error(request, "Veuillez remplir tous les champs.")
 
     # --- RÉCUPÉRATION DES CLASSES (FILTRÉE PAR ÉCOLE) ---
-    classes_qs = Class.objects.filter(student_years__year__running=True)
+    classes_qs = Class.objects.filter(student_years__year__current=True)
 
-    if user_type != "SuperAdministrator":
+    if not user_type == "SuperAdministrator":
         # Si c'est un Proviseur/CPE/Admin, on filtre par SON école
         try:
             current_school = request.user.staff_user.school
+
+            if not current_school:
+                return render(request, "404.html", status=403)
+            
+            if not current_school.is_active:
+                return render(request, "404.html", status=403)
+            
             # On suppose que l'année (Year) est liée à l'école (School)
             classes_qs = classes_qs.filter(student_years__year__school=current_school)
         except AttributeError:
@@ -535,7 +542,7 @@ def teacher_main_classes_dashboard(request):
     user = request.user
     user_type = get_user_type(user)
 
-    if user_type != "Teacher":
+    if not user_type == "Teacher":
         return render(request, "404.html", status=403)
 
     try:

@@ -43,7 +43,15 @@ def login(request):
             password = data.get('password')
 
             user = get_user_by_username(username)
+
+            if not user:
+                return JsonResponse({'success': False, 'message': 'Nom d\'utilisateur ou mot de passe incorrect.'})
+
             user_type = get_user_type(user)
+
+            if not user_type:
+                return JsonResponse({'success': False, 'message': 'Impossible de vous connecter.'})
+
 
             # 1. Déterminer l'école 
             if not user_type == "SuperAdministrator":
@@ -320,7 +328,14 @@ def manage_users_view(request):
     users = []
     
     user_type = get_user_type(request.user)
+
+    if not user_type:
+        return render(request, "404.html", status=404)
+
     user_school = get_user_school(request.user, request.session.get('selected_school_id'))
+
+    if not user_school:
+        return render(request, "404.html", status=404)
     
     # Vérifie si l'utilisateur a la permission de voir cette page
     if user_type not in ["SuperAdministrator", "Principal", "Administrator"]:
@@ -635,12 +650,19 @@ def assign_children_view(request):
     """
 
     user_type = get_user_type(request.user)
+
+    if not user_type:
+        return render(request, "404.html", status=404)
+
     
     # Vérifie si l'utilisateur a la permission de voir cette page : 
     if user_type not in ["SuperAdministrator", "Principal", "Administrator"]:
         return render(request, "404.html", status=404)
 
     user_school = get_user_school(request.user, request.session.get('selected_school_id'))
+
+    if not user_school:
+        return render(request, "404.html", status=404)
 
     # 1. Récupérer tous les parents et étudiants en préchargeant l'objet User pour les noms.
     # Ceci optimise les requêtes SQL (select_related).

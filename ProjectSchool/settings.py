@@ -63,9 +63,53 @@ SESSION_COOKIE_AGE = 600
 # ce qui gère la déconnexion après inactivité.
 SESSION_SAVE_EVERY_REQUEST = True
 
-# Paramètres du backend d'envoi d'emails
-# Utilisez le backend SMTP de Django
-EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_BACKEND_CHOICE = config('EMAIL_BACKEND', default='console').upper()
+
+# Configuration du backend selon le choix
+if EMAIL_BACKEND_CHOICE == 'CONSOLE':
+    # Backend console (développement)
+    EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+    DEFAULT_FROM_EMAIL = 'noreply@localhost'
+    SUPPORT_EMAIL = 'support@localhost'
+    
+elif EMAIL_BACKEND_CHOICE == 'MAILEROO':
+    # Backend Maileroo (API)
+    EMAIL_BACKEND = 'accounts.backends.MailerooBackend'
+    MAILEROO_API_KEY = config('EMAIL_MAILEROO_API_KEY')
+    DEFAULT_FROM_EMAIL = config('EMAIL_MAILEROO_DEFAULT_FROM_EMAIL')
+    SUPPORT_EMAIL = config('EMAIL_MAILEROO_SUPPORT_EMAIL', default=DEFAULT_FROM_EMAIL)
+    
+elif EMAIL_BACKEND_CHOICE == 'GMAIL':
+    # Backend Gmail (SMTP)
+    EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+    EMAIL_HOST = config('EMAIL_GMAIL_HOST')
+    EMAIL_PORT = config('EMAIL_GMAIL_PORT', cast=int)
+    EMAIL_USE_TLS = config('EMAIL_GMAIL_USE_TLS', cast=bool)
+    EMAIL_USE_SSL = config('EMAIL_GMAIL_USE_SSL', default=False, cast=bool)
+    EMAIL_HOST_USER = config('EMAIL_GMAIL_HOST_USER')
+    EMAIL_HOST_PASSWORD = config('EMAIL_GMAIL_HOST_PASSWORD')
+    DEFAULT_FROM_EMAIL = config('EMAIL_GMAIL_DEFAULT_FROM_EMAIL')
+    SUPPORT_EMAIL = config('EMAIL_GMAIL_SUPPORT_EMAIL', default=DEFAULT_FROM_EMAIL)
+    EMAIL_TIMEOUT = 300
+    
+elif EMAIL_BACKEND_CHOICE == 'YAHOO':
+    # Backend Yahoo (SMTP)
+    EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+    EMAIL_HOST = config('EMAIL_YAHOO_HOST')
+    EMAIL_PORT = config('EMAIL_YAHOO_PORT', cast=int)
+    EMAIL_USE_TLS = config('EMAIL_YAHOO_USE_TLS', cast=bool)
+    EMAIL_USE_SSL = config('EMAIL_YAHOO_USE_SSL', default=False, cast=bool)
+    EMAIL_HOST_USER = config('EMAIL_YAHOO_HOST_USER')
+    EMAIL_HOST_PASSWORD = config('EMAIL_YAHOO_HOST_PASSWORD')
+    DEFAULT_FROM_EMAIL = config('EMAIL_YAHOO_DEFAULT_FROM_EMAIL')
+    SUPPORT_EMAIL = config('EMAIL_YAHOO_SUPPORT_EMAIL', default=DEFAULT_FROM_EMAIL)
+    EMAIL_TIMEOUT = 300
+    
+else:
+    # Fallback sur console
+    EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+    DEFAULT_FROM_EMAIL = 'noreply@localhost'
+    SUPPORT_EMAIL = 'support@localhost'
 
 # Le serveur SMTP de Gmail
 EMAIL_HOST = 'smtp.gmail.com'
@@ -89,10 +133,11 @@ AUTHENTICATION_BACKENDS = (
     "allauth.account.auth_backends.AuthenticationBackend",
 )
 
-ACCOUNT_AUTHENTICATION_METHOD = "username"
-ACCOUNT_EMAIL_REQUIRED = True
-ACCOUNT_USERNAME_REQUIRED = True
-ACCOUNT_EMAIL_VERIFICATION = "optional"
+# ACCOUNT_AUTHENTICATION_METHOD = "username"
+ACCOUNT_LOGIN_METHODS = {'username'}
+# ACCOUNT_EMAIL_REQUIRED = True
+# ACCOUNT_USERNAME_REQUIRED = True
+ACCOUNT_EMAIL_VERIFICATION = 'optional'
 
 REST_FRAMEWORK = {
     "DEFAULT_AUTHENTICATION_CLASSES": [
@@ -301,6 +346,14 @@ else:
     SECURE_SSL_REDIRECT = False
     SESSION_COOKIE_SECURE = False
     CSRF_COOKIE_SECURE = False
+
+# IMPORTANT : Trusted origins pour HTTPS + reverse proxy
+CSRF_TRUSTED_ORIGINS = (
+    ["http://localhost:8000", "http://127.0.0.1:8000"] if DEBUG 
+    else [
+        "https://theranotes-tsr.com",
+    ]
+)
 
 # -------------------------
 # Cookies configuration pour l'authentification

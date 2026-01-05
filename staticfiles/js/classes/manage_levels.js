@@ -232,7 +232,8 @@ async function performAction(levelId, action, data) {
 
         if (response.ok) {
             showMessageModal(true, result.message);
-            updateTable(action, levelId, payload); // Mettre à jour l'interface utilisateur
+            const finalId = result.level_id || levelId;
+            updateTable(action, finalId, payload); // Mettre à jour l'interface utilisateur
             closeModal();
         } else {
             // Afficher l'erreur retournée par la vue (ex: permission, unicité, validation)
@@ -259,13 +260,11 @@ function updateTable(action, levelId, data) {
     let count = parseInt(levelCountDisplay.textContent);
 
     if (action === 'create') {
-        // NOTE: Dans un cas réel, Django devrait retourner l'ID du nouvel objet.
-        const newId = new Date().getTime(); 
         
         // CORRECTION: Utiliser text-emerald-600 pour l'icône de modification
         const newRow = `
-            <tr id="level-row-${newId}" 
-                data-id="${newId}" 
+            <tr id="level-row-${levelId}" 
+                data-id="${levelId}" 
                 data-level-code="${data.level_code}" 
                 data-level-display="${levelDisplay}"
                 data-term-type="${data.term_type}"
@@ -274,12 +273,12 @@ function updateTable(action, levelId, data) {
                 <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${levelDisplay}</td>
                 <td class="px-6 py-4 whitespace-nowrap hidden sm:table-cell text-sm text-gray-500">${termDisplay}</td>
                 <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                    <button onclick="openModalById('${newId}')" 
+                    <button onclick="openModalById('${levelId}')" 
                             class="text-emerald-600 hover:text-emerald-800 p-2 rounded-full hover:bg-gray-100 transition duration-150"
                             title="Modifier">
                         <i class="fas fa-edit"></i>
                     </button>
-                    <button onclick="handleDeleteLevel('${newId}', '${levelDisplay}')" 
+                    <button onclick="handleDeleteLevel('${levelId}', '${levelDisplay}')" 
                             class="text-red-600 hover:text-red-800 ml-3 p-2 rounded-full hover:bg-gray-100 transition duration-150"
                             title="Supprimer">
                         <i class="fas fa-trash-alt"></i>

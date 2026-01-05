@@ -440,9 +440,9 @@ async function openEvaluationModal(mode, data) {
         evaluationModalTitle.textContent = `Ajouter une Évaluation (${data.subjectName} - ${data.className})`;
         evalIdInput.value = ''; 
         evalMaxGradeInput.value = '20.0';
-        evalIsMainInput.checked = false; // [NOUVEAU] Par défaut décoché
+        evalIsMainInput.checked = false;
         
-        maxGrade = 20.0; 
+        maxGrade = parseFloat(evalMaxGradeInput.value) || 20.0; 
         
         renderStudentGradeInputs(studentList, [], isReadOnly, maxGrade);
         evaluationModal.classList.remove('opacity-0', 'pointer-events-none');
@@ -713,6 +713,27 @@ document.addEventListener('DOMContentLoaded', () => {
     // 2. Affiche les données initiales (déjà fait par Django)
     // On doit juste initialiser les permissions
     initializeUIPermissions();
+
+    // Écouteur pour mettre à jour la limite max dynamiquement
+    if (evalMaxGradeInput) {
+        evalMaxGradeInput.addEventListener('input', function() {
+            const newMax = parseFloat(this.value);
+            // On s'assure que c'est un nombre positif
+            if (!isNaN(newMax) && newMax > 0) {
+                // On met à jour l'attribut 'max' de tous les champs de note
+                document.querySelectorAll('.grade-input').forEach(input => {
+                    input.setAttribute('max', newMax);
+                    
+                    // Optionnel : Ajout d'une classe visuelle si la note dépasse déjà
+                    if (parseFloat(input.value) > newMax) {
+                        input.classList.add('border-red-500', 'border-2');
+                    } else {
+                        input.classList.remove('border-red-500', 'border-2');
+                    }
+                });
+            }
+        });
+    }
 
     // 3. Écouteurs pour les modales (via délégation)
     document.body.addEventListener('click', (e) => {

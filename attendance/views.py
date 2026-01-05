@@ -36,14 +36,11 @@ def attendance_hub_view(request):
     """
     user = request.user
     user_type = get_user_type(user)
-   
-    if user_type == "SuperAdministrator":
-        school_id_filter = request.session.get('selected_school_id')
-        school_filter = School.objects.get(id=school_id_filter)
 
-    elif user_type in ["Teacher", "CPE", "Principal"]:
+    if user_type in ["Teacher", "CPE", "Principal", "SuperAdministrator"]:
         school_filter = get_user_school(user, request.session.get('selected_school_id'))
-
+        if not school_filter:
+            return render(request, "404.html", status=404)
     else:
         return render(request, "404.html", status=404)
 
@@ -56,6 +53,9 @@ def attendance_hub_view(request):
 
     # Récupération des classes via Utils
     classes_list = get_attendance_classes_for_user(user, current_year, user_type)
+
+    if not classes_list:
+        return render(request, "404.html", status=404)
 
     # Détermination du rôle pour l'interface
     # Permet au template de savoir quelle URL générer pour chaque classe
@@ -393,8 +393,13 @@ def student_attendance_dashboard_view(request):
             return render(request, "404.html", status=404)
     else:
         return render(request, "404.html", status=404)
+    
+    school = student.school
 
-    current_year = get_current_year_for_school(student.school)
+    if not school:
+        return render(request, "404.html", status=404)
+
+    current_year = get_current_year_for_school(school)
     if not current_year:
         return render(request, 'attendance/student_attendance.html', {
             'error_message': "Aucune année scolaire active."

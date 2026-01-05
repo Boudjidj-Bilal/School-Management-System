@@ -306,7 +306,7 @@ def get_week_schedule_data(classe, start_of_week):
             # --- Fin de l'ajout ---
             
             'status': course.status,
-            'status_display': course.status,
+            'status_display': course.get_status_display(),
             
             'subject_name': course.teacher_subject.subject.name,
             'teacher_name': course.teacher_subject.teacher.user.username, # Ajuste si tu préfères last_name
@@ -361,7 +361,7 @@ def get_week_schedule_data_for_teacher(teacher_staff, start_of_week):
             
             # Statut du cours
             'status': course.status,
-            'status_display': course.status,
+            'status_display': course.get_status_display(),
             
             # Informations sur le cours
             'subject_name': course.teacher_subject.subject.name,

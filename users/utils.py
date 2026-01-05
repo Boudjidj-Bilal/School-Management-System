@@ -252,12 +252,14 @@ def send_email(subject, message, recipient_list):
         bool: True si l'envoi est réussi, False sinon.
     """
     try:
+        from_email = settings.DEFAULT_FROM_EMAIL
+
         send_mail(
-            subject,
-            message,
-            EMAIL_HOST_USER, # Utilise l'expéditeur configuré dans settings.py
-            recipient_list,
-            fail_silently=False, # Lève une exception si l'envoi échoue
+            subject=subject,
+            message=message,
+            from_email=from_email,
+            recipient_list=recipient_list,
+            fail_silently=False,  # On veut lever une exception
         )
         return True
     except SMTPException as e:

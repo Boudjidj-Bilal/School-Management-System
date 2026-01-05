@@ -58,7 +58,7 @@ def messaging_dashboard_view(request):
     current_year = get_current_year_for_school(school)
 
     if current_year:
-        if not current_year.running or current_year.finished:
+        if not current_year.running and not current_year.end_year:
             return render(request, "404.html", status=404)
     else: 
         return render(request, "404.html", status=404)
@@ -325,15 +325,13 @@ def announcement_dashboard_view(request):
     current_year = None
 
     # 1. Déterminer l'école de l'utilisateur
-    if user_type == "SuperAdministrator":
-        school_id_filter = request.session.get('selected_school_id')
-        school = School.objects.get(id=school_id_filter)
-    else:
-        school = get_user_school(request.user)
+    school = get_user_school(request.user, request.session.get('selected_school_id'))
     
     if school:
         if school.is_active:
             current_year = get_current_year_for_school(school)
+            if not current_year:
+                return render(request, "404.html", status=404)
         else:
             return render(request, "404.html", status=404)
     else: 

@@ -218,7 +218,7 @@ def get_student_attendance_view_data(student, current_year):
             'term': term,
             'stats': stats,
             'records': records,
-            'is_default_tab': is_default_tab # [CLEF UTILISÉE PAR LE HTML]
+            'is_default_tab': is_default_tab 
         })
 
     global_stats = get_student_attendance_stats(student, current_year=current_year)

@@ -125,24 +125,22 @@ def manage_years_view(request):
     Affiche la page de gestion des années scolaires.
     """
     user_type = get_user_type(request.user)
+
+    if not user_type:
+        return render(request, "404.html", status=404)
     
-    # Vérifie si l'utilisateur a la permission : SuperAdministrator, Principal
+    # Vérifie si l'utilisateur a la permission de voir cette page : 
     if user_type not in ["SuperAdministrator", "Principal"]:
         return render(request, "404.html", status=404)
 
-    # 1. Déterminer l'école de l'utilisateur
-    if user_type == "SuperAdministrator":
-        school_id_filter = request.session.get('selected_school_id')
-        school = School.objects.get(id=school_id_filter)
-    else:
-        school = get_user_school(request.user)
+    school = get_user_school(request.user, request.session.get('selected_school_id'))
 
-    if school:
-        if not school.is_active:
-            return render(request, "404.html", status=404)
-    else:
+    if not school:
         return render(request, "404.html", status=404)
-    
+
+    if not school.is_active:
+        return render(request, "404.html", status=404)
+
     # 2. Récupérer toutes les années scolaires pour cette école, triées par date de début
     all_years = Year.objects.filter(school=school).order_by('-start_date')
 
@@ -157,7 +155,6 @@ def manage_years_view(request):
 
     return render(request, 'schools/manage_years.html', context)
 
-
 @require_http_methods(["POST"])
 @csrf_exempt
 @login_required
@@ -166,17 +163,13 @@ def create_or_update_year_api(request):
     API pour créer ou modifier une année scolaire.
     """
     user_type = get_user_type(request.user)
+
     if user_type not in ["SuperAdministrator", "Principal"]:
         return render(request, "404.html", status=404)
         
-    # 1. Déterminer l'école (même logique que dans la vue)
-    if user_type == "SuperAdministrator":
-        school_id_filter = request.session.get('selected_school_id')
-        school = School.objects.get(id=school_id_filter)
-    else:
-        school = get_user_school(request.user)
+    # 1. Déterminer l'école
+    school = get_user_school(request.user, request.session.get('selected_school_id'))
 
-    # Erreur : S'il n'y a pas d'école
     if school:
         if not school.is_active:
             return render(request, "404.html", status=404)
@@ -209,44 +202,33 @@ def create_or_update_year_api(request):
                 
                 year = get_object_or_404(Year, pk=year_id, school=school)
 
-                # Impossible de modifier l'année lorsqu'on n'est pas à l'étape de la création.
                 if not year.creation:
                     return JsonResponse({"success": False, "message": f"Impossible de modifier l'année, vous devez être dans la phase de création."}, status=400)
 
-                # Mise à jour des champs
                 year.name = name
                 year.start_date = start_date
                 year.end_date = end_date
                 year.min_time = min_time
                 year.max_time = max_time
                 
-                # Le statut 'current' ne devrait pas être modifiable facilement
-                # (il est géré par la création d'une nouvelle année)
-                # Mais si l'utilisateur sélectionne explicitement 'current' via un autre mécanisme, on peut le gérer ici.
-
                 year.save()
                 message = f"L'année scolaire {year.name} a été modifiée avec succès."
 
             else:
                 # --- MODE CRÉATION ---
 
-                # Avant de créer une nouvelle année il faut vérifier que la précédente est bien à l'état de terminé, sinon -> message d'erreur
                 current_year = get_current_year_for_school(school)
                 if current_year:
                     if not current_year.finished:
                         return JsonResponse({"success": False, "message": f"Impossible de créer une nouvelle année, vous devez d'abord terminer la précédente."}, status=400)
    
-
-                # Vérification de la non-chevauchement des dates (simplifié)
                 if Year.objects.filter(school=school, name=name).exists():
                      return JsonResponse({"success": False, "message": f"Une année scolaire nommée '{name}' existe déjà."}, status=400)
 
-
-                # 3. Gérer le drapeau 'current' : Si on crée une nouvelle année, l'ancienne est désactivée
-                # Note: La nouvelle année est mise à 'current=True' par défaut
+                # Mise à jour du flag 'current' pour sécurité
                 Year.objects.filter(school=school, current=True).update(current=False)
                 
-                # Création                
+                # Création de la nouvelle année              
                 new_year = Year.objects.create(
                     name=name,
                     start_date=start_date,
@@ -254,23 +236,30 @@ def create_or_update_year_api(request):
                     min_time=min_time,
                     max_time=max_time,
                     school=school,
-                    current=True,         # La nouvelle année est automatiquement l'année actuelle
-                    creation=True,        # État initial
+                    current=True,
+                    creation=True,
                     registration=False,
                     running=False,
                     end_year=False,
                     finished=False,
                 )
 
-                # 1. Sélectionner toutes les autres années de la même école.
-                # Nous utilisons Q(pk=new_year.pk) pour exclure l'année que nous venons de créer.
+                # 1. Sélectionner toutes les autres années de la même école (les anciennes)
                 other_years = Year.objects.filter(school=school).exclude(Q(pk=new_year.pk))
 
-                # 2. Mettre à jour ces années : elles ne sont plus 'current' et sont 'finished' (terminées).
+                # NETTOYAGE DES RELATIONS PROF-CLASSE ---
+                # On récupère toutes les affectations liées aux années précédentes et on les supprime.
+                # Cela libère le couple (Prof, Classe) pour la nouvelle année.
+                from classes.models import ClassTeacherYear # Import local pour éviter les cycles si besoin
+                
+                ClassTeacherYear.objects.filter(
+                    year__in=other_years
+                ).delete()
+
+                # 2. Mettre à jour ces années (archivage)
                 other_years.update(
                     current=False,
                     finished=True,
-                    # Par sécurité, nous mettons aussi tous les autres statuts à False
                     creation=False,
                     registration=False,
                     running=False,
@@ -316,7 +305,7 @@ def change_year_status_api(request, year_id):
         year = get_object_or_404(Year, pk=year_id)
 
         # 2. On vérifie si on est bien dans l'année actuelle :
-        if not year or year.current == False :
+        if not year or not year.current:
             return JsonResponse({'success': False, 'message': 'Impossible de modifier le statut d\'une année terminée.'}, status=400)
    
         # 3. Charger les données du corps de la requête
@@ -391,6 +380,7 @@ def change_year_status_api(request, year_id):
     except Year.DoesNotExist:
         return JsonResponse({'success': False, 'message': 'Année scolaire non trouvée ou accès refusé.'}, status=404)
     except Exception as e:
+        print("erreur : ",e) # TODO : à enlever, je rentre ici à cause de mailroo qui n'es pas encore configuré
         return JsonResponse({'success': False, 'message': 'Une erreur serveur est survenue lors du changement de statut.'}, status=500)
 
 
@@ -601,6 +591,8 @@ def manage_term(request):
     # 2. Détermination du contexte de l'école
     try:
         school_filter = get_user_school(request.user, request.session.get('selected_school_id'))
+        if not school_filter:
+            return render(request, "404.html", status=404)
     except School.DoesNotExist:
         return render(request, "404.html", status=404)
     
@@ -782,7 +774,7 @@ def manage_term(request):
     return render(request, 'schools/manage_term.html', context)
 
 @login_required(login_url='login')
-def edit_school_view(request, school_id):
+def edit_school_view(request):
     """
     Affiche le formulaire de modification pour une école spécifique.
     Accessible uniquement au Super Administrateur.
@@ -794,7 +786,8 @@ def edit_school_view(request, school_id):
 
     try:
         # On récupère l'école ou on renvoie une 404
-        school = get_object_or_404(School, pk=school_id)
+        school = get_user_school(request.user, request.session.get('selected_school_id'))
+
         
         context = {
             'school': school,

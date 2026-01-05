@@ -5,7 +5,7 @@
     -->
 
     <!-- Bloc NAV : C'est ce bloc qui doit défiler si son contenu devient trop long. -->
-    <nav class="flex-1 overflow-y-auto pb-4">
+    <nav class="flex-1 overflow-y-auto pb-4 mb-10">
         <!--
             flex-1: permet à la nav de prendre tout l'espace vertical restant.
             overflow-y-auto: active la barre de défilement verticale si le contenu dépasse.
@@ -28,7 +28,7 @@
                     </a>
                 </li>
                 <li>
-                    <a href="{% url 'edit_school' school_id=request.session.selected_school_id %}" class="flex items-center space-x-3 text-gray-300 hover:bg-gray-700 hover:text-white rounded-lg p-2 transition-colors duration-200">
+                    <a href="{% url 'edit_school' %}" class="flex items-center space-x-3 text-gray-300 hover:bg-gray-700 hover:text-white rounded-lg p-2 transition-colors duration-200">
                         <i class="fas fa-edit"></i>
                         <span>Modifier l'école</span>
                     </a>

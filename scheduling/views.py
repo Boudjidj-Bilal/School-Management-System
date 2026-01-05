@@ -810,9 +810,14 @@ def redirect_to_my_schedule(request):
     if not student:
         # Si ce n'est ni un élève ni un parent avec enfant sélectionné
         return render(request, "404.html", status=404)
+    
+    school = student.school
+
+    if not school:
+        return render(request, "404.html", status=404)
 
     # 2. Trouver l'année en cours pour son école
-    current_year = get_current_year_for_school(student.school)
+    current_year = get_current_year_for_school(school)
     if not current_year:
         return render(request, "404.html", status=404)
 
