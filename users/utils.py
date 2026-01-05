@@ -252,6 +252,9 @@ def send_email(subject, message, recipient_list):
         bool: True si l'envoi est réussi, False sinon.
     """
     try:
+        if isinstance(recipient_list, str):
+            recipient_list = [recipient_list]
+
         from_email = settings.DEFAULT_FROM_EMAIL
 
         send_mail(

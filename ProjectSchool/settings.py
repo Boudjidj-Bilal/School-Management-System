@@ -50,6 +50,7 @@ INSTALLED_APPS = [
     "communications",
     "documents",
     "notifications",
+    "accounts",
 ]
 
 SITE_ID = 1
