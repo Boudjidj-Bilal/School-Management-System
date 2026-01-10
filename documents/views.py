@@ -470,7 +470,7 @@ def download_report_card(request, report_card_id):
     is_owner = (user == rc.student.user)
 
     if not is_owner:
-        if type not in ("SuperAdministrator", "Principal", "Parent", "Administrator"):
+        if type not in ("SuperAdministrator", "Principal", "Parent", "Teacher", "Administrator"):
             return render(request, "404.html", status=404)
 
         
