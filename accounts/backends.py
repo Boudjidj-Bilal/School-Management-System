@@ -1,5 +1,5 @@
-# accounts/backends.py
 import requests
+import json
 from django.core.mail.backends.base import BaseEmailBackend
 from django.conf import settings
 from django.core.mail import EmailMultiAlternatives
@@ -11,12 +11,10 @@ class MailerooBackend(BaseEmailBackend):
     def __init__(self, fail_silently=False, **kwargs):
         super().__init__(fail_silently=fail_silently)
         self.api_key = settings.MAILEROO_API_KEY
-        self.api_url = "https://api.maileroo.com/v1/email" # Vérifie l'URL exacte dans la doc Maileroo
+        # URL API (Utiliser celle qui répond, même avec erreur 400)
+        self.api_url = "https://smtp.maileroo.com/send" 
 
     def send_messages(self, email_messages):
-        """
-        Envoie un ou plusieurs objets EmailMessage.
-        """
         if not email_messages:
             return 0
 
@@ -28,46 +26,74 @@ class MailerooBackend(BaseEmailBackend):
         return count
 
     def _send(self, email_message):
-        """
-        Envoie un email unique via l'API HTTP de Maileroo.
-        """
         if not email_message.recipients():
             return False
 
+        # Extraction des données
+        to_email = email_message.to[0] if email_message.to else ""
+        subject = str(email_message.subject) if email_message.subject else "Pas de sujet"
+        
+        # Debug : Vérifier le contenu avant envoi
+        print(f"--- Envoi Maileroo ---")
+        print(f"To: {to_email}")
+        print(f"Subject: {subject}")
+
         # Préparation des données pour l'API
+        # On utilise 'data' (Form Data) au lieu de 'json' pour une compatibilité maximale
         payload = {
             "from": email_message.from_email,
-            "to": email_message.to, # L'API attend souvent une liste ou un string
-            "subject": email_message.subject,
-            "html": None,
-            "text": email_message.body,
+            "to": to_email,
+            "subject": subject,
+            "plain": email_message.body, # Certain APIs préfèrent 'plain' à 'text'
+            "text": email_message.body,   # On envoie les deux pour être sûr
         }
 
-        # Gestion du HTML si présent (EmailMultiAlternatives)
+        # Gestion du HTML
+        html_content = None
         if isinstance(email_message, EmailMultiAlternatives):
             for content, mimetype in email_message.alternatives:
                 if mimetype == "text/html":
-                    payload["html"] = content
+                    html_content = content
                     break
         
-        # Si pas de HTML alternatif mais que le body est html (cas rare mais possible)
-        if not payload["html"] and email_message.content_subtype == "html":
-             payload["html"] = email_message.body
+        if not html_content and email_message.content_subtype == "html":
+             html_content = email_message.body
+
+        if html_content:
+            payload["html"] = html_content
 
         headers = {
-            "X-API-Key": self.api_key, # Vérifie le nom du header dans la doc Maileroo
-            "Content-Type": "application/json"
+            "X-API-Key": self.api_key,
+            # Pas de Content-Type ici, requests le mettra automatiquement pour le Form-Data
         }
 
         try:
-            response = requests.post(self.api_url, json=payload, headers=headers)
+            # Envoi en 'data' (application/x-www-form-urlencoded)
+            response = requests.post(self.api_url, data=payload, headers=headers)
+            
             if response.status_code in [200, 201, 202]:
+                print("Maileroo: Succès")
                 return True
-            else:
-                if not self.fail_silently:
-                    raise Exception(f"Erreur API Maileroo ({response.status_code}): {response.text}")
-                return False
+            
+            # Si échec 400 avec Form-Data, on tente en JSON (Fallback)
+            if response.status_code >= 400:
+                print(f"Maileroo (Form-Data) échoué: {response.text}. Tentative JSON...")
+                headers["Content-Type"] = "application/json"
+                response = requests.post(self.api_url, json=payload, headers=headers)
+                
+                if response.status_code in [200, 201, 202]:
+                    print("Maileroo (JSON): Succès")
+                    return True
+
+            error_msg = f"Erreur API Maileroo ({response.status_code}): {response.text}"
+            print(error_msg)
+            
+            if not self.fail_silently:
+                raise Exception(error_msg)
+            return False
+
         except Exception as e:
+            print(f"Exception Maileroo: {e}")
             if not self.fail_silently:
                 raise e
             return False
