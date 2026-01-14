@@ -6,11 +6,11 @@ charset-normalizer
 crispy-bootstrap5
 cssselect2
 dj-rest-auth
-Django
-django-allauth
-django-cors-headers
-django-crispy-forms
-djangorestframework
+Django==4.2.27
+django-allauth==0.60.0
+django-cors-headers==4.9.0
+django-crispy-forms==2.5
+djangorestframework==3.16.1
 et_xmlfile
 fonttools
 gunicorn
