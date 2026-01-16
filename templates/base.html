@@ -7,10 +7,14 @@
     <title>{% block title %}Tableau de bord{% endblock %}</title>
     <link rel="icon" href="{% static 'img/logo_mini.jpg' %}">
 
+    <!-- CSS Local (compilé par Tailwind) -->
     <link rel="stylesheet" href="{% static 'css/style.css' %}">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    
+    <!-- FontAwesome Local -->
+    <link rel="stylesheet" href="{% static 'css/all.min.css' %}">
+    
+    <!-- Police par défaut (Système) pour éviter l'appel Google Fonts -->
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
         body {
             font-family: 'Inter', sans-serif;
             background-color: #f4f7f9;
@@ -87,34 +91,13 @@
 
     {% include 'footer.html' %}
 
+    <!-- Chargement des scripts JS -->
+    
+    <!-- Script global pour le layout (Menu mobile, Sidebar) -->
+    <script src="{% static 'js/base.js' %}"></script>
+
     {% block extra_js %}
     {% endblock %}
 
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            const mobileBtn = document.getElementById('mobile-menu-btn');
-            const closeBtn = document.getElementById('close-sidebar-btn');
-            const sidebar = document.getElementById('sidebar-wrapper');
-            const overlay = document.getElementById('sidebar-overlay');
-            
-            function openSidebar() {
-                sidebar.classList.remove('-translate-x-full');
-                overlay.classList.remove('hidden');
-                setTimeout(() => { overlay.classList.remove('opacity-0'); }, 10);
-                document.body.style.overflow = 'hidden';
-            }
-
-            function closeSidebar() {
-                sidebar.classList.add('-translate-x-full');
-                overlay.classList.add('opacity-0');
-                setTimeout(() => { overlay.classList.add('hidden'); }, 300);
-                document.body.style.overflow = '';
-            }
-
-            if(mobileBtn) mobileBtn.addEventListener('click', openSidebar);
-            if(closeBtn) closeBtn.addEventListener('click', closeSidebar);
-            if(overlay) overlay.addEventListener('click', closeSidebar);
-        });
-    </script>
 </body>
 </html>

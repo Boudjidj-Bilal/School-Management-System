@@ -5,11 +5,9 @@ document.addEventListener('DOMContentLoaded', () => {
     const messageBox = document.getElementById('messageBox');
     const loadingIndicator = document.getElementById('loadingIndicator');
     
-    // CONFIGURATION : URL de l'API
-    // [CORRECTION] L'URL doit correspondre à votre urls.py.
-    // Votre vue gère le POST sur la même URL que l'affichage : '/users/password-reset/'
-    // Nous retirons '/api/' qui n'existe pas dans vos routes.
-    const API_URL = '/password-reset/'; 
+    // --- MODIFICATION : Récupération dynamique de l'URL ---
+    // On ne hardcode plus '/password-reset/' ici.
+    const apiResetUrl = resetForm.getAttribute('data-reset-url');
 
     resetForm.addEventListener('submit', async function(event) {
         event.preventDefault();
@@ -28,7 +26,12 @@ document.addEventListener('DOMContentLoaded', () => {
         const csrfToken = csrfInput ? csrfInput.value : '';
         
         try {
-            const response = await fetch(API_URL, {
+            // Vérification de sécurité avant l'envoi
+            if (!apiResetUrl) {
+                throw new Error("L'URL de réinitialisation est introuvable dans le DOM.");
+            }
+
+            const response = await fetch(apiResetUrl, { // Utilisation de la variable dynamique
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -59,12 +62,12 @@ document.addEventListener('DOMContentLoaded', () => {
                 // Erreur technique (HTML renvoyé)
                 const textResponse = await response.text();
                 console.error("Réponse serveur invalide (non-JSON):", textResponse);
-                throw new Error("Le serveur a renvoyé une page HTML (probablement une erreur 404 ou 500). Vérifiez l'URL et les logs serveur.");
+                throw new Error("Le serveur a renvoyé une réponse invalide.");
             }
 
         } catch (error) {
             console.error('Erreur technique:', error);
-            messageBox.textContent = 'Une erreur de connexion est survenue. Veuillez réessayer.';
+            messageBox.textContent = 'Une erreur est survenue. Veuillez réessayer.';
             messageBox.classList.remove('text-green-600');
             messageBox.classList.add('text-red-600');
         } finally {

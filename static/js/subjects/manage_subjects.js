@@ -1,15 +1,25 @@
 /**
  * Logique JavaScript pour la gestion des matières (CRUD via AJAX)
- * * Ce script dépend des variables globales définies dans le template HTML:
- * - SAVE_SUBJECT_URL
- * - TOGGLE_STATUS_URL
- * - CSRF_TOKEN
+ * VERSION SÉCURISÉE (CSP Compliant)
+ * * Ce script ne dépend PLUS de variables globales.
+ * Il récupère les URLs depuis les attributs data-* du DOM 
+ * et le CSRF Token depuis le formulaire.
  */
 
 document.addEventListener('DOMContentLoaded', () => {
     
     // --- Éléments du DOM ---
     const subjectForm = document.getElementById('subject-form');
+    // Récupération du conteneur principal qui porte les URLs
+    const subjectsContainer = document.getElementById('subjects-container'); 
+    
+    // Récupération sécurisée des variables depuis le DOM
+    const saveSubjectUrl = subjectsContainer.getAttribute('data-save-url');
+    const toggleStatusUrl = subjectsContainer.getAttribute('data-toggle-url');
+    // Récupération du token CSRF directement depuis l'input généré par Django
+    const csrfTokenInput = document.querySelector('[name=csrfmiddlewaretoken]');
+    const csrfToken = csrfTokenInput ? csrfTokenInput.value : '';
+
     const subjectNameInput = document.getElementById('subject-name');
     const subjectColorInput = document.getElementById('subject-color');
     const formTitle = document.getElementById('form-title');
@@ -73,7 +83,8 @@ document.addEventListener('DOMContentLoaded', () => {
     subjectColorInput.addEventListener('change', () => {
         const selectedOption = subjectColorInput.options[subjectColorInput.selectedIndex];
         const colorValue = selectedOption.value.toLowerCase();
-        const colorLabel = selectedOption.textContent.split('(')[0].trim(); // Nettoyer le label
+        // Vérification de sécurité si selectedOption existe
+        const colorLabel = selectedOption ? selectedOption.textContent.split('(')[0].trim() : ''; 
         
         // Supprimer toutes les classes de couleur existantes avant d'ajouter la nouvelle
         colorPreview.className = 'text-sm mt-2 font-medium';
@@ -105,11 +116,12 @@ document.addEventListener('DOMContentLoaded', () => {
         };
 
         try {
-            const response = await fetch(SAVE_SUBJECT_URL, {
+            // Utilisation de la variable locale saveSubjectUrl
+            const response = await fetch(saveSubjectUrl, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    'X-CSRFToken': CSRF_TOKEN,
+                    'X-CSRFToken': csrfToken, // Utilisation du token récupéré
                 },
                 body: JSON.stringify(payload)
             });
@@ -118,8 +130,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
             if (result.success) {
                 displayMessage(result.message, true);
-                // Le moyen le plus simple et le plus sûr de mettre à jour le tableau complet après C/U
-                // car les matières changent de statut (active/inactive) et de position.
                 setTimeout(() => window.location.reload(), 1000); 
             } else {
                 displayMessage(result.message, false);
@@ -170,7 +180,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
         if (toggleButton) {
             const subjectId = toggleButton.dataset.subjectId;
-            // Détermine si l'action actuelle est 'deactivate' (la matière est active) ou 'activate' (la matière est inactive)
             const isCurrentlyActive = toggleButton.dataset.action === 'deactivate'; 
             const subjectName = toggleButton.closest('li').querySelector('.subject-name').textContent;
             
@@ -180,24 +189,19 @@ document.addEventListener('DOMContentLoaded', () => {
             modalTitle.textContent = `Confirmer la ${action}ation`;
             modalMessage.innerHTML = `Voulez-vous vraiment <strong>${action}</strong> la matière <strong>"${subjectName}"</strong> ?`;
             
-            // Configuration du bouton de confirmation
             modalConfirmBtn.textContent = action.charAt(0).toUpperCase() + action.slice(1);
             
-            // Gestion des couleurs des boutons (Rouge pour désactiver, Vert pour activer)
             modalConfirmBtn.classList.toggle('bg-red-600', isCurrentlyActive);
             modalConfirmBtn.classList.toggle('hover:bg-red-700', isCurrentlyActive);
             modalConfirmBtn.classList.toggle('bg-indigo-600', !isCurrentlyActive);
             modalConfirmBtn.classList.toggle('hover:bg-indigo-700', !isCurrentlyActive);
             
-            // Affichage de la modal
             modal.classList.remove('hidden');
 
-            // --- Gestion des écouteurs de la modal ---
-            
-            // Suppression des anciens écouteurs pour éviter les accumulations
+            // Clonage pour reset des event listeners
             modalConfirmBtn.replaceWith(modalConfirmBtn.cloneNode(true));
             modalCancelBtn.replaceWith(modalCancelBtn.cloneNode(true));
-            // Récupération des nouveaux éléments clonés
+            
             const newModalConfirmBtn = document.getElementById('modal-confirm-btn');
             const newModalCancelBtn = document.getElementById('modal-cancel-btn');
 
@@ -205,7 +209,6 @@ document.addEventListener('DOMContentLoaded', () => {
             // Nouvelle fonction de confirmation
             const confirmHandler = async () => {
                 modal.classList.add('hidden');
-                
                 toggleButton.disabled = true;
                 
                 const payload = {
@@ -213,11 +216,12 @@ document.addEventListener('DOMContentLoaded', () => {
                 };
                 
                 try {
-                    const response = await fetch(TOGGLE_STATUS_URL, {
+                    // Utilisation de la variable locale toggleStatusUrl
+                    const response = await fetch(toggleStatusUrl, {
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json',
-                            'X-CSRFToken': CSRF_TOKEN,
+                            'X-CSRFToken': csrfToken, // Utilisation du token récupéré
                         },
                         body: JSON.stringify(payload)
                     });
@@ -226,7 +230,6 @@ document.addEventListener('DOMContentLoaded', () => {
                     
                     if (result.success) {
                         displayMessage(result.message, true);
-                        // Rechargement après 1 seconde pour voir la matière passer de liste
                         setTimeout(() => window.location.reload(), 1000);
                     } else {
                         displayMessage(result.message, false);
@@ -239,7 +242,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             };
 
-            // Attribution des nouveaux écouteurs
             newModalConfirmBtn.addEventListener('click', confirmHandler);
             newModalCancelBtn.addEventListener('click', () => modal.classList.add('hidden'));
         }

@@ -9,6 +9,10 @@ document.addEventListener('DOMContentLoaded', () => {
     loginForm.addEventListener('submit', async function(event) {
         event.preventDefault();
         
+        // Cela évite les URLs en dur comme '/dashboard'
+        const loginUrl = loginForm.getAttribute('data-login-url');
+        const successUrl = loginForm.getAttribute('data-success-url');
+
         // Afficher l'indicateur de chargement et désactiver le bouton
         loadingIndicator.classList.remove('hidden');
         messageBox.textContent = '';
@@ -20,7 +24,8 @@ document.addEventListener('DOMContentLoaded', () => {
         const csrfToken = document.querySelector('input[name="csrfmiddlewaretoken"]').value;
         
         try {
-            const response = await fetch('', {
+            // --- MODIFICATION 2 : Utilisation de loginUrl ---
+            const response = await fetch(loginUrl, { 
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -35,8 +40,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 messageBox.textContent = data.message;
                 messageBox.classList.remove('text-red-600');
                 messageBox.classList.add('text-green-600');
-                // Rediriger après une connexion réussie
-                window.location.href = '/dashboard';
+                
+                // Si le backend renvoie une 'next_url', on l'utilise, sinon on prend celle du dashboard par défaut
+                window.location.href = data.redirect_url || successUrl;
             } else {
                 messageBox.textContent = data.message || 'Erreur de connexion.';
                 messageBox.classList.remove('text-green-600');

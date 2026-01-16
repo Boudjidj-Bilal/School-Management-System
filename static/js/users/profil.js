@@ -2,18 +2,17 @@
  * Gestion de la page de profil utilisateur.
  * - Changement de mot de passe via API
  * - Afficher/Masquer le mot de passe
- * - [NOUVEAU] Gestion de la photo de profil (Upload/Delete)
+ * - Gestion de la photo de profil (Upload/Delete)
+ * * VERSION SÉCURISÉE (CSP Compliant) :
+ * - Plus de dépendance à window.PROFILE_CONFIG
+ * - Récupération des URLs via data-attributes
  */
 
 document.addEventListener('DOMContentLoaded', () => {
     
-    // Récupération de la configuration injectée
-    const CONFIG = window.PROFILE_CONFIG;
-    
-    if (!CONFIG) {
-        console.error("Erreur: Configuration du profil manquante.");
-        return;
-    }
+    // --- 0. Récupération de la configuration depuis le DOM ---
+    const csrfInput = document.getElementById('csrf-token');
+    const CSRF_TOKEN = csrfInput ? csrfInput.value : '';
 
     // --- Éléments du Formulaire Mot de Passe ---
     const form = document.getElementById('change-password-form');
@@ -25,6 +24,11 @@ document.addEventListener('DOMContentLoaded', () => {
     const profileImgDisplay = document.getElementById('profile-image-display');
     const profileInitialsDisplay = document.getElementById('profile-initials-display');
     const btnDeletePhoto = document.getElementById('btn-delete-photo');
+    const triggerUploadBtn = document.getElementById('trigger-upload-btn'); // Bouton caméra
+
+    // URLs API (récupérées depuis les data-attributes)
+    const apiChangePasswordUrl = form ? form.getAttribute('data-api-url') : null;
+    const apiProfilePictureUrl = profileInput ? profileInput.getAttribute('data-api-url') : null;
 
     // =================================================================
     // 1. TOGGLE PASSWORD VISIBILITY (Afficher/Masquer)
@@ -75,7 +79,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 return;
             }
             
-            if (newPassword.length < 4) { // J'ai remis 4 comme dans ton HTML, avant c'était 8
+            if (newPassword.length < 4) {
                 showMessage("Le mot de passe doit faire au moins 4 caractères.", "error");
                 resetButton(originalBtnText);
                 return;
@@ -83,11 +87,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
             // --- D. Envoi API ---
             try {
-                const response = await fetch(CONFIG.apiChangePasswordUrl, {
+                if (!apiChangePasswordUrl) throw new Error("URL API manquante");
+
+                const response = await fetch(apiChangePasswordUrl, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
-                        'X-CSRFToken': CONFIG.csrfToken
+                        'X-CSRFToken': CSRF_TOKEN
                     },
                     body: JSON.stringify({
                         current_password: currentPassword,
@@ -115,29 +121,37 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // =================================================================
-    // 3. GESTION DE LA PHOTO DE PROFIL (NOUVEAU)
+    // 3. GESTION DE LA PHOTO DE PROFIL
     // =================================================================
 
-    // --- A. Upload d'une nouvelle image ---
+    // --- A. Trigger Upload (Clic sur l'icône caméra) ---
+    // Remplace le onclick="..." qui a été supprimé du HTML
+    if (triggerUploadBtn && profileInput) {
+        triggerUploadBtn.addEventListener('click', () => {
+            profileInput.click();
+        });
+    }
+
+    // --- B. Upload d'une nouvelle image ---
     if (profileInput) {
         profileInput.addEventListener('change', async function(e) {
             const file = e.target.files[0];
             if (!file) return;
 
-            // Préparation des données (FormData pour envoyer des fichiers)
+            // Préparation des données
             const formData = new FormData();
             formData.append('profile_picture', file);
 
             try {
-                // Petit effet visuel d'attente sur l'image (opacité)
+                if (!apiProfilePictureUrl) throw new Error("URL API Photo manquante");
+
+                // Petit effet visuel d'attente
                 if(profileImgDisplay) profileImgDisplay.style.opacity = '0.5';
 
-                const response = await fetch(CONFIG.apiProfilePictureUrl, {
+                const response = await fetch(apiProfilePictureUrl, {
                     method: 'POST',
                     headers: {
-                        // NE PAS METTRE 'Content-Type': 'multipart/form-data'
-                        // Le navigateur le fait automatiquement avec le bon boundary pour les fichiers
-                        'X-CSRFToken': CONFIG.csrfToken
+                        'X-CSRFToken': CSRF_TOKEN
                     },
                     body: formData
                 });
@@ -145,15 +159,15 @@ document.addEventListener('DOMContentLoaded', () => {
                 const result = await response.json();
 
                 if (result.success) {
-                    // 1. Mettre à jour la source de l'image (ajout d'un timestamp pour forcer le rafraîchissement cache)
-                    profileImgDisplay.src = result.new_image_url; // + '?t=' + new Date().getTime(); 
+                    // 1. Mettre à jour la source
+                    profileImgDisplay.src = result.new_image_url; 
                     
                     // 2. Afficher l'image et cacher les initiales
                     profileImgDisplay.classList.remove('hidden');
-                    profileInitialsDisplay.classList.add('hidden');
+                    if (profileInitialsDisplay) profileInitialsDisplay.classList.add('hidden');
                     
                     // 3. Afficher le bouton supprimer
-                    btnDeletePhoto.classList.remove('hidden');
+                    if (btnDeletePhoto) btnDeletePhoto.classList.remove('hidden');
 
                 } else {
                     alert("Erreur : " + result.message);
@@ -163,58 +177,61 @@ document.addEventListener('DOMContentLoaded', () => {
                 console.error("Erreur API Photo:", error);
                 alert("Impossible de mettre à jour la photo.");
             } finally {
-                // Rétablir l'opacité
                 if(profileImgDisplay) profileImgDisplay.style.opacity = '1';
-                // Reset de l'input pour pouvoir ré-uploader la même image si besoin
                 profileInput.value = ''; 
             }
         });
     }
 
-    // --- B. Suppression de l'image (AVEC MODAL) ---
+    // --- C. Suppression de l'image (AVEC MODAL) ---
     const deleteModal = document.getElementById('delete-photo-modal');
     const confirmDeleteBtn = document.getElementById('confirm-delete-btn');
+    const modalCancelBtn = document.getElementById('modal-cancel-btn');
 
-    // 1. Ouvrir la modale au clic sur la poubelle
+    // 1. Ouvrir la modale
     if (btnDeletePhoto) {
         btnDeletePhoto.addEventListener('click', function(e) {
             e.preventDefault();
-            deleteModal.classList.remove('hidden');
+            if (deleteModal) deleteModal.classList.remove('hidden');
         });
     }
 
-    // 2. Action réelle de suppression au clic sur "Confirmer" dans la modale
+    // 2. Fermer la modale (Nouveau gestionnaire pour le bouton Annuler)
+    if (modalCancelBtn && deleteModal) {
+        modalCancelBtn.addEventListener('click', () => {
+            deleteModal.classList.add('hidden');
+        });
+    }
+
+    // 3. Action réelle de suppression
     if (confirmDeleteBtn) {
         confirmDeleteBtn.addEventListener('click', async function() {
             
-            // On ferme la modale tout de suite pour l'UX
-            deleteModal.classList.add('hidden');
+            if (deleteModal) deleteModal.classList.add('hidden');
 
             try {
-                const response = await fetch(CONFIG.apiProfilePictureUrl, {
+                if (!apiProfilePictureUrl) throw new Error("URL API Photo manquante");
+
+                const response = await fetch(apiProfilePictureUrl, {
                     method: 'DELETE',
                     headers: {
                         'Content-Type': 'application/json',
-                        'X-CSRFToken': CONFIG.csrfToken
+                        'X-CSRFToken': CSRF_TOKEN
                     }
                 });
 
                 const result = await response.json();
 
                 if (result.success) {
-                    // --- Mise à jour UI ---
-                    // 1. Cacher l'image et nettoyer la source
-                    profileImgDisplay.classList.add('hidden');
-                    profileImgDisplay.src = '#';
+                    // Mise à jour UI
+                    if (profileImgDisplay) {
+                        profileImgDisplay.classList.add('hidden');
+                        profileImgDisplay.src = '#';
+                    }
                     
-                    // 2. Afficher les initiales
-                    profileInitialsDisplay.classList.remove('hidden');
+                    if (profileInitialsDisplay) profileInitialsDisplay.classList.remove('hidden');
                     
-                    // 3. Cacher le bouton poubelle
-                    btnDeletePhoto.classList.add('hidden');
-
-                    // Optionnel : Petit message de succès discret
-                    // alert("Photo supprimée"); ou utiliser ton showMessage() existant
+                    if (btnDeletePhoto) btnDeletePhoto.classList.add('hidden');
 
                 } else {
                     alert("Erreur : " + result.message);
@@ -228,7 +245,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
 
-    // --- Fonctions Utilitaires (Pour le mot de passe) ---
+    // --- Fonctions Utilitaires ---
 
     function showMessage(message, type) {
         messageArea.classList.remove('hidden', 'bg-green-100', 'text-green-800', 'border-green-200', 'bg-red-100', 'text-red-800', 'border-red-200');

@@ -7,6 +7,10 @@ document.addEventListener('DOMContentLoaded', () => {
     const statusMessageEl = document.getElementById('status-message');
     const subjectLegendEl = document.getElementById('subject-legend');
     
+    // MODIFICATION 1 : Récupération de l'URL API depuis le template HTML
+    // Cela évite d'avoir une URL "/subjects/api/..." en dur dans le code
+    const API_TOGGLE_URL = subjectsDataEl.dataset.apiUrl; 
+
     let subjectsData = [];
     let linksData = {};
 
@@ -21,7 +25,8 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     
     // Sécurité CSRF pour les requêtes POST
-    const csrftoken = document.getElementById('csrf-token').value;
+    const csrftokenInput = document.getElementById('csrf-token');
+    const csrftoken = csrftokenInput ? csrftokenInput.value : '';
 
     /**
      * Affiche un message de statut à l'utilisateur.
@@ -123,7 +128,10 @@ document.addEventListener('DOMContentLoaded', () => {
         tagElement.classList.remove('hover:bg-indigo-700', 'hover:border-primary-blue'); // Nettoyer les hover
 
         try {
-            const response = await fetch('/subjects/api/toggle-assignment/', { // L'URL de votre API
+            // MODIFICATION 2 : Utilisation de la variable API_TOGGLE_URL au lieu de l'URL en dur
+            if (!API_TOGGLE_URL) throw new Error("URL de l'API introuvable dans le DOM.");
+
+            const response = await fetch(API_TOGGLE_URL, { 
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -139,7 +147,6 @@ document.addEventListener('DOMContentLoaded', () => {
             const result = await response.json();
 
             if (!response.ok || !result.success) {
-                // Afficher l'erreur retournée par l'API
                 throw new Error(result.message || "Erreur serveur lors de la mise à jour.");
             }
 
@@ -176,10 +183,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
     // 2. Initialisation : Affichage de la légende des matières
-    subjectsData.forEach(subject => {
-        const tag = createSubjectTag(subject, false, null, true); // true pour isLegend
-        subjectLegendEl.appendChild(tag);
-    });
+    if (subjectsData.length > 0) {
+        subjectsData.forEach(subject => {
+            const tag = createSubjectTag(subject, false, null, true); // true pour isLegend
+            subjectLegendEl.appendChild(tag);
+        });
+    }
 
     
     // 3. Initialisation : Remplissage du tableau des attributions

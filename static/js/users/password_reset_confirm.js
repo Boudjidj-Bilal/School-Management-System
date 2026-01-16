@@ -5,10 +5,9 @@ document.addEventListener('DOMContentLoaded', () => {
     const messageBox = document.getElementById('messageBox');
     const loadingIndicator = document.getElementById('loadingIndicator');
 
-    // CONFIGURATION : URL de l'API
-    // L'URL de confirmation contient des tokens dynamiques (uidb64/token).
-    // fetch(window.location.href) est le moyen le plus sûr d'envoyer le POST à la même URL que celle affichée.
-    const API_URL = window.location.href; 
+    // On utilise les attributs qu'on a ajoutés dans l'étape précédente.
+    const apiConfirmUrl = passwordConfirmForm.getAttribute('data-confirm-url');
+    const successUrl = passwordConfirmForm.getAttribute('data-success-url');
 
     passwordConfirmForm.addEventListener('submit', async function(event) {
         event.preventDefault();
@@ -27,7 +26,8 @@ document.addEventListener('DOMContentLoaded', () => {
         const csrfToken = csrfInput ? csrfInput.value : '';
         
         try {
-            const response = await fetch(API_URL, {
+            // Utilisation de l'URL fournie par le template (request.path)
+            const response = await fetch(apiConfirmUrl, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -46,9 +46,10 @@ document.addEventListener('DOMContentLoaded', () => {
                     messageBox.textContent = data.message;
                     messageBox.classList.remove('text-red-600');
                     messageBox.classList.add('text-green-600');
-                    // Redirection vers la page de connexion après un succès (avec un délai pour lire le message)
+                    
+                    // On utilise l'URL de login définie par Django, au lieu de '/' en dur.
                     setTimeout(() => {
-                        window.location.href = '/'; 
+                        window.location.href = successUrl; 
                     }, 1500);
                 } else {
                     messageBox.textContent = data.message || 'Erreur lors de la mise à jour du mot de passe.';
@@ -59,7 +60,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 // Erreur technique (HTML renvoyé)
                 const textResponse = await response.text();
                 console.error("Réponse serveur invalide (non-JSON):", textResponse);
-                throw new Error("Le serveur a renvoyé une page HTML au lieu du JSON. Vérifiez la console pour les détails.");
+                throw new Error("Le serveur a renvoyé une page HTML invalide.");
             }
 
         } catch (error) {

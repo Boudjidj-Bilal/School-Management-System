@@ -1,22 +1,60 @@
 /**
  * assign_children.js
  * Gère l'interaction utilisateur sur la page d'attribution Parent-Enfant.
- * Utilise les données JSON injectées dans le template (window.linksData, window.studentsData, window.urlsData).
- * Effectue des requêtes POST vers l'API Django pour mettre à jour la BDD.
+ * VERSION SÉCURISÉE & ROBUSTE :
+ * - Lit les données JSON depuis les balises <script type="application/json"> générées par Django.
+ * - Évite les erreurs de syntaxe JSON dues aux guillemets simples Python.
  */
 
 document.addEventListener('DOMContentLoaded', () => {
-    // --- Variables Globales (issues du template Django) ---
-    const linksData = window.linksData || {}; // { parent_id: [student_id1, student_id2, ...], ... }
-    const studentsData = window.studentsData || []; // [{ id: 1, username: 'A'}, ...]
-    const toggleUrl = window.urlsData.toggleUrl;
-    // Récupère le jeton CSRF pour les requêtes POST
-    const csrfToken = document.querySelector('input[name="csrfmiddlewaretoken"]').value;
+    
+    // --- 1. Récupération des données et configuration ---
+    const container = document.getElementById('assign-children-container');
+    const csrfInput = document.getElementById('csrf-token');
+    
+    // Valeurs par défaut
+    let linksData = {};
+    let studentsData = [];
+    let toggleUrl = '';
+    const csrfToken = csrfInput ? csrfInput.value : '';
+
+    // A. Récupération de l'URL API
+    if (container) {
+        toggleUrl = container.getAttribute('data-toggle-url');
+    }
+
+    // B. Récupération des données JSON via json_script
+    // Cette méthode est beaucoup plus fiable que les data-attributes pour les objets complexes
+    try {
+        const linksElement = document.getElementById('links-data-json');
+        if (linksElement) {
+            linksData = JSON.parse(linksElement.textContent);
+            // Si la donnée a été passée comme une string JSON depuis la vue, on parse une seconde fois
+            if (typeof linksData === 'string') {
+                linksData = JSON.parse(linksData);
+            }
+        }
+    } catch (e) {
+        console.error("Erreur lecture linksData", e);
+    }
+
+    try {
+        const studentsElement = document.getElementById('students-data-json');
+        if (studentsElement) {
+            studentsData = JSON.parse(studentsElement.textContent);
+            // Idem, double parse si nécessaire
+            if (typeof studentsData === 'string') {
+                studentsData = JSON.parse(studentsData);
+            }
+        }
+    } catch (e) {
+        console.error("Erreur lecture studentsData", e);
+    }
 
     // --- Éléments du DOM ---
     const parentList = document.getElementById('parent-list');
-    const assignmentSection = document.getElementById('assignment-section'); // Message initial
-    const detailsSection = document.getElementById('details-section'); // Conteneur des listes
+    const assignmentSection = document.getElementById('assignment-section');
+    const detailsSection = document.getElementById('details-section');
     const selectedParentName = document.getElementById('selected-parent-name');
     const linkedStudentsList = document.getElementById('linked-students-list');
     const availableStudentsList = document.getElementById('available-students-list');
@@ -27,26 +65,18 @@ document.addEventListener('DOMContentLoaded', () => {
 
     /**
      * Recherche un étudiant par son ID dans la liste complète.
-     * @param {string|number} studentId L'ID de l'étudiant à trouver.
-     * @returns {object|undefined} L'objet étudiant ou undefined.
      */
     function findStudent(studentId) {
-        // La comparaison est faite avec '==' pour gérer la possible différence de type (number vs string)
         return studentsData.find(student => String(student.id) == String(studentId));
     }
 
     /**
      * Crée un élément LI pour un étudiant avec le bouton d'action approprié.
-     * @param {object} student L'objet étudiant.
-     * @param {string} type 'linked' ou 'available'.
-     * @returns {HTMLLIElement} L'élément li créé.
      */
     function createStudentElement(student, type) {
         const li = document.createElement('li');
-        // Stocke l'ID dans l'attribut de données
         li.dataset.studentId = student.id; 
         
-        // Classes de base communes
         li.className = `student-item p-3 rounded-lg shadow-sm cursor-pointer transition-colors duration-200 
                         flex items-center justify-between border`;
         
@@ -71,10 +101,8 @@ document.addEventListener('DOMContentLoaded', () => {
         li.appendChild(nameSpan);
         li.appendChild(button);
         
-        // Ajout de l'écouteur d'événement pour l'action link/unlink via l'API
         li.addEventListener('click', () => {
             const action = type === 'linked' ? 'unlink' : 'link';
-            // L'ID du parent est forcément défini ici
             if (currentParentId) {
                 toggleAssignment(currentParentId, student.id, action, li);
             }
@@ -84,22 +112,19 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     /**
-     * Met à jour les listes des enfants liés et disponibles pour le parent sélectionné.
-     * @param {string} parentId ID du parent sélectionné.
+     * Met à jour les listes des enfants liés et disponibles.
      */
     function updateStudentLists(parentId) {
-        // Nettoyage des listes
         linkedStudentsList.innerHTML = '';
         availableStudentsList.innerHTML = '';
-        actionMessage.textContent = ''; // Effacer les anciens messages d'action
+        actionMessage.textContent = ''; 
 
-        // Récupération des IDs des enfants liés au parent (les IDs dans linksData sont des chaînes)
         const linkedIds = linksData[String(parentId)] || [];
         
         let hasLinked = false;
         let hasAvailable = false;
 
-        // 1. Peupler la liste des enfants liés
+        // 1. Liste des enfants liés
         linkedIds.forEach(studentId => {
             const student = findStudent(studentId);
             if (student) {
@@ -108,16 +133,14 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
 
-        // 2. Peupler la liste des enfants disponibles
+        // 2. Liste des enfants disponibles
         studentsData.forEach(student => {
-            // Vérifie si l'ID de l'étudiant (en chaîne) n'est PAS dans la liste des IDs liés
             if (!linkedIds.includes(String(student.id))) {
                 availableStudentsList.appendChild(createStudentElement(student, 'available'));
                 hasAvailable = true;
             }
         });
 
-        // Affichage des messages par défaut si les listes sont vides
         if (!hasLinked) {
             linkedStudentsList.innerHTML = '<p class="text-red-500 italic" id="no-linked-students">Aucun enfant n\'est attribué à ce parent.</p>';
         }
@@ -128,14 +151,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
     /**
      * Gère la sélection d'un parent.
-     * @param {HTMLLIElement} selectedLi L'élément LI du parent sélectionné.
      */
     function handleParentSelection(selectedLi) {
-        // Masquer le message initial, afficher la section de détails
         assignmentSection.classList.add('hidden');
         detailsSection.classList.remove('hidden');
 
-        // Gérer la classe 'selected' pour le parent
         document.querySelectorAll('.parent-item').forEach(li => {
             li.classList.remove('bg-blue-200', 'font-bold', 'border-blue-500');
             li.classList.add('bg-white', 'hover:bg-blue-50', 'border-transparent', 'font-medium');
@@ -143,8 +163,6 @@ document.addEventListener('DOMContentLoaded', () => {
         selectedLi.classList.add('bg-blue-200', 'font-bold', 'border-blue-500');
         selectedLi.classList.remove('bg-white', 'hover:bg-blue-50', 'border-transparent', 'font-medium');
 
-
-        // Mettre à jour l'état et l'affichage
         currentParentId = selectedLi.dataset.parentId;
         selectedParentName.textContent = selectedLi.querySelector('span').textContent;
 
@@ -152,19 +170,19 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     /**
-     * Envoie la requête à l'API pour lier/délier un enfant et met à jour l'état local.
-     * @param {string} parentId ID du parent.
-     * @param {number} studentId ID de l'étudiant.
-     * @param {string} action 'link' ou 'unlink'.
-     * @param {HTMLLIElement} element L'élément DOM de l'étudiant (pour le feedback).
+     * Envoie la requête API et met à jour l'état local.
      */
     async function toggleAssignment(parentId, studentId, action, element) {
         
-        // Affichage du message de chargement
+        if (!toggleUrl) {
+            actionMessage.textContent = "Erreur de configuration : URL API manquante.";
+            actionMessage.className = 'mt-6 text-sm text-center font-medium text-red-600';
+            return;
+        }
+
         actionMessage.textContent = "Action en cours...";
         actionMessage.className = 'mt-6 text-sm text-center font-medium text-gray-500';
         
-        // Désactiver l'élément pendant le traitement
         element.style.opacity = 0.5;
         element.style.pointerEvents = 'none';
 
@@ -185,29 +203,19 @@ document.addEventListener('DOMContentLoaded', () => {
             const data = await response.json();
 
             if (data.success) {
-                // Mettre à jour les liens dans l'état local (linksData)
                 const parentKey = String(parentId);
-                const studentKey = String(studentId); // Les IDs stockés sont des chaînes
+                const studentKey = String(studentId);
 
                 if (action === 'link') {
-                    if (!linksData[parentKey]) {
-                        linksData[parentKey] = [];
-                    }
-                    if (!linksData[parentKey].includes(studentKey)) {
-                        linksData[parentKey].push(studentKey);
-                    }
+                    if (!linksData[parentKey]) linksData[parentKey] = [];
+                    if (!linksData[parentKey].includes(studentKey)) linksData[parentKey].push(studentKey);
                 } else if (action === 'unlink') {
                     if (linksData[parentKey]) {
-                        // Filtre pour enlever l'ID de l'étudiant
                         linksData[parentKey] = linksData[parentKey].filter(id => id !== studentKey);
-                        // Supprime la clé si la liste devient vide pour garder l'état propre
-                        if (linksData[parentKey].length === 0) {
-                            delete linksData[parentKey];
-                        }
+                        if (linksData[parentKey].length === 0) delete linksData[parentKey];
                     }
                 }
                 
-                // Rafraîchir les listes après la mise à jour de l'état local
                 updateStudentLists(parentId);
 
                 actionMessage.textContent = data.message;
@@ -219,33 +227,26 @@ document.addEventListener('DOMContentLoaded', () => {
             }
 
         } catch (error) {
-            console.error("Erreur de l'API de bascule:", error);
+            console.error("Erreur API:", error);
             actionMessage.textContent = "Erreur de connexion au serveur.";
             actionMessage.className = 'mt-6 text-sm text-center font-medium text-red-600';
         } finally {
-            // Réactiver l'élément (note: il sera de toute façon recréé par updateStudentLists)
-            element.style.opacity = 1;
-            element.style.pointerEvents = 'auto';
+            if (element && element.parentNode) {
+                element.style.opacity = 1;
+                element.style.pointerEvents = 'auto';
+            }
         }
     }
 
-
-    // --- Écouteurs d'événements principaux ---
-    
-    // 1. Écouter la sélection d'un parent
+    // --- Écouteurs d'événements ---
     if (parentList) {
         parentList.addEventListener('click', (event) => {
-            // Trouve le LI le plus proche avec la classe .parent-item
             const li = event.target.closest('.parent-item');
-            if (li) {
-                handleParentSelection(li);
-            }
+            if (li) handleParentSelection(li);
         });
     }
 
-    // 2. Initialisation : Si des parents existent, sélectionne le premier par défaut
+    // Initialisation
     const firstParentLi = parentList ? parentList.querySelector('.parent-item') : null;
-    if (firstParentLi) {
-        handleParentSelection(firstParentLi);
-    }
+    if (firstParentLi) handleParentSelection(firstParentLi);
 });

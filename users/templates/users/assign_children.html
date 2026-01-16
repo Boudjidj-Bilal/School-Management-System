@@ -4,7 +4,10 @@
 {% block title %}Attribuer les enfants{% endblock %}
 
 {% block content %}
-<div class="flex flex-col lg:flex-row gap-8">
+<div class="flex flex-col lg:flex-row gap-8" 
+     id="assign-children-container"
+     data-toggle-url="{% url 'toggle_child_assignment_api' %}">
+
     <!-- Colonne de gauche: Liste des parents -->
     <div class="w-full lg:w-1/3 bg-white p-6 rounded-xl shadow-lg border border-gray-200 max-h-[calc(100vh-100px)] overflow-y-auto">
         <div class="flex justify-between items-center mb-4 border-b pb-4 border-gray-200">
@@ -16,10 +19,7 @@
                 {% for parent in parents %}
                 <li class="parent-item p-3 bg-white rounded-xl shadow-md cursor-pointer hover:bg-blue-50 transition duration-150 border border-transparent font-medium" 
                     data-parent-id="{{ parent.id }}">
-                    <!-- Utilisation de la clé 'full_name' -->
                     <span class="text-lg text-gray-800">{{ parent.user.username }}</span>
-                    <!-- Vous pouvez ajouter plus de détails ici si besoin -->
-                    <!-- <p class="text-xs text-gray-500">...</p> -->
                 </li>
                 {% endfor %}
             </ul>
@@ -48,7 +48,6 @@
                     <i class="fas fa-link-slash mr-2"></i> Enfants attribués (Cliquer pour délier)
                 </h3>
                 <div id="linked-students-list" class="space-y-3">
-                    <!-- Les étudiants liés seront insérés ici par JS -->
                     <p class="text-red-500 italic" id="no-linked-students">Aucun enfant n'est attribué à ce parent.</p>
                 </div>
             </div>
@@ -59,7 +58,6 @@
                     <i class="fas fa-link mr-2"></i> Enfants disponibles (Cliquer pour lier)
                 </h3>
                 <div id="available-students-list" class="space-y-3">
-                    <!-- Les étudiants disponibles seront insérés ici par JS -->
                     <p class="text-green-500 italic" id="no-available-students">Tous les étudiants ont été attribués.</p>
                 </div>
             </div>
@@ -73,40 +71,11 @@
 
 <!-- Token CSRF pour les requêtes POST -->
 {% csrf_token %}
+<input type="hidden" id="csrf-token" value="{{ csrf_token }}">
 
-<!-- 
-    MÉTHODE POUR PASSER LES DONNÉES JSON AU JAVASCRIPT :
-    Les variables 'links_data' et 'students' contiennent déjà la chaîne JSON (grâce à json.dumps dans la vue).
-    Nous utilisons |escapejs pour gérer les caractères spéciaux et |safe pour permettre l'injection.
--->
-<script>
-    // Chargement des données des liens (Parent ID -> [Student IDs])
-    try {
-        window.linksData = JSON.parse('{{ links_data|escapejs|safe }}');
-    } catch (e) {
-        console.error("Erreur de parsing linksData. Assurez-vous que la vue retourne un JSON valide.", e);
-        window.linksData = {};
-    }
 
-    // Chargement des données de tous les étudiants
-    try {
-        window.studentsData = JSON.parse('{{ students|escapejs|safe }}');
-    } catch (e) {
-        console.error("Erreur de parsing studentsData. Assurez-vous que la vue retourne un JSON valide.", e);
-        window.studentsData = [];
-    }
-
-    // URL de l'API pour lier/délier les enfants
-    window.urlsData = {
-        // 'toggle_child_assignment_api' doit être défini dans users/urls.py
-        "toggleUrl": "{% url 'toggle_child_assignment_api' %}"
-    };
-    
-    // Ajoutez ceci pour le débogage si nécessaire:
-    // console.log("URLs Data:", window.urlsData);
-    // console.log("Links Data:", window.linksData);
-    // console.log("Students Data:", window.studentsData);
-</script>
+{{ links_data|json_script:"links-data-json" }}
+{{ students|json_script:"students-data-json" }}
 
 {% endblock %}
 

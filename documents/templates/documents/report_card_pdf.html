@@ -1,10 +1,11 @@
+{% load static %}
 <!DOCTYPE html>
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
     <title>Bulletin {{ student_name }}</title>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600;700&display=swap');
+
         /* --- DÉFINITION VARIABLES CSS --- */
         :root {
             --primary: {{ school_color|default:'#4f46e5' }};

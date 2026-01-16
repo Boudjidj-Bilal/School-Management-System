@@ -7,16 +7,18 @@
     <title>Page introuvable - THERANOTE</title>
     <link rel="icon" href="{% static 'img/logo_mini.jpg' %}">
     <link rel="stylesheet" href="{% static 'css/style.css' %}">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    
+    <link rel="stylesheet" href="{% static 'css/all.min.css' %}">
+    
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
-        body { font-family: 'Inter', sans-serif; }
+        body { 
+            font-family: 'Inter', sans-serif; 
+        }
     </style>
 </head>
 <body class="bg-gray-100 h-screen flex flex-col justify-center items-center">
 
     <div class="bg-white p-8 rounded-2xl shadow-xl text-center max-w-lg w-full mx-4">
-        <!-- Illustration / Icone -->
         <div class="mb-6">
             <div class="w-24 h-24 bg-indigo-50 rounded-full flex items-center justify-center mx-auto mb-4">
                 <i class="fas fa-compass text-4xl text-indigo-500"></i>
@@ -29,8 +31,6 @@
             Il semble que le lien que vous avez suivi soit cassé ou que la page ait été déplacée.
         </p>
 
-        <!-- Bouton de retour intelligent -->
-        <!-- Le lien '/' renverra vers login si pas connecté, ou dashboard si connecté (géré par tes vues existantes) -->
         <a href="/" class="inline-flex items-center justify-center px-6 py-3 border border-transparent text-base font-medium rounded-lg text-white bg-indigo-600 hover:bg-indigo-700 transition duration-150 ease-in-out shadow-md hover:shadow-lg transform hover:-translate-y-0.5">
             <i class="fas fa-home mr-2"></i>
             Retour à l'accueil

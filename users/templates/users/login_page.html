@@ -7,9 +7,9 @@
     <title>Connexion</title>
     <link rel="icon" href="{% static 'img/logo_mini.jpg' %}">
     <link rel="stylesheet" href="{% static 'css/style.css' %}">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link rel="stylesheet" href="{% static 'css/all.min.css' %}">
+    
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
         body {
             font-family: 'Inter', sans-serif;
         }
@@ -26,7 +26,10 @@
             <h3 class="text-3xl font-bold text-gray-800 text-center">Connexion</h3>
         </div>
 
-        <form id="loginForm" class="space-y-6">
+        <form id="loginForm" class="space-y-6" 
+              data-login-url="{% url 'login' %}" 
+              data-success-url="{% url 'dashboard' %}">
+              
             {% csrf_token %}
             <div>
                 <label for="username" class="block text-sm font-medium text-gray-700 mb-1">Nom d'utilisateur</label>
@@ -73,7 +76,6 @@
         </div>
     </div>
 
-    <!-- Lien vers le fichier JavaScript externe -->
     <script src="{% static 'js/users/login_page.js' %}"></script>
 </body>
 </html>
