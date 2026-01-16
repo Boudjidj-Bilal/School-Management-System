@@ -1,30 +1,38 @@
 /**
  * Script de gestion pour la modification d'une école.
  * Gère la soumission du formulaire via AJAX.
+ * VERSION SÉCURISÉE (CSP Compliant)
  */
 
 document.addEventListener('DOMContentLoaded', () => {
     const form = document.getElementById('edit-school-form');
     const submitBtn = document.getElementById('submit-btn');
     
-    // Récupération de la configuration injectée dans le HTML
-    const config = window.SCHOOL_CONFIG;
+    if (!form) return;
 
-    if (!form || !config) {
-        console.error("Formulaire ou configuration manquante.");
+    // 1. Récupération de la configuration depuis le DOM (Data Attributes)
+    const updateUrl = form.getAttribute('data-update-url');
+    const dashboardUrl = form.getAttribute('data-dashboard-url');
+    
+    // Récupération du token CSRF interne au formulaire
+    const csrfInput = form.querySelector('[name=csrfmiddlewaretoken]');
+    const csrfToken = csrfInput ? csrfInput.value : '';
+
+    if (!updateUrl) {
+        console.error("Erreur configuration : URL de mise à jour manquante.");
         return;
     }
 
     form.addEventListener('submit', async (e) => {
         e.preventDefault();
 
-        // 1. Feedback Visuel (Loading)
+        // 2. Feedback Visuel (Loading)
         const originalBtnContent = submitBtn.innerHTML;
         submitBtn.disabled = true;
         submitBtn.classList.add('opacity-75', 'cursor-wait');
         submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> Enregistrement...';
 
-        // 2. Récupération des données
+        // 3. Récupération des données
         // On construit l'objet manuellement pour gérer proprement les types (booléen)
         const formData = {
             name: document.getElementById('name').value.trim(),
@@ -36,12 +44,12 @@ document.addEventListener('DOMContentLoaded', () => {
         };
 
         try {
-            // 3. Envoi de la requête
-            const response = await fetch(config.updateUrl, {
+            // 4. Envoi de la requête
+            const response = await fetch(updateUrl, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    'X-CSRFToken': config.csrfToken
+                    'X-CSRFToken': csrfToken
                 },
                 body: JSON.stringify(formData)
             });
@@ -49,24 +57,24 @@ document.addEventListener('DOMContentLoaded', () => {
             const result = await response.json();
 
             if (result.success) {
-                // 4. Succès
-                // On utilise un petit délai pour que l'utilisateur voit le succès avant la redirection
+                // 5. Succès
                 submitBtn.innerHTML = '<i class="fas fa-check mr-2"></i> Succès !';
                 submitBtn.classList.remove('bg-indigo-600', 'hover:bg-indigo-700');
                 submitBtn.classList.add('bg-green-600', 'hover:bg-green-700');
                 
                 setTimeout(() => {
-                    window.location.href = config.dashboardUrl;
+                    // Redirection vers le dashboard (ou l'URL fournie)
+                    window.location.href = dashboardUrl || '/dashboard/';
                 }, 500);
 
             } else {
-                // 5. Erreur Métier (ex: email déjà pris)
+                // 6. Erreur Métier (ex: email déjà pris)
                 alert("Erreur : " + (result.message || "Une erreur est survenue."));
                 resetButton(originalBtnContent);
             }
 
         } catch (error) {
-            // 6. Erreur Technique
+            // 7. Erreur Technique
             console.error("Erreur technique:", error);
             alert("Erreur de communication avec le serveur.");
             resetButton(originalBtnContent);

@@ -4,10 +4,15 @@
 {% block title %}Gestion des exceptions du calendrier{% endblock %}
 
 {% block content %}
-    <!-- Jeton CSRF ajouté ici pour garantir qu'il soit dans le DOM avant que le JS ne le lise -->
+    <!-- Jeton CSRF pour le DOM -->
     {% csrf_token %} 
+    <input type="hidden" id="csrf-token" value="{{ csrf_token }}">
     
-    <div class="max-w-4xl mx-auto p-4 sm:p-8 bg-gray-50 min-h-screen">
+    <!-- Conteneur principal avec configuration API -->
+    <div id="exception-manager-container" 
+         class="max-w-4xl mx-auto p-4 sm:p-8 bg-gray-50 min-h-screen"
+         data-api-url="{% url 'exception_management' %}">
+
         <!-- En-tête -->
         <header class="mb-8">
             <h1 class="text-3xl font-extrabold text-gray-900 mb-2">Gestion des exceptions scolaires</h1>
@@ -36,6 +41,7 @@
                 </ul>
             </div>
         </div>
+
         <!-- Contenu principal des listes -->
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
             
@@ -43,8 +49,8 @@
             <div class="bg-white p-6 rounded-xl shadow-2xl border border-gray-200">
                 <div class="flex justify-between items-center mb-6">
                     <h2 class="text-2xl font-bold text-gray-800">Jours d'exception</h2>
-                    <!-- Bouton avec le style de l'exemple fourni -->
-                    <button onclick="openCrudModal('day')" 
+                    <!-- MODIFICATION : Suppression onclick, ajout ID -->
+                    <button id="btn-add-day" 
                             class="bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-2 px-4 rounded-xl shadow-lg transition duration-150 ease-in-out transform hover:scale-[1.02] flex items-center">
                         <i class="fas fa-calendar-alt mr-2"></i> Ajouter un Jour
                     </button>
@@ -58,8 +64,8 @@
             <div class="bg-white p-6 rounded-xl shadow-2xl border border-gray-200">
                 <div class="flex justify-between items-center mb-6">
                     <h2 class="text-2xl font-bold text-gray-800">Horaires d'exception</h2>
-                    <!-- Bouton avec le style de l'exemple fourni -->
-                    <button onclick="openCrudModal('time')" 
+                    <!-- MODIFICATION : Suppression onclick, ajout ID -->
+                    <button id="btn-add-time" 
                             class="bg-green-600 hover:bg-green-700 text-white font-semibold py-2 px-4 rounded-xl shadow-lg transition duration-150 ease-in-out transform hover:scale-[1.02] flex items-center">
                         <i class="fas fa-clock mr-2"></i> Ajouter un Horaire
                     </button>
@@ -73,8 +79,8 @@
     </div>
     
     <!-- Modal CRUD (Création/Modification) -->
-    <div id="crud-modal" class="fixed inset-0 bg-gray-900 bg-opacity-75 z-50 flex items-center justify-center hidden" onclick="if(event.target.id === 'crud-modal') closeCrudModal()">
-        <div class="bg-white rounded-xl shadow-2xl w-full max-w-lg p-6 m-4" onclick="event.stopPropagation()">
+    <div id="crud-modal" class="fixed inset-0 bg-gray-900 bg-opacity-75 z-50 flex items-center justify-center hidden">
+        <div class="bg-white rounded-xl shadow-2xl w-full max-w-lg p-6 m-4" id="crud-modal-content">
             <h3 id="crud-modal-title" class="text-xl font-semibold text-gray-800 mb-4 border-b pb-2">Ajouter/Modifier une exception</h3>
             
             <form id="exception-form">
@@ -121,7 +127,8 @@
                 </div>
 
                 <div class="mt-6 flex justify-end space-x-3">
-                    <button type="button" onclick="closeCrudModal()" class="px-4 py-2 bg-gray-300 hover:bg-gray-400 text-gray-800 font-medium rounded-lg transition duration-150 ease-in-out">Annuler</button>
+                    <!-- MODIFICATION : Ajout ID pour le JS -->
+                    <button type="button" id="btn-close-crud" class="px-4 py-2 bg-gray-300 hover:bg-gray-400 text-gray-800 font-medium rounded-lg transition duration-150 ease-in-out">Annuler</button>
                     <button type="submit" id="crud-submit-button" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-medium rounded-lg shadow-md transition duration-150 ease-in-out">
                         <span id="submit-text">Créer</span>
                         <span id="loading-spinner" class="hidden animate-spin h-5 w-5 border-4 border-white border-t-transparent rounded-full ml-2"></span>
@@ -131,16 +138,12 @@
         </div>
     </div>
 
-    <!-- Modal de Feedback (messages de statut) -->
+    <!-- Modal de Feedback -->
     <div id="feedback-modal" class="fixed inset-0 bg-gray-900 bg-opacity-70 flex items-center justify-center hidden z-50 transition-opacity duration-300 opacity-0">
         <div id="feedback-content" class="bg-white rounded-xl p-6 shadow-2xl border border-gray-200 max-w-md w-full transform transition-transform duration-300 scale-95">
             
             <div class="flex items-start">
-                <!-- Icône dynamique -->
-                <div id="feedback-icon" class="flex-shrink-0 mr-4 mt-1">
-                    <!-- Icon placeholder -->
-                </div>
-                
+                <div id="feedback-icon" class="flex-shrink-0 mr-4 mt-1"></div>
                 <div>
                     <h3 id="feedback-title" class="text-lg font-bold text-gray-900 mb-1">Notification</h3>
                     <p id="feedback-message" class="text-sm text-gray-600"></p>
@@ -148,14 +151,17 @@
             </div>
 
             <div class="flex justify-end mt-6">
-                <button id="feedback-close-btn" onclick="closeFeedbackModal()" class="px-5 py-2 text-white rounded-lg text-sm font-semibold transition duration-300 focus:outline-none focus:ring-2 focus:ring-opacity-50 bg-indigo-600 hover:bg-indigo-700">
+                <!-- MODIFICATION : Suppression onclick, ID existant -->
+                <button id="feedback-close-btn" class="px-5 py-2 text-white rounded-lg text-sm font-semibold transition duration-300 focus:outline-none focus:ring-2 focus:ring-opacity-50 bg-indigo-600 hover:bg-indigo-700">
                     Fermer
                 </button>
             </div>
         </div>
     </div>
-    <div id="delete-modal" class="fixed inset-0 bg-gray-900 bg-opacity-75 z-50 flex items-center justify-center hidden" onclick="if(event.target.id === 'delete-modal') closeDeleteModal()">
-        <div class="bg-white rounded-xl shadow-2xl w-full max-w-md p-6 m-4 transform transition-all" onclick="event.stopPropagation()">
+
+    <!-- Modal de Suppression -->
+    <div id="delete-modal" class="fixed inset-0 bg-gray-900 bg-opacity-75 z-50 flex items-center justify-center hidden">
+        <div class="bg-white rounded-xl shadow-2xl w-full max-w-md p-6 m-4 transform transition-all" id="delete-modal-content">
             <div class="text-center">
                 <div class="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-red-100 mb-4">
                     <i class="fas fa-exclamation-triangle text-red-600 text-xl"></i>
@@ -171,7 +177,8 @@
             </div>
 
             <div class="mt-6 flex gap-3 justify-center">
-                <button type="button" onclick="closeDeleteModal()" 
+                <!-- MODIFICATION : Ajout ID pour le JS -->
+                <button type="button" id="btn-cancel-delete"
                     class="w-full inline-flex justify-center rounded-lg border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:text-sm transition-colors">
                     Annuler
                 </button>
@@ -185,8 +192,7 @@
 {% endblock %}
 
 {% block extra_js %}
-    <!-- Récupération des données initiales (via |json_script) -->
-    <!-- ... (Vos json_script tags sont ici) ... -->
+    <!-- Injection des données JSON (CSP Safe) -->
     <script id="exception_days_data" type="application/json">
         [
             {% for day in exception_days %}
@@ -211,21 +217,6 @@
         ]
     </script>
 
-    <!-- Définition des variables globales pour le JS -->
-    <script>
-        // Lecture du jeton CSRF. Cette lecture est maintenant beaucoup plus fiable car 
-        // le tag {% csrf_token %} a été ajouté au bloc 'content'.
-        const csrfInput = document.querySelector('[name=csrfmiddlewaretoken]');
-        
-        // Ajout d'une vérification de nullité pour éviter l'erreur
-        const CSRF_TOKEN = csrfInput ? csrfInput.value : ''; 
-        
-        // L'URL de l'API doit être définie ici en utilisant le tag Django
-        // VEUILLEZ VÉRIFIER QUE LE NOM D'URL 'exception_management' EST CORRECT DANS urls.py
-        const API_URL = "{% url 'exception_management' %}"; 
-    </script>
-
-    <!-- Inclusion du fichier JavaScript externe. 
-         Vérifiez ce chemin si vous avez toujours une erreur 404 ! -->
+    <!-- Inclusion du script JS -->
     <script src="{% static 'js/schools/exception_management.js' %}"></script>
 {% endblock %}

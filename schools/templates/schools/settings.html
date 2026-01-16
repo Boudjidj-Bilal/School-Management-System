@@ -1,4 +1,5 @@
 {% extends 'base.html' %}
+{% load static %}
 
 {% block content %}
 <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -125,15 +126,9 @@
         </form>
     </div>
 </div>
+{% endblock %}
 
-<script>
-    const colorInput = document.querySelector('input[type="color"]');
-    const colorCode = document.getElementById('color-code');
-    
-    if(colorInput && colorCode) {
-        colorInput.addEventListener('input', (e) => {
-            colorCode.textContent = e.target.value;
-        });
-    }
-</script>
+{% block extra_js %}
+<!-- MODIFICATION : Suppression du script inline et inclusion du fichier externe -->
+<script src="{% static 'js/schools/settings.js' %}"></script>
 {% endblock %}

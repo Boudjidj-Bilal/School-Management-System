@@ -17,7 +17,11 @@
 
         <!-- Formulaire -->
         <div class="p-8">
-            <form id="edit-school-form" class="space-y-6">
+            <!-- MODIFICATION : Ajout des data-attributes pour les URLs API -->
+            <form id="edit-school-form" class="space-y-6"
+                  data-update-url="{% url 'api_update_school' school_id=school.id %}"
+                  data-dashboard-url="{% url 'dashboard' %}">
+                  
                 {% csrf_token %}
                 
                 <!-- Nom -->
@@ -90,15 +94,5 @@
 {% endblock %}
 
 {% block extra_js %}
-    <script>
-        // Configuration injectée par Django pour le JS
-        window.SCHOOL_CONFIG = {
-            csrfToken: "{{ csrf_token }}",
-            updateUrl: "{% url 'api_update_school' school_id=school.id %}",
-            dashboardUrl: "{% url 'dashboard' %}"
-        };
-    </script>
-    
-    <!-- Le fichier JS sera créé à l'étape suivante -->
     <script src="{% static 'js/schools/edit_school.js' %}"></script>
 {% endblock %}
