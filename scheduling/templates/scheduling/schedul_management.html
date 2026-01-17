@@ -4,9 +4,23 @@
 {% block title %}Gestion du Planning : {{ classe.name }} ({{ current_year.name }}){% endblock %}
 
 {% block content %}
+    <!-- Jeton CSRF pour le JS -->
     {% csrf_token %}
+    <input type="hidden" id="csrf-token" value="{{ csrf_token }}">
 
-    <div class="max-w-7xl mx-auto p-4 sm:p-8">
+    <!-- Conteneur principal avec les données de configuration injectées -->
+    <div id="schedule-manager-container" 
+         class="max-w-7xl mx-auto p-4 sm:p-8"
+         data-class-pk="{{ classe.pk }}"
+         data-year-pk="{{ current_year.pk }}"
+         data-year-min-time="{{ current_year.min_time|time:'H:i' }}"
+         data-year-max-time="{{ current_year.max_time|time:'H:i' }}"
+         data-year-start-date="{{ current_year.start_date|date:'Y-m-d' }}"
+         data-year-end-date="{{ current_year.end_date|date:'Y-m-d' }}"
+         data-api-manage-template="{% url 'scheduling:manage_weekly_schedule_template_view' %}"
+         data-api-manage-course="{% url 'scheduling:manage_course_template_view' %}"
+         data-api-create-scheduled="{% url 'scheduling:create_scheduled_courses_view' %}">
+
         <header class="mb-8 border-b pb-4 border-gray-200">
             <a href="#" onclick="history.back();" class="text-indigo-600 hover:text-indigo-800 text-sm font-medium transition duration-150">
                 <i class="fas fa-arrow-left mr-2"></i> Retour
@@ -132,12 +146,11 @@
         <!-- Conteneur pour les "Cartes" de Cours -->
         <section class="w-full bg-white rounded-xl shadow-2xl p-6 border border-gray-100">
             
-            <!-- [MODIFIÉ] Ajout du conteneur pour le total -->
             <div class="flex flex-wrap justify-between items-center mb-6 border-b pb-3">
                 <h2 class="text-2xl font-bold text-gray-800 flex items-center">
                     <i class="fas fa-table text-indigo-500 mr-3"></i> Cours dans le Modèle Actuel
                 </h2>
-                <!-- [NOUVEAU] Badge pour le total des heures -->
+                <!-- Badge pour le total des heures -->
                 <div id="template-total-hours" class="text-lg font-bold text-gray-700 bg-indigo-100 text-indigo-800 px-4 py-2 rounded-lg shadow-inner" style="display: none;">
                     Total: 0h 00m
                 </div>
@@ -197,7 +210,7 @@
 {% endblock %}
 
 {% block extra_js %}
-{# --- BLOC JSON SÉRIALISÉ --- #}
+{# --- BLOC JSON SÉRIALISÉ (SAFE) --- #}
 {{ classrooms_data|json_script:"classrooms_data" }}
 {{ teacher_subjects_data|json_script:"teacher_subjects_data" }}
 {{ weekly_scheduling_templates_data|json_script:"weekly_templates_data" }}
@@ -205,38 +218,6 @@
 {{ exception_days_data|json_script:"exception_days_data" }}
 {{ exception_times_data|json_script:"exception_times_data" }}
 
-{# --- VARIABLES DE L'ANNÉE --- #}
-<script>
-    // Variables contextuelles
-    const CLASS_PK = "{{ classe.pk }}"; 
-    const YEAR_PK = "{{ current_year.pk }}"; 
-    const YEAR_MIN_TIME = "{{ current_year.min_time|time:'H:i' }}";
-    const YEAR_MAX_TIME = "{{ current_year.max_time|time:'H:i' }}";
-    const YEAR_START_DATE = "{{ current_year.start_date|date:'Y-m-d' }}";
-    const YEAR_END_DATE = "{{ current_year.end_date|date:'Y-m-d' }}";
-    
-    // Récupération du jeton CSRF
-    const CSRF_TOKEN = document.querySelector('[name=csrfmiddlewaretoken]').value;
-    
-    // URLs des APIs
-    const API_URLS = {
-        MANAGE_TEMPLATE: "{% url 'scheduling:manage_weekly_schedule_template_view' %}",
-        MANAGE_COURSE: "{% url 'scheduling:manage_course_template_view' %}",
-        CREATE_SCHEDULED_COURSES: "{% url 'scheduling:create_scheduled_courses_view' %}",
-    };
-    
-    // Jours de la semaine (pour le rendu)
-    const DAYS_OF_WEEK = [
-        { key: 1, name: 'Lundi' },
-        { key: 2, name: 'Mardi' },
-        { key: 3, name: 'Mercredi' },
-        { key: 4, name: 'Jeudi' },
-        { key: 5, name: 'Vendredi' },
-        { key: 6, name: 'Samedi' },
-        { key: 7, name: 'Dimanche' },
-    ];
-</script>
-
+<!-- MODIFICATION : Suppression du script inline. La config est passée via data-attributes dans le conteneur principal. -->
 <script src="{% static 'js/scheduling/schedul_management.js' %}"></script>
 {% endblock %}
-

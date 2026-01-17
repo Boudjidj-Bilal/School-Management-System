@@ -222,7 +222,7 @@ def api_manage_evaluation_views(request):
     user = request.user
     user_type = get_user_type(user)
 
-    if user_type != "Teacher":
+    if not user_type == "Teacher":
         return JsonResponse({"success": False, "message": "Accès refusé."}, status=403)
        
     try:

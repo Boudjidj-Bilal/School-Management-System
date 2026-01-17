@@ -78,14 +78,14 @@ def login(request):
                         return JsonResponse({"success": False, "message": "Impossible de vous connecter pour le moment."}, status=400)
 
                     # Si on est à l'étape de creation ou fini d'une année, impossible de se connecter
-                    if year.creation == True or year.finished == True:
+                    if year.creation or year.finished:
                         return JsonResponse({"success": False, "message": "Impossible de vous connecter pour le moment."}, status=400)
                     
                     # On vérifie si ces utilisateurs on le droit de se connecter :
                     elif user_type in ["Teacher", "CPE", "Student", "Parent"]:
 
                         # Si on est à l'étape d'enregistrement d'une année, impossible de se connecter
-                        if year.registration == True:
+                        if year.registration:
                             return JsonResponse({"success": False, "message": "Impossible de vous connecter pour le moment."}, status=400)
 
             user_login = login_user(request, username, password)

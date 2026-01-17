@@ -58,7 +58,8 @@
         </div>
         
         <div class="mt-4 md:mt-0">
-            <a href="javascript:history.back()" class="text-gray-600 hover:text-gray-900 font-medium">
+            <!-- MODIFICATION : Suppression du JS inline, ajout ID -->
+            <a href="#" id="btn-back" class="text-gray-600 hover:text-gray-900 font-medium">
                 <i class="fas fa-arrow-left mr-2"></i> Retour
             </a>
         </div>
@@ -87,7 +88,8 @@
                     <input type="hidden" name="action" value="generate_all">
                     
                     {% if can_generate %}
-                        <button type="button" onclick="openModal()" class="flex items-center px-5 py-2.5 bg-indigo-600 text-white font-semibold rounded-lg shadow-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all duration-200">
+                        <!-- MODIFICATION : Suppression onclick, ajout ID -->
+                        <button type="button" id="btn-open-generate-modal" class="flex items-center px-5 py-2.5 bg-indigo-600 text-white font-semibold rounded-lg shadow-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all duration-200">
                             <i class="fas fa-cogs mr-2"></i> Générer tous les bulletins
                         </button>
                     {% else %}
@@ -95,7 +97,7 @@
                             <button type="button" disabled class="flex items-center px-5 py-2.5 bg-gray-300 text-gray-500 font-semibold rounded-lg cursor-not-allowed">
                                 <i class="fas fa-lock mr-2"></i> Générer tous les bulletins
                             </button>
-                            </div>
+                        </div>
                     {% endif %}
                 </form>
                 
@@ -242,10 +244,12 @@
         </div>
     </div>
 </div>
+
 <div id="confirm-modal" class="fixed z-50 inset-0 overflow-y-auto hidden" aria-labelledby="modal-title" role="dialog" aria-modal="true">
     <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
         
-        <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" aria-hidden="true" onclick="closeModal()"></div>
+        <!-- MODIFICATION : Suppression onclick, ajout ID -->
+        <div id="modal-overlay" class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" aria-hidden="true"></div>
 
         <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
 
@@ -273,7 +277,8 @@
                 <button type="button" id="confirm-btn" class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-indigo-600 text-base font-medium text-white hover:bg-indigo-700 focus:outline-none sm:ml-3 sm:w-auto sm:text-sm">
                     Oui, générer
                 </button>
-                <button type="button" onclick="closeModal()" class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm">
+                <!-- MODIFICATION : Suppression onclick, ajout ID -->
+                <button type="button" id="btn-cancel-modal" class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm">
                     Annuler
                 </button>
             </div>
@@ -283,37 +288,6 @@
 {% endblock %}
 
 {% block extra_js %}
-<script>
-    // Éléments
-    const modal = document.getElementById('confirm-modal');
-    const form = document.getElementById('generate-form');
-    const confirmBtn = document.getElementById('confirm-btn');
-
-    // Fonctions d'ouverture/fermeture
-    function openModal() {
-        modal.classList.remove('hidden');
-    }
-
-    function closeModal() {
-        modal.classList.add('hidden');
-    }
-
-    // Action de confirmation
-    confirmBtn.addEventListener('click', function() {
-        // On change le texte du bouton pour montrer que ça charge
-        this.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> Traitement...';
-        this.disabled = true;
-        this.classList.add('opacity-50', 'cursor-not-allowed');
-        
-        // On soumet le formulaire manuellement
-        form.submit();
-    });
-
-    // Fermeture avec la touche ESC
-    document.addEventListener('keydown', function(event) {
-        if (event.key === "Escape") {
-            closeModal();
-        }
-    });
-</script>
+<!-- MODIFICATION : Inclusion du script JS externe -->
+<script src="{% static 'js/documents/manage_report_cards.js' %}"></script>
 {% endblock %}

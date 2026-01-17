@@ -170,12 +170,14 @@
                         <span>Notes</span>
                     </a>
                 </li>
-                <li>
-                    <a href="{% url 'scheduling:view_teacher_schedule' pk_staff=request.user.staff_user.id %}" class="flex items-center space-x-3 text-gray-300 hover:bg-gray-700 hover:text-white rounded-lg p-2 transition-colors duration-200">
-                        <i class="fas fa-calendar-week text-lg"></i>
-                        <span>Planning</span>
-                    </a>
-                </li>
+                {% if request.user.staff_user.id %}
+                    <li>
+                        <a href="{% url 'scheduling:view_teacher_schedule' pk_staff=request.user.staff_user.id %}" class="flex items-center space-x-3 text-gray-300 hover:bg-gray-700 hover:text-white rounded-lg p-2 transition-colors duration-200">
+                            <i class="fas fa-calendar-week text-lg"></i>
+                            <span>Planning</span>
+                        </a>
+                    </li>
+                {% endif %}
                 <li>
                     <a href="{% url 'grades:appreciations_dashboard' %}" class="flex items-center space-x-3 text-gray-300 hover:bg-gray-700 hover:text-white rounded-lg p-2 transition-colors duration-200">
                         <i class="fas fa-comment-alt text-lg"></i>
@@ -219,12 +221,14 @@
 
             <!-- SECTION ÉLÈVE -->
             {% if user_is_student %}
-                <li>
-                    <a href="{% url 'scheduling:view_class_schedule_page' pk_class=request.user.student_user.class_years.last.student_class.id %}" class="flex items-center space-x-3 text-gray-300 hover:bg-gray-700 hover:text-white rounded-lg p-2 transition-colors duration-200">
-                        <i class="fas fa-calendar-alt text-lg"></i>
-                        <span>Planning</span>
-                    </a>
-                </li>
+                {% if request.user.student_user.class_years.last.student_class.id %}
+                    <li>
+                        <a href="{% url 'scheduling:view_class_schedule_page' pk_class=request.user.student_user.class_years.last.student_class.id %}" class="flex items-center space-x-3 text-gray-300 hover:bg-gray-700 hover:text-white rounded-lg p-2 transition-colors duration-200">
+                            <i class="fas fa-calendar-alt text-lg"></i>
+                            <span>Planning</span>
+                        </a>
+                    </li>
+                {% endif %}
                 <li>
                     <a href="{% url 'grades:student_grades_dashboard' %}" class="flex items-center space-x-3 text-gray-300 hover:bg-gray-700 hover:text-white rounded-lg p-2 transition-colors duration-200">
                         <i class="fas fa-clipboard-list text-lg"></i>
