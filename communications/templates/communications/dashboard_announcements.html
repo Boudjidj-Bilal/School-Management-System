@@ -5,8 +5,20 @@
 
 {% block content %}
 {% csrf_token %}
+<input type="hidden" id="csrf-token" value="{{ csrf_token }}">
 
-<div class="bg-white rounded-xl shadow-lg border border-gray-200 min-h-[calc(100vh-140px)] flex flex-col">
+{# Résolution des URLs API #}
+{% url 'communications:api_announcement_list' as api_list_url %}
+{% url 'communications:api_announcement_create' as api_create_url %}
+{% url 'communications:api_announcement_read' as api_read_url %}
+
+<!-- Conteneur principal avec Configuration Injectée -->
+<div id="announcements-container" 
+     class="bg-white rounded-xl shadow-lg border border-gray-200 min-h-[calc(100vh-140px)] flex flex-col"
+     data-api-list-url="{{ api_list_url }}"
+     data-api-create-url="{{ api_create_url }}"
+     data-api-read-url="{{ api_read_url }}"
+     data-can-send="{{ can_send|yesno:'true,false' }}">
     
     <!-- EN-TÊTE -->
     <div class="p-6 border-b border-gray-200 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
@@ -62,7 +74,7 @@
         <!-- Liste : Éléments envoyés -->
         <div id="tab-content-sent" class="tab-content space-y-4 hidden"></div>
 
-        <!-- [AJOUT] Liste : Toutes les annonces -->
+        <!-- Liste : Toutes les annonces -->
         <div id="tab-content-all" class="tab-content space-y-4 hidden"></div>
 
         <!-- État vide (Template) -->
@@ -102,7 +114,6 @@
                 <div id="view-attachments-list" class="grid grid-cols-1 sm:grid-cols-2 gap-3"></div>
             </div>
 
-            <!-- [CORRECTION] Restauration des éléments de statistiques manquants -->
             <div id="view-stats-container" class="hidden p-4 bg-indigo-50 rounded-lg border border-indigo-100">
                 <h4 class="text-sm font-bold text-indigo-900 mb-2">Suivi de lecture</h4>
                 <div class="flex items-center justify-between text-sm">
@@ -132,7 +143,7 @@
 </div>
 
 {% if can_send %}
-<!-- MODALE CRÉATION (Inchangée) -->
+<!-- MODALE CRÉATION -->
 <div id="modal-create" class="fixed inset-0 z-50 flex items-center justify-center bg-gray-900 bg-opacity-50 hidden opacity-0 transition-opacity duration-300">
     <div class="bg-white rounded-xl shadow-2xl w-full max-w-3xl mx-4 flex flex-col max-h-[90vh] transform scale-95 transition-transform duration-300">
          <!-- Header -->
@@ -208,21 +219,9 @@
 {% endblock %}
 
 {% block extra_js %}
-    {% url 'communications:api_announcement_list' as api_list_url %}
-    {% url 'communications:api_announcement_create' as api_create_url %}
-    {% url 'communications:api_announcement_read' as api_read_url %}
+    <!-- Passage des données complexes (Cibles disponibles) via json_script -->
+    {{ available_targets|json_script:"available-targets-data" }}
     
-    <script>
-        const csrfEl = document.querySelector('[name=csrfmiddlewaretoken]');
-        window.CSRF_TOKEN = csrfEl ? csrfEl.value : "";
-        window.AVAILABLE_TARGETS = JSON.parse('{{ available_targets|escapejs|default:"{}" }}');
-        
-        window.API_URLS = {
-            LIST: "{{ api_list_url|escapejs }}",
-            CREATE: "{{ api_create_url|escapejs }}",
-            READ: "{{ api_read_url|escapejs }}"
-        };
-    </script>
-    
+    <!-- MODIFICATION : Suppression du script inline, chargement externe -->
     <script src="{% static 'js/communications/dashboard_announcements.js' %}"></script>
 {% endblock %}

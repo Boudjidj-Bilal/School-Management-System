@@ -1,16 +1,53 @@
 // ====================================================================
 // LOGIQUE JAVASCRIPT POUR LES ANNONCES (dashboard_announcements.js)
+// VERSION SÉCURISÉE (CSP Compliant)
 // ====================================================================
 
 document.addEventListener('DOMContentLoaded', () => {
     
-    // --- CONFIGURATION ---
-    const API = window.API_URLS;
-    const CSRF = window.CSRF_TOKEN;
-    const TARGETS_CONFIG = window.AVAILABLE_TARGETS || {};
+    // --- CONFIGURATION & CONTEXTE ---
+    const container = document.getElementById('announcements-container');
+    const csrfInput = document.getElementById('csrf-token');
 
-    if (!API) {
-        console.error("ERREUR CRITIQUE : API_URLS non défini dans le HTML.");
+    if (!container) {
+        console.error("ERREUR CRITIQUE : Conteneur #announcements-container introuvable.");
+        return;
+    }
+
+    // 1. Récupération des URLs depuis les data-attributes
+    const API = {
+        LIST: container.dataset.apiListUrl,
+        CREATE: container.dataset.apiCreateUrl,
+        READ: container.dataset.apiReadUrl
+    };
+
+    // 2. Récupération du Token CSRF
+    const CSRF = csrfInput ? csrfInput.value : '';
+
+    // 3. Récupération des cibles (Targets) depuis le script JSON sécurisé
+    let TARGETS_CONFIG = {};
+    try {
+        const targetsScript = document.getElementById('available-targets-data');
+        if (targetsScript) {
+            // Premier parsing : Récupère le contenu du tag json_script
+            const rawContent = JSON.parse(targetsScript.textContent);
+            
+            // [CORRECTION] Second parsing si nécessaire
+            // Comme la vue envoie déjà un json.dumps(), le résultat ici est une string JSON ("{...}")
+            // Il faut donc la parser une seconde fois pour obtenir l'objet JS réel.
+            if (typeof rawContent === 'string') {
+                TARGETS_CONFIG = JSON.parse(rawContent);
+            } else {
+                TARGETS_CONFIG = rawContent;
+            }
+            console.log("Configuration Destinataires chargée :", TARGETS_CONFIG);
+        }
+    } catch (e) {
+        console.error("Erreur parsing targets data:", e);
+    }
+
+    if (!API.LIST) {
+        console.error("ERREUR CRITIQUE : URLs API non définies dans le HTML.");
         return;
     }
 
@@ -33,9 +70,9 @@ document.addEventListener('DOMContentLoaded', () => {
     const viewStatsContainer = document.getElementById('view-stats-container');
     const viewFooterAction = document.getElementById('view-footer-action');
     const checkRead = document.getElementById('check-read');
-    const checkReadLabel = document.getElementById('label-check-read'); // Le parent label
+    const checkReadLabel = document.getElementById('label-check-read'); 
     const readConfirmation = document.getElementById('read-confirmation');
-    const readOnlyMsg = document.getElementById('read-only-msg'); // [AJOUT]
+    const readOnlyMsg = document.getElementById('read-only-msg');
     
     let currentAnnouncementId = null;
 
@@ -62,11 +99,16 @@ document.addEventListener('DOMContentLoaded', () => {
             colors = 'bg-white border-l-4 border-red-500 text-gray-800';
             icon = '<i class="fas fa-exclamation-circle text-red-500 text-xl"></i>';
         }
-        notif.className = `${colors} shadow-lg rounded-r-lg p-4 flex items-center space-x-3 transform transition-all duration-300 translate-x-full pointer-events-auto min-w-[300px]`;
+        notif.className = `${colors} shadow-lg rounded-r-lg p-4 flex items-center space-x-3 transform transition-all duration-300 translate-x-full pointer-events-auto min-w-[300px] mb-3`;
         notif.innerHTML = `<div>${icon}</div><div class="font-medium text-sm">${message}</div><button class="ml-auto text-gray-400 hover:text-gray-600 focus:outline-none" onclick="this.parentElement.remove()"><i class="fas fa-times"></i></button>`;
         notificationArea.appendChild(notif);
+        
         requestAnimationFrame(() => notif.classList.remove('translate-x-full'));
-        setTimeout(() => { notif.classList.add('translate-x-full', 'opacity-0'); setTimeout(() => notif.remove(), 300); }, 4000);
+        
+        setTimeout(() => { 
+            notif.classList.add('translate-x-full', 'opacity-0'); 
+            setTimeout(() => notif.remove(), 300); 
+        }, 4000);
     }
 
 
@@ -78,8 +120,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
     tabBtns.forEach(btn => {
         btn.addEventListener('click', () => {
-            tabBtns.forEach(b => b.classList.remove('active-tab', 'border-indigo-500', 'text-indigo-600'));
-            tabBtns.forEach(b => b.classList.add('border-transparent', 'text-gray-500'));
+            tabBtns.forEach(b => {
+                b.classList.remove('active-tab', 'border-indigo-500', 'text-indigo-600');
+                b.classList.add('border-transparent', 'text-gray-500');
+            });
             
             btn.classList.add('active-tab', 'border-indigo-500', 'text-indigo-600');
             btn.classList.remove('border-transparent', 'text-gray-500');
@@ -102,7 +146,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (document.getElementById('tab-content-sent')) {
                     renderList('sent', data.data.sent);
                 }
-                // [AJOUT] Rendu de l'onglet 'all' s'il existe
                 if (document.getElementById('tab-content-all')) {
                     renderList('all', data.data.all);
                 }
@@ -151,7 +194,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
         items.forEach(item => {
             const el = document.createElement('div');
-            // Pour 'all', on affiche comme 'inbox' mais sans bordure bleue si non lu (sauf si destinataire)
             const isUnread = (type === 'inbox' && !item.is_read) || (type === 'all' && item.is_recipient && !item.is_read);
             
             el.className = `bg-white p-4 rounded-lg border ${isUnread ? 'border-l-4 border-l-indigo-500 border-gray-200 bg-indigo-50' : 'border-gray-200 hover:border-indigo-300'} shadow-sm cursor-pointer transition-all hover:shadow-md`;
@@ -161,14 +203,12 @@ document.addEventListener('DOMContentLoaded', () => {
             if (item.type_code === 'TEST') iconClass = 'fa-file-alt text-red-500';
             if (item.type_code === 'COURSE') iconClass = 'fa-graduation-cap text-green-500';
 
-            // Cible affichée : pour 'inbox' c'est "De:", pour 'sent' et 'all' c'est "Pour:" ou "De:" selon contexte
             let infoLine = "";
             if (type === 'inbox') {
                 infoLine = `De : <span class="font-medium">${item.sender}</span>`;
             } else if (type === 'sent') {
                 infoLine = `Pour : ${item.targets_summary || 'Destinataires multiples'}`;
             } else if (type === 'all') {
-                // Dans la vue globale, on affiche l'expéditeur
                 infoLine = `De : <span class="font-medium">${item.sender}</span>`;
             }
 
@@ -194,12 +234,13 @@ document.addEventListener('DOMContentLoaded', () => {
                 </div>
             `;
             
-            el.onclick = () => openViewModal(type, item);
+            el.addEventListener('click', () => openViewModal(type, item));
             container.appendChild(el);
         });
     }
 
     function renderSentStats(stats) {
+        if (!stats) return '';
         let color = 'bg-indigo-600';
         if (stats.percent < 30) color = 'bg-red-500';
         else if (stats.percent < 70) color = 'bg-orange-500';
@@ -229,7 +270,6 @@ document.addEventListener('DOMContentLoaded', () => {
         if(viewContent) viewContent.innerHTML = item.content.replace(/\n/g, '<br>');
         if(viewTypeBadge) viewTypeBadge.textContent = item.type;
         
-        // Pièces jointes
         if (item.attachments && item.attachments.length > 0) {
             if(viewAttachmentsContainer) viewAttachmentsContainer.classList.remove('hidden');
             if(viewAttachmentsList) {
@@ -249,40 +289,39 @@ document.addEventListener('DOMContentLoaded', () => {
             if(viewAttachmentsContainer) viewAttachmentsContainer.classList.add('hidden');
         }
 
-        // --- GESTION DU FOOTER SELON LE TYPE ET LE RÔLE ---
+        // Gestion du footer
         if (type === 'sent') {
-            // Mode Expéditeur : Stats uniquement
             if(viewFooterAction) viewFooterAction.classList.add('hidden');
-            if(viewStatsContainer) viewStatsContainer.classList.remove('hidden');
-            document.getElementById('view-stats-read').textContent = item.stats.read;
-            document.getElementById('view-stats-total').textContent = item.stats.total;
-            document.getElementById('view-stats-percent').textContent = item.stats.percent + '%';
-            document.getElementById('view-stats-bar').style.width = item.stats.percent + '%';
+            if(viewStatsContainer) {
+                viewStatsContainer.classList.remove('hidden');
+                if (item.stats) {
+                    document.getElementById('view-stats-read').textContent = item.stats.read;
+                    document.getElementById('view-stats-total').textContent = item.stats.total;
+                    document.getElementById('view-stats-percent').textContent = item.stats.percent + '%';
+                    document.getElementById('view-stats-bar').style.width = item.stats.percent + '%';
+                }
+            }
         } else {
-            // Mode Inbox ou All
             if(viewFooterAction) viewFooterAction.classList.remove('hidden');
             if(viewStatsContainer) viewStatsContainer.classList.add('hidden');
             
-            // Si c'est 'all' et que je ne suis PAS destinataire -> Lecture seule
             if (type === 'all' && !item.is_recipient) {
                 if(checkReadLabel) checkReadLabel.classList.add('hidden');
                 if(readConfirmation) readConfirmation.classList.add('hidden');
-                if(readOnlyMsg) readOnlyMsg.classList.remove('hidden'); // Affiche "Mode consultation"
+                if(readOnlyMsg) readOnlyMsg.classList.remove('hidden');
             } else {
-                // Je suis destinataire (ou inbox normal)
                 if(readOnlyMsg) readOnlyMsg.classList.add('hidden');
                 
                 if (item.is_read) {
-                    // Déjà lu
                     if(checkReadLabel) checkReadLabel.classList.add('hidden');
                     if(readConfirmation) readConfirmation.classList.remove('hidden');
                     document.getElementById('read-date').textContent = item.read_at || '';
                 } else {
-                    // Pas encore lu
                     if(checkReadLabel) checkReadLabel.classList.remove('hidden');
                     if(checkRead) {
                         checkRead.checked = false;
                         checkRead.disabled = false;
+                        checkRead.parentElement.classList.remove('hidden'); 
                     }
                     if(readConfirmation) readConfirmation.classList.add('hidden');
                 }
@@ -303,7 +342,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     });
                     if (response.ok) {
                         e.target.disabled = true;
-                        e.target.parentElement.classList.add('hidden'); // Cache la case
+                        e.target.parentElement.classList.add('hidden'); 
                         if(readConfirmation) readConfirmation.classList.remove('hidden');
                         document.getElementById('read-date').textContent = "à l'instant";
                         loadAnnouncements(); 
@@ -329,58 +368,60 @@ document.addEventListener('DOMContentLoaded', () => {
             openModal(modalCreate);
         });
 
-        formCreate.addEventListener('submit', async (e) => {
-            e.preventDefault();
-            
-            const targets = {
-                classes: getCheckedValues('target-class'),
-                staff_groups: getCheckedValues('target-group'),
-                students: [],
-                staff_individuals: []
-            };
-
-            if (targets.classes.length === 0 && targets.staff_groups.length === 0) {
-                showNotification("Veuillez sélectionner au moins un destinataire.", "error");
-                return;
-            }
-
-            const formData = new FormData(formCreate);
-            formData.append('targets', JSON.stringify(targets));
-
-            const submitBtn = document.getElementById('btn-submit-announcement');
-            const originalText = submitBtn.innerHTML;
-            submitBtn.disabled = true;
-            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> Envoi...';
-
-            try {
-                const response = await fetch(API.CREATE, {
-                    method: 'POST',
-                    headers: { 'X-CSRFToken': CSRF },
-                    body: formData
-                });
+        if (formCreate) {
+            formCreate.addEventListener('submit', async (e) => {
+                e.preventDefault();
                 
-                const json = await response.json();
-                
-                if (json.success) {
-                    closeModal(modalCreate);
-                    formCreate.reset();
-                    if(fileList) fileList.innerHTML = '';
-                    if(targetsSummary) targetsSummary.classList.add('hidden');
-                    loadAnnouncements();
-                    
-                    showNotification("Annonce envoyée avec succès !", 'success');
-                } else {
-                    showNotification("Erreur : " + json.message, 'error');
+                const targets = {
+                    classes: getCheckedValues('target-class'),
+                    staff_groups: getCheckedValues('target-group'),
+                    students: [],
+                    staff_individuals: []
+                };
+
+                if (targets.classes.length === 0 && targets.staff_groups.length === 0) {
+                    showNotification("Veuillez sélectionner au moins un destinataire.", "error");
+                    return;
                 }
 
-            } catch (err) {
-                console.error(err);
-                showNotification("Erreur technique lors de l'envoi.", 'error');
-            } finally {
-                submitBtn.disabled = false;
-                submitBtn.innerHTML = originalText;
-            }
-        });
+                const formData = new FormData(formCreate);
+                formData.append('targets', JSON.stringify(targets));
+
+                const submitBtn = document.getElementById('btn-submit-announcement');
+                const originalText = submitBtn.innerHTML;
+                submitBtn.disabled = true;
+                submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> Envoi...';
+
+                try {
+                    const response = await fetch(API.CREATE, {
+                        method: 'POST',
+                        headers: { 'X-CSRFToken': CSRF },
+                        body: formData
+                    });
+                    
+                    const json = await response.json();
+                    
+                    if (json.success) {
+                        closeModal(modalCreate);
+                        formCreate.reset();
+                        if(fileList) fileList.innerHTML = '';
+                        if(targetsSummary) targetsSummary.classList.add('hidden');
+                        loadAnnouncements();
+                        
+                        showNotification("Annonce envoyée avec succès !", 'success');
+                    } else {
+                        showNotification("Erreur : " + json.message, 'error');
+                    }
+
+                } catch (err) {
+                    console.error(err);
+                    showNotification("Erreur technique lors de l'envoi.", 'error');
+                } finally {
+                    submitBtn.disabled = false;
+                    submitBtn.innerHTML = originalText;
+                }
+            });
+        }
 
         if(fileInput) {
             fileInput.addEventListener('change', (e) => {
@@ -402,8 +443,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function renderTargetSelectors() {
         if (!targetsContainer) return;
-        if (targetsContainer.innerHTML.trim() !== '' && targetsContainer.querySelector('input')) return;
         
+        // On vide systématiquement pour re-rendre proprement si la config a changé
         targetsContainer.innerHTML = '';
 
         if (TARGETS_CONFIG.classes && TARGETS_CONFIG.classes.length > 0) {
@@ -415,12 +456,13 @@ document.addEventListener('DOMContentLoaded', () => {
             grid.className = 'grid grid-cols-2 gap-2';
             
             TARGETS_CONFIG.classes.forEach(cls => {
-                grid.innerHTML += `
-                    <label class="flex items-center space-x-2 cursor-pointer bg-white p-2 rounded border border-gray-200 hover:border-indigo-300">
-                        <input type="checkbox" value="${cls.id}" class="target-class form-checkbox h-4 w-4 text-indigo-600 rounded border-gray-300 focus:ring-indigo-500">
-                        <span class="text-sm text-gray-700 select-none">${cls.name}</span>
-                    </label>
+                const label = document.createElement('label');
+                label.className = 'flex items-center space-x-2 cursor-pointer bg-white p-2 rounded border border-gray-200 hover:border-indigo-300';
+                label.innerHTML = `
+                    <input type="checkbox" value="${cls.id}" class="target-class form-checkbox h-4 w-4 text-indigo-600 rounded border-gray-300 focus:ring-indigo-500">
+                    <span class="text-sm text-gray-700 select-none">${cls.name}</span>
                 `;
+                grid.appendChild(label);
             });
             section.appendChild(grid);
             targetsContainer.appendChild(section);
@@ -432,16 +474,23 @@ document.addEventListener('DOMContentLoaded', () => {
             section.innerHTML = `<h4 class="text-xs font-bold text-gray-500 uppercase mb-2">Personnel</h4>`;
             
             TARGETS_CONFIG.staff_groups.forEach(grp => {
-                section.innerHTML += `
-                    <label class="flex items-center space-x-2 cursor-pointer mb-2">
-                        <input type="checkbox" value="${grp.code}" class="target-group form-checkbox h-4 w-4 text-pink-600 rounded border-gray-300 focus:ring-pink-500">
-                        <span class="text-sm text-gray-700">${grp.name}</span>
-                    </label>
+                const label = document.createElement('label');
+                label.className = 'flex items-center space-x-2 cursor-pointer mb-2';
+                label.innerHTML = `
+                    <input type="checkbox" value="${grp.code}" class="target-group form-checkbox h-4 w-4 text-pink-600 rounded border-gray-300 focus:ring-pink-500">
+                    <span class="text-sm text-gray-700">${grp.name}</span>
                 `;
+                section.appendChild(label);
             });
             targetsContainer.appendChild(section);
         }
+        
+        // Si aucune cible n'est disponible
+        if ((!TARGETS_CONFIG.classes || TARGETS_CONFIG.classes.length === 0) && (!TARGETS_CONFIG.staff_groups || TARGETS_CONFIG.staff_groups.length === 0)) {
+            targetsContainer.innerHTML = '<p class="text-sm text-red-500 italic">Aucun destinataire disponible.</p>';
+        }
 
+        // Réattache les événements
         targetsContainer.querySelectorAll('input[type="checkbox"]').forEach(cb => {
             cb.addEventListener('change', updateTargetsSummary);
         });

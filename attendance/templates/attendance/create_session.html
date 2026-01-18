@@ -5,12 +5,14 @@
 
 {% block content %}
     
-    <div class="flex flex-col lg:flex-row gap-8">
+    <div id="attendance-container" 
+         class="flex flex-col lg:flex-row gap-8"
+         data-class-id="{{ student_class.id }}"
+         data-api-save-url="{% url 'attendance:api_save_attendance_session' %}"
+         data-api-details-url="{% url 'attendance:api_get_session_details' %}">
         
-        <!-- COLONNE GAUCHE : FORMULAIRE DE SAISIE -->
         <div class="w-full lg:w-3/4">
             
-            <!-- En-tête -->
             <div class="bg-white p-6 rounded-xl shadow-md border border-gray-200 mb-6">
                 <div class="flex justify-between items-center">
                     <div>
@@ -30,13 +32,11 @@
                 </div>
             </div>
 
-            <!-- Formulaire -->
             <form id="attendance-form" class="space-y-6">
                 {% csrf_token %}
                 <input type="hidden" id="session-id" name="session_id" value="">
                 <input type="hidden" id="class-id" name="class_id" value="{{ student_class.id }}">
 
-                <!-- 1. Paramètres de la séance (Date & Heure) -->
                 <div class="bg-white rounded-xl shadow-md border border-gray-200 overflow-hidden">
                     <div class="bg-gray-50 px-6 py-4 border-b border-gray-200">
                         <h2 class="text-lg font-semibold text-gray-800">1. Informations de la séance</h2>
@@ -44,7 +44,6 @@
                     <div class="p-6 grid grid-cols-1 md:grid-cols-3 gap-6">
                         <div>
                             <label for="date" class="block text-sm font-medium text-gray-700 mb-1">Date</label>
-                            <!-- [MODIFIÉ] Ajout de bg-gray-50 pour le contraste -->
                             <input type="date" id="date" name="date" value="{{ today }}" required
                                    class="w-full rounded-md border-gray-300 bg-gray-100 text-gray-900 shadow-sm focus:bg-white focus:border-green-500 focus:ring focus:ring-green-200 transition">
                         </div>
@@ -61,7 +60,6 @@
                     </div>
                 </div>
 
-                <!-- 2. Liste des élèves (Grille de saisie) -->
                 <div class="bg-white rounded-xl shadow-md border border-gray-200 overflow-hidden">
                     <div class="px-6 py-4 border-b border-gray-200 bg-gray-50 flex justify-between items-center">
                         <h2 class="text-lg font-semibold text-gray-800">2. Liste des élèves</h2>
@@ -75,7 +73,6 @@
                         <div class="student-row p-4 flex flex-col sm:flex-row items-center justify-between hover:bg-gray-50 transition-colors" 
                              data-student-id="{{ link.student.id }}">
                             
-                            <!-- Nom de l'élève -->
                             <div class="flex items-center w-full sm:w-1/3 mb-3 sm:mb-0">
                                 <div class="h-10 w-10 rounded-full bg-indigo-100 text-indigo-600 flex items-center justify-center font-bold text-sm mr-3 border border-indigo-200">
                                     {{ link.student.user.first_name|slice:":1" }}{{ link.student.user.last_name|slice:":1" }}
@@ -86,18 +83,14 @@
                                 </div>
                             </div>
 
-                            <!-- Sélecteur de statut (Radio Buttons Stylisés) -->
                             <div class="flex space-x-2 w-full sm:w-2/3 justify-end">
-                                <!-- Option Présent -->
                                 <label class="cursor-pointer flex-1 sm:flex-none">
                                     <input type="radio" name="status_{{ link.student.id }}" value="" checked class="peer sr-only status-radio">
-                                    <!-- [MODIFIÉ] bg-gray-50 par défaut pour ressortir sur le blanc -->
                                     <div class="px-4 py-2 rounded-lg border border-gray-200 text-center text-sm font-medium text-gray-600 bg-gray-50 hover:bg-white hover:border-gray-300 peer-checked:bg-green-100 peer-checked:text-green-800 peer-checked:border-green-400 transition-all shadow-sm">
                                         <i class="fas fa-check mr-1"></i> Présent
                                     </div>
                                 </label>
 
-                                <!-- Option Retard -->
                                 <label class="cursor-pointer flex-1 sm:flex-none">
                                     <input type="radio" name="status_{{ link.student.id }}" value="DELAY" class="peer sr-only status-radio">
                                     <div class="px-4 py-2 rounded-lg border border-gray-200 text-center text-sm font-medium text-gray-600 bg-gray-50 hover:bg-white hover:border-gray-300 peer-checked:bg-orange-100 peer-checked:text-orange-800 peer-checked:border-orange-400 transition-all shadow-sm">
@@ -105,7 +98,6 @@
                                     </div>
                                 </label>
 
-                                <!-- Option Absent -->
                                 <label class="cursor-pointer flex-1 sm:flex-none">
                                     <input type="radio" name="status_{{ link.student.id }}" value="ABSENCE" class="peer sr-only status-radio">
                                     <div class="px-4 py-2 rounded-lg border border-gray-200 text-center text-sm font-medium text-gray-600 bg-gray-50 hover:bg-white hover:border-gray-300 peer-checked:bg-red-100 peer-checked:text-red-800 peer-checked:border-red-400 transition-all shadow-sm">
@@ -122,7 +114,6 @@
                     </div>
                 </div>
 
-                <!-- Bouton Submit -->
                 <div class="flex justify-end pt-4 pb-8">
                     <button type="submit" id="submit-btn" class="px-8 py-3 bg-green-600 text-white font-bold rounded-xl shadow-lg hover:bg-green-700 focus:outline-none focus:ring-4 focus:ring-green-300 transition-transform transform hover:scale-105">
                         <i class="fas fa-save mr-2"></i> Enregistrer l'appel
@@ -132,7 +123,6 @@
         </div>
 
 
-        <!-- COLONNE DROITE : HISTORIQUE -->
         <div class="w-full lg:w-1/4">
             <div class="bg-white rounded-xl shadow-lg border border-gray-200 sticky top-24 overflow-hidden">
                 <div class="p-4 border-b border-gray-200 bg-gray-50">
@@ -141,7 +131,6 @@
                 </div>
                 
                 <div class="max-h-[600px] overflow-y-auto p-2 space-y-2 custom-scrollbar">
-                    <!-- Bouton "Nouvel appel" pour reset le formulaire -->
                     <button id="btn-new-session" class="w-full text-left px-4 py-3 rounded-lg border-2 border-dashed border-gray-300 text-gray-600 hover:border-green-500 hover:text-green-700 hover:bg-green-50 transition-colors flex items-center justify-center mb-2 font-medium bg-gray-50">
                         <i class="fas fa-plus-circle mr-2"></i> Nouvel appel
                     </button>
@@ -175,24 +164,10 @@
 
     </div>
 
-    <!-- Notification Area -->
     <div id="notification-area" class="fixed bottom-4 right-4 z-50 space-y-2"></div>
 
 {% endblock %}
 
 {% block extra_js %}
-    {# URLs des APIs pour le JS #}
-    {% url 'attendance:api_save_attendance_session' as api_save_url %}
-    {% url 'attendance:api_get_session_details' as api_details_url %}
-
-    <script>
-        const CLASS_ID = "{{ student_class.id }}";
-        const CSRF_TOKEN = document.querySelector('[name=csrfmiddlewaretoken]').value;
-        const API_URLS = {
-            SAVE_SESSION: "{{ api_save_url|escapejs }}",
-            GET_DETAILS: "{{ api_details_url|escapejs }}"
-        };
-    </script>
-    
     <script src="{% static 'js/attendance/create_session.js' %}"></script>
 {% endblock %}

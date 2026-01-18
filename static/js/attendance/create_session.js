@@ -1,9 +1,37 @@
-// ====================================================================
-// LOGIQUE JAVASCRIPT POUR LA SAISIE D'APPEL (create_session.js)
-// ====================================================================
+/**
+ * create_session.js
+ * Logique de saisie d'appel (Mode Production Safe)
+ */
 
 document.addEventListener('DOMContentLoaded', () => {
     
+    // ----------------------------------------------------------------------
+    // 1. CONFIGURATION & RÉFÉRENCES (Extraction depuis le DOM)
+    // ----------------------------------------------------------------------
+
+    // Récupération du conteneur de configuration
+    const container = document.getElementById('attendance-container');
+    if (!container) {
+        console.error("Erreur critique : Le conteneur #attendance-container est introuvable.");
+        return;
+    }
+
+    // Extraction des données de configuration (Data Attributes)
+    // Note: data-class-id devient dataset.classId en JS
+    const CLASS_ID = container.dataset.classId;
+    const API_URLS = {
+        SAVE_SESSION: container.dataset.apiSaveUrl,
+        GET_DETAILS: container.dataset.apiDetailsUrl
+    };
+
+    // Récupération du CSRF Token depuis le formulaire
+    const csrfInput = document.querySelector('[name=csrfmiddlewaretoken]');
+    const CSRF_TOKEN = csrfInput ? csrfInput.value : '';
+
+    if (!CLASS_ID || !API_URLS.SAVE_SESSION || !CSRF_TOKEN) {
+        console.error("Configuration manquante (ID classe, API URLs ou CSRF).");
+    }
+
     // --- ÉLÉMENTS DOM ---
     const form = document.getElementById('attendance-form');
     const sessionIdInput = document.getElementById('session-id');
@@ -15,7 +43,10 @@ document.addEventListener('DOMContentLoaded', () => {
     const notificationArea = document.getElementById('notification-area');
     const historyItems = document.querySelectorAll('.history-item');
 
-    // --- 1. UTILITAIRES ---
+
+    // ----------------------------------------------------------------------
+    // 2. UTILITAIRES
+    // ----------------------------------------------------------------------
 
     function showNotification(message, type) {
         const colorMap = {
@@ -28,13 +59,18 @@ document.addEventListener('DOMContentLoaded', () => {
         div.className = `p-4 rounded-xl border shadow-md ${colorMap[type]} flex items-center transition-all duration-300 opacity-0 transform translate-y-2`;
         div.innerHTML = `<i class="fas ${icon} mr-3 text-lg"></i><p class="font-semibold">${message}</p>`;
 
-        notificationArea.appendChild(div);
-        
-        requestAnimationFrame(() => div.classList.remove('opacity-0', 'translate-y-2'));
-        setTimeout(() => {
-            div.classList.add('opacity-0', 'translate-y-2');
-            div.addEventListener('transitionend', () => div.remove());
-        }, 4000);
+        if (notificationArea) {
+            notificationArea.appendChild(div);
+            
+            requestAnimationFrame(() => div.classList.remove('opacity-0', 'translate-y-2'));
+            setTimeout(() => {
+                div.classList.add('opacity-0', 'translate-y-2');
+                div.addEventListener('transitionend', () => div.remove());
+            }, 4000);
+        } else {
+            // Fallback si la zone de notif n'existe pas
+            alert(message);
+        }
     }
 
     async function apiFetch(url, data) {
@@ -47,12 +83,22 @@ document.addEventListener('DOMContentLoaded', () => {
                 },
                 body: JSON.stringify(data),
             });
-            const json = await response.json();
-            if (!response.ok) {
-                showNotification(json.message || `Erreur serveur (${response.status})`, 'error');
-                return { success: false, ...json };
+            
+            // On vérifie d'abord si la réponse est du JSON valide
+            const contentType = response.headers.get("content-type");
+            if (contentType && contentType.indexOf("application/json") !== -1) {
+                const json = await response.json();
+                if (!response.ok) {
+                    showNotification(json.message || `Erreur serveur (${response.status})`, 'error');
+                    return { success: false, ...json };
+                }
+                return json;
+            } else {
+                // Erreur non-JSON (ex: erreur 500 HTML brute)
+                showNotification(`Erreur critique serveur (${response.status})`, 'error');
+                return { success: false };
             }
-            return json;
+
         } catch (error) {
             console.error("Erreur API:", error);
             showNotification("Erreur de connexion.", 'error');
@@ -60,72 +106,80 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // --- 2. GESTION DU FORMULAIRE (ENREGISTREMENT) ---
+    // ----------------------------------------------------------------------
+    // 3. GESTION DU FORMULAIRE (ENREGISTREMENT)
+    // ----------------------------------------------------------------------
 
-    form.addEventListener('submit', async (e) => {
-        e.preventDefault();
-        
-        // UI Loading
-        const originalText = submitBtn.innerHTML;
-        submitBtn.disabled = true;
-        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> Enregistrement...';
-
-        // 1. Collecte des données de session
-        const payload = {
-            session_id: sessionIdInput.value || null, // Null si création
-            class_id: CLASS_ID, // Constante définie dans le HTML
-            date: dateInput.value,
-            start_time: startTimeInput.value,
-            end_time: endTimeInput.value,
-            attendances: []
-        };
-
-        // 2. Collecte des statuts élèves
-        document.querySelectorAll('.student-row').forEach(row => {
-            const studentId = row.dataset.studentId;
-            // Trouve le radio coché dans cette ligne
-            const checkedRadio = row.querySelector(`input[name="status_${studentId}"]:checked`);
+    if (form) {
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
             
-            // Si une radio est cochée et qu'elle n'est pas désactivée (cas justifié)
-            if (checkedRadio && !checkedRadio.disabled) {
-                payload.attendances.push({
-                    student_id: studentId,
-                    status: checkedRadio.value // "" (Présent), "DELAY", "ABSENCE"
-                });
+            // UI Loading
+            const originalText = submitBtn.innerHTML;
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> Enregistrement...';
+
+            // 1. Collecte des données de session
+            const payload = {
+                session_id: sessionIdInput.value || null, // Null si création
+                class_id: CLASS_ID, 
+                date: dateInput.value,
+                start_time: startTimeInput.value,
+                end_time: endTimeInput.value,
+                attendances: []
+            };
+
+            // 2. Collecte des statuts élèves
+            document.querySelectorAll('.student-row').forEach(row => {
+                const studentId = row.dataset.studentId;
+                // Trouve le radio coché dans cette ligne
+                const checkedRadio = row.querySelector(`input[name="status_${studentId}"]:checked`);
+                
+                // Si une radio est cochée et qu'elle n'est pas désactivée (cas justifié)
+                if (checkedRadio && !checkedRadio.disabled) {
+                    payload.attendances.push({
+                        student_id: studentId,
+                        status: checkedRadio.value // "" (Présent), "DELAY", "ABSENCE"
+                    });
+                }
+            });
+
+            // 3. Envoi API
+            const result = await apiFetch(API_URLS.SAVE_SESSION, payload);
+
+            if (result.success) {
+                showNotification("Appel enregistré avec succès !", 'success');
+                // Rechargement après court délai pour mettre à jour l'historique à droite
+                setTimeout(() => {
+                    window.location.reload();
+                }, 1000);
+            } else {
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = originalText;
             }
         });
-
-        // 3. Envoi API
-        const result = await apiFetch(API_URLS.SAVE_SESSION, payload);
-
-        if (result.success) {
-            showNotification("Appel enregistré avec succès !", 'success');
-            // Rechargement après court délai pour mettre à jour l'historique à droite
-            setTimeout(() => {
-                window.location.reload();
-            }, 1000);
-        } else {
-            submitBtn.disabled = false;
-            submitBtn.innerHTML = originalText;
-        }
-    });
+    }
 
 
-    // --- 3. CHARGEMENT D'UNE SESSION (HISTORIQUE) ---
+    // ----------------------------------------------------------------------
+    // 4. CHARGEMENT D'UNE SESSION (HISTORIQUE)
+    // ----------------------------------------------------------------------
 
     // Écouteur sur les éléments de l'historique
-    historyItems.forEach(item => {
-        item.addEventListener('click', async () => {
-            // Vérifie si l'élément est verrouillé (cadenas)
-            if (item.querySelector('.fa-lock')) {
-                showNotification("Ce trimestre est clos, modification impossible.", "error");
-                return;
-            }
+    if (historyItems) {
+        historyItems.forEach(item => {
+            item.addEventListener('click', async () => {
+                // Vérifie si l'élément est verrouillé (cadenas)
+                if (item.querySelector('.fa-lock')) {
+                    showNotification("Ce trimestre est clos, modification impossible.", "error");
+                    return;
+                }
 
-            const sessionId = item.dataset.sessionId;
-            loadSession(sessionId);
+                const sessionId = item.dataset.sessionId;
+                loadSession(sessionId);
+            });
         });
-    });
+    }
 
     async function loadSession(sessionId) {
         // UI Feedback sur l'historique
@@ -162,6 +216,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 if (studentData) {
                     // Appliquer le statut (Absent ou Retard)
+                    // Note: Sélecteur CSS robuste pour gérer la valeur vide ""
                     const radioToCheck = row.querySelector(`input[name="status_${studentId}"][value="${studentData.status}"]`);
                     if (radioToCheck) radioToCheck.checked = true;
 
@@ -177,49 +232,48 @@ document.addEventListener('DOMContentLoaded', () => {
             });
 
             showNotification("Session chargée pour modification.", "success");
-            // Scroll vers le haut pour voir le formulaire
             window.scrollTo({ top: 0, behavior: 'smooth' });
         }
     }
 
-    // --- 4. GESTION DU NOUVEL APPEL (RESET) ---
+    // ----------------------------------------------------------------------
+    // 5. GESTION DU NOUVEL APPEL (RESET)
+    // ----------------------------------------------------------------------
 
-    newSessionBtn.addEventListener('click', () => {
-        // Reset des champs
-        sessionIdInput.value = "";
-        
-        // On remet la date/heure actuelle (logique simple ou celle du chargement de page)
-        const now = new Date();
-        // Note: pour être parfait, on pourrait garder les valeurs initiales stockées au chargement
-        // ici on garde simplement les valeurs actuelles des inputs ou on peut les vider.
-        
-        // Reset du bouton submit
-        submitBtn.classList.add('bg-green-600', 'hover:bg-green-700');
-        submitBtn.classList.remove('bg-indigo-600', 'hover:bg-indigo-700');
-        submitBtn.innerHTML = '<i class="fas fa-save mr-2"></i> Enregistrer l\'appel';
+    if (newSessionBtn) {
+        newSessionBtn.addEventListener('click', () => {
+            // Reset des champs
+            sessionIdInput.value = "";
+            
+            // Remise à zéro visuelle du bouton
+            submitBtn.classList.add('bg-green-600', 'hover:bg-green-700');
+            submitBtn.classList.remove('bg-indigo-600', 'hover:bg-indigo-700');
+            submitBtn.innerHTML = '<i class="fas fa-save mr-2"></i> Enregistrer l\'appel';
 
-        // Reset de la sélection visuelle historique
-        historyItems.forEach(i => i.classList.remove('bg-indigo-50', 'border-indigo-200', 'ring-2', 'ring-indigo-300'));
+            // Reset de la sélection visuelle historique
+            historyItems.forEach(i => i.classList.remove('bg-indigo-50', 'border-indigo-200', 'ring-2', 'ring-indigo-300'));
 
-        // Reset de toutes les lignes élèves
-        document.querySelectorAll('.student-row').forEach(row => {
-            resetStudentRow(row);
-            // Remet à "Présent" par défaut
-            const radioPresent = row.querySelector(`input[value=""]`);
-            if (radioPresent) radioPresent.checked = true;
+            // Reset de toutes les lignes élèves
+            document.querySelectorAll('.student-row').forEach(row => {
+                resetStudentRow(row);
+                // Remet à "Présent" par défaut
+                const radioPresent = row.querySelector(`input[value=""]`);
+                if (radioPresent) radioPresent.checked = true;
+            });
+
+            showNotification("Mode création activé.", "success");
         });
-
-        showNotification("Mode création activé.", "success");
-    });
+    }
 
 
-    // --- HELPERS UI ---
+    // ----------------------------------------------------------------------
+    // 6. HELPERS UI
+    // ----------------------------------------------------------------------
 
     function resetStudentRow(row) {
         // Réactive tous les inputs
         row.querySelectorAll('input[type="radio"]').forEach(input => {
             input.disabled = false;
-            // Supprime l'effet visuel de désactivation sur le parent (label/div)
             input.parentElement.classList.remove('opacity-50', 'cursor-not-allowed');
         });
 
@@ -230,7 +284,6 @@ document.addEventListener('DOMContentLoaded', () => {
             badge.textContent = '';
         }
         
-        // Retire fond gris éventuel
         row.classList.remove('bg-gray-100');
     }
 
@@ -246,10 +299,9 @@ document.addEventListener('DOMContentLoaded', () => {
         if (badge) {
             badge.textContent = message;
             badge.classList.remove('hidden');
-            badge.classList.add('bg-green-100', 'text-green-800', 'border-green-200'); // Style positif
+            badge.classList.add('bg-green-100', 'text-green-800', 'border-green-200');
         }
 
-        // Ajoute un fond gris léger pour indiquer que la ligne est traitée
         row.classList.add('bg-gray-50');
     }
 

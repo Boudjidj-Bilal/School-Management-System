@@ -1,45 +1,34 @@
 {% extends 'base.html' %}
 {% load static %}
+{% load school_extras %} 
 
 {% block title %}Gestion des Classes{% endblock %}
 
 {% block content %}
-    <!-- NOTE: Assumer que Tailwind CSS et Font Awesome sont inclus dans base.html -->
-
     <style>
-        /* Styles pour l'overlay de désactivation (conservé pour une logique spécifique) */
+        /* Styles conservés car spécifiques à cette page */
         .disabled-overlay {
             position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
+            top: 0; left: 0; right: 0; bottom: 0;
             background-color: rgba(255, 255, 255, 0.7);
             display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: bold;
-            text-align: center;
-            border-radius: 0.5rem;
-            pointer-events: none;
+            align-items: center; justify-content: center;
+            font-weight: bold; text-align: center;
+            border-radius: 0.5rem; pointer-events: none;
             z-index: 10;
         }
-        .form-disabled {
-            position: relative;
-        }
+        .form-disabled { position: relative; }
     </style>
     
-    <!-- Conteneur pour les messages toast/notifications -->
-    <div id="toast-container" class="fixed top-5 right-5 z-50 space-y-2">
-        <!-- Les messages toast seront injectés ici par le JS -->
-    </div>
+    <div id="toast-container" class="fixed top-5 right-5 z-50 space-y-2"></div>
 
-    <!-- Le jeton CSRF est essentiel pour les requêtes POST, placé ici comme dans votre exemple -->
     {% csrf_token %}
 
-    <div class="max-w-6xl mx-auto p-4 sm:p-8 bg-gray-100 min-h-screen font-sans">
+    <div id="management-container" 
+         class="max-w-6xl mx-auto p-4 sm:p-8 bg-gray-100 min-h-screen font-sans"
+         data-api-url="{% url 'classes:class_management' %}"
+         data-is-creation-step="{{ is_creation_stape|yesno:'true,false' }}">
         
-        <!-- En-tête Adapté -->
         <header class="mb-8 p-4 rounded-xl bg-white shadow-xl border-t-4 border-indigo-600">
             <h1 class="text-3xl font-extrabold text-gray-900 mb-2">Gestion des Classes</h1>
             <p class="text-lg text-indigo-600 font-semibold">École: {{ school.name }} | Année: {{ current_year.name }}</p>
@@ -49,7 +38,6 @@
 
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
 
-            <!-- Panneau de Création/Modification -->
             <div id="form-container" class="lg:col-span-1 bg-white p-6 rounded-xl shadow-xl form-disabled border border-gray-200">
                 
                 {% if is_creation_stape %}
@@ -62,8 +50,6 @@
 
                 <h2 id="form-title" class="text-2xl font-bold text-gray-800 mb-6">Créer une Nouvelle Classe</h2>
 
-                
-                <!-- La gestion de la soumission se fait dans le JS -->
                 <form id="classForm">
                     <input type="hidden" id="action" name="action" value="create">
                     <input type="hidden" id="class_id" name="class_id" value="">
@@ -94,7 +80,6 @@
                                 {% if is_creation_stape %}disabled{% endif %}>
                             Créer la Classe
                         </button>
-                        <!-- La gestion de l'annulation se fait dans le JS via l'ID -->
                         <button type="button" id="cancel-button"
                                 class="py-2.5 px-4 border border-gray-300 rounded-lg shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition duration-150 ease-in-out hidden">
                             Annuler
@@ -103,7 +88,6 @@
                 </form>
             </div>
 
-            <!-- Tableau des Classes Existantes -->
             <div class="lg:col-span-2">
                 <div class="bg-white p-6 rounded-xl shadow-xl border border-gray-200">
                     <h2 class="text-2xl font-bold text-gray-800 mb-4">Classes Existantes ({{ existing_classes|length }})</h2>
@@ -117,64 +101,44 @@
                                     <th class="px-4 py-3 text-right text-xs font-medium text-gray-600 uppercase tracking-wider">Actions</th>
                                 </tr>
                             </thead>
-                            <!-- classes-list est le conteneur pour la délégation d'événements -->
                             <tbody class="bg-white divide-y divide-gray-100" id="classes-list">
                                 {% for class_obj in existing_classes %}
                                 <tr id="class-row-{{ class_obj.id }}" class="hover:bg-indigo-50/50 transition duration-100">
                                     <td class="px-4 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{{ class_obj.name }}</td>
                                     <td class="px-4 py-4 whitespace-nowrap text-sm text-gray-500" data-level-id="{{ class_obj.level.id }}">{{ class_obj.level.get_level_display }}</td>
                                     <td class="px-4 py-4 whitespace-nowrap text-right text-sm font-medium flex justify-end items-center space-x-2">
-                                        {% load school_extras %}
-    
-                                            {% get_current_term_id class_obj as dyn_term_id %}
-                                            {% if can_access_bulletin %}
-                                                {% if dyn_term_id %}
-                                                    <a href="{% url 'documents:manage_class_report_cards' class_id=class_obj.id term_id=dyn_term_id %}" 
-                                                    class="text-sky-600 hover:text-sky-900 ml-3 p-2"
-                                                    title="Gérer les bulletins (Trimestre actuel)">
-                                                        <i class="fas fa-file-invoice"></i>
-                                                    </a>
-                                                {% else %}
-                                                    <span class="text-gray-400 ml-3" title="Aucun trimestre configuré pour ce niveau"><i class="fas fa-ban"></i></span>
-                                                {% endif %}
+                                        
+                                        {% get_current_term_id class_obj as dyn_term_id %}
+                                        {% if can_access_bulletin %}
+                                            {% if dyn_term_id %}
+                                                <a href="{% url 'documents:manage_class_report_cards' class_id=class_obj.id term_id=dyn_term_id %}" 
+                                                class="text-sky-600 hover:text-sky-900 ml-3 p-2"
+                                                title="Gérer les bulletins (Trimestre actuel)">
+                                                    <i class="fas fa-file-invoice"></i>
+                                                </a>
+                                            {% else %}
+                                                <span class="text-gray-400 ml-3" title="Aucun trimestre configuré pour ce niveau"><i class="fas fa-ban"></i></span>
                                             {% endif %}
+                                        {% endif %}
 
-                                        <a 
-                                            {% if not is_creation_stape %}
-                                                href="{% url 'scheduling:view_class_schedule_page' pk_class=class_obj.id %}"
-                                            {% endif %}
-                                            class="text-blue-600 p-2 rounded-full hover:bg-gray-100 transition duration-150
-                                                {% if is_creation_stape %}
-                                                    opacity-50 cursor-not-allowed pointer-events-none
-                                                {% else %}
-                                                    hover:text-blue-800
-                                                {% endif %}"
-                                            title="Voir le planning de la classe">
+                                        <a {% if not is_creation_stape %} href="{% url 'scheduling:view_class_schedule_page' pk_class=class_obj.id %}" {% endif %}
+                                            class="text-blue-600 p-2 rounded-full hover:bg-gray-100 transition duration-150 {% if is_creation_stape %}opacity-50 cursor-not-allowed pointer-events-none{% else %}hover:text-blue-800{% endif %}"
+                                            title="Voir le planning">
                                             <i class="fas fa-eye"></i>
                                         </a>
 
-                                        <a 
-                                            {% if not is_creation_stape %}
-                                                href="{% url 'scheduling:planning_gestion_view' pk_class=class_obj.id %}"
-                                            {% endif %}
-                                            class="text-pink-600 p-2 rounded-full hover:bg-gray-100 transition duration-150
-                                                {% if is_creation_stape %}
-                                                    opacity-50 cursor-not-allowed pointer-events-none
-                                                {% else %}
-                                                    hover:text-pink-800
-                                                {% endif %}"
-                                            title="Gérer le planning hebdomadaire">
+                                        <a {% if not is_creation_stape %} href="{% url 'scheduling:planning_gestion_view' pk_class=class_obj.id %}" {% endif %}
+                                            class="text-pink-600 p-2 rounded-full hover:bg-gray-100 transition duration-150 {% if is_creation_stape %}opacity-50 cursor-not-allowed pointer-events-none{% else %}hover:text-pink-800{% endif %}"
+                                            title="Gérer le planning">
                                             <i class="fas fa-calendar-alt"></i>
                                         </a>
                                         
-                                        <!-- Utilise le nom d'URL 'class_assignment_main' avec le pk de la classe -->
                                         <a href="{% url 'classes:class_assignment_main' pk=class_obj.id %}"
                                             class="text-teal-600 hover:text-teal-800 p-2 rounded-full hover:bg-gray-100 transition duration-150"
                                             title="Affecter Élèves et Professeurs">
                                             <i class="fas fa-user-check"></i>
                                         </a>
                                         
-                                        <!-- Bouton Modifier - utilise des attributs data-* pour le JS -->
                                         <button type="button"
                                                 data-action="edit"
                                                 data-id="{{ class_obj.id }}" 
@@ -186,7 +150,6 @@
                                             <i class="fas fa-edit"></i>
                                         </button>
 
-                                        <!-- Bouton Supprimer - utilise des attributs data-* pour le JS -->
                                         <button type="button"
                                                 data-action="delete"
                                                 data-id="{{ class_obj.id }}" 
@@ -214,12 +177,11 @@
         </div>
     </div>
 
-    <!-- Modal pour la Confirmation de Suppression (Nouvelle Section) -->
     <div id="confirm-modal" class="fixed inset-0 bg-gray-600 bg-opacity-75 hidden items-center justify-center p-4 z-40 transition-opacity duration-300">
         <div class="bg-white rounded-xl shadow-2xl w-full max-w-sm p-6">
             <h3 class="text-xl font-bold text-gray-900 mb-4">Confirmer la Suppression</h3>
             <p class="text-gray-700 mb-6">Êtes-vous sûr de vouloir supprimer la classe <strong id="confirm-class-name" class="font-semibold text-indigo-600"></strong> ?</p>
-            <p class="text-sm text-red-600 mb-6 font-medium">ATTENTION: Cette action est irréversible et pourrait impacter les données des élèves associés.</p>
+            <p class="text-sm text-red-600 mb-6 font-medium">ATTENTION: Cette action est irréversible.</p>
             
             <div class="flex justify-end space-x-4">
                 <button type="button" id="cancel-delete-btn" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-xl hover:bg-gray-300 transition duration-150">
@@ -234,15 +196,5 @@
 {% endblock %}
 
 {% block extra_js %}
-<script>
-    // Définition des variables globales à partir du contexte Django
-    const API_URL = "{% url 'classes:class_management' %}";
-    // Le jeton CSRF est déjà disponible grâce à la balise {% csrf_token %} au début du block content
-    const CSRF_TOKEN = document.querySelector('[name=csrfmiddlewaretoken]').value;
-    // Utilisation de JSON.parse pour garantir que la valeur booléenne est correctement injectée en tant que type JS valide
-    const IS_CREATION_STAPE = JSON.parse('{{ is_creation_stape|lower }}');
-</script>
-
-<!-- Le fichier JS de l'application est inclus via le système de fichiers statiques -->
 <script src="{% static 'js/classes/class_management.js' %}" defer></script>
 {% endblock %}

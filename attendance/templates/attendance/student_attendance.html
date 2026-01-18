@@ -5,7 +5,6 @@
 
 {% block content %}
     
-    <!-- En-tête -->
     <header class="mb-8 border-b pb-6 border-gray-200">
         <h1 class="text-3xl font-extrabold text-gray-900 flex items-center">
             <i class="fas fa-user-clock text-indigo-600 mr-3"></i>
@@ -33,7 +32,6 @@
         </div>
     {% else %}
 
-        <!-- 1. STATISTIQUES DU TRIMESTRE EN COURS -->
         <section class="mb-10">
             <h2 class="text-lg font-bold text-gray-700 mb-4 flex items-center">
                 <i class="fas fa-chart-bar mr-2 text-indigo-500"></i> 
@@ -41,7 +39,6 @@
             </h2>
             
             <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <!-- Carte Absences Totales -->
                 <div class="bg-white rounded-xl shadow-md border border-gray-100 p-6 flex items-center">
                     <div class="p-3 rounded-full bg-indigo-100 text-indigo-600 mr-4">
                         <i class="fas fa-calendar-times text-2xl"></i>
@@ -52,7 +49,6 @@
                     </div>
                 </div>
 
-                <!-- Carte À JUSTIFIER (Absences + Retards) -->
                 <div class="bg-white rounded-xl shadow-md border-l-4 {% if current_term_stats.total_unjustified > 0 %}border-red-500{% else %}border-green-500{% endif %} p-6 flex items-center">
                     <div class="p-3 rounded-full {% if current_term_stats.total_unjustified > 0 %}bg-red-100 text-red-600{% else %}bg-green-100 text-green-600{% endif %} mr-4">
                         <i class="fas {% if current_term_stats.total_unjustified > 0 %}fa-exclamation-triangle{% else %}fa-check{% endif %} text-2xl"></i>
@@ -65,7 +61,6 @@
                     </div>
                 </div>
 
-                <!-- Carte Retards -->
                 <div class="bg-white rounded-xl shadow-md border border-gray-100 p-6 flex items-center">
                     <div class="p-3 rounded-full bg-orange-100 text-orange-600 mr-4">
                         <i class="fas fa-running text-2xl"></i>
@@ -79,11 +74,11 @@
         </section>
 
 
-        <!-- 2. NAVIGATION PAR TRIMESTRE -->
         <div class="mb-6 border-b border-gray-200">
-            <nav class="-mb-px flex space-x-8 overflow-x-auto" aria-label="Tabs">
+            <nav id="tabs-container" class="-mb-px flex space-x-8 overflow-x-auto" aria-label="Tabs">
                 {% for data in terms_data %}
                 <button 
+                    type="button"
                     data-action="switch-term" 
                     data-target="#term-{{ data.term.id }}"
                     class="term-tab-btn whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm transition-colors duration-200 
@@ -98,13 +93,10 @@
         </div>
 
 
-        <!-- 3. CONTENU DÉTAILLÉ PAR TRIMESTRE -->
         <div id="terms-content-container">
             {% for data in terms_data %}
-            <!-- [CORRECTION] Affichage unique basé sur is_default_tab -->
             <div id="term-{{ data.term.id }}" class="term-content space-y-6 {% if not data.is_default_tab %}hidden{% endif %}">
                 
-                <!-- Liste des incidents -->
                 <div class="bg-white shadow overflow-hidden sm:rounded-lg border border-gray-200">
                     <ul class="divide-y divide-gray-200">
                         {% for record in data.records %}
@@ -112,7 +104,6 @@
                             <div class="px-4 py-4 sm:px-6">
                                 <div class="flex items-center justify-between">
                                     
-                                    <!-- Date et Type -->
                                     <div class="flex items-center">
                                         <div class="flex-shrink-0 h-10 w-10 rounded-full flex items-center justify-center 
                                             {% if record.status == 'ABSENCE' %}bg-red-100 text-red-600{% else %}bg-orange-100 text-orange-600{% endif %}">
@@ -130,7 +121,6 @@
                                         </div>
                                     </div>
 
-                                    <!-- Statut Justification -->
                                     <div class="flex flex-col items-end">
                                         {% if record.justified %}
                                             <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
@@ -149,7 +139,6 @@
 
                                 </div>
                                 
-                                <!-- Détails Professeur (Optionnel) -->
                                 <div class="mt-2 sm:flex sm:justify-between">
                                     <div class="sm:flex">
                                         <p class="flex items-center text-xs text-gray-500">
@@ -180,30 +169,5 @@
 {% endblock %}
 
 {% block extra_js %}
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            const tabButtons = document.querySelectorAll('[data-action="switch-term"]');
-            
-            tabButtons.forEach(button => {
-                button.addEventListener('click', function() {
-                    // 1. Reset UI Boutons
-                    tabButtons.forEach(btn => {
-                        btn.classList.remove('border-indigo-500', 'text-indigo-600');
-                        btn.classList.add('border-transparent', 'text-gray-500', 'hover:text-gray-700', 'hover:border-gray-300');
-                    });
-                    
-                    // 2. Active Bouton Cliqué
-                    this.classList.remove('border-transparent', 'text-gray-500', 'hover:text-gray-700', 'hover:border-gray-300');
-                    this.classList.add('border-indigo-500', 'text-indigo-600');
-                    
-                    // 3. Affiche Contenu Cible
-                    const targetSelector = this.dataset.target;
-                    document.querySelectorAll('.term-content').forEach(content => {
-                        content.classList.add('hidden');
-                    });
-                    document.querySelector(targetSelector).classList.remove('hidden');
-                });
-            });
-        });
-    </script>
+    <script src="{% static 'js/attendance/student_attendance.js' %}"></script>
 {% endblock %}

@@ -4,36 +4,31 @@
 {% block title %}Gestion des salles de classe{% endblock %}
 
 {% block content %}
-    <!-- NOTE: Assumer que Tailwind CSS et Font Awesome sont inclus dans base.html -->
-
     <style>
-        /* Limiter la hauteur du corps du tableau pour un défilement agréable */
         .scrollable-list {
-            /* Ajusté pour tenir compte de la hauteur de l'en-tête et du pied de page éventuels */
             max-height: calc(100vh - 250px); 
             overflow-y: auto;
         }
     </style>
 
-    <!-- Le jeton CSRF est essentiel pour les requêtes POST -->
     {% csrf_token %}
 
-    <div class="max-w-4xl mx-auto p-4 sm:p-8 bg-gray-50">
-        <!-- En-tête -->
+    <div id="classroom-container" 
+         class="max-w-4xl mx-auto p-4 sm:p-8 bg-gray-50"
+         data-api-url="{% url 'classes:classroom_management' %}">
+
         <header class="mb-8">
             <h1 class="text-3xl font-extrabold text-gray-900 mb-2">Gestion des salles de classe</h1>
             <p class="text-lg text-indigo-600 font-semibold">École: {{ school.name }}</p>
         </header>
         
-        <!-- Bouton d'ajout de salle -->
         <div class="mb-6 flex justify-end">
-            <button id="open-modal-create" 
+            <button id="open-create-modal-btn" 
                     class="bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-2 px-4 rounded-xl shadow-lg transition duration-150 ease-in-out transform hover:scale-[1.02]">
                 <i class="fas fa-plus mr-2"></i> Ajouter une Salle
             </button>
         </div>
 
-        <!-- Liste des Salles de Classe -->
         <div class="bg-white rounded-xl shadow-2xl p-6">
             <h2 class="text-2xl font-bold text-gray-800 mb-4">Liste des Salles (<span id="classroom-count-display">{{ classrooms|length }}</span>)</h2>            
             <div class="scrollable-list">
@@ -61,16 +56,17 @@
                                 </span>
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                                <button onclick="openModalById('{{ classroom.id }}')" 
-                                        class="text-indigo-600 hover:text-indigo-900 p-2 rounded-full hover:bg-gray-100 transition duration-150"
+                                <button type="button"
+                                        class="js-edit-btn text-indigo-600 hover:text-indigo-900 p-2 rounded-full hover:bg-gray-100 transition duration-150"
                                         title="Modifier">
-                                    <i class="fas fa-edit"></i>
+                                    <i class="fas fa-edit pointer-events-none"></i>
                                 </button>
-                                <button onclick="handleToggleStatusById('{{ classroom.id }}')" 
+                                
+                                <button type="button"
                                         id="toggle-btn-{{ classroom.id }}"
-                                        class="{% if classroom.is_active %}text-red-600 hover:text-red-900{% else %}text-green-600 hover:text-green-900{% endif %} ml-3 p-2 rounded-full hover:bg-gray-100 transition duration-150"
+                                        class="js-toggle-btn {% if classroom.is_active %}text-red-600 hover:text-red-900{% else %}text-green-600 hover:text-green-900{% endif %} ml-3 p-2 rounded-full hover:bg-gray-100 transition duration-150"
                                         title="Changer le statut">
-                                    <i class="fas {% if classroom.is_active %}fa-toggle-on{% else %}fa-toggle-off{% endif %}"></i>
+                                    <i class="pointer-events-none fas {% if classroom.is_active %}fa-toggle-on{% else %}fa-toggle-off{% endif %}"></i>
                                 </button>
                             </td>
                         </tr>
@@ -85,13 +81,12 @@
         </div>
     </div>
 
-    <!-- Modal pour Création/Modification -->
     <div id="classroom-modal" class="fixed inset-0 bg-gray-600 bg-opacity-75 hidden items-center justify-center p-4 z-40 transition-opacity duration-300">
         <div class="bg-white rounded-xl shadow-3xl w-full max-w-md p-6">
             <div class="flex justify-between items-center mb-4">
                 <h3 id="modal-title" class="text-xl font-bold text-gray-900">Ajouter une Nouvelle Salle</h3>
-                <button type="button" onclick="closeModal()" class="text-gray-400 hover:text-gray-600 transition">
-                    <i class="fas fa-times text-xl"></i>
+                <button type="button" class="js-close-modal text-gray-400 hover:text-gray-600 transition">
+                    <i class="fas fa-times text-xl pointer-events-none"></i>
                 </button>
             </div>
             
@@ -121,24 +116,17 @@
         </div>
     </div>
 
-    <!-- Modal pour les messages de succès/erreur (Z-index 50) -->
     <div id="message-modal" class="fixed inset-0 bg-gray-900 bg-opacity-70 flex items-center justify-center hidden z-50 transition-opacity duration-300 opacity-0">
         <div id="modal-content-msg" class="bg-white rounded-xl p-6 shadow-2xl border border-gray-200 max-w-md w-full transform transition-transform duration-300 scale-95">
-            
             <div class="flex items-start">
-                <!-- Icône dynamique -->
-                <div id="modal-icon-container" class="flex-shrink-0 mr-4 mt-1">
-                    <!-- Icon placeholder -->
-                </div>
-                
+                <div id="modal-icon-container" class="flex-shrink-0 mr-4 mt-1"></div>
                 <div>
                     <h3 id="modal-title-msg" class="text-lg font-bold text-gray-900 mb-1">Notification</h3>
                     <p id="modal-message" class="text-sm text-gray-600"></p>
                 </div>
             </div>
-
             <div class="flex justify-end mt-6">
-                <button id="modal-close-btn" class="px-5 py-2 text-white rounded-lg text-sm font-semibold transition duration-300 focus:outline-none focus:ring-2 focus:ring-opacity-50">
+                <button id="modal-close-btn" class="js-close-msg-modal px-5 py-2 text-white rounded-lg text-sm font-semibold transition duration-300 focus:outline-none focus:ring-2 focus:ring-opacity-50">
                     Fermer
                 </button>
             </div>
@@ -147,8 +135,6 @@
 {% endblock %}
 
 {% block extra_js %}
-<!-- UTILISATION DE |json_script POUR ÉVITER LES ERREURS DE SYNTAXE JS -->
-<!-- Cette balise place les messages de Django dans un bloc <script type="application/json"> -->
 {% if messages %}
     <script id="django-messages-data" type="application/json">
         [
@@ -162,13 +148,5 @@
     </script>
 {% endif %}
 
-<script>
-    // Variables globales simples et non problématiques
-    const CSRF_TOKEN = document.querySelector('[name=csrfmiddlewaretoken]').value;
-    const API_URL = "{% url 'classes:classroom_management' %}"; 
-    // Le script externe lira maintenant la variable "django-messages-data"
-</script>
-
-<!-- Le fichier JS de l'application est inclus en dernier -->
 <script src="{% static 'js/classes/manage_classrooms.js' %}"></script>
 {% endblock %}

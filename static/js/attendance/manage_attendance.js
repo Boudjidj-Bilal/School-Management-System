@@ -1,9 +1,33 @@
-// ====================================================================
-// LOGIQUE JAVASCRIPT POUR LA GESTION DES ABSENCES (CPE)
-// ====================================================================
+/**
+ * manage_attendance.js
+ * Logique de gestion des justifications d'absence (CPE/Admin)
+ * Mode Production Safe
+ */
 
 document.addEventListener('DOMContentLoaded', () => {
     
+    // ----------------------------------------------------------------------
+    // 1. CONFIGURATION & RÉFÉRENCES (Extraction DOM)
+    // ----------------------------------------------------------------------
+
+    // Conteneur principal
+    const container = document.getElementById('manage-attendance-container');
+    if (!container) {
+        console.error("Erreur critique : Le conteneur #manage-attendance-container est introuvable.");
+        return;
+    }
+
+    // Récupération de l'URL API
+    const API_JUSTIFY_URL = container.dataset.apiJustifyUrl;
+
+    // Récupération du CSRF Token
+    const csrfInput = document.querySelector('[name=csrfmiddlewaretoken]');
+    const CSRF_TOKEN = csrfInput ? csrfInput.value : '';
+
+    if (!API_JUSTIFY_URL || !CSRF_TOKEN) {
+        console.error("Configuration manquante (API URL ou CSRF).");
+    }
+
     // --- ÉLÉMENTS DOM ---
     const modal = document.getElementById('justification-modal');
     const form = document.getElementById('justification-form');
@@ -22,7 +46,10 @@ document.addEventListener('DOMContentLoaded', () => {
     // Variable pour gérer l'état de confirmation du bouton "Retirer"
     let unjustifyConfirmState = false;
 
-    // --- 1. UTILITAIRES ---
+
+    // ----------------------------------------------------------------------
+    // 2. UTILITAIRES
+    // ----------------------------------------------------------------------
 
     function showNotification(message, type) {
         const colorMap = {
@@ -35,13 +62,17 @@ document.addEventListener('DOMContentLoaded', () => {
         div.className = `p-4 rounded-xl border shadow-md ${colorMap[type]} flex items-center transition-all duration-300 opacity-0 transform translate-y-2`;
         div.innerHTML = `<i class="fas ${icon} mr-3 text-lg"></i><p class="font-semibold">${message}</p>`;
 
-        notificationArea.appendChild(div);
-        
-        requestAnimationFrame(() => div.classList.remove('opacity-0', 'translate-y-2'));
-        setTimeout(() => {
-            div.classList.add('opacity-0', 'translate-y-2');
-            div.addEventListener('transitionend', () => div.remove());
-        }, 4000);
+        if (notificationArea) {
+            notificationArea.appendChild(div);
+            
+            requestAnimationFrame(() => div.classList.remove('opacity-0', 'translate-y-2'));
+            setTimeout(() => {
+                div.classList.add('opacity-0', 'translate-y-2');
+                div.addEventListener('transitionend', () => div.remove());
+            }, 4000);
+        } else {
+            alert(message);
+        }
     }
 
     async function apiFetch(url, data) {
@@ -54,12 +85,20 @@ document.addEventListener('DOMContentLoaded', () => {
                 },
                 body: JSON.stringify(data),
             });
-            const json = await response.json();
-            if (!response.ok) {
-                showNotification(json.message || `Erreur serveur (${response.status})`, 'error');
-                return { success: false, ...json };
+            
+            const contentType = response.headers.get("content-type");
+            if (contentType && contentType.indexOf("application/json") !== -1) {
+                const json = await response.json();
+                if (!response.ok) {
+                    showNotification(json.message || `Erreur serveur (${response.status})`, 'error');
+                    return { success: false, ...json };
+                }
+                return json;
+            } else {
+                showNotification(`Erreur critique serveur (${response.status})`, 'error');
+                return { success: false };
             }
-            return json;
+
         } catch (error) {
             console.error("Erreur API:", error);
             showNotification("Erreur de connexion.", 'error');
@@ -67,7 +106,10 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // --- 2. GESTION DE LA MODALE ---
+
+    // ----------------------------------------------------------------------
+    // 3. GESTION DE LA MODALE
+    // ----------------------------------------------------------------------
 
     function openModal(button) {
         // Récupération des données depuis le bouton
@@ -99,11 +141,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // Affichage (Transition)
         modal.classList.remove('hidden');
-        // Petit délai pour permettre à la classe hidden de s'enlever avant l'opacité
         requestAnimationFrame(() => {
             modal.classList.remove('opacity-0');
-            modal.querySelector('div[class*="transform"]').classList.remove('scale-95');
-            modal.querySelector('div[class*="transform"]').classList.add('scale-100');
+            const modalPanel = modal.querySelector('div[class*="transform"]');
+            if(modalPanel) {
+                modalPanel.classList.remove('scale-95');
+                modalPanel.classList.add('scale-100');
+            }
         });
         
         reasonInput.focus();
@@ -111,100 +155,114 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function closeModal() {
         modal.classList.add('opacity-0');
-        modal.querySelector('div[class*="transform"]').classList.remove('scale-100');
-        modal.querySelector('div[class*="transform"]').classList.add('scale-95');
+        const modalPanel = modal.querySelector('div[class*="transform"]');
+        if(modalPanel) {
+            modalPanel.classList.remove('scale-100');
+            modalPanel.classList.add('scale-95');
+        }
         
         setTimeout(() => {
             modal.classList.add('hidden');
             form.reset();
-            resetUnjustifyButton(); // Reset du bouton en cas de fermeture sans action
-        }, 300); // Correspond à la durée de transition CSS
+            resetUnjustifyButton(); 
+        }, 300);
     }
 
-    // Fonction pour remettre le bouton "Retirer" à son état initial
     function resetUnjustifyButton() {
         unjustifyConfirmState = false;
         btnUnjustify.innerHTML = '<i class="fas fa-trash-alt mr-1"></i> Retirer la justification';
-        btnUnjustify.classList.remove('bg-red-50', 'border', 'border-red-200', 'rounded', 'px-2', 'py-1');
+        btnUnjustify.classList.remove('bg-red-50', 'border', 'border-red-200', 'rounded', 'px-2', 'py-1', 'text-red-700', 'font-bold');
         btnUnjustify.classList.add('text-red-600');
     }
 
     // Écouteurs d'ouverture (Délégation sur le tableau)
-    document.getElementById('attendance-list').addEventListener('click', (e) => {
-        const btn = e.target.closest('.btn-justify');
-        if (btn) {
-            openModal(btn);
-        }
-    });
+    const list = document.getElementById('attendance-list');
+    if (list) {
+        list.addEventListener('click', (e) => {
+            const btn = e.target.closest('.btn-justify');
+            if (btn) {
+                openModal(btn);
+            }
+        });
+    }
 
     // Écouteurs de fermeture
-    btnCancel.addEventListener('click', closeModal);
-    modal.addEventListener('click', (e) => {
-        if (e.target === modal) closeModal();
-    });
+    if (btnCancel) btnCancel.addEventListener('click', closeModal);
+    
+    if (modal) {
+        modal.addEventListener('click', (e) => {
+            if (e.target === modal) closeModal();
+        });
+    }
 
 
-    // --- 3. ACTIONS API (JUSTIFIER / DÉ-JUSTIFIER) ---
+    // ----------------------------------------------------------------------
+    // 4. ACTIONS API (JUSTIFIER / DÉ-JUSTIFIER)
+    // ----------------------------------------------------------------------
 
     // A. Soumission du formulaire (JUSTIFIER)
-    form.addEventListener('submit', async (e) => {
-        e.preventDefault();
-        
-        const attendanceId = attendanceIdInput.value;
-        const reason = reasonInput.value;
+    if (form) {
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const attendanceId = attendanceIdInput.value;
+            const reason = reasonInput.value;
 
-        if (!reason.trim()) {
-            showNotification("Veuillez entrer un motif.", "error");
-            return;
-        }
+            if (!reason.trim()) {
+                showNotification("Veuillez entrer un motif.", "error");
+                return;
+            }
 
-        const result = await apiFetch(API_URLS.JUSTIFY, {
-            attendance_id: attendanceId,
-            justified: true,
-            reason: reason
+            const result = await apiFetch(API_JUSTIFY_URL, {
+                attendance_id: attendanceId,
+                justified: true,
+                reason: reason
+            });
+
+            if (result.success) {
+                updateRowUI(attendanceId, true, reason, result.justification_date);
+                showNotification(result.message, 'success');
+                closeModal();
+            }
         });
-
-        if (result.success) {
-            updateRowUI(attendanceId, true, reason, result.justification_date);
-            showNotification(result.message, 'success');
-            closeModal();
-        }
-    });
+    }
 
     // B. Clic sur "Retirer la justification"
-    // [MODIFIÉ] Gestion de la confirmation en 2 étapes sur le bouton lui-même
-    btnUnjustify.addEventListener('click', async () => {
-        
-        if (!unjustifyConfirmState) {
-            // Étape 1 : Demande de confirmation
-            unjustifyConfirmState = true;
-            btnUnjustify.innerHTML = '<i class="fas fa-exclamation-triangle mr-1"></i> Confirmer le retrait ?';
+    if (btnUnjustify) {
+        btnUnjustify.addEventListener('click', async () => {
             
-            // Changement visuel pour attirer l'attention
-            btnUnjustify.classList.remove('text-red-600');
-            btnUnjustify.classList.add('bg-red-50', 'border', 'border-red-200', 'rounded', 'px-2', 'py-1', 'text-red-700', 'font-bold');
-            
-            return; // On arrête ici, on attend le deuxième clic
-        }
+            if (!unjustifyConfirmState) {
+                // Étape 1 : Demande de confirmation
+                unjustifyConfirmState = true;
+                btnUnjustify.innerHTML = '<i class="fas fa-exclamation-triangle mr-1"></i> Confirmer le retrait ?';
+                
+                btnUnjustify.classList.remove('text-red-600');
+                btnUnjustify.classList.add('bg-red-50', 'border', 'border-red-200', 'rounded', 'px-2', 'py-1', 'text-red-700', 'font-bold');
+                
+                return; // On arrête ici
+            }
 
-        // Étape 2 : L'utilisateur a cliqué une deuxième fois (Confirmation)
-        const attendanceId = attendanceIdInput.value;
+            // Étape 2 : Confirmation
+            const attendanceId = attendanceIdInput.value;
 
-        const result = await apiFetch(API_URLS.JUSTIFY, {
-            attendance_id: attendanceId,
-            justified: false,
-            reason: ""
+            const result = await apiFetch(API_JUSTIFY_URL, {
+                attendance_id: attendanceId,
+                justified: false,
+                reason: ""
+            });
+
+            if (result.success) {
+                updateRowUI(attendanceId, false, "", null);
+                showNotification(result.message, 'success');
+                closeModal();
+            }
         });
-
-        if (result.success) {
-            updateRowUI(attendanceId, false, "", null);
-            showNotification(result.message, 'success');
-            closeModal();
-        }
-    });
+    }
 
 
-    // --- 4. MISE À JOUR DU DOM (SANS RECHARGEMENT) ---
+    // ----------------------------------------------------------------------
+    // 5. MISE À JOUR DU DOM (SANS RECHARGEMENT)
+    // ----------------------------------------------------------------------
 
     function updateRowUI(attendanceId, isJustified, reason, dateStr) {
         const row = document.querySelector(`.record-row[data-id="${attendanceId}"]`);

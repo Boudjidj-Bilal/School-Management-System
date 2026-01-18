@@ -1,14 +1,36 @@
+// ====================================================================
+// LOGIQUE JAVASCRIPT POUR LA MESSAGERIE (messaging.js)
+// VERSION SÉCURISÉE (CSP Compliant)
+// ====================================================================
+
 document.addEventListener('DOMContentLoaded', () => {
     
     console.log("Messaging JS chargé.");
 
-    // --- RÉCUPÉRATION CONFIGURATION ---
-    const API = window.API_URLS;
-    const CSRF = window.CSRF_TOKEN;
-    const USER_ID = window.USER_ID;
+    // --- 0. CONFIGURATION & CONTEXTE ---
+    const container = document.getElementById('messaging-container');
+    // Récupération robuste du token CSRF
+    const csrfInput = document.querySelector('[name=csrfmiddlewaretoken]') || document.getElementById('csrf-token');
 
-    if (!API) {
-        console.error("ERREUR CRITIQUE : API_URLS non défini. Vérifiez le template HTML.");
+    if (!container) {
+        console.error("ERREUR CRITIQUE : Conteneur #messaging-container introuvable.");
+        return;
+    }
+
+    const CONFIG = {
+        userId: container.dataset.userId,
+        urls: {
+            listConversations: container.dataset.apiListUrl,
+            listContacts: container.dataset.apiContactsUrl,
+            createConversation: container.dataset.apiCreateUrl,
+            messagesBase: container.dataset.apiMessagesBase,
+            sendBase: container.dataset.apiSendBase
+        },
+        csrfToken: csrfInput ? csrfInput.value : ''
+    };
+
+    if (!CONFIG.urls.listConversations) {
+        console.error("ERREUR CRITIQUE : URLs API non définies. Vérifiez les data-attributes HTML.");
         return;
     }
 
@@ -46,7 +68,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     async function loadConversations() {
         try {
-            const response = await fetch(API.LIST_CONVERSATIONS);
+            const response = await fetch(CONFIG.urls.listConversations);
             const data = await response.json();
             
             if (data.success) {
@@ -109,9 +131,7 @@ document.addEventListener('DOMContentLoaded', () => {
     async function openConversation(id) {
         currentConversationId = id;
         
-        // Bascule Responsive (Si on est sur mobile, on cache la liste)
-        // Note : Sur desktop, le CSS gère l'affichage simultané si configuré, 
-        // sinon notre HTML actuel force une vue à la fois. On respecte le HTML.
+        // Bascule Responsive
         if (leftCol && rightCol) {
             leftCol.classList.add('hidden');
             rightCol.classList.remove('hidden');
@@ -126,7 +146,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         try {
-            const url = `${API.GET_MESSAGES_BASE}${id}/`;
+            const url = `${CONFIG.urls.messagesBase}${id}/`;
             const response = await fetch(url);
             const data = await response.json();
 
@@ -218,11 +238,11 @@ document.addEventListener('DOMContentLoaded', () => {
             messageInput.style.height = 'auto';
 
             try {
-                const response = await fetch(API.SEND_MESSAGE, {
+                const response = await fetch(CONFIG.urls.sendBase, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
-                        'X-CSRFToken': CSRF
+                        'X-CSRFToken': CONFIG.csrfToken
                     },
                     body: JSON.stringify({
                         conversation_id: currentConversationId,
@@ -254,7 +274,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     
                     messagesContainer.appendChild(bubbleDiv);
                     scrollToBottom();
-                    loadConversations(); // Pour mettre à jour le dernier message dans la liste
+                    loadConversations();
                 }
             } catch (e) {
                 console.error(e);
@@ -288,7 +308,7 @@ document.addEventListener('DOMContentLoaded', () => {
             // Force le repaint pour l'animation
             setTimeout(() => {
                 modal.classList.remove('opacity-0');
-                const modalCard = modal.querySelector('div.bg-white'); // La carte interne
+                const modalCard = modal.querySelector('div.bg-white');
                 if (modalCard) {
                     modalCard.classList.remove('scale-95', 'opacity-0');
                     modalCard.classList.add('scale-100', 'opacity-100');
@@ -332,8 +352,8 @@ document.addEventListener('DOMContentLoaded', () => {
         contactsListEl.innerHTML = '<div class="p-8 text-center text-gray-500"><i class="fas fa-spinner fa-spin mr-2"></i> Chargement...</div>';
         
         try {
-            console.log("Appel API Contacts:", API.LIST_CONTACTS);
-            const response = await fetch(API.LIST_CONTACTS);
+            console.log("Appel API Contacts:", CONFIG.urls.listContacts);
+            const response = await fetch(CONFIG.urls.listContacts);
             const data = await response.json();
             
             console.log("Données contacts reçues:", data);
@@ -355,8 +375,8 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
-        // Sauvegarde globale pour la recherche
-        window.availableContacts = contacts;
+        // Sauvegarde globale pour la recherche (limité à ce scope)
+        window.availableContacts = contacts; // Pourrait être déplacé dans un state local si nécessaire
 
         let html = '';
         contacts.forEach(contact => {
@@ -396,11 +416,11 @@ document.addEventListener('DOMContentLoaded', () => {
                 item.style.pointerEvents = 'none';
 
                 try {
-                    const response = await fetch(API.CREATE_CONVERSATION, {
+                    const response = await fetch(CONFIG.urls.createConversation, {
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json',
-                            'X-CSRFToken': CSRF
+                            'X-CSRFToken': CONFIG.csrfToken
                         },
                         body: JSON.stringify({ target_id: targetId, target_type: targetType })
                     });
@@ -452,10 +472,6 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!name) return '?';
         return name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
     }
-
-    function formatDate(dateStr) {
-        return dateStr; 
-    }
     
     function escapeHtml(text) {
         const div = document.createElement('div');
@@ -467,9 +483,6 @@ document.addEventListener('DOMContentLoaded', () => {
     loadConversations();
     
     pollingInterval = setInterval(() => {
-        // Rafraichit la liste pour les nouveaux messages
-        // Si on est dans une conv, on pourrait aussi rafraichir les messages actifs
-        // Pour l'instant, on recharge juste la liste pour les badges non lus
         loadConversations(); 
     }, 30000);
 

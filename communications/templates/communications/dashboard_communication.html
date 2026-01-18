@@ -6,17 +6,31 @@
 {% block content %}
 <!-- Token CSRF nécessaire pour les requêtes AJAX -->
 {% csrf_token %}
+<input type="hidden" id="csrf-token" value="{{ csrf_token }}">
 
-<!-- Conteneur principal -->
-<div class="w-full max-w-full h-[calc(100vh-220px)] bg-white rounded-xl shadow-lg border border-gray-200 overflow-hidden relative flex">
+{# Résolution des URLs API #}
+{% url 'communications:api_get_conversations' as api_list_url %}
+{% url 'communications:api_get_contacts' as api_contacts_url %}
+{% url 'communications:api_create_conversation' as api_create_url %}
+{# Note: Pour les URLs dépendant d'un ID (messages), on garde la base fixe #}
+
+<!-- Conteneur principal avec Configuration Injectée -->
+<div id="messaging-container" 
+     class="w-full max-w-full h-[calc(100vh-220px)] bg-white rounded-xl shadow-lg border border-gray-200 overflow-hidden relative flex"
+     data-user-id="{{ user_id }}"
+     data-api-list-url="{{ api_list_url }}"
+     data-api-contacts-url="{{ api_contacts_url }}"
+     data-api-create-url="{{ api_create_url }}"
+     data-api-messages-base="/communications/api/messages/"
+     data-api-send-base="/communications/api/send/">
     
     <!-- COLONNE GAUCHE : LISTE DES CONVERSATIONS -->
-    <!-- Visible par défaut (w-full), cachée par JS quand une conv est ouverte -->
     <div id="left-col" class="w-full flex flex-col bg-gray-50 h-full transition-all duration-300">
         
         <!-- En-tête Sidebar -->
         <div class="p-4 border-b border-gray-200 bg-white flex justify-between items-center flex-shrink-0">
             <h2 class="font-bold text-gray-800 text-lg">Discussions</h2>
+            <!-- MODIFICATION: Ajout ID pour JS -->
             <button id="btn-new-conversation" class="text-white bg-indigo-600 hover:bg-indigo-700 rounded-full w-8 h-8 flex items-center justify-center shadow transition-colors cursor-pointer" title="Nouvelle discussion">
                 <i class="fas fa-plus"></i>
             </button>
@@ -31,13 +45,11 @@
     </div>
 
     <!-- COLONNE DROITE : ZONE DE CHAT -->
-    <!-- Cachée par défaut (hidden), devient visible (flex w-full) par JS -->
     <div id="right-col" class="hidden flex-col bg-white relative h-full w-full min-w-0 transition-all duration-300">
         
         <!-- En-tête Chat -->
         <div id="chat-header" class="p-3 border-b border-gray-200 bg-white flex justify-between items-center flex-shrink-0 shadow-sm z-10">
             <div class="flex items-center min-w-0">
-                <!-- Bouton Retour (Toujours visible maintenant) -->
                 <button id="btn-back-list" class="mr-3 text-gray-500 hover:text-indigo-600 p-2 rounded-full hover:bg-gray-100 transition-colors" title="Retour à la liste">
                     <i class="fas fa-arrow-left"></i>
                 </button>
@@ -104,32 +116,6 @@
 {% endblock %}
 
 {% block extra_js %}
-    {# URLs des APIs pour le JS #}
-    {% url 'communications:api_get_conversations' as api_list_url %}
-    {% url 'communications:api_get_contacts' as api_contacts_url %}
-    {% url 'communications:api_create_conversation' as api_create_url %}
-    
-    <script>
-        // [CORRECTION] Variables attachées à window
-        window.USER_ID = "{{ user_id }}";
-        
-        // [CORRECTION CRITIQUE] Récupération sécurisée du token CSRF
-        // On vérifie si l'élément existe avant de prendre sa valeur pour éviter le crash "Cannot read properties of null"
-        const csrfElement = document.querySelector('[name=csrfmiddlewaretoken]');
-        window.CSRF_TOKEN = csrfElement ? csrfElement.value : "";
-        
-        if (!window.CSRF_TOKEN) {
-            console.error("Attention: Token CSRF introuvable dans le DOM.");
-        }
-        
-        window.API_URLS = {
-            LIST_CONVERSATIONS: "{{ api_list_url|escapejs }}",
-            LIST_CONTACTS: "{{ api_contacts_url|escapejs }}",
-            CREATE_CONVERSATION: "{{ api_create_url|escapejs }}",
-            GET_MESSAGES_BASE: "/communications/api/messages/", 
-            SEND_MESSAGE: "/communications/api/send/"
-        };
-    </script>
-    
+    <!-- MODIFICATION : Suppression du script inline, chargement externe -->
     <script src="{% static 'js/communications/messaging.js' %}"></script>
 {% endblock %}
