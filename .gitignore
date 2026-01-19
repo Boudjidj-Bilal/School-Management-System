@@ -42,6 +42,10 @@ secret.txt
 
 # Fichiers de base de données temporaires
 *.db
+db.sqlite3
+data_dump.json
 
 text.txt
 type_comment.py
+
+requirementsystem.txt

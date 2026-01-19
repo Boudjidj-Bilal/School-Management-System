@@ -153,7 +153,6 @@ REST_FRAMEWORK = {
 MIDDLEWARE = [
     "corsheaders.middleware.CorsMiddleware",  # Doit être en premier pour CORS
     "django.middleware.security.SecurityMiddleware",
-    'whitenoise.middleware.WhiteNoiseMiddleware',
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
@@ -161,8 +160,6 @@ MIDDLEWARE = [
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
     'allauth.account.middleware.AccountMiddleware',
-
-
 ]
 
 ROOT_URLCONF = "ProjectSchool.urls"
@@ -268,8 +265,6 @@ STATIC_ROOT = BASE_DIR / 'staticfiles'
 STATICFILES_DIRS = [BASE_DIR / 'static'] if (BASE_DIR / 'static').exists() else []
 
 
-
-
 # -------------------------
 # Configuration commune
 CORS_ALLOW_CREDENTIALS = True  # Nécessaire pour les cookies HttpOnly
@@ -371,5 +366,3 @@ API_COOKIE_SAMESITE = "Lax" if DEBUG else "None"
 # Durée de vie des sessions
 SESSION_COOKIE_AGE = 86400  # 24 heures
 
-
-STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
