@@ -285,22 +285,18 @@ def upload_document(request):
             messages.error(request, "Veuillez remplir tous les champs.")
 
     # --- RÉCUPÉRATION DES CLASSES (FILTRÉE PAR ÉCOLE) ---
-    classes_qs = Class.objects.filter(student_years__year__current=True)
+    try:
+        # current_school = request.user.staff_user.school
+        current_school = get_user_school(request.user, request.session.get('selected_school_id'))
 
-    if not user_type == "SuperAdministrator":
-        # Si c'est un Proviseur/CPE/Admin, on filtre par SON école
-        try:
-            current_school = request.user.staff_user.school
-
-            if not current_school:
-                return render(request, "404.html", status=403)
-            
-            if not current_school.is_active:
-                return render(request, "404.html", status=403)
-            
-            # On suppose que l'année (Year) est liée à l'école (School)
-            classes_qs = classes_qs.filter(student_years__year__school=current_school)
-        except AttributeError:
+        if not current_school:
+            return render(request, "404.html", status=403)
+        
+        if not current_school.is_active:
+            return render(request, "404.html", status=403)
+        
+        classes_qs = Class.objects.filter(student_years__year__current=True, student_years__year__school=current_school)
+    except AttributeError:
              classes_qs = Class.objects.none() # Sécurité
 
     # .distinct() est vital car le join sur student_years peut dupliquer les lignes
