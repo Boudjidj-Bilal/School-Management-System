@@ -284,8 +284,7 @@ def send_email_create_compte(request, email, username, password):
     domain = request.get_host()
     protocol = 'https' if request.is_secure() else 'http'
     reset_url = ""
-    reset_link = f"{protocol}://{domain}{reset_url}" # TODO : Voir protocol et domain ?? Vérifier si sa fonctionne et/ou comment?. Si cela retourne bien vers la page voulue.
-    # TODO Envoie du lien vers la page de connexion 
+    reset_link = f"{protocol}://{domain}{reset_url}" 
 
     # Message de l'email
     # Utilisation d'un f-string pour insérer dynamiquement les informations
@@ -353,7 +352,7 @@ def send_password_reset_link(user, domain, protocol):
     token = PasswordResetTokenGenerator().make_token(user)
     uid = urlsafe_base64_encode(force_bytes(user.pk))
     reset_url = reverse('password_reset_confirm', kwargs={'uidb64': uid, 'token': token})
-    reset_link = f"{protocol}://{domain}{reset_url}" # TODO : Voir protocol et domain ?? Vérifier si sa fonctionne et/ou comment?. Si cela retourne bien vers la page voulue.
+    reset_link = f"{protocol}://{domain}{reset_url}" 
     subject = "Réinitialisation de votre mot de passe"
     message = f"""
     Bonjour,

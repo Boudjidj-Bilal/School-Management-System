@@ -379,8 +379,7 @@ def change_year_status_api(request, year_id):
 
     except Year.DoesNotExist:
         return JsonResponse({'success': False, 'message': 'Année scolaire non trouvée ou accès refusé.'}, status=404)
-    except Exception as e:
-        print("erreur : ",e) # TODO : à enlever, je rentre ici à cause de mailroo qui n'es pas encore configuré
+    except Exception:
         return JsonResponse({'success': False, 'message': 'Une erreur serveur est survenue lors du changement de statut.'}, status=500)
 
 
