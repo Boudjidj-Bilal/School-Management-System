@@ -242,7 +242,7 @@ def assign_subjects_view(request):
     if not school:
         return render(request, "404.html", status=404)
 
-    if school.is_active == False:
+    if not school.is_active:
         return render(request, "404.html", status=404)
 
     try:
@@ -301,6 +301,7 @@ def assign_subjects_view(request):
         return render(request, 'subjects/assign_subjects.html', context)
 
     except Exception as e:
+        print("erreur : ",e)
         return render(request, "404.html", status=404)
 
 

@@ -4,6 +4,14 @@
  */
 
 document.addEventListener('DOMContentLoaded', function() {
+
+    const backBtn = document.getElementById('btn-back');
+    if (backBtn) {
+        backBtn.addEventListener('click', (e) => {
+            e.preventDefault(); // Empêche le # dans l'URL
+            history.back();     // Action JavaScript équivalente
+        });
+    }
     
     // --- 1. Initialisation & Configuration (Extraction depuis le DOM) ---
     

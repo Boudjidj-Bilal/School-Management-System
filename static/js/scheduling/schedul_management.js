@@ -4,6 +4,15 @@
 
 document.addEventListener('DOMContentLoaded', () => {
 
+    const backBtn = document.getElementById('btn-back');
+    // On vérifie si le bouton existe sur la page pour éviter des erreurs
+    if (backBtn) {
+        backBtn.addEventListener('click', (event) => {
+            event.preventDefault(); // Empêche le lien de recharger la page avec '#'
+            window.history.back();  // Fait l'action de retour
+        });
+    }
+
     // --- 0. CONFIGURATION & DONNÉES CONTEXTUELLES ---
     // Récupération sécurisée depuis les data-attributes du conteneur
     const container = document.getElementById('schedule-manager-container');

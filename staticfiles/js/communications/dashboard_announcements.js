@@ -1,6 +1,6 @@
 // ====================================================================
 // LOGIQUE JAVASCRIPT POUR LES ANNONCES (dashboard_announcements.js)
-// VERSION SÉCURISÉE (CSP Compliant)
+// VERSION SÉCURISÉE (CSP Compliant - Fixed)
 // ====================================================================
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -33,8 +33,6 @@ document.addEventListener('DOMContentLoaded', () => {
             const rawContent = JSON.parse(targetsScript.textContent);
             
             // [CORRECTION] Second parsing si nécessaire
-            // Comme la vue envoie déjà un json.dumps(), le résultat ici est une string JSON ("{...}")
-            // Il faut donc la parser une seconde fois pour obtenir l'objet JS réel.
             if (typeof rawContent === 'string') {
                 TARGETS_CONFIG = JSON.parse(rawContent);
             } else {
@@ -87,27 +85,53 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
     // =================================================================
-    // 0. UTILITAIRE NOTIFICATIONS
+    // 0. UTILITAIRE NOTIFICATIONS (CORRIGÉ CSP)
     // =================================================================
 
     function showNotification(message, type = 'success') {
         if (!notificationArea) return;
+        
         const notif = document.createElement('div');
         let colors = 'bg-white border-l-4 border-green-500 text-gray-800';
         let icon = '<i class="fas fa-check-circle text-green-500 text-xl"></i>';
+        
         if (type === 'error') {
             colors = 'bg-white border-l-4 border-red-500 text-gray-800';
             icon = '<i class="fas fa-exclamation-circle text-red-500 text-xl"></i>';
         }
+        
         notif.className = `${colors} shadow-lg rounded-r-lg p-4 flex items-center space-x-3 transform transition-all duration-300 translate-x-full pointer-events-auto min-w-[300px] mb-3`;
-        notif.innerHTML = `<div>${icon}</div><div class="font-medium text-sm">${message}</div><button class="ml-auto text-gray-400 hover:text-gray-600 focus:outline-none" onclick="this.parentElement.remove()"><i class="fas fa-times"></i></button>`;
+        
+        // MODIFICATION CSP : Suppression de l'attribut onclick dans le HTML string
+        // Ajout de la classe 'js-notif-close' pour cibler le bouton
+        notif.innerHTML = `
+            <div>${icon}</div>
+            <div class="font-medium text-sm">${message}</div>
+            <button class="js-notif-close ml-auto text-gray-400 hover:text-gray-600 focus:outline-none">
+                <i class="fas fa-times"></i>
+            </button>
+        `;
+
+        // Attachement de l'événement click proprement via JS
+        const closeBtn = notif.querySelector('.js-notif-close');
+        if (closeBtn) {
+            closeBtn.addEventListener('click', () => {
+                notif.remove();
+            });
+        }
+
         notificationArea.appendChild(notif);
         
         requestAnimationFrame(() => notif.classList.remove('translate-x-full'));
         
         setTimeout(() => { 
-            notif.classList.add('translate-x-full', 'opacity-0'); 
-            setTimeout(() => notif.remove(), 300); 
+            // Vérification si l'élément existe encore avant d'agir dessus
+            if (notif.parentElement) {
+                notif.classList.add('translate-x-full', 'opacity-0'); 
+                setTimeout(() => {
+                    if (notif.parentElement) notif.remove();
+                }, 300); 
+            }
         }, 4000);
     }
 
