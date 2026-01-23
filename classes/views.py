@@ -568,7 +568,7 @@ def class_assignment_main_view(request, pk):
         'student__user__first_name', 
         'student__user__last_name', 
         'student__user__username'
-    ).order_by('student__user__last_name')
+    ).order_by('student__user__username')
     
     assigned_students_json = json.dumps(list(assigned_students_queryset))
 
