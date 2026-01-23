@@ -254,7 +254,7 @@ def create_or_update_year_api(request):
                 
                 ClassTeacherYear.objects.filter(
                     year__in=other_years
-                ).delete()
+                ).update(is_active=False)
 
                 # 2. Mettre à jour ces années (archivage)
                 other_years.update(

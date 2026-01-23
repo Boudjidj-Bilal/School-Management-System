@@ -473,7 +473,7 @@ def class_management(request):
             return JsonResponse({'success': False, 'message': 'Données JSON invalides.'}, status=400)
         except IntegrityError:
              return JsonResponse({'success': False, 'message': 'Erreur d\'intégrité de la base de données. Opération annulée.'}, status=400)
-        except Exception:
+        except Exception as e:
             return JsonResponse({'success': False, 'message': f'Une erreur interne du serveur est survenue: {str(e)}'}, status=500)
 
     # --- 6. Gestion des requêtes GET (Affichage de la page) ---
@@ -505,9 +505,7 @@ def class_assignment_main_view(request, pk):
     """
     Vue principale (GET) pour la gestion des associations (Élèves/Professeurs)
     pour une classe donnée.
-    
-    Retourne la page HTML en cas de succès ou un JsonResponse en cas d'erreur
-    de permission ou d'objet introuvable.
+    [CORRIGÉ] Utilisation de l'exclusion par ID pour garantir la liste des profs disponibles.
     """
     
     user_type = get_user_type(request.user)
@@ -528,71 +526,84 @@ def class_assignment_main_view(request, pk):
         
     current_year = get_current_year_for_school(school_filter)
     
-    # Vérification de la cohérence de l'école
-    if current_class.level.school != school_filter:
-        # Retourne JSON au lieu de rendre une page 403.html
+    if not current_year:
         return render(request, "404.html", status=404)
 
-    # --- 1. Élèves : Données disponibles (Ceux qui n'ont AUCUNE affectation active cette année) ---
-    
-    # Exclure les élèves ayant DÉJÀ une affectation active (ClassStudentYear) pour l'année en cours
+    # Vérification de la cohérence de l'école
+    if current_class.level.school != school_filter:
+        return render(request, "404.html", status=404)
+
+
+    # --- 1. ÉLÈVES ---
+
+    # A. IDs des élèves déjà affectés (activement) cette année
+    # On utilise cette liste pour exclure proprement
+    assigned_student_ids = ClassStudentYear.objects.filter(
+        year=current_year,
+        is_active=True
+    ).values_list('student_id', flat=True)
+
+    # B. Élèves Disponibles
+    # Tous les élèves de l'école - Ceux déjà affectés (n'importe où cette année)
     available_students_queryset = Student.objects.select_related('user').filter(
-        school=school_filter, user__is_active=True
+        school=school_filter, 
+        user__is_active=True
     ).exclude(
-        class_years__year=current_year,
-        class_years__is_active=True
-    ).order_by('user__username').values(
+        id__in=assigned_student_ids
+    ).order_by('user__last_name', 'user__first_name').values(
         'pk', 'user__first_name', 'user__last_name', 'user__username'
     )
     
     available_students_json = json.dumps(list(available_students_queryset))
 
-    # --- 1.bis Élèves : Données déjà affectées à CETTE classe ---
-    
-    # On récupère l'ID de l'affectation (pk de ClassStudentYear) et le statut délégué
+    # C. Élèves Affectés à CETTE classe
     assigned_students_queryset = ClassStudentYear.objects.filter(
         student_class=current_class, 
         year=current_year, 
         is_active=True
     ).select_related('student__user').values(
-        'pk', # ID de l'objet ClassStudentYear (nécessaire pour toggle_delegate/unlink)
+        'pk', 
         'student_id', 
         'is_delegate', 
         'student__user__first_name', 
         'student__user__last_name', 
         'student__user__username'
-    ).order_by('student__user__username')
+    ).order_by('student__user__last_name')
     
     assigned_students_json = json.dumps(list(assigned_students_queryset))
 
-    # --- 2. Professeurs : Données disponibles ---
 
-    # Exclure les TeacherSubject déjà affectés à CETTE classe pour l'année en cours
-    # NOTE: Un TeacherSubject est l'unicité (Professeur + Matière).
+    # --- 2. PROFESSEURS ---
+
+    # A. IDs des Professeurs (TeacherSubject) déjà affectés à CETTE CLASSE cette année
+    # Note: Un prof peut avoir plusieurs classes, donc on n'exclut que ceux qui sont DÉJÀ dans CELLE-CI.
+    assigned_ts_ids = ClassTeacherYear.objects.filter(
+        student_class=current_class, 
+        year=current_year,
+        is_active=True
+    ).values_list('teacher_id', flat=True)
+
+    # B. Professeurs Disponibles (TeacherSubject)
+    # Tous les TeacherSubject de l'école - Ceux déjà dans cette classe
     available_teacher_subjects_queryset = TeacherSubject.objects.select_related('teacher__user', 'subject').filter(
-        # Filtre sur l'école (assumant Teacher a une relation avec School)
         teacher__school=school_filter, 
         teacher__user__is_active=True
     ).exclude(
-        class_years__student_class=current_class, 
-        class_years__year=current_year,
-        class_years__is_active=True
-    ).order_by('teacher__user__username', 'subject__name').values(
+        id__in=assigned_ts_ids # Exclusion simple et robuste par ID
+    ).order_by('teacher__user__last_name', 'subject__name').values(
         'pk', 'subject__name', 'teacher__user__first_name', 'teacher__user__last_name', 'teacher__user__username'
     )
     
     available_teacher_subjects_json = json.dumps(list(available_teacher_subjects_queryset))
 
-    # --- 2.bis Professeurs : Données déjà affectées à CETTE classe ---
-    
-    # On récupère l'ID de l'affectation (pk de ClassTeacherYear) et le statut principal
+    # C. Professeurs Affectés à CETTE classe
     assigned_teachers_queryset = ClassTeacherYear.objects.filter(
         student_class=current_class, 
         year=current_year, 
         is_active=True
     ).select_related('teacher__user', 'teacher__subject').values(
-        'pk', # ID de l'objet ClassTeacherYear (nécessaire pour toggle_main_teacher/unlink)
-        'teacher_id', # ID de l'objet TeacherSubject
+        'pk', 
+        'teacher_id', 
         'is_main_teacher', 
         'teacher__subject__name', 
         'teacher__teacher__user__first_name', 
@@ -602,7 +613,6 @@ def class_assignment_main_view(request, pk):
     assigned_teachers_json = json.dumps(list(assigned_teachers_queryset))
 
     # --- 3. Construction du Contexte ---
-
     context = {
         'current_class': current_class,
         'current_year': current_year,
@@ -612,7 +622,6 @@ def class_assignment_main_view(request, pk):
         'available_teacher_subjects_json': available_teacher_subjects_json,
     }
 
-    # Le seul endroit où l'on retourne une page HTML
     return render(request, 'classes/class_assignment.html', context)
 
 
