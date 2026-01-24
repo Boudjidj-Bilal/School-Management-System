@@ -366,3 +366,50 @@ API_COOKIE_SAMESITE = "Lax" if DEBUG else "None"
 # Durée de vie des sessions
 SESSION_COOKIE_AGE = 86400  # 24 heures
 
+
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'formatters': {
+        'verbose': {
+            'format': '{levelname} {asctime} {module} {process:d} {thread:d} {message}',
+            'style': '{',
+        },
+        'simple': {
+            'format': '{levelname} {message}',
+            'style': '{',
+        },
+    },
+    'handlers': {
+        # Handler Console : Pour journalctl / syslog
+        # Gunicorn capture stdout/stderr et l'envoie au journal système grâce à StandardOutput=journal
+        'console': {
+            'level': 'INFO',
+            'class': 'logging.StreamHandler',
+            'formatter': 'verbose',
+        },
+        # Handler Fichier : Pour stocker les erreurs applicatives Django
+        # Ecrit dans /var/www/theranotes-tsr.com/logs/django_errors.log
+        'file': {
+            'level': 'ERROR',
+            'class': 'logging.FileHandler',
+            # Utilisation dynamique de BASE_DIR pour pointer vers le dossier logs
+            'filename': os.path.join(BASE_DIR, 'logs', 'django_errors.log'),
+            'formatter': 'verbose',
+        },
+    },
+    'loggers': {
+        # Logger principal Django
+        'django': {
+            'handlers': ['console', 'file'],
+            'level': 'INFO',
+            'propagate': True,
+        },
+        # Logger spécifique pour les erreurs de requêtes (ex: 500)
+        'django.request': {
+            'handlers': ['console', 'file'],
+            'level': 'ERROR',
+            'propagate': False,
+        },
+    },
+}
