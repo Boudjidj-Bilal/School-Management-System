@@ -596,8 +596,7 @@ def manage_term(request):
         return render(request, "404.html", status=404)
     
     if not school_filter or not school_filter.is_active:
-        message = "L'école sélectionnée est introuvable ou désactivée. Impossible de procéder."
-        return JsonResponse({"success": False, "message": message}, status=404 if not school_filter else 403)
+        return render(request, "404.html", status=404)
         
     # 3. Détermination de l'année scolaire actuelle
     current_year = get_current_year_for_school(school_filter)
@@ -787,10 +786,14 @@ def edit_school_view(request):
         # On récupère l'école ou on renvoie une 404
         school = get_user_school(request.user, request.session.get('selected_school_id'))
 
+        school_types_fr = [
+            ("HIGHSCHOOL", "Lycée"),
+            ("COLLEGE", "Collège"),
+        ]
         
         context = {
             'school': school,
-            'school_types': School.SCHOOL_TYPE_CHOICES, # Pour le select du type
+            'school_types': school_types_fr, # Pour le select du type
         }
         return render(request, 'schools/edit_school.html', context)
         

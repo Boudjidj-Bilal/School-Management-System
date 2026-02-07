@@ -23,7 +23,7 @@ from attendance.models import Attendance # Pour les alertes CPE
 from communications.utils import get_dashboard_messaging_stats, get_dashboard_last_announcement
 
 
-from .models import User, STAFF_TYPE_CHOICES, GENDER_CHOICES
+from .models import User, GENDER_CHOICES
 
 def login(request):
     """
@@ -130,7 +130,7 @@ def dashboard_page(request):
 
     # Logique SuperAdmin (Sélecteur d'école)
     if user_type == "SuperAdministrator":
-        schools = School.objects.filter(is_active=True)
+        schools = School.objects.filter()
         context['schools'] = schools
         
         selected_school_id = request.session.get('selected_school_id')
@@ -386,10 +386,17 @@ def manage_users_view(request):
             # (par exemple, 'staff'), on retourne une liste vide
             users = []
     
+    staff_types_fr = {
+        "PRINCIPAL": "Proviseur",
+        "TEACHER": "Professeur",
+        "CPE": "CPE",
+        "ADMINISTRATOR": "Administrateur"
+    }
+    
     context = {
         "users": users,
         "user_type": user_type_choice,
-        "staff_types": dict(STAFF_TYPE_CHOICES),
+        "staff_types": staff_types_fr,
         "gender_choices": dict(GENDER_CHOICES),
         "user_school": user_school
     }
@@ -497,8 +504,12 @@ def create_user_view(request):
             unique_email = is_email_unique(email)
             if unique_email:
                 return JsonResponse({"success": False, "message": "L'adresse email existe déjà."}, status=404)
+            
+            # On formate le nom est le prénom pour le nom d'utilisateur. # TODO : attention, ici, cela ne convient que pour la langue Francaise et anglaise, attention pour l'arabe dans le prochaine amélioration. 
+            formater_first_name = formater_name(first_name)
+            formater_last_name = formater_name(last_name)
 
-            username = generate_unique_username(first_name, last_name) # Génération du nom d'utilisateur
+            username = generate_unique_username(formater_first_name, formater_last_name) # Génération du nom d'utilisateur
 
             # Génération du mot de passe
             length_password = 10 
@@ -513,8 +524,8 @@ def create_user_view(request):
                 username=username,
                 password=password,
                 email=email,
-                first_name=first_name,
-                last_name=last_name
+                first_name=formater_first_name,
+                last_name=formater_last_name
             )
 
             if not error: # Si il y a une erreur

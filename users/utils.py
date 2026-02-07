@@ -1323,3 +1323,19 @@ def remove_old_profile_image(user):
                 os.remove(file_path)
             except Exception as e:
                 print(f"Erreur lors de la suppression de l'image : {e}")
+
+
+def formater_name(texte):
+    # 1. On vérifie si la chaîne n'est pas vide ou None
+    if not texte:
+        return ""
+
+    # 2. On enlève les espaces au début et à la fin
+    texte_propre = texte.strip()
+
+    # 3. On gère le cas où la chaîne ne contenait que des espaces (devient vide après strip)
+    if not texte_propre:
+        return ""
+
+    # 4. On met la première lettre en majuscule et on recolle le reste de la chaîne
+    return texte_propre[0].upper() + texte_propre[1:]

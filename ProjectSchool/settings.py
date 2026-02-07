@@ -366,7 +366,7 @@ API_COOKIE_SAMESITE = "Lax" if DEBUG else "None"
 # Durée de vie des sessions
 SESSION_COOKIE_AGE = 86400  # 24 heures
 
-
+"""
 LOGGING = {
     'version': 1,
     'disable_existing_loggers': False,
@@ -413,3 +413,4 @@ LOGGING = {
         },
     },
 }
+"""
