@@ -39,6 +39,7 @@
                                        data-birth-date="{{ user_obj.birth_date|date:'Y-m-d'|default:'' }}"
                                        data-gender="{{ user_obj.gender|default:'' }}"
                                        data-profile-picture-url="{% if user_obj.user.profile_picture %}{{ user_obj.user.profile_picture.url }}{% endif %}"
+                                       data-national-number="{{ user_obj.national_number|default:'' }}"
                                        class="user-link flex items-center w-full mb-3"> <!-- mb-3 pour espacer du bas -->
                                         <div class="w-8 h-8 rounded-full bg-green-100 flex-shrink-0 flex items-center justify-center mr-3 group-hover:bg-green-200 transition-colors">
                                             <i class="fas fa-user text-green-600"></i>
@@ -97,6 +98,7 @@
                                        data-birth-date="{{ user_obj.birth_date|date:'Y-m-d'|default:'' }}"
                                        data-gender="{{ user_obj.gender|default:'' }}"
                                        data-profile-picture-url="{% if user_obj.user.profile_picture %}{{ user_obj.user.profile_picture.url }}{% endif %}"
+                                       data-national-number="{{ user_obj.national_number|default:'' }}"
                                        class="user-link flex items-center flex-grow min-w-0 mr-4">
 
                                        
@@ -148,6 +150,7 @@
                                    data-birth-date="{{ user_obj.birth_date|date:'Y-m-d'|default:'' }}"
                                    data-gender="{{ user_obj.gender|default:'' }}"
                                    data-profile-picture-url="{% if user_obj.user.profile_picture %}{{ user_obj.user.profile_picture.url }}{% endif %}"
+                                   data-national-number="{{ user_obj.national_number|default:'' }}"
                                    class="user-link flex items-center flex-grow min-w-0 mr-4">
                                     <!-- Icone harmonisée (gris) -->
                                     <div class="w-8 h-8 rounded-full bg-gray-100 flex-shrink-0 flex items-center justify-center mr-3 group-hover:bg-gray-200 transition-colors">
@@ -249,6 +252,16 @@
                     {% endfor %}
                 </select>
             </div>
+
+            <!-- Numéro National (Élèves Uniquement) -->
+            {% if user_type == 'student' %}
+            <div class="mb-4" id="national-number-field">
+                <label for="national_number" class="block text-sm font-medium text-gray-700">Numéro national (ex: INE)</label>
+                <input type="text" id="national_number" name="national_number"
+                    class="mt-1 block w-full pl-3 pr-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 transition duration-300">
+            </div>
+            {% endif %}
+
             <div class="mb-4">
                 <label for="gender" class="block text-sm font-medium text-gray-700">Civilité</label>
                 <select id="gender" name="gender" required

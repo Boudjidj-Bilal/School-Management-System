@@ -778,7 +778,7 @@ GESTION DES ETUDIANTS :
 =======================
 """
 
-def create_student(user, school, gender, address, birth_date=None):
+def create_student(user, school, gender, address, national_number, birth_date=None):
     """
     Crée un nouvel objet Student lié à un utilisateur existant.
     Args:
@@ -786,6 +786,7 @@ def create_student(user, school, gender, address, birth_date=None):
         school_id (int): L'ID de l'école de rattachement.
         gender (str): Le genre de l'élève.
         birth_date (date, optional): La date de naissance de l'élève.
+        national_number (varchar): Le numéro national d'identification de l'élève.
     Returns:
         tuple: (Student, str) - L'objet Student créé ou un message d'erreur.
     """
@@ -797,6 +798,7 @@ def create_student(user, school, gender, address, birth_date=None):
             school=school,
             gender=gender,
             address=address,
+            national_number=national_number,
             birth_date=birth_date
         )
         return student, None
@@ -1339,3 +1341,40 @@ def formater_name(texte):
 
     # 4. On met la première lettre en majuscule et on recolle le reste de la chaîne
     return texte_propre[0].upper() + texte_propre[1:]
+
+import re
+
+def is_strong_password(password):
+    """
+    Vérifie si un mot de passe est suffisamment robuste.
+    
+    Critères :
+    - Au moins 8 caractères
+    - Au moins une majuscule
+    - Au moins une minuscule
+    - Au moins un chiffre
+    - Au moins un caractère spécial
+    
+    Retourne :
+        (bool, str): Un tuple contenant True/False et le message associé.
+    """
+    if not password:
+        return False, "Le mot de passe ne peut pas être vide."
+
+    if len(password) < 8:
+        return False, "Le mot de passe doit contenir au moins 8 caractères."
+        
+    if not re.search(r'[A-Z]', password):
+        return False, "Le mot de passe doit contenir au moins une lettre majuscule."
+        
+    if not re.search(r'[a-z]', password):
+        return False, "Le mot de passe doit contenir au moins une lettre minuscule."
+        
+    if not re.search(r'\d', password):
+        return False, "Le mot de passe doit contenir au moins un chiffre."
+        
+    # [^A-Za-z0-9] signifie "tout ce qui n'est ni une lettre ni un chiffre" (donc un caractère spécial)
+    if not re.search(r'[^A-Za-z0-9]', password):
+        return False, "Le mot de passe doit contenir au moins un caractère spécial (ex: @, #, !, ?, etc.)."
+
+    return True, "Le mot de passe est valide."

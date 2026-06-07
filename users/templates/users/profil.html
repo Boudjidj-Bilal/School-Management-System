@@ -77,6 +77,15 @@
                             <i class="fas fa-envelope w-5 text-gray-400 text-center mr-2"></i>
                             <span class="truncate">{{ user.email }}</span>
                         </div>
+                        
+                        <!-- Numéro d'identification (ex: INE) pour les élèves uniquement -->
+                        {% if user_type == 'Student' and user.student_user.national_number %}
+                        <div class="flex items-center text-sm text-gray-600" title="Numéro d'identification national">
+                            <i class="fas fa-id-card w-5 text-gray-400 text-center mr-2"></i>
+                            <span>{{ user.student_user.national_number }}</span>
+                        </div>
+                        {% endif %}
+
                         {% if user.phone_number %}
                         <div class="flex items-center text-sm text-gray-600">
                             <i class="fas fa-phone w-5 text-gray-400 text-center mr-2"></i>

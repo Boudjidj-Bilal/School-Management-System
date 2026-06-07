@@ -159,7 +159,7 @@ def get_available_contacts(user, current_year):
     """
     Récupère la liste des personnes à qui l'utilisateur peut envoyer un NOUVEAU message.
     (Exclut les personnes avec qui une conversation existe déjà).
-    [CORRECTION] Filtre les doublons de professeurs (si un prof enseigne plusieurs matières).
+    [CORRECTION] Filtre les doublons de professeurs et ajout du nom d'utilisateur.
     """
     contacts = []
     existing_conversations = get_user_conversations(user, current_year)
@@ -186,7 +186,8 @@ def get_available_contacts(user, current_year):
                 contacts.append({
                     'type': 'student',
                     'id': link.student.id, 
-                    'name': f"{link.student.user.first_name} {link.student.user.last_name} (Élève - {link.student_class.name})"
+                    'name': f"{link.student.user.first_name} {link.student.user.last_name} (Élève - {link.student_class.name})",
+                    'username': link.student.user.username 
                 })
             
             child_links = Child.objects.filter(student=link.student)
@@ -199,7 +200,8 @@ def get_available_contacts(user, current_year):
                         contacts.append({
                             'type': 'parent',
                             'id': parent.id, 
-                            'name': f"{parent.user.first_name} {parent.user.last_name} (Parent de {link.student.user.first_name})"
+                            'name': f"{parent.user.first_name} {parent.user.last_name} (Parent de {link.student.user.first_name})",
+                            'username': parent.user.username 
                         })
 
     # B. Si c'est un ÉLÈVE
@@ -215,19 +217,18 @@ def get_available_contacts(user, current_year):
                 is_active=True
             ).select_related('teacher__teacher__user', 'teacher__subject')
             
-            # [CORRECTION] Set pour éviter les doublons de professeurs
+            # Set pour éviter les doublons de professeurs
             added_prof_ids = set()
 
             for link in teachers:
                 prof = link.teacher.teacher # Objet Staff
                 
-                # Si le prof n'a pas de conversation ET qu'on ne l'a pas encore ajouté à la liste locale
                 if prof.user.id not in existing_ids and prof.id not in added_prof_ids:
                     contacts.append({
                         'type': 'teacher',
                         'id': prof.id,
-                        # On n'affiche plus la matière dans le nom car elle n'est pas unique
-                        'name': f"{prof.user.last_name} {prof.user.first_name}" 
+                        'name': f"{prof.user.last_name} {prof.user.first_name}",
+                        'username': prof.user.username
                     })
                     added_prof_ids.add(prof.id)
         except:
@@ -254,12 +255,12 @@ def get_available_contacts(user, current_year):
                 for t_link in teachers:
                     prof = t_link.teacher.teacher
                     
-                    # [CORRECTION] Vérification des doublons locale et globale
                     if prof.id not in processed_teacher_ids and prof.user.id not in existing_ids:
                         contacts.append({
                             'type': 'teacher',
                             'id': prof.id,
-                            'name': f"{prof.user.last_name} {prof.user.first_name} (Prof de {student.user.first_name})"
+                            'name': f"{prof.user.last_name} {prof.user.first_name} (Prof de {student.user.first_name})",
+                            'username': prof.user.username 
                         })
                         processed_teacher_ids.append(prof.id)
             except:

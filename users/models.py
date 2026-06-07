@@ -116,8 +116,11 @@ class Student(models.Model):
     on_delete=models.CASCADE, related_name="students_school")  # L'école de l'élève
 
     gender = models.CharField(max_length=1, choices=GENDER_CHOICES)  # Civilité (M ou F)
-    birth_date = models.DateField(blank=True,null=True)  # Date de naissance (optionnelle)
-    address = models.TextField()                      # adresse étudiant
+    birth_date = models.DateField(blank=True, null=True)  # Date de naissance (optionnelle)
+    address = models.TextField()                          # adresse étudiant
+    
+    # Numéro d'identification national (ex: INE en France) - Non obligatoire
+    national_number = models.CharField(max_length=50, blank=True, null=True)
 
     def __str__(self):
         return f"Élève: {self.user.username} - {self.school.name}"

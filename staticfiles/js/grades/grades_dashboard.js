@@ -229,9 +229,15 @@ document.addEventListener('DOMContentLoaded', () => {
             studentsData.sort((a, b) => a.student_name.localeCompare(b.student_name));
 
             studentsData.forEach(student => {
+                // Balise pour le nom d'utilisateur s'il existe
+                const usernameHtml = student.username ? `<span class="text-xs text-gray-400 ml-1">(${student.username})</span>` : '';
+                
                 studentsHtml += `
                     <li class="flex justify-between items-center text-sm py-1">
-                        <span class="text-gray-700">${student.student_name}</span>
+                        <span class="text-gray-700">
+                            ${student.student_name}
+                            ${usernameHtml}
+                        </span>
                         <span class="font-bold text-gray-900">${student.average}</span>
                     </li>
                 `;
@@ -296,9 +302,15 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (data.student_averages && data.student_averages.length > 0) {
                     data.student_averages.sort((a, b) => a.student_name.localeCompare(b.student_name));
                     data.student_averages.forEach(student => {
+                        // Balise pour le nom d'utilisateur s'il existe
+                        const usernameHtml = student.username ? `<span class="text-xs text-gray-400 ml-1">(${student.username})</span>` : '';
+                        
                         studentsHtml += `
                             <li class="flex justify-between items-center text-sm py-1">
-                                <span class="text-gray-700">${student.student_name}</span>
+                                <span class="text-gray-700">
+                                    ${student.student_name}
+                                    ${usernameHtml}
+                                </span>
                                 <span class="font-bold text-gray-900">${student.average}</span>
                             </li>
                         `;
@@ -349,7 +361,6 @@ document.addEventListener('DOMContentLoaded', () => {
             updateBlockPermissions(contextKey, newTermId);
         }
     }
-
 
     // --- 6. GESTION DES MODALES (Eval & Confirm) ---
 
@@ -438,9 +449,15 @@ document.addEventListener('DOMContentLoaded', () => {
             const isAbsent = gradeInfo.is_absent || false;
             const disabled = isReadOnly || isAbsent ? 'disabled' : '';
 
+            // Affichage du nom d'utilisateur dans la liste de saisie (avec passage à la ligne sur mobile)
+            const usernameHtml = student.username ? `<span class="text-xs text-gray-400 block sm:inline sm:ml-1">(${student.username})</span>` : '';
+
             const html = `
                 <div class="grid grid-cols-3 gap-4 items-center p-2 hover:bg-gray-50 border-b">
-                    <label class="text-sm font-medium text-gray-700">${student.student_name}</label>
+                    <label class="text-sm font-medium text-gray-700">
+                        ${student.student_name}
+                        ${usernameHtml}
+                    </label>
                     <input type="number" step="any" min="0" max="${maxGrade}" 
                            class="grade-input w-full p-2 border rounded"
                            data-student-id="${student.student_id}"
@@ -460,7 +477,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- 7. ACTION HANDLERS ---
 
-    // [CORRECTION] Fonction renommée pour correspondre à l'appel
     async function handleEvaluationFormSubmit(e) {
         e.preventDefault();
         
@@ -531,7 +547,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // [CORRECTION] Fonction réintégrée
     function handleDeleteEvaluation(button) {
         const evalId = button.dataset.evalId;
         const evalName = button.dataset.evalName;

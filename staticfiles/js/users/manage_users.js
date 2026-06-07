@@ -15,6 +15,9 @@ document.addEventListener('DOMContentLoaded', function() {
     const addressInput = document.getElementById('address');
     const genderInput = document.getElementById('gender');
     const birthDateInput = document.getElementById('birth_date');
+    
+    // Champ pour le numéro national
+    const nationalNumberInput = document.getElementById('national_number');
 
     const formUserAvatar = document.getElementById('form-user-avatar');
     const formUserInitials = document.getElementById('form-user-initials');
@@ -24,7 +27,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const modalMessage = document.getElementById('modal-message');
     const modalConfirmBtn = document.getElementById('modal-confirm-btn');
     const modalCancelBtn = document.getElementById('modal-cancel-btn');
-    const cancelBtn = document.getElementById('cancel-btn'); // Corrected: This line was missing.
+    const cancelBtn = document.getElementById('cancel-btn');
 
     const userType = userTypeInput.value;
     const userSchoolId = userForm.getAttribute('data-school-id');
@@ -63,6 +66,11 @@ document.addEventListener('DOMContentLoaded', function() {
         genderInput.value = user.gender;
         birthDateInput.value = user.birthDate;
 
+        // Remplissage du numéro national s'il existe (Uniquement pour les élèves)
+        if (nationalNumberInput) {
+            nationalNumberInput.value = user.nationalNumber || '';
+        }
+
         // Gestion de l'affichage Photo vs Initiales
         if (user.profilePictureUrl && user.profilePictureUrl !== 'None' && user.profilePictureUrl !== '') {
             // Cas 1 : Il y a une photo
@@ -92,7 +100,7 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     createBtn.addEventListener('click', showCreateMode);
-    cancelBtn.addEventListener('click', showCreateMode); // Corrected: Moved this listener here.
+    cancelBtn.addEventListener('click', showCreateMode);
 
     userLinks.forEach(link => {
         link.addEventListener('click', function(e) {
@@ -106,7 +114,9 @@ document.addEventListener('DOMContentLoaded', function() {
                 address: this.getAttribute('data-address'),
                 gender: this.getAttribute('data-gender'),
                 birthDate: this.getAttribute('data-birth-date'),
-                profilePictureUrl: this.getAttribute('data-profile-picture-url')
+                profilePictureUrl: this.getAttribute('data-profile-picture-url'),
+                // Extraction du numéro national de l'attribut data
+                nationalNumber: this.getAttribute('data-national-number')
             };
             showEditMode(user);
         });

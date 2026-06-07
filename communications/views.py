@@ -150,11 +150,15 @@ def api_get_messages(request, conversation_id):
         prof_school_year = get_current_year_for_school(conversation.teacher.school)
         is_active = is_conversation_active(conversation, prof_school_year)
 
+        # Récupération du nom et du nom d'utilisateur via le helper
+        interlocutor_name, interlocutor_username = get_interlocutor_details(conversation, request.user)
+
         return JsonResponse({
             'success': True, 
             'messages': formatted_messages,
             'is_active': is_active,
-            'interlocutor_name': get_interlocutor_name(conversation, request.user)
+            'interlocutor_name': interlocutor_name,
+            'interlocutor_username': interlocutor_username 
         })
 
     except Messaging.DoesNotExist:
@@ -298,17 +302,22 @@ def api_create_conversation(request):
         return JsonResponse({'success': False, 'message': str(e)}, status=500)
 
 
-# Helper local
-def get_interlocutor_name(conversation, current_user):
-    # Logique simple pour trouver le nom de "l'autre"
+# --- Helper local pour renvoyer le nom ET le nom d'utilisateur ---
+def get_interlocutor_details(conversation, current_user):
+    """
+    Renvoie un Tuple: (Nom complet, Username) de l'interlocuteur.
+    """
     if conversation.teacher.user == current_user:
-        # Je suis le prof
-        if conversation.student: return f"{conversation.student.user.first_name} {conversation.student.user.last_name}"
-        if conversation.parent: return f"{conversation.parent.user.first_name} {conversation.parent.user.last_name}"
+        # Je suis le prof, l'interlocuteur est l'élève ou le parent
+        if conversation.student: 
+            return f"{conversation.student.user.first_name} {conversation.student.user.last_name}", conversation.student.user.username
+        if conversation.parent: 
+            return f"{conversation.parent.user.first_name} {conversation.parent.user.last_name}", conversation.parent.user.username
     else:
-        # Je suis l'élève ou le parent, je parle au prof
-        return f"{conversation.teacher.user.first_name} {conversation.teacher.user.last_name}"
-    return "Inconnu"
+        # Je suis l'élève ou le parent, l'interlocuteur est le prof
+        return f"{conversation.teacher.user.first_name} {conversation.teacher.user.last_name}", conversation.teacher.user.username
+    
+    return "Inconnu", ""
 
 
 @login_required(login_url='login')

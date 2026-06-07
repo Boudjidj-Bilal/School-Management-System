@@ -152,6 +152,7 @@ def get_report_card_context(student, term_year):
         'birth_date': student.birth_date,
         'student_gender': student_gender, 
         'student_address': student.address,
+        'national_number': student.national_number,  # Le numéro national (facultatif)
     }
 
     # --- C. BOUCLE SUR LES MATIÈRES ---

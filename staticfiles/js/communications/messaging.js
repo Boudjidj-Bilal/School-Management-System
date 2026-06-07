@@ -391,6 +391,10 @@ document.addEventListener('DOMContentLoaded', () => {
         const icon = contact.type === 'student' ? 'fa-user-graduate' : (contact.type === 'teacher' ? 'fa-chalkboard-teacher' : 'fa-user');
         const color = contact.type === 'student' ? 'text-green-600 bg-green-100' : (contact.type === 'teacher' ? 'text-blue-600 bg-blue-100' : 'text-orange-600 bg-orange-100');
         
+        // Construction du nom complet avec le username
+        const fullName = `${contact.first_name || ''} ${contact.last_name || ''}`.trim();
+        const displayLabel = fullName ? `${fullName} (@${contact.username})` : contact.username;
+
         return `
             <div class="contact-item p-3 hover:bg-gray-50 cursor-pointer flex items-center transition-colors border-b border-gray-50" 
                  data-id="${contact.id}" data-type="${contact.type}">
@@ -398,7 +402,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     <i class="fas ${icon}"></i>
                 </div>
                 <div class="min-w-0">
-                    <p class="font-semibold text-gray-800 text-sm truncate">${contact.name}</p>
+                    <p class="font-semibold text-gray-800 text-sm truncate">${escapeHtml(displayLabel)}</p>
                     <p class="text-xs text-gray-500 capitalize">${contact.type === 'teacher' ? 'Professeur' : (contact.type === 'student' ? 'Élève' : 'Parent')}</p>
                 </div>
             </div>
@@ -470,10 +474,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function getInitials(name) {
         if (!name) return '?';
-        return name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
+        return name.split(' ').map(n => n[0]).filter(Boolean).join('').substring(0, 2).toUpperCase();
     }
     
     function escapeHtml(text) {
+        if (!text) return '';
         const div = document.createElement('div');
         div.textContent = text;
         return div.innerHTML;

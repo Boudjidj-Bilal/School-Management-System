@@ -78,7 +78,13 @@
                                     {{ link.student.user.first_name|slice:":1" }}{{ link.student.user.last_name|slice:":1" }}
                                 </div>
                                 <div>
-                                    <p class="font-bold text-gray-800">{{ link.student.user.last_name }} {{ link.student.user.first_name }}</p>
+                                    <p class="font-bold text-gray-800">
+                                        {{ link.student.user.last_name }} {{ link.student.user.first_name }}
+                                        <!-- Nom d'utilisateur -->
+                                        {% if link.student.user.username %}
+                                            <span class="text-xs text-gray-400 font-normal ml-1">({{ link.student.user.username }})</span>
+                                        {% endif %}
+                                    </p>
                                     <span class="justification-badge hidden text-xs bg-gray-100 text-gray-600 px-2 py-0.5 rounded border border-gray-300 mt-1"></span>
                                 </div>
                             </div>

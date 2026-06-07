@@ -239,6 +239,7 @@ document.addEventListener('DOMContentLoaded', () => {
         studentsData.forEach(student => {
             let mentionHtml = '';
             
+            // Si Global, on ajoute le selecteur de mention
             if (isGlobal) {
                 let optionsHtml = '<option value="">-- Aucune --</option>';
                 if (mentionsChoices) {
@@ -259,11 +260,18 @@ document.addEventListener('DOMContentLoaded', () => {
                     </div>
                 `;
             }
-
+    
+            // Affichage du nom d'utilisateur dans la liste de saisie des appréciations
+            const usernameHtml = student.username ? `<span class="text-xs text-gray-400 block sm:inline sm:ml-1">(${student.username})</span>` : '';
+    
+            // HTML de l'item
             const itemHtml = `
                 <div class="student-item bg-white p-3 rounded-lg shadow-sm border border-gray-100 flex flex-col md:flex-row gap-4 items-start" data-student-id="${student.student_id}">
                     <div class="md:w-1/4 pt-2">
-                        <span class="font-bold text-gray-800 text-lg md:text-base">${student.name}</span>
+                        <span class="font-bold text-gray-800 text-lg md:text-base">
+                            ${student.name}
+                            ${usernameHtml}
+                        </span>
                         ${mentionHtml}
                     </div>
                     <div class="md:w-3/4 relative w-full">

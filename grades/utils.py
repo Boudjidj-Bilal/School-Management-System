@@ -222,12 +222,15 @@ def get_grades_data_for_specific_context(teacher_staff, current_year, student_cl
         
         evaluations = get_evaluations_for_subject(ts, student_class, selected_term)
         
+        # Note : si 'is_main_grade' manque dans votre get_evaluations_for_subject, 
+        # assurez-vous de l'ajouter dans list() si vous en avez besoin côté JS !
         data_payload['evaluations'] = list(evaluations.values(
             'id', 
             'name', 
             'date', 
             'coefficient',
             'max_grade'
+            # 'is_main_grade' # Parfois utile d'ajouter ce champ s'il existe dans le modèle
         ))
         
         avg = calculate_subject_class_average(student_class, ts, selected_term)
@@ -239,6 +242,7 @@ def get_grades_data_for_specific_context(teacher_staff, current_year, student_cl
             student_averages_list.append({
                 'student_id': class_student.student.id,
                 'student_name': f"{class_student.student.user.first_name} {class_student.student.user.last_name}",
+                'username': class_student.student.user.username,
                 'average': student_avg if student_avg is not None else "N/A"
             })
         data_payload['student_averages'] = student_averages_list
@@ -254,6 +258,7 @@ def get_grades_data_for_specific_context(teacher_staff, current_year, student_cl
             student_averages_list.append({
                 'student_id': student.id,
                 'student_name': f"{student.user.first_name} {student.user.last_name}",
+                'username': student.user.username,  # <--- [AJOUT ICI]
                 'average': avg if avg is not None else "N/A"
             })
         data_payload['student_averages'] = student_averages_list
@@ -381,7 +386,6 @@ def get_student_grades_view_data(student, current_year):
 # ====================================================================
 # FONCTIONS POUR LE TABLEAU DE BORD DES APPRÉCIATIONS
 # ====================================================================
-
 def get_appreciations_data_for_context(current_year, student_class, teacher_subject_id, selected_term, is_global=False):
     
     if not selected_term:
@@ -426,6 +430,7 @@ def get_appreciations_data_for_context(current_year, student_class, teacher_subj
         student_info = {
             'student_id': student.id,
             'name': f"{student.user.last_name} {student.user.first_name}",
+            'username': student.user.username, 
             'appreciation_content': appreciation.content if appreciation else "",
             'appreciation_id': appreciation.id if appreciation else None,
         }

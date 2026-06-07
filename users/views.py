@@ -288,7 +288,7 @@ def password_reset(request):
             return JsonResponse({'success': False, 'message': str(e)}, status=500)
 
 
-def password_reset_confirm(request, uidb64, token):
+def password_reset_confirm_old(request, uidb64, token):
     """
     Gère la page de confirmation de réinitialisation de mot de passe et le changement du mot de passe.
     """
@@ -319,6 +319,46 @@ def password_reset_confirm(request, uidb64, token):
         return render(request, 'error_page.html', {
             'message': 'Le lien de réinitialisation est invalide ou a expiré.'
         })
+
+
+def password_reset_confirm(request, uidb64, token):
+    """
+    Gère la page de confirmation de réinitialisation de mot de passe et le changement du mot de passe.
+    """
+    try:
+        uid = force_str(urlsafe_base64_decode(uidb64))
+        user = User.objects.get(pk=uid)
+    except (TypeError, ValueError, OverflowError, User.DoesNotExist):
+        user = None
+
+    if user is not None and PasswordResetTokenGenerator().check_token(user, token):
+        if request.method == 'GET':
+            return render(request, 'users/password_reset_confirm.html', {'uidb64': uidb64, 'token': token})
+        
+        if request.method == 'POST':
+            try:
+                data = json.loads(request.body)
+                new_password = data.get('new_password')
+                
+                # Vérification de la robustesse
+                is_valid, pwd_message = is_strong_password(new_password)
+                if not is_valid:
+                    # Si le mot de passe n'est pas robuste, on retourne l'erreur directement
+                    return JsonResponse({'success': False, 'message': pwd_message})
+                
+                user, message = change_user_password(user.id, new_password)
+
+                if user:
+                    return JsonResponse({'success': True, 'message': message})
+                else: 
+                    return JsonResponse({'success': False, 'message': message})
+            except Exception as e:
+                return JsonResponse({'success': False, 'message': str(e)}, status=500)
+    else:
+        return render(request, 'error_page.html', {
+            'message': 'Le lien de réinitialisation est invalide ou a expiré.'
+        })
+
 
 @login_required
 def manage_users_view(request):
@@ -432,8 +472,10 @@ def create_user_view(request):
         password = data.get('password')
 
         staff_type = data.get('staff_type')
-
         
+        # Récupération du Numéro National
+        national_number = data.get('national_number')
+
         if get_user_type(request.user) == "SuperAdministrator":
             school_id = request.session.get('selected_school_id')
         else:
@@ -467,8 +509,13 @@ def create_user_view(request):
 
             if user_type == 'student':
                 specific_user = Student.objects.get(user=user_to_update)
+                # Sauvegarde du numéro national pour l'étudiant
+                if national_number is not None:
+                    specific_user.national_number = national_number
+
             elif user_type == 'parent':
                 specific_user = Parent.objects.get(user=user_to_update)
+
             elif user_type == 'staff':
                 specific_user = Staff.objects.get(user=user_to_update)
                 if staff_type != specific_user.staff_type :
@@ -482,7 +529,6 @@ def create_user_view(request):
             if birth_date:
                 specific_user.birth_date = birth_date
 
-                
             if modif_status == True:
                 if year.running == False:
                     specific_user.save()
@@ -544,13 +590,12 @@ def create_user_view(request):
                 )
                 
             elif user_type == 'student':
-                # def create_student(user_id, school_id, gender, birth_date=None):
-
                 student, message_error = create_student(
                     user=user_add,
                     school=school,
                     gender=gender,
                     address=address,
+                    national_number=national_number,
                     birth_date=birth_date
                 )
             elif user_type == 'parent':
@@ -868,15 +913,18 @@ def api_change_password(request):
         if new_password != confirm_password:
             return JsonResponse({'success': False, 'message': "Les nouveaux mots de passe ne correspondent pas."}, status=400)
 
+        # Vérification de la robustesse
+        is_valid, pwd_message = is_strong_password(new_password)
+        if not is_valid:
+            # Retourne directement l'erreur spécifique générée par is_strong_password
+            return JsonResponse({'success': False, 'message': pwd_message}, status=400)
+
         # 2. Vérification de l'ancien mot de passe
         user = request.user
         if not user.check_password(current_password):
             return JsonResponse({'success': False, 'message': "Votre mot de passe actuel est incorrect."}, status=400)
 
         # 3. Changement du mot de passe
-        if len(new_password) < 4:
-             return JsonResponse({'success': False, 'message': "Le nouveau mot de passe doit contenir au moins 4 caractères."}, status=400)
-
         user.set_password(new_password)
         user.save()
 
@@ -891,7 +939,7 @@ def api_change_password(request):
     except Exception as e:
         print(f"Erreur changement mot de passe: {e}")
         return JsonResponse({'success': False, 'message': "Une erreur serveur est survenue."}, status=500)
-    
+
 def custom_page_not_found_view(request, exception=None):
     """
     Vue personnalisée pour l'erreur 404 (Page non trouvée).

@@ -74,7 +74,12 @@
                         <ul id="student-main-avg-{{ class_id }}" class="hidden mt-4 pr-2 max-h-60 overflow-y-auto space-y-1 divide-y divide-indigo-100">
                             {% for student in data.student_averages %}
                             <li class="flex justify-between items-center text-sm py-1">
-                                <span class="text-gray-700">{{ student.student_name }}</span>
+                                <span class="text-gray-700">
+                                    {{ student.student_name }}
+                                    {% if student.username %}
+                                        <span class="text-xs text-gray-400 ml-1">({{ student.username }})</span>
+                                    {% endif %}
+                                </span>
                                 <span class="font-bold text-gray-900">{{ student.average }}</span>
                             </li>
                             {% endfor %}
@@ -172,7 +177,12 @@
                                             <ul class="space-y-1 divide-y divide-gray-100">
                                             {% for student in data.student_averages %}
                                             <li class="flex justify-between items-center text-sm py-1">
-                                                <span class="text-gray-700">{{ student.student_name }}</span>
+                                                <span class="text-gray-700">
+                                                    {{ student.student_name }}
+                                                    {% if student.username %}
+                                                        <span class="text-xs text-gray-400 ml-1">({{ student.username }})</span>
+                                                    {% endif %}
+                                                </span>
                                                 <span class="font-bold text-gray-900">{{ student.average }}</span>
                                             </li>
                                             {% endfor %}

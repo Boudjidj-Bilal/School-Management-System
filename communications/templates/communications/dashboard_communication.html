@@ -58,8 +58,12 @@
                     ?
                 </div>
                 <div class="min-w-0 overflow-hidden">
-                    <h3 class="font-bold text-gray-800 truncate" id="header-name">Nom Contact</h3>
-                    <p class="text-xs text-gray-500 flex items-center truncate">
+                    <!-- Conteneur flex pour aligner le nom et le username sur la même ligne -->
+                    <div class="flex items-baseline truncate">
+                        <h3 class="font-bold text-gray-800 truncate" id="header-name">Nom Contact</h3>
+                        <span id="header-username" class="text-xs text-gray-400 font-normal ml-1 truncate hidden"></span>
+                    </div>
+                    <p class="text-xs text-gray-500 flex items-center truncate mt-0.5">
                         <span id="header-status-indicator" class="w-2 h-2 rounded-full bg-green-500 mr-1 flex-shrink-0"></span>
                         <span id="header-role">Rôle</span>
                     </p>
