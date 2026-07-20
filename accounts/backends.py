@@ -12,7 +12,7 @@ class MailerooBackend(BaseEmailBackend):
         super().__init__(fail_silently=fail_silently)
         self.api_key = settings.MAILEROO_API_KEY
         # URL API (Utiliser celle qui répond, même avec erreur 400)
-        self.api_url = "https://smtp.maileroo.com/send" 
+        self.api_url = "https://smtp.maileroo.com/api/v2/emails"
 
     def send_messages(self, email_messages):
         if not email_messages:
@@ -24,28 +24,27 @@ class MailerooBackend(BaseEmailBackend):
             if sent:
                 count += 1
         return count
-
+    
     def _send(self, email_message):
         if not email_message.recipients():
             return False
 
-        # Extraction des données
         to_email = email_message.to[0] if email_message.to else ""
         subject = str(email_message.subject) if email_message.subject else "Pas de sujet"
-        
-        # Debug : Vérifier le contenu avant envoi
-        print(f"--- Envoi Maileroo ---")
-        print(f"To: {to_email}")
-        print(f"Subject: {subject}")
 
-        # Préparation des données pour l'API
-        # On utilise 'data' (Form Data) au lieu de 'json' pour une compatibilité maximale
+        # STRUCTURE EXACTE DU PAYLOAD FONCTIONNEL
         payload = {
-            "from": email_message.from_email,
-            "to": to_email,
+            "from": {
+                "address": email_message.from_email,
+                "display_name": "Theranotes"
+            },
+            "to": [
+                {
+                    "address": to_email
+                }
+            ],
             "subject": subject,
-            "plain": email_message.body, # Certain APIs préfèrent 'plain' à 'text'
-            "text": email_message.body,   # On envoie les deux pour être sûr
+            "plain": email_message.body, # API Maileroo utilise 'plain' et non 'text'
         }
 
         # Gestion du HTML
@@ -63,27 +62,27 @@ class MailerooBackend(BaseEmailBackend):
             payload["html"] = html_content
 
         headers = {
-            "X-API-Key": self.api_key,
-            # Pas de Content-Type ici, requests le mettra automatiquement pour le Form-Data
+            "X-Api-Key": self.api_key,
+            "Content-Type": "application/json",
+            "Accept": "application/json"
         }
 
         try:
-            # Envoi en 'data' (application/x-www-form-urlencoded)
-            response = requests.post(self.api_url, data=payload, headers=headers)
+
+            print(json.dumps(payload, indent=4))
+            
+            print(settings.DEFAULT_FROM_EMAIL)
+
+            # Envoi direct en JSON
+            response = requests.post(self.api_url, json=payload, headers=headers, timeout=30)
             
             if response.status_code in [200, 201, 202]:
-                print("Maileroo: Succès")
-                return True
-            
-            # Si échec 400 avec Form-Data, on tente en JSON (Fallback)
-            if response.status_code >= 400:
-                print(f"Maileroo (Form-Data) échoué: {response.text}. Tentative JSON...")
-                headers["Content-Type"] = "application/json"
-                response = requests.post(self.api_url, json=payload, headers=headers)
+
+                print("STATUS :", response.status_code)
+                print("BODY :", response.text)
+                print("JSON :", response.json() if response.headers.get("Content-Type","").startswith("application/json") else response.text)
                 
-                if response.status_code in [200, 201, 202]:
-                    print("Maileroo (JSON): Succès")
-                    return True
+                return True
 
             error_msg = f"Erreur API Maileroo ({response.status_code}): {response.text}"
             print(error_msg)
