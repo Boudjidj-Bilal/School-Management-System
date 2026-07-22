@@ -73,7 +73,7 @@ if EMAIL_BACKEND_CHOICE == 'CONSOLE':
     DEFAULT_FROM_EMAIL = 'noreply@localhost'
     SUPPORT_EMAIL = 'support@localhost'
     
-elif EMAIL_BACKEND_CHOICE == 'MAILEROO':
+elif EMAIL_BACKEND_CHOICE == 'MAILROO':
     # Backend Maileroo (API)
     EMAIL_BACKEND = 'accounts.backends.MailerooBackend'
     MAILEROO_API_KEY = config('EMAIL_MAILEROO_API_KEY')
