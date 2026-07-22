@@ -262,7 +262,7 @@ def send_email(subject, message, recipient_list):
             message=message,
             from_email=from_email,
             recipient_list=recipient_list,
-            fail_silently=False,  # On veut lever une exception
+            fail_silently=True,  # On ne veut pas lever d'exception
         )
         return True
     except SMTPException as e:

@@ -27,8 +27,10 @@ from .forms import SchoolUpdateForm
 # --- Constantes pour la logique de gestion des trimestres ---
 TERM_TYPE_TRIMESTRE = "TRIMESTRE"
 TERM_TYPE_SEMESTRE = "SEMESTRE"
+TERM_TYPE_UNIQUE = "UNIQUE"
 MAX_COUNTER_TRIMESTRE = 3
 MAX_COUNTER_SEMESTRE = 2
+MAX_COUNTER_UNIQUE = 1
 
 User = get_user_model()
 
@@ -646,9 +648,19 @@ def manage_term(request):
                     return JsonResponse({'success': False, 'message': f'Aucun trimestre/semestre actif trouvé pour le niveau {level_obj.get_level_display()} et l\'année en cours.'}, status=404)
                 
                 # Déterminer la limite en fonction du type de niveau
-                is_trimestre = level_obj.term_type == TERM_TYPE_TRIMESTRE
-                MAX_COUNTER = MAX_COUNTER_TRIMESTRE if is_trimestre else MAX_COUNTER_SEMESTRE
-                term_type_name = "trimestre" if is_trimestre else "semestre"
+                # is_trimestre = level_obj.term_type == TERM_TYPE_TRIMESTRE
+                # MAX_COUNTER = MAX_COUNTER_TRIMESTRE if is_trimestre else MAX_COUNTER_SEMESTRE
+                # term_type_name = "trimestre" if is_trimestre else "semestre"
+
+                if level_obj.term_type == TERM_TYPE_TRIMESTRE:
+                    term_type_name = "trimestre"
+                    MAX_COUNTER = MAX_COUNTER_TRIMESTRE
+                elif level_obj.term_type == TERM_TYPE_SEMESTRE:
+                    term_type_name = "semestre"
+                    MAX_COUNTER = MAX_COUNTER_SEMESTRE
+                else:
+                    term_type_name = "unique"
+                    MAX_COUNTER = MAX_COUNTER_UNIQUE
                 
                 # B. Logique d'Avancement ('advance')
                 if action == 'advance':
@@ -742,8 +754,15 @@ def manage_term(request):
         ).order_by('-counter').first()
 
         # Déterminer la limite max
-        is_trimestre = level.term_type == TERM_TYPE_TRIMESTRE
-        MAX_COUNTER = MAX_COUNTER_TRIMESTRE if is_trimestre else MAX_COUNTER_SEMESTRE
+        # is_trimestre = level.term_type == TERM_TYPE_TRIMESTRE
+        # MAX_COUNTER = MAX_COUNTER_TRIMESTRE if is_trimestre else MAX_COUNTER_SEMESTRE
+
+        if level.term_type == TERM_TYPE_TRIMESTRE:
+            MAX_COUNTER = MAX_COUNTER_TRIMESTRE
+        elif level.term_type == TERM_TYPE_SEMESTRE:
+            MAX_COUNTER = MAX_COUNTER_SEMESTRE
+        else:
+            MAX_COUNTER = MAX_COUNTER_UNIQUE
         
         # Calculer le statut
         status = {
@@ -789,6 +808,8 @@ def edit_school_view(request):
         school_types_fr = [
             ("HIGHSCHOOL", "Lycée"),
             ("COLLEGE", "Collège"),
+            ("UNIVERSITY", "Université"), 
+            ("SCHOOL", "Ecole")
         ]
         
         context = {

@@ -14,6 +14,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if (!container) {
         console.error("ERREUR CRITIQUE : Conteneur #messaging-container introuvable.");
+        showToast("Une erreur est survenue.", "error");
         return;
     }
 
@@ -31,6 +32,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if (!CONFIG.urls.listConversations) {
         console.error("ERREUR CRITIQUE : URLs API non définies. Vérifiez les data-attributes HTML.");
+        showToast("Une erreur est survenue.", "error");
         return;
     }
 
@@ -55,7 +57,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const inputArea = document.getElementById('input-area');
     const messageForm = document.getElementById('message-form');
     const messageInput = document.getElementById('message-input');
-    const blockedMessage = document.getElementById('blocked-message');
+    // const blockedMessage = document.getElementById('blocked-message');
 
     // Modale
     const btnNewConv = document.getElementById('btn-new-conversation');
@@ -77,6 +79,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         } catch (error) {
             console.error("Erreur chargement conversations:", error);
+            showToast("Une erreur est survenue.", "error");
         }
     }
 
@@ -153,20 +156,26 @@ document.addEventListener('DOMContentLoaded', () => {
             if (data.success) {
                 if (headerName) headerName.textContent = data.interlocutor_name;
                 if (headerAvatar) headerAvatar.textContent = getInitials(data.interlocutor_name);
-                if (headerRole) headerRole.textContent = data.is_active ? 'Actif' : 'Inactif';
+                if (headerRole) headerRole.textContent = data.interlocutor_role;
                 if (headerStatusIndicator) headerStatusIndicator.className = `w-2 h-2 rounded-full mr-1 ${data.is_active ? 'bg-green-500' : 'bg-gray-400'}`;
 
-                if (data.is_active) {
-                    if (inputArea) inputArea.classList.remove('hidden');
-                    if (blockedMessage) blockedMessage.classList.add('hidden');
-                    if (messageInput) {
-                        messageInput.disabled = false;
+                if (inputArea) inputArea.classList.remove('hidden');
+
+                if (messageForm) {
+                    messageForm.classList.remove('hidden');
+                }
+                if (messageInput) {
+                    messageInput.disabled = !data.is_active;
+
+                    if (data.is_active) {
                         messageInput.focus();
                     }
-                } else {
-                    if (inputArea) inputArea.classList.remove('hidden');
-                    if (messageForm) messageForm.classList.add('hidden');
-                    if (blockedMessage) blockedMessage.classList.remove('hidden');
+                }
+
+                const sendBtn = document.getElementById('send-btn');
+
+                if (sendBtn) {
+                    sendBtn.disabled = !data.is_active;
                 }
 
                 renderMessages(data.messages);
@@ -174,6 +183,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         } catch (error) {
             console.error("Erreur API messages:", error);
+            showToast("Une erreur est survenue.", "error");
         }
     }
 
@@ -278,6 +288,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             } catch (e) {
                 console.error(e);
+                showToast("Une erreur est survenue.", "error");
             }
         });
 
@@ -318,6 +329,7 @@ document.addEventListener('DOMContentLoaded', () => {
             loadContacts();
         } else {
             console.error("Modale introuvable dans le DOM");
+            showToast("Une erreur est survenue.", "error");
         }
     }
 
@@ -365,6 +377,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         } catch (e) {
             console.error("Erreur fetch contacts:", e);
+            showToast("Une erreur est survenue.", "error");
             contactsListEl.innerHTML = '<p class="text-center text-red-500 p-4">Erreur réseau.</p>';
         }
     }
@@ -388,23 +401,64 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function buildContactItem(contact) {
-        const icon = contact.type === 'student' ? 'fa-user-graduate' : (contact.type === 'teacher' ? 'fa-chalkboard-teacher' : 'fa-user');
-        const color = contact.type === 'student' ? 'text-green-600 bg-green-100' : (contact.type === 'teacher' ? 'text-blue-600 bg-blue-100' : 'text-orange-600 bg-orange-100');
-        
-        // Construction du nom complet avec le username
-        const fullName = `${contact.first_name || ''} ${contact.last_name || ''}`.trim();
-        const displayLabel = fullName ? `${fullName} (@${contact.username})` : contact.username;
 
+        const config = {
+            principal: {
+                icon: 'fa-user-tie',
+                color: 'text-red-600 bg-red-100'
+            },
+            teacher: {
+                icon: 'fa-chalkboard-teacher',
+                color: 'text-blue-600 bg-blue-100'
+            },
+            cpe: {
+                icon: 'fa-user-shield',
+                color: 'text-purple-600 bg-purple-100'
+            },
+            administrator: {
+                icon: 'fa-briefcase',
+                color: 'text-amber-600 bg-amber-100'
+            },
+            parent: {
+                icon: 'fa-user',
+                color: 'text-orange-600 bg-orange-100'
+            },
+            student: {
+                icon: 'fa-user-graduate',
+                color: 'text-green-600 bg-green-100'
+            }
+        };
+    
+        const current = config[contact.type] || {
+            icon: 'fa-user',
+            color: 'text-gray-600 bg-gray-100'
+        };
+    
+        const displayLabel = `${contact.name} (@${contact.username})`;
+    
         return `
-            <div class="contact-item p-3 hover:bg-gray-50 cursor-pointer flex items-center transition-colors border-b border-gray-50" 
-                 data-id="${contact.id}" data-type="${contact.type}">
-                <div class="w-10 h-10 rounded-full ${color} flex-shrink-0 flex items-center justify-center mr-3">
-                    <i class="fas ${icon}"></i>
+            <div
+                class="contact-item p-3 hover:bg-gray-50 cursor-pointer flex items-center transition-colors border-b border-gray-50"
+                data-id="${contact.id}"
+                data-type="${contact.type}"
+            >
+    
+                <div class="w-10 h-10 rounded-full ${current.color} flex-shrink-0 flex items-center justify-center mr-3">
+                    <i class="fas ${current.icon}"></i>
                 </div>
-                <div class="min-w-0">
-                    <p class="font-semibold text-gray-800 text-sm truncate">${escapeHtml(displayLabel)}</p>
-                    <p class="text-xs text-gray-500 capitalize">${contact.type === 'teacher' ? 'Professeur' : (contact.type === 'student' ? 'Élève' : 'Parent')}</p>
+    
+                <div class="min-w-0 flex-1">
+    
+                    <p class="font-semibold text-gray-800 text-sm truncate">
+                        ${escapeHtml(displayLabel)}
+                    </p>
+    
+                    <p class="text-xs text-gray-500 truncate">
+                        ${escapeHtml(contact.role)}
+                    </p>
+    
                 </div>
+    
             </div>
         `;
     }
@@ -434,13 +488,14 @@ document.addEventListener('DOMContentLoaded', () => {
                         await loadConversations();
                         openConversation(data.conversation_id);
                     } else {
-                        alert(data.message);
+                        showToast(data.message, "error");
                         // Restore item state
                         item.style.opacity = '1';
                         item.style.pointerEvents = 'auto';
                     }
                 } catch (e) {
                     console.error(e);
+                    showToast("Une erreur est survenue.", "error");
                     item.style.opacity = '1';
                     item.style.pointerEvents = 'auto';
                 }
@@ -450,19 +505,104 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if (contactSearch) {
         contactSearch.addEventListener('input', (e) => {
-            const term = e.target.value.toLowerCase();
-            if (!window.availableContacts) return;
-            
-            const filtered = window.availableContacts.filter(c => c.name.toLowerCase().includes(term));
-            let html = '';
-            if (filtered.length === 0) {
-                html = '<div class="p-4 text-center text-gray-400">Aucun résultat.</div>';
-            } else {
-                filtered.forEach(c => html += buildContactItem(c));
+    
+            const term = e.target.value.trim().toLowerCase();
+    
+            if (!window.availableContacts) {
+                return;
             }
-            contactsListEl.innerHTML = html;
+    
+            const filtered = window.availableContacts.filter(contact => {
+    
+                return (
+                    contact.name.toLowerCase().includes(term) ||
+                    contact.username.toLowerCase().includes(term) ||
+                    contact.role.toLowerCase().includes(term)
+                );
+    
+            });
+    
+            if (filtered.length === 0) {
+    
+                contactsListEl.innerHTML = `
+                    <div class="p-8 text-center text-gray-400">
+                        Aucun utilisateur trouvé.
+                    </div>
+                `;
+    
+                return;
+            }
+    
+            contactsListEl.innerHTML = filtered
+                .map(buildContactItem)
+                .join("");
+    
             attachContactListeners();
+    
         });
+    }
+
+    function showToast(message, type = "error") {
+
+        const container = document.getElementById("toast-container");
+    
+        if (!container) return;
+    
+        const colors = {
+            success: "bg-green-600",
+            error: "bg-red-600",
+            warning: "bg-yellow-500",
+            info: "bg-indigo-600"
+        };
+    
+        const icons = {
+            success: "fa-check-circle",
+            error: "fa-circle-exclamation",
+            warning: "fa-triangle-exclamation",
+            info: "fa-circle-info"
+        };
+    
+        const toast = document.createElement("div");
+    
+        toast.className = `
+            ${colors[type]}
+            text-white
+            rounded-lg
+            shadow-xl
+            px-4
+            py-3
+            min-w-[320px]
+            max-w-[420px]
+            flex
+            items-center
+            gap-3
+            pointer-events-auto
+            opacity-0
+            translate-x-8
+            transition-all
+            duration-300
+        `;
+    
+        toast.innerHTML = `
+            <i class="fas ${icons[type]} text-lg"></i>
+            <span class="flex-1">${escapeHtml(message)}</span>
+        `;
+    
+        container.appendChild(toast);
+    
+        requestAnimationFrame(() => {
+            toast.classList.remove("opacity-0", "translate-x-8");
+        });
+    
+        setTimeout(() => {
+    
+            toast.classList.add("opacity-0", "translate-x-8");
+    
+            setTimeout(() => {
+                toast.remove();
+            }, 300);
+    
+        }, 4000);
     }
 
 

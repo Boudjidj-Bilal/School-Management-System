@@ -128,7 +128,7 @@
                 <li>
                     <a href="{% url 'manage_terms' %}" class="flex items-center space-x-3 text-gray-300 hover:bg-gray-700 hover:text-white rounded-lg p-2 transition-colors duration-200">
                         <i class="fas fa-calendar-check text-lg"></i>
-                        <span>Trimestres/Semestres</span>
+                        <span>Découpage de l'année</span>
                     </a>
                 </li>
             {% endif %}
@@ -150,6 +150,15 @@
                     </a>
                 </li>
             {% endif %}
+            {% if user_is_cpe or user_is_principal or user_is_administrator %}
+                <li>
+                    <a href="{% url 'communications:dashboard' %}" class="flex items-center space-x-3 text-gray-300 hover:bg-gray-700 hover:text-white rounded-lg p-2 transition-colors duration-200">
+                        <i class="fas fa-comments text-lg"></i>
+                        <span>Messagerie</span>
+                    </a>
+                </li>
+            {% endif %}
+            
 
             <!--ANNONCES & ABSENCES (STAFF ADMINISTRATIF) -->
             {% if user_is_cpe or user_is_principal or user_is_super_admin or user_is_administrator %}

@@ -102,70 +102,112 @@ class AnnouncementRecipient(models.Model):
 
 
 # --> Représente une conversation (Fil de discussion)
+# class Messaging(models.Model):
+#     """
+#     Une conversation lie TOUJOURS un Professeur (Teacher) à :
+#     - SOIT un Parent
+#     - SOIT un Élève
+#     """
+#     teacher = models.ForeignKey(
+#         Staff, on_delete=models.CASCADE, related_name="messagings"
+#     )
+    
+#     # Destinataire A : Le Parent (Optionnel)
+#     parent = models.ForeignKey(
+#         Parent, on_delete=models.CASCADE, related_name="messagings",
+#         null=True, blank=True
+#     )
+    
+#     # Destinataire B : L'Élève (Optionnel) - [NOUVEAU]
+#     student = models.ForeignKey(
+#         Student, on_delete=models.CASCADE, related_name="messagings",
+#         null=True, blank=True
+#     )
+
+#     # Statut global de la conversation (pour soft delete / archivage manuel)
+#     # Note : Le blocage par année se fera via la logique métier (utils), pas ce champ.
+#     is_active = models.BooleanField(default=True)
+    
+#     # Pour le tri : date du dernier message (mis à jour à chaque envoi)
+#     last_message_date = models.DateTimeField(auto_now_add=True)
+
+#     class Meta:
+#         ordering = ['-last_message_date'] # Les conversations récentes en premier
+#         constraints = [
+#             # Unicité Professeur <-> Parent
+#             models.UniqueConstraint(
+#                 fields=["teacher", "parent"],
+#                 condition=Q(student__isnull=True),
+#                 name="unique_messaging_teacher_parent"
+#             ),
+#             # Unicité Professeur <-> Élève
+#             models.UniqueConstraint(
+#                 fields=["teacher", "student"],
+#                 condition=Q(parent__isnull=True),
+#                 name="unique_messaging_teacher_student"
+#             )
+#         ]
+
+#     def clean(self):
+#         """Validation pour s'assurer qu'on a soit un parent, soit un élève, mais pas les deux."""
+#         if self.parent and self.student:
+#             raise ValidationError("Une conversation ne peut pas lier un professeur à un parent ET un élève en même temps.")
+#         if not self.parent and not self.student:
+#             raise ValidationError("Une conversation doit avoir un interlocuteur (Parent ou Élève).")
+
+#     def save(self, *args, **kwargs):
+#         self.clean()
+#         super().save(*args, **kwargs)
+
+#     def __str__(self):
+#         if self.parent:
+#             return f"Discussion : {self.teacher.user.last_name} <-> {self.parent.user.last_name} (Parent)"
+#         elif self.student:
+#             return f"Discussion : {self.teacher.user.last_name} <-> {self.student.user.last_name} (Élève)"
+#         return f"Discussion {self.id}"
+
+
 class Messaging(models.Model):
-    """
-    Une conversation lie TOUJOURS un Professeur (Teacher) à :
-    - SOIT un Parent
-    - SOIT un Élève
-    """
-    teacher = models.ForeignKey(
-        Staff, on_delete=models.CASCADE, related_name="messagings"
-    )
-    
-    # Destinataire A : Le Parent (Optionnel)
-    parent = models.ForeignKey(
-        Parent, on_delete=models.CASCADE, related_name="messagings",
-        null=True, blank=True
-    )
-    
-    # Destinataire B : L'Élève (Optionnel) - [NOUVEAU]
-    student = models.ForeignKey(
-        Student, on_delete=models.CASCADE, related_name="messagings",
-        null=True, blank=True
+
+    user1 = models.ForeignKey(
+        User,
+        related_name="messaging_user1",
+        on_delete=models.CASCADE
     )
 
-    # Statut global de la conversation (pour soft delete / archivage manuel)
-    # Note : Le blocage par année se fera via la logique métier (utils), pas ce champ.
+    user2 = models.ForeignKey(
+        User,
+        related_name="messaging_user2",
+        on_delete=models.CASCADE
+    )
+
     is_active = models.BooleanField(default=True)
-    
-    # Pour le tri : date du dernier message (mis à jour à chaque envoi)
-    last_message_date = models.DateTimeField(auto_now_add=True)
+
+    last_message_date = models.DateTimeField(auto_now=True)
 
     class Meta:
-        ordering = ['-last_message_date'] # Les conversations récentes en premier
+        ordering = ["-last_message_date"]
         constraints = [
-            # Unicité Professeur <-> Parent
             models.UniqueConstraint(
-                fields=["teacher", "parent"],
-                condition=Q(student__isnull=True),
-                name="unique_messaging_teacher_parent"
-            ),
-            # Unicité Professeur <-> Élève
-            models.UniqueConstraint(
-                fields=["teacher", "student"],
-                condition=Q(parent__isnull=True),
-                name="unique_messaging_teacher_student"
+                fields=["user1", "user2"],
+                name="unique_conversation"
             )
         ]
 
     def clean(self):
-        """Validation pour s'assurer qu'on a soit un parent, soit un élève, mais pas les deux."""
-        if self.parent and self.student:
-            raise ValidationError("Une conversation ne peut pas lier un professeur à un parent ET un élève en même temps.")
-        if not self.parent and not self.student:
-            raise ValidationError("Une conversation doit avoir un interlocuteur (Parent ou Élève).")
+        if self.user1 == self.user2:
+            raise ValidationError(
+                "Un utilisateur ne peut pas discuter avec lui-même."
+            )
 
     def save(self, *args, **kwargs):
+        # Toujours stocker le plus petit id en premier
+        if self.user1_id and self.user2_id:
+            if self.user1_id > self.user2_id:
+                self.user1, self.user2 = self.user2, self.user1
+
         self.clean()
         super().save(*args, **kwargs)
-
-    def __str__(self):
-        if self.parent:
-            return f"Discussion : {self.teacher.user.last_name} <-> {self.parent.user.last_name} (Parent)"
-        elif self.student:
-            return f"Discussion : {self.teacher.user.last_name} <-> {self.student.user.last_name} (Élève)"
-        return f"Discussion {self.id}"
-
 
 # --> Représente un message individuel dans une conversation
 class Message(models.Model):

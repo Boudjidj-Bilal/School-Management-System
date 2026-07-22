@@ -6,7 +6,9 @@ class School(models.Model):
 
     SCHOOL_TYPE_CHOICES = [
         ("HIGHSCHOOL", "high_school"),   # Lycée
-        ("COLLEGE", "college"),           # Collège
+        ("COLLEGE", "college"),          # Collège
+        ("UNIVERSITY", "university"),    # Université
+        ("SCHOOL", "school")             # Ecole
     ]
 
     name = models.CharField(max_length=200)           # nom de l'école

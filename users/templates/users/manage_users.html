@@ -32,6 +32,7 @@
                                        data-user-id="{{ user_obj.user.id }}" 
                                        data-first-name="{{ user_obj.user.first_name }}" 
                                        data-last-name="{{ user_obj.user.last_name }}" 
+                                       data-phone-number="{{ user_obj.user.phone_number }}" 
                                        data-email="{{ user_obj.user.email }}" 
                                        data-user-type="{{ user_type }}" 
                                        data-staff-type="{{ user_obj.staff_type|default:'' }}" 
@@ -91,6 +92,7 @@
                                        data-user-id="{{ user_obj.user.id }}" 
                                        data-first-name="{{ user_obj.user.first_name }}" 
                                        data-last-name="{{ user_obj.user.last_name }}" 
+                                       data-phone-number="{{ user_obj.user.phone_number }}" 
                                        data-email="{{ user_obj.user.email }}" 
                                        data-user-type="{{ user_type }}" 
                                        data-staff-type="{{ user_obj.staff_type|default:'' }}" 
@@ -143,6 +145,7 @@
                                    data-user-id="{{ user_obj.user.id }}" 
                                    data-first-name="{{ user_obj.user.first_name }}" 
                                    data-last-name="{{ user_obj.user.last_name }}" 
+                                   data-phone-number="{{ user_obj.user.phone_number }}" 
                                    data-email="{{ user_obj.user.email }}" 
                                    data-user-type="{{ user_type }}" 
                                    data-staff-type="{{ user_obj.staff_type|default:'' }}" 
@@ -229,10 +232,16 @@
                     class="mt-1 block w-full pl-3 pr-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 transition duration-300">
             </div>
             
+            <div class="mb-4">
+                <label for="phone_number" class="block text-sm font-medium text-gray-700">Numéro de téléphone</label>
+                <input type="text" id="phone_number" name="phone_number"
+                    class="mt-1 block w-full pl-3 pr-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 transition duration-300">
+            </div>
+
             <div id="password-field">
                 <label for="password" class="block text-sm font-medium text-gray-700">Mot de passe</label>
-                <input type="password" id="password" name="password" minlength="8"
-                    class="mt-1 block w-full pl-3 pr-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 transition duration-300">
+                <input type="password" id="password" name="password" minlength="8" 
+                    class="mt-1 block w-full pl-3 pr-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 transition duration-300">            
             </div>
 
             <div id="school-id-field" class="mb-4" style="display: none;">

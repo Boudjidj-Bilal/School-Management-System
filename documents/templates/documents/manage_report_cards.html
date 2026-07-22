@@ -18,8 +18,10 @@
                     
                     {% if t.level.term_type == "SEMESTRE" %}
                         Semestre {{ t.counter }}
-                    {% else %}
+                    {% elif t.level.term_type == "TRIMESTRE" %}
                         Trimestre {{ t.counter }}
+                    {% else %}
+                        Unique {{ t.counter }}
                     {% endif %}
                 </a>
             {% endfor %}

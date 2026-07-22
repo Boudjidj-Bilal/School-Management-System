@@ -72,7 +72,7 @@ document.addEventListener('DOMContentLoaded', () => {
         
         if (action === 'advance') {
             title = `Passer au Terme ${currentCounter}`;
-            message = `Êtes-vous sûr de vouloir AVANCER le niveau ${levelName} au ${currentCounter}e terme/semestre ? Cette action est IRRÉVERSIBLE.`;
+            message = `Êtes-vous sûr de vouloir AVANCER le niveau ${levelName} au ${currentCounter}e terme ? Cette action est IRRÉVERSIBLE.`;
             modalConfirmBtn.className = 'py-2 px-4 rounded-lg text-white bg-green-600 hover:bg-green-700 transition duration-150 ease-in-out';
         } else if (action === 'finish') {
             title = `Terminer le Cycle`;

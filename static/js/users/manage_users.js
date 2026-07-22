@@ -9,6 +9,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const firstNameInput = document.getElementById('first_name');
     const lastNameInput = document.getElementById('last_name');
     const emailInput = document.getElementById('email');
+    const phoneNumberInput = document.getElementById('phone_number');
     const passwordField = document.getElementById('password-field');
     const passwordInput = document.getElementById('password');
     const staffTypeField = document.getElementById('staff-type-field');
@@ -70,6 +71,12 @@ document.addEventListener('DOMContentLoaded', function() {
         if (nationalNumberInput) {
             nationalNumberInput.value = user.nationalNumber || '';
         }
+        if (user.phoneNumber !== "None"){
+            phoneNumberInput.value = user.phoneNumber;
+        }
+        else {
+            phoneNumberInput.value = '';
+        }
 
         // Gestion de l'affichage Photo vs Initiales
         if (user.profilePictureUrl && user.profilePictureUrl !== 'None' && user.profilePictureUrl !== '') {
@@ -110,6 +117,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 firstName: this.getAttribute('data-first-name'),
                 lastName: this.getAttribute('data-last-name'),
                 email: this.getAttribute('data-email'),
+                phoneNumber: this.getAttribute('data-phone-number'),
                 staffType: this.getAttribute('data-staff-type'),
                 address: this.getAttribute('data-address'),
                 gender: this.getAttribute('data-gender'),
@@ -118,6 +126,8 @@ document.addEventListener('DOMContentLoaded', function() {
                 // Extraction du numéro national de l'attribut data
                 nationalNumber: this.getAttribute('data-national-number')
             };
+
+            console.log(user)
             showEditMode(user);
         });
     });

@@ -20,7 +20,7 @@ from django.contrib.auth.tokens import PasswordResetTokenGenerator
 # Imports des Services (Utils des autres apps)
 from attendance.utils import get_dashboard_attendance_summary, get_school_attendance_kpis
 from attendance.models import Attendance # Pour les alertes CPE
-from communications.utils import get_dashboard_messaging_stats, get_dashboard_last_announcement
+from communications.utils_old import get_dashboard_messaging_stats, get_dashboard_last_announcement
 
 
 from .models import User, GENDER_CHOICES
@@ -465,6 +465,7 @@ def create_user_view(request):
         # Récupération des données communes
         first_name = data.get('first_name')
         last_name = data.get('last_name')
+        phone_number = data.get('phone_number')
         email = data.get('email', None)
         gender = data.get('gender')
         address = data.get('address')
@@ -498,6 +499,8 @@ def create_user_view(request):
                 user_to_update.last_name = last_name
             if email:
                 user_to_update.email = email
+            if phone_number:
+                user_to_update.phone_number = phone_number
             if password:
                 user_to_update.set_password(password)
 
@@ -570,6 +573,7 @@ def create_user_view(request):
                 username=username,
                 password=password,
                 email=email,
+                phone_number=phone_number,
                 first_name=formater_first_name,
                 last_name=formater_last_name
             )

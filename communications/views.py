@@ -1,4 +1,5 @@
 import json
+from django.db.models import Q
 from django.shortcuts import render, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse
@@ -8,7 +9,7 @@ from django.utils import timezone
  
 # Modèles
 from .models import Messaging, Message, Announcement, AnnouncementRecipient
-from users.models import Staff, Student, Parent
+from users.models import Staff, Student, Parent, User
 from schools.models import School
 
 # Utilitaires
@@ -17,20 +18,55 @@ from users.utils import get_user_type, get_student_context
 from .utils import (
     get_user_conversations,
     get_available_contacts,
-    is_conversation_active,
+    can_users_message,
     create_announcement_logic,
     get_available_targets,
+    get_or_create_conversation
 )
 
 
-# --- HELPER: Identifier le rôle de l'utilisateur connecté ---
+# --- HELPER : Identifier le rôle et le profil de l'utilisateur connecté ---
 def get_user_role_profile(user):
-    if hasattr(user, 'staff_user') and user.staff_user.staff_type == 'TEACHER':
-        return 'TEACHER', user.staff_user
-    elif hasattr(user, 'student_user'):
-        return 'STUDENT', user.student_user
-    elif hasattr(user, 'parent_user'):
-        return 'PARENT', user.parent_user
+    """
+    Retourne un tuple (role, profile).
+
+    Roles possibles :
+        - PRINCIPAL
+        - TEACHER
+        - CPE
+        - ADMINISTRATOR
+        - STUDENT
+        - PARENT
+
+    Retourne (None, None) si l'utilisateur ne possède
+    pas de profil de messagerie (SuperAdmin ou inconnu).
+    """
+
+    # Personnel
+    if hasattr(user, "staff_user"):
+        staff = user.staff_user
+
+        if staff.staff_type == "PRINCIPAL":
+            return "PRINCIPAL", staff
+
+        if staff.staff_type == "TEACHER":
+            return "TEACHER", staff
+
+        if staff.staff_type == "CPE":
+            return "CPE", staff
+
+        if staff.staff_type == "ADMINISTRATOR":
+            return "ADMINISTRATOR", staff
+
+    # Élève
+    if hasattr(user, "student_user"):
+        return "STUDENT", user.student_user
+
+    # Parent
+    if hasattr(user, "parent_user"):
+        return "PARENT", user.parent_user
+
+    # Super administrateur ou utilisateur non autorisé
     return None, None
 
 
@@ -58,7 +94,7 @@ def messaging_dashboard_view(request):
     current_year = get_current_year_for_school(school)
 
     if current_year:
-        if not current_year.running and not current_year.end_year:
+        if not current_year.running and not current_year.end_year and not current_year.registration :
             return render(request, "404.html", status=404)
     else: 
         return render(request, "404.html", status=404)
@@ -90,20 +126,7 @@ def api_get_conversations(request):
     # Pour simplifier l'affichage de la liste, on va déduire l'année active contextuellement dans utils.
     # Ici, on prend l'année de l'école du profil (ou du premier enfant pour le parent) pour référence.
     
-    school = None
-    if role == 'TEACHER' or role == 'STUDENT':
-        school = profile.school
-    elif role == 'PARENT':
-        # On prend l'école du premier enfant pour référence d'année par défaut
-        # (Dans un système multi-école parfait, il faudrait boucler, mais restons simples)
-        from users.models import Child
-        first_child = Child.objects.filter(parent=profile).first()
-        if first_child:
-            school = first_child.student.school
-            
-    current_year = get_current_year_for_school(school) if school else None
-
-    conversations = get_user_conversations(request.user, current_year)
+    conversations = get_user_conversations(request.user)
     
     return JsonResponse({'success': True, 'conversations': conversations})
 
@@ -118,13 +141,8 @@ def api_get_messages(request, conversation_id):
         conversation = Messaging.objects.get(id=conversation_id)
         
         # Vérification sécurité : L'utilisateur doit faire partie de la conversation
-        is_participant = False
-        if conversation.teacher.user == request.user: is_participant = True
-        if conversation.student and conversation.student.user == request.user: is_participant = True
-        if conversation.parent and conversation.parent.user == request.user: is_participant = True
-        
-        if not is_participant:
-            return JsonResponse({'success': False, 'message': 'Accès refusé'}, status=403)
+        if request.user not in (conversation.user1, conversation.user2):
+            return JsonResponse({"success": False,"message": "Accès refusé"},status=403)
 
         # Marquer comme LU les messages qui ne viennent pas de moi
         conversation.messages.filter(is_read=False).exclude(sender=request.user).update(is_read=True)
@@ -145,18 +163,13 @@ def api_get_messages(request, conversation_id):
                 'sender_name': f"{msg['sender__first_name']} {msg['sender__last_name']}"
             })
 
-        # Vérifier si la conversation est active pour l'écriture (Règle A-B-C)
-        # On récupère l'année scolaire de l'école du prof
-        prof_school_year = get_current_year_for_school(conversation.teacher.school)
-        is_active = is_conversation_active(conversation, prof_school_year)
-
         # Récupération du nom et du nom d'utilisateur via le helper
         interlocutor_name, interlocutor_username = get_interlocutor_details(conversation, request.user)
 
         return JsonResponse({
             'success': True, 
             'messages': formatted_messages,
-            'is_active': is_active,
+            'is_active': True,
             'interlocutor_name': interlocutor_name,
             'interlocutor_username': interlocutor_username 
         })
@@ -184,17 +197,11 @@ def api_send_message(request):
 
         # 1. Vérification participant (Sécurité)
         is_participant = False
-        if conversation.teacher.user == request.user: is_participant = True
-        if conversation.student and conversation.student.user == request.user: is_participant = True
-        if conversation.parent and conversation.parent.user == request.user: is_participant = True
+        if request.user in (conversation.user1, conversation.user2):
+            is_participant = True
         
         if not is_participant:
             return JsonResponse({'success': False, 'message': 'Accès refusé'}, status=403)
-
-        # 2. Vérification Règle A-B-C (Année active)
-        prof_school_year = get_current_year_for_school(conversation.teacher.school)
-        if not is_conversation_active(conversation, prof_school_year):
-            return JsonResponse({'success': False, 'message': 'Cette conversation est archivée (année scolaire terminée ou lien rompu).'}, status=403)
 
         # 3. Création
         message = Message.objects.create(
@@ -224,24 +231,8 @@ def api_get_contacts(request):
     """
     Récupère l'annuaire des contacts disponibles pour une NOUVELLE conversation.
     """
-    role, profile = get_user_role_profile(request.user)
     
-    # Détermination de l'année scolaire de référence
-    school = None
-    if role == 'TEACHER' or role == 'STUDENT':
-        school = profile.school
-    elif role == 'PARENT':
-        # On essaie de trouver une école via les enfants
-        from users.models import Child
-        child = Child.objects.filter(parent=profile).first()
-        if child: school = child.student.school
-    
-    if not school:
-        return JsonResponse({'success': True, 'contacts': []})
-
-    current_year = get_current_year_for_school(school)
-    
-    contacts = get_available_contacts(request.user, current_year)
+    contacts = get_available_contacts(request.user)
 
     return JsonResponse({'success': True, 'contacts': contacts})
 
@@ -256,42 +247,30 @@ def api_create_conversation(request):
     try:
         data = json.loads(request.body)
         target_id = data.get('target_id') # ID du profil (Staff, Student, Parent)
-        target_type = data.get('target_type') # 'teacher', 'student', 'parent'
-        
-        role, my_profile = get_user_role_profile(request.user)
-        
+                
         messaging = None
 
-        # Logique de création selon qui parle à qui
-        if role == 'TEACHER':
-            # Le prof parle à un élève ou un parent
-            if target_type == 'student':
-                student = get_object_or_404(Student, id=target_id)
-                messaging, created = Messaging.objects.get_or_create(
-                    teacher=my_profile, student=student
-                )
-            elif target_type == 'parent':
-                parent = get_object_or_404(Parent, id=target_id)
-                messaging, created = Messaging.objects.get_or_create(
-                    teacher=my_profile, parent=parent
-                )
-        
-        elif role == 'STUDENT':
-            # L'élève parle à un prof
-            if target_type == 'teacher':
-                teacher = get_object_or_404(Staff, id=target_id)
-                messaging, created = Messaging.objects.get_or_create(
-                    teacher=teacher, student=my_profile
-                )
+        target = get_object_or_404(User, id=target_id)
 
-        elif role == 'PARENT':
-            # Le parent parle à un prof
-            if target_type == 'teacher':
-                teacher = get_object_or_404(Staff, id=target_id)
-                messaging, created = Messaging.objects.get_or_create(
-                    teacher=teacher, parent=my_profile
-                )
+        can_message = can_users_message(request.user, target)
 
+        if can_message:
+
+            messaging = (
+                Messaging.objects.filter(
+                    Q(user1=request.user, user2=target) |
+                    Q(user1=target, user2=request.user)
+                )
+                .first()
+            )
+
+            if messaging is None:
+
+                messaging = Messaging.objects.create(
+                    user1=request.user,
+                    user2=target
+                )
+            
         if messaging:
             return JsonResponse({'success': True, 'conversation_id': messaging.id})
         else:
@@ -302,23 +281,22 @@ def api_create_conversation(request):
         return JsonResponse({'success': False, 'message': str(e)}, status=500)
 
 
-# --- Helper local pour renvoyer le nom ET le nom d'utilisateur ---
 def get_interlocutor_details(conversation, current_user):
     """
-    Renvoie un Tuple: (Nom complet, Username) de l'interlocuteur.
+    Retourne le nom complet et le username
+    de l'autre participant.
     """
-    if conversation.teacher.user == current_user:
-        # Je suis le prof, l'interlocuteur est l'élève ou le parent
-        if conversation.student: 
-            return f"{conversation.student.user.first_name} {conversation.student.user.last_name}", conversation.student.user.username
-        if conversation.parent: 
-            return f"{conversation.parent.user.first_name} {conversation.parent.user.last_name}", conversation.parent.user.username
-    else:
-        # Je suis l'élève ou le parent, l'interlocuteur est le prof
-        return f"{conversation.teacher.user.first_name} {conversation.teacher.user.last_name}", conversation.teacher.user.username
-    
-    return "Inconnu", ""
 
+    other = (
+        conversation.user2
+        if conversation.user1 == current_user
+        else conversation.user1
+    )
+
+    return (
+        f"{other.first_name} {other.last_name}",
+        other.username
+    )
 
 @login_required(login_url='login')
 def announcement_dashboard_view(request):

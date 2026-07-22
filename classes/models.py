@@ -5,6 +5,7 @@ class Level(models.Model):
     TERM_TYPE_CHOICES = [
     ("TRIMESTRE", "Trimestre"),
     ("SEMESTRE", "Semestre"),
+    ("UNIQUE", "Unique"),
     ]
 
     LEVEL_CHOICES = [
@@ -17,6 +18,24 @@ class Level(models.Model):
     ("T", "Terminale"),
     ("BTS1", "Bts1"),
     ("BTS2", "Bts2"),
+    ("L1", "L1"),
+    ("L2", "L2"),
+    ("L3", "L3"),
+    ("M1", "M1"),
+    ("M2", "M2"),
+    ("D1", "D1"),
+    ("D2", "D2"),
+    ("D3", "D3"),
+    ("1A", "1er année"),
+    ("2A", "2e année"),
+    ("3A", "3e année"),
+    ("4A", "4e année"),
+    ("5A", "5e année"),
+    ("6A", "6e année"),
+    ("7A", "7e année"),
+    ("8A", "8e année"),
+    ("9A", "9e année"),
+    ("10A", "10e année"),
     ]
 
     level = models.CharField(max_length=255, choices=LEVEL_CHOICES, default="6E")  # niveau numérique (ex: 6, 5, 1, 2...)

@@ -186,8 +186,12 @@ WSGI_APPLICATION = "ProjectSchool.wsgi.application"
 
 
 DEBUG = config('DEBUG', default=True, cast=bool)
+DATA_BASE_ENGINE = config('DATA_BASE_ENGINE', default='sqlite').lower()
 
-if DEBUG:
+print("DEBUG =", DEBUG)
+print("DATA_BASE_ENGINE =", DATA_BASE_ENGINE)
+
+if DATA_BASE_ENGINE == "sqlite":
     # Mode développement → SQLite par défaut
     DATABASES = {
         'default': {
@@ -283,17 +287,17 @@ CORS_ALLOWED_HEADERS = [
 if DEBUG:
     # Développement : HTTP autorisé
     CORS_ALLOWED_ORIGINS = [
-        "https://neurotex.shop"
+        "https://theranotes-tsr.com"
     ]
     CORS_ALLOW_CREDENTIALS = True
 else:
     # Production : HTTPS uniquement
-    FRONTEND_URL_CONFIG = config('FRONTEND_URL', default='https://neurotex.shop')
+    FRONTEND_URL_CONFIG = config('FRONTEND_URL', default='https://theranotes-tsr.com')
     
     CORS_ALLOWED_ORIGINS = [
         FRONTEND_URL_CONFIG,
-        "https://neurotex.shop",
-        "https://www.neurotex.shop",
+        "https://theranotes-tsr.com",
+        "https://www.theranotes-tsr.com",
         # Ajoutez d'autres domaines si nécessaire
     ]
     

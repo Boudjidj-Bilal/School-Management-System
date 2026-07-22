@@ -298,11 +298,19 @@ def get_student_grades_view_data(student, current_year):
 
     terms_data = []
 
+    terme_string = ""
+    if student_class.level.term_type == "TRIMESTRE":
+        terme_string = f"Trimestre {term.counter}" 
+    elif student_class.level.term_type == "SEMESTRE":
+        terme_string = f"Semestre {term.counter}"
+    else:
+        terme_string = f"Unique {term.counter}"
+
     # 4. Boucle sur chaque trimestre
     for term in terms:
         term_payload = {
             'term_id': term.id,
-            'term_name': f"Trimestre {term.counter}" if student_class.level.term_type == "TRIMESTRE" else f"Semestre {term.counter}",
+            'term_name': terme_string,
             'is_active': not term.finished,
             'subjects': [],
             'overall_student_average': 'N/A',

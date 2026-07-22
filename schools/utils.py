@@ -614,7 +614,7 @@ def create_term_year_level(counter, year_id, level_id, start_date=None, end_date
         ).update(finished=True)
 
         if counter > 3 and counter < 1:
-            return None, f"Erreur lors de la création du trimestre/semestre : le numéro du trimestre/semestre est incorecte."
+            return None, f"Erreur lors de la création du trimestre/semestre : le numéro du trimestre/semestr/ est incorecte."
 
         term_year_level = TermYearLevel.objects.create(
             counter=counter,

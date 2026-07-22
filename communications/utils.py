@@ -1,272 +1,457 @@
+from django.db.models import Q
+
+from .models import Messaging, Message
+
 from django.db import transaction
 
 from .models import Messaging, AnnouncementRecipient, Announcement, Attachment, Message
-from users.models import Student, Child, Staff
-from classes.models import Class, ClassStudentYear, ClassTeacherYear
+from users.models import Student, Staff, Parent
+from classes.models import Class, ClassStudentYear
 
 from users.utils import get_user_type
 
+ROLE_LABELS = {
+    "PRINCIPAL": "Proviseur",
+    "TEACHER": "Professeur",
+    "CPE": "CPE",
+    "ADMINISTRATOR": "Administratif",
+    "PARENT": "Parent",
+    "STUDENT": "Élève",
+}
 
-# ====================================================================
-# 1. LOGIQUE MÉTIER : VÉRIFICATION DES PERMISSIONS (RÈGLE A-B-C)
-# ====================================================================
+def get_user_role(user):
+    """
+    Retourne le rôle métier de l'utilisateur.
 
-def is_conversation_active(messaging, current_year):
+    Valeurs possibles :
+
+    PRINCIPAL
+    TEACHER
+    CPE
+    ADMINISTRATOR
+    PARENT
+    STUDENT
+
+    None = Super Administrateur ou utilisateur inconnu
     """
-    Détermine si une conversation est 'Active' (autorise l'écriture) 
-    pour l'année scolaire donnée.
-    
-    Règle : Le professeur doit enseigner à l'élève (ou à l'enfant du parent) 
-    durant l'année 'current_year'.
+
+    if hasattr(user, "staff_user"):
+
+        return user.staff_user.staff_type
+
+    if hasattr(user, "parent_user"):
+        return "PARENT"
+
+    if hasattr(user, "student_user"):
+        return "STUDENT"
+
+    return None
+
+def get_user_school(user):
     """
-    if not current_year:
+    Retourne l'école de l'utilisateur.
+
+    None :
+        - SuperAdmin
+        - utilisateur invalide
+    """
+
+    if hasattr(user, "staff_user"):
+        return user.staff_user.school
+
+    if hasattr(user, "parent_user"):
+        return user.parent_user.school
+
+    if hasattr(user, "student_user"):
+        return user.student_user.school
+
+    return None
+
+def get_role_label(user):
+
+    role = get_user_role(user)
+
+    return ROLE_LABELS.get(role, "Utilisateur")
+
+def get_other_user(conversation, current_user):
+    """
+    Retourne l'autre participant d'une conversation.
+    """
+
+    if conversation.user1_id == current_user.id:
+        return conversation.user2
+
+    return conversation.user1
+
+def same_school(user1, user2):
+    """
+    Vérifie que les deux utilisateurs appartiennent à la même école.
+    """
+
+    school1 = get_user_school(user1)
+    school2 = get_user_school(user2)
+
+    if school1 is None:
         return False
 
-    teacher = messaging.teacher
-    
-    # CAS 1 : Conversation Professeur <-> Élève
-    if messaging.student:
-        student = messaging.student
-        return check_teacher_student_link(teacher, student, current_year)
-
-    # CAS 2 : Conversation Professeur <-> Parent
-    elif messaging.parent:
-        parent = messaging.parent
-        # On vérifie si le prof enseigne à AU MOINS UN des enfants du parent
-        children = student_links = Student.objects.filter(parent_links__parent=parent)
-        for child in children:
-            if check_teacher_student_link(teacher, child, current_year):
-                return True
+    if school2 is None:
         return False
 
-    return False
+    return school1.id == school2.id
 
+def can_users_message(user1, user2):
+    """
+    Vérifie si deux utilisateurs peuvent communiquer.
+    Toutes les règles métier sont centralisées ici.
+    """
 
-def check_teacher_student_link(teacher, student, current_year):
-    """
-    Vérifie s'il existe un lien pédagogique entre un prof et un élève pour une année.
-    (Est-ce qu'ils sont dans la même classe ?)
-    """
-    # 1. Trouver la classe de l'élève pour cette année
-    try:
-        class_student_link = ClassStudentYear.objects.get(
-            student=student,
-            year=current_year,
-            is_active=True
-        )
-        student_class = class_student_link.student_class
-    except ClassStudentYear.DoesNotExist:
+    if user1.id == user2.id:
         return False
 
-    # 2. Vérifier si le prof enseigne dans cette classe
-    is_teacher_in_class = ClassTeacherYear.objects.filter(
-        teacher__teacher=teacher,
-        student_class=student_class,
-        year=current_year,
-        is_active=True
-    ).exists()
+    if not user1.is_active:
+        return False
 
-    return is_teacher_in_class
+    if not user2.is_active:
+        return False
+
+    role1 = get_user_role(user1)
+    role2 = get_user_role(user2)
+
+    # Super administrateur
+    if role1 is None or role2 is None:
+        return False
+
+    # écoles différentes
+    if not same_school(user1, user2):
+        return False
+
+    #
+    # -------- PROVISEUR ----------
+    #
+
+    if role1 == "PRINCIPAL":
+
+        return role2 in {
+            "PRINCIPAL",
+            "TEACHER",
+            "CPE",
+            "ADMINISTRATOR"
+        }
+
+    if role2 == "PRINCIPAL":
+
+        return role1 in {
+            "PRINCIPAL",
+            "TEACHER",
+            "CPE",
+            "ADMINISTRATOR"
+        }
+
+    #
+    # -------- PARENT ----------
+    #
+
+    if role1 == "PARENT":
+
+        return role2 in {
+            "TEACHER",
+            "CPE",
+            "ADMINISTRATOR"
+        }
+
+    if role2 == "PARENT":
+
+        return role1 in {
+            "TEACHER",
+            "CPE",
+            "ADMINISTRATOR"
+        }
+
+    #
+    # -------- ELEVE ----------
+    #
+
+    if role1 == "STUDENT":
+
+        return role2 in {
+            "STUDENT",
+            "TEACHER",
+            "CPE",
+            "ADMINISTRATOR"
+        }
+
+    if role2 == "STUDENT":
+
+        return role1 in {
+            "STUDENT",
+            "TEACHER",
+            "CPE",
+            "ADMINISTRATOR"
+        }
+
+    #
+    # -------- PERSONNEL ----------
+    #
+
+    return True
 
 
-# ====================================================================
-# 2. RÉCUPÉRATION DES DONNÉES (POUR LE DASHBOARD)
-# ====================================================================
-
-def get_user_conversations(user, current_year):
+def get_existing_conversation(user1, user2):
     """
-    Récupère la liste des conversations pour l'utilisateur connecté.
-    Enrichit chaque conversation avec :
-    - Le nom de l'interlocuteur
-    - Le dernier message
-    - Le nombre de messages non lus
-    - Le statut (Actif/Bloqué)
+    Retourne la conversation existante entre deux utilisateurs.
     """
+    return Messaging.objects.filter(Q(user1=user1, user2=user2) | Q(user1=user2, user2=user1)).first()
+
+def get_or_create_conversation(user1, user2):
+    """
+    Retourne la conversation si elle existe. Sinon la crée.
+    """
+
+    conversation = get_existing_conversation(user1,user2)
+
+    if conversation:
+        return conversation
+
+    if not can_users_message(user1, user2):
+        return None
+
+    if user1.id > user2.id:
+        user1, user2 = user2, user1
+
+    return Messaging.objects.create(
+        user1=user1,
+        user2=user2
+    )
+
+
+def get_user_conversations(user):
+    """
+    Récupère la liste des conversations de l'utilisateur connecté.
+    """
+
     conversations_list = []
-    
-    # Déterminer qui est l'utilisateur (Prof, Parent ou Élève)
-    try:
-        if hasattr(user, 'staff_user') and user.staff_user.staff_type == 'TEACHER':
-            # C'est un PROFESSEUR
-            qs = Messaging.objects.filter(teacher=user.staff_user)
-            role = 'TEACHER'
-        elif hasattr(user, 'parent_user'):
-            # C'est un PARENT
-            qs = Messaging.objects.filter(parent=user.parent_user)
-            role = 'PARENT'
-        elif hasattr(user, 'student_user'):
-            # C'est un ÉLÈVE
-            qs = Messaging.objects.filter(student=user.student_user)
-            role = 'STUDENT'
-        else:
-            return [] # Admin ou autre (exclu)
-    except:
+
+    # Les SuperAdministrateurs (ou utilisateurs inconnus)
+    # n'ont pas accès à la messagerie.
+    if get_user_role(user) is None:
         return []
 
-    # Optimisation : Pré-chargement
-    qs = qs.select_related(
-        'teacher', 'teacher__user', 
-        'parent', 'parent__user', 
-        'student', 'student__user'
-    ).prefetch_related('messages')
+    # Toutes les conversations où l'utilisateur participe
+    qs = (
+        Messaging.objects
+        .filter(
+            Q(user1=user) | Q(user2=user)
+        )
+        .select_related(
+            "user1",
+            "user2"
+        )
+        .prefetch_related(
+            "messages"
+        )
+        .order_by("-last_message_date")
+    )
 
     for conv in qs:
-        # 1. Identifier l'interlocuteur
-        interlocutor = None
-        if role == 'TEACHER':
-            if conv.parent:
-                interlocutor = conv.parent.user
-                interlocutor_role = "Parent d'élève"
-            elif conv.student:
-                interlocutor = conv.student.user
-                interlocutor_role = "Élève"
-        else:
-            # Pour Parent ou Élève, l'interlocuteur est toujours le prof
-            interlocutor = conv.teacher.user
-            interlocutor_role = "Professeur"
 
-        if not interlocutor: continue
+        # Récupération de l'autre participant
+        interlocutor = get_other_user(conv, user)
 
-        # 2. Récupérer le dernier message
-        last_msg = conv.messages.last() # Grâce au ordering=['date'] dans Message
-        
-        # 3. Compter les non-lus (Messages reçus, non lus)
-        unread_count = conv.messages.filter(
-            is_read=False
-        ).exclude(sender=user).count()
+        if interlocutor is None:
+            continue
 
-        # 4. Vérifier si la conversation est active cette année
-        is_active_year = is_conversation_active(conv, current_year)
+        # Dernier message
+        last_msg = conv.messages.last()
+
+        # Nombre de messages non lus
+        unread_count = (
+            conv.messages
+            .filter(is_read=False)
+            .exclude(sender=user)
+            .count()
+        )
+
+        # Vérifie que la conversation est encore autorisée
+        # (utile si les droits changent dans le futur)
+        is_active_year = can_users_message(
+            user,
+            interlocutor
+        )
 
         conversations_list.append({
-            'id': conv.id,
-            'interlocutor_name': f"{interlocutor.username}",
-            'interlocutor_role': interlocutor_role,
-            'interlocutor_id': interlocutor.id, # Utile pour l'avatar
-            'last_message': last_msg.content if last_msg else "Aucun message",
-            'last_message_date': last_msg.date if last_msg else conv.last_message_date,
-            'unread_count': unread_count,
-            'is_active': is_active_year, # True = on peut écrire, False = archivé/bloqué
+            "id": conv.id,
+            "interlocutor_name": interlocutor.username,
+            "interlocutor_role": get_role_label(interlocutor),
+            "interlocutor_id": interlocutor.id,
+            "last_message": (
+                last_msg.content
+                if last_msg
+                else "Aucun message"
+            ),
+            "last_message_date": (
+                last_msg.date
+                if last_msg
+                else conv.last_message_date
+            ),
+            "unread_count": unread_count,
+            "is_active": is_active_year,
         })
 
-    # Tri : Conversations avec messages non lus en premier, puis par date récente
-    conversations_list.sort(key=lambda x: (x['unread_count'] > 0, x['last_message_date']), reverse=True)
-    
+    # Même tri que l'ancien code
+    conversations_list.sort(
+
+        key=lambda x: (
+
+            x["unread_count"] > 0,
+
+            x["last_message_date"]
+
+        ),
+
+        reverse=True
+
+    )
+
     return conversations_list
 
+def get_available_contacts(user):
+    """
+    Retourne la liste des utilisateurs avec lesquels
+    l'utilisateur peut créer une nouvelle conversation.
 
-def get_available_contacts(user, current_year):
+    - uniquement les utilisateurs de la même école
+    - exclusion des conversations existantes
+    - application des règles métier
     """
-    Récupère la liste des personnes à qui l'utilisateur peut envoyer un NOUVEAU message.
-    (Exclut les personnes avec qui une conversation existe déjà).
-    [CORRECTION] Filtre les doublons de professeurs et ajout du nom d'utilisateur.
-    """
+
     contacts = []
-    existing_conversations = get_user_conversations(user, current_year)
-    existing_ids = [c['interlocutor_id'] for c in existing_conversations] # IDs des Users déjà contactés
 
-    # A. Si c'est un PROFESSEUR
-    if hasattr(user, 'staff_user') and user.staff_user.staff_type == 'TEACHER':
-        teacher = user.staff_user
-        
-        teacher_classes = ClassTeacherYear.objects.filter(
-            teacher__teacher=teacher,
-            year=current_year,
-            is_active=True
-        ).values_list('student_class', flat=True)
+    role = get_user_role(user)
 
-        students = ClassStudentYear.objects.filter(
-            student_class__in=teacher_classes,
-            year=current_year,
-            is_active=True
-        ).select_related('student__user')
+    # Super administrateur
+    if role is None:
+        return contacts
 
-        for link in students:
-            if link.student.user.id not in existing_ids:
-                contacts.append({
-                    'type': 'student',
-                    'id': link.student.id, 
-                    'name': f"{link.student.user.first_name} {link.student.user.last_name} (Élève - {link.student_class.name})",
-                    'username': link.student.user.username 
-                })
-            
-            child_links = Child.objects.filter(student=link.student)
-            
-            for child_link in child_links:
-                parent = child_link.parent
-                
-                if parent.user.id not in existing_ids:
-                    if not any(c['id'] == parent.id and c['type'] == 'parent' for c in contacts):
-                        contacts.append({
-                            'type': 'parent',
-                            'id': parent.id, 
-                            'name': f"{parent.user.first_name} {parent.user.last_name} (Parent de {link.student.user.first_name})",
-                            'username': parent.user.username 
-                        })
+    school = get_user_school(user)
 
-    # B. Si c'est un ÉLÈVE
-    elif hasattr(user, 'student_user'):
-        student = user.student_user
-        try:
-            class_link = ClassStudentYear.objects.get(student=student, year=current_year, is_active=True)
-            my_class = class_link.student_class
-            
-            teachers = ClassTeacherYear.objects.filter(
-                student_class=my_class,
-                year=current_year,
-                is_active=True
-            ).select_related('teacher__teacher__user', 'teacher__subject')
-            
-            # Set pour éviter les doublons de professeurs
-            added_prof_ids = set()
+    if school is None:
+        return contacts
 
-            for link in teachers:
-                prof = link.teacher.teacher # Objet Staff
-                
-                if prof.user.id not in existing_ids and prof.id not in added_prof_ids:
-                    contacts.append({
-                        'type': 'teacher',
-                        'id': prof.id,
-                        'name': f"{prof.user.last_name} {prof.user.first_name}",
-                        'username': prof.user.username
-                    })
-                    added_prof_ids.add(prof.id)
-        except:
-            pass 
+    # Conversations déjà existantes
+    existing_ids = {
+        conversation["interlocutor_id"]
+        for conversation in get_user_conversations(user)
+    }
 
-    # C. Si c'est un PARENT
-    elif hasattr(user, 'parent_user'):
-        parent = user.parent_user
-        children_links = Child.objects.filter(parent=parent)
-        
-        processed_teacher_ids = []
+    #
+    # On ne récupère QUE les utilisateurs
+    # appartenant à cette école
+    #
 
-        for link in children_links:
-            student = link.student
-            try:
-                class_link = ClassStudentYear.objects.get(student=student, year=current_year, is_active=True)
-                
-                teachers = ClassTeacherYear.objects.filter(
-                    student_class=class_link.student_class,
-                    year=current_year,
-                    is_active=True
-                ).select_related('teacher__teacher__user', 'teacher__subject')
+    users = []
 
-                for t_link in teachers:
-                    prof = t_link.teacher.teacher
-                    
-                    if prof.id not in processed_teacher_ids and prof.user.id not in existing_ids:
-                        contacts.append({
-                            'type': 'teacher',
-                            'id': prof.id,
-                            'name': f"{prof.user.last_name} {prof.user.first_name} (Prof de {student.user.first_name})",
-                            'username': prof.user.username 
-                        })
-                        processed_teacher_ids.append(prof.id)
-            except:
-                continue
+    staff_members = (
+        Staff.objects
+        .filter(
+            school=school,
+            user__is_active=True
+        )
+        .select_related("user")
+    )
+
+    users.extend(
+        staff.user
+        for staff in staff_members
+    )
+
+    parents = (
+        Parent.objects
+        .filter(
+            school=school,
+            user__is_active=True
+        )
+        .select_related("user")
+    )
+
+    users.extend(
+        parent.user
+        for parent in parents
+    )
+
+    students = (
+        Student.objects
+        .filter(
+            school=school,
+            user__is_active=True
+        )
+        .select_related("user")
+    )
+
+    users.extend(
+        student.user
+        for student in students
+    )
+
+    #
+    # Construction de la liste
+    #
+
+    for other in users:
+
+        if other.id == user.id:
+            continue
+
+        if other.id in existing_ids:
+            continue
+
+        if not can_users_message(user, other):
+            continue
+
+        contacts.append({
+            "id": other.id,
+            "type": get_user_role(other).lower(),
+            "name": (
+                f"{other.first_name} "
+                f"{other.last_name}"
+            ),
+            "username": other.username,
+            "role": get_role_label(other)
+        })
+
+    #
+    # Tri :
+    # 1. rôle
+    # 2. nom
+    #
+
+    contacts.sort(
+        key=lambda c: (
+            c["role"],
+            c["name"].lower()
+        )
+    )
 
     return contacts
+
+
+def get_dashboard_messaging_stats(user):
+    """
+    Retourne les statistiques de messagerie
+    affichées sur le dashboard.
+    """
+
+    if get_user_role(user) is None:
+        return {"unread_count": 0}
+
+    conversations = Messaging.objects.filter(
+        Q(user1=user)|Q(user2=user)
+    )
+
+    unread_count = (Message.objects.filter(messaging__in=conversations,is_read=False).exclude(sender=user).count())
+
+    return {
+        "unread_count": unread_count
+    }
 
 
 def get_available_targets(user, current_year):
@@ -449,37 +634,6 @@ def generate_target_summary(targets):
         summary_parts.append(f"{count} Membre{'s' if count > 1 else ''} du personnel")
         
     return ", ".join(summary_parts)
-
-
-
-def get_dashboard_messaging_stats(user):
-    """
-    Récupère le nombre total de messages non lus pour l'utilisateur.
-    Utilisé pour le widget "Messagerie" du dashboard principal.
-    """
-    try:
-        # 1. Identifier les conversations de l'utilisateur selon son rôle
-        if hasattr(user, 'staff_user') and user.staff_user.staff_type == 'TEACHER':
-            conversations = Messaging.objects.filter(teacher=user.staff_user)
-        elif hasattr(user, 'parent_user'):
-            conversations = Messaging.objects.filter(parent=user.parent_user)
-        elif hasattr(user, 'student_user'):
-            conversations = Messaging.objects.filter(student=user.student_user)
-        else:
-            # Admin, CPE, etc. n'ont pas de messagerie privée
-            return {'unread_count': 0}
-        
-        # 2. Compter les messages non lus reçus (sender != user)
-        unread_count = Message.objects.filter(
-            messaging__in=conversations,
-            is_read=False
-        ).exclude(sender=user).count()
-
-        return {'unread_count': unread_count}
-
-    except Exception:
-        # En cas d'erreur (ex: utilisateur mal configuré), on retourne 0 pour ne pas casser le dashboard
-        return {'unread_count': 0}
 
 
 def get_dashboard_last_announcement(user):
