@@ -309,17 +309,6 @@ document.addEventListener('DOMContentLoaded', () => {
         if(viewContent) viewContent.innerHTML = item.content.replace(/\n/g, '<br>');
         if(viewTypeBadge) viewTypeBadge.textContent = item.type;
 
-        // if (homeworkActionContainer && linkHomeworkDetail) {
-        //     // Si c'est un devoir ET que le rendu est requis
-        //     if (item.type_code === 'HOMEWORK' && item.requires_submission) {
-        //         // On construit dynamiquement l'URL vers la page de détail du devoir
-        //         linkHomeworkDetail.href = `/communications/homework/${item.id}/`;
-        //         homeworkActionContainer.classList.remove('hidden');
-        //     } else {
-        //         homeworkActionContainer.classList.add('hidden');
-        //     }
-        // }
-
         if (homeworkActionContainer && linkHomeworkDetail) {
             // Si c'est un devoir ET que le rendu est requis
             if (item.type_code === 'HOMEWORK' && item.requires_submission) {

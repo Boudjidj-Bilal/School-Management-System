@@ -69,13 +69,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 successAlert.classList.remove('hidden');
                 
                 // Mettre à jour la date dynamiquement (heure actuelle exacte du client ou renvoyée par le serveur)
-                // const now = new Date();
-                // const formattedDate = now.toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric' }) + ' à ' + now.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
-                
-                // if (subUpdatedAt) {
-                //     subUpdatedAt.textContent = result.body.updated_at || formattedDate;
-                // }
-
                 if (subUpdatedAt && result.body.updated_at) {
                     subUpdatedAt.textContent = result.body.updated_at;
                 }
