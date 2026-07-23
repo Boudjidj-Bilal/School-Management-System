@@ -4,11 +4,16 @@ from .models import Messaging, Message
 
 from django.db import transaction
 
-from .models import Messaging, AnnouncementRecipient, Announcement, Attachment, Message
+from .models import Messaging, AnnouncementRecipient, Announcement, Attachment, Message, HomeworkSubmission, SubmissionAttachment
 from users.models import Student, Staff, Parent
 from classes.models import Class, ClassStudentYear
 
 from users.utils import get_user_type
+
+
+from django.shortcuts import get_object_or_404
+from django.core.exceptions import PermissionDenied
+
 
 ROLE_LABELS = {
     "PRINCIPAL": "Proviseur",
@@ -526,6 +531,11 @@ def create_announcement_logic(sender, form_data, files, current_year):
     title = form_data.get('title')
     content = form_data.get('content')
     announcement_type = form_data.get('announcement_type')
+    
+    # Rendu requis uniquement si l'annonce est de type DEVOIR (HOMEWORK)
+    raw_req_sub = form_data.get('requires_submission', False)
+    requires_submission = True if (announcement_type == 'HOMEWORK' and raw_req_sub) else False
+
     targets = form_data.get('targets', {}) 
 
     school = None
@@ -539,6 +549,7 @@ def create_announcement_logic(sender, form_data, files, current_year):
             title=title,
             content=content,
             announcement_type=announcement_type,
+            requires_submission=requires_submission,  # Enregistré en BDD
             sender=sender,
             school=school,
             target_display=generate_target_summary(targets) 
@@ -668,3 +679,88 @@ def get_dashboard_last_announcement(user):
 
     except Exception:
         return None
+    
+
+def get_homework_detail_context(announcement_id, user):
+    """
+    Prépare le contexte pour la page unique d'un devoir (Professeur ou Élève).
+    """
+    announcement = get_object_or_404(Announcement, id=announcement_id)
+    
+    if announcement.announcement_type != "HOMEWORK":
+        raise PermissionDenied("Cette annonce n'est pas un devoir.")
+
+    context = {
+        'announcement': announcement,
+        'is_teacher': False,
+        'is_student': False,
+    }
+
+    # Cas du Professeur (Créateur ou SuperAdmin)
+    if hasattr(user, 'staff_user') and (announcement.sender == user or user.is_superuser):
+        context['is_teacher'] = True
+        context['submissions'] = announcement.submissions.select_related('student__user').prefetch_related('files')
+        return context
+
+    # Cas de l'Élève destinataire
+    elif hasattr(user, 'student_user'):
+        student_profile = user.student_user
+        
+        is_recipient = announcement.recipients.filter(user=user).exists()
+        if not is_recipient and not user.is_superuser:
+            raise PermissionDenied("Vous n'êtes pas destinataire de ce devoir.")
+
+        context['is_student'] = True
+        context['requires_submission'] = announcement.requires_submission
+        
+        try:
+            context['my_submission'] = HomeworkSubmission.objects.prefetch_related('files').get(
+                announcement=announcement, 
+                student=student_profile
+            )
+        except HomeworkSubmission.DoesNotExist:
+            context['my_submission'] = None
+            
+        return context
+
+    else:
+        raise PermissionDenied("Accès non autorisé à cette page de devoir.")
+
+
+def handle_student_submission(announcement, student_user, comment, files_list):
+    """
+    Gère le dépôt ou la modification d'un rendu par un élève, 
+    avec nettoyage physique des anciens fichiers de CET élève pour CE devoir.
+    """
+    if not announcement.requires_submission:
+        raise PermissionDenied("Ce devoir ne nécessite pas de rendu.")
+        
+    student_profile = student_user.student_user
+
+    # 1. Récupère ou crée l'unique rendu de cet élève pour ce devoir
+    submission, created = HomeworkSubmission.objects.get_or_create(
+        announcement=announcement,
+        student=student_profile,
+        defaults={'comment': comment}
+    )
+
+    # 2. Si le rendu existait déjà, on met à jour le commentaire
+    if not created:
+        submission.comment = comment
+        submission.save()
+
+    # 3. Si de nouveaux fichiers sont fournis par l'élève :
+    if files_list:
+        # Parcours et suppression physique des anciens fichiers de CET élève
+        for old_attachment in submission.files.all():
+            if old_attachment.file:
+                # Supprime le fichier du stockage (dossier media)
+                old_attachment.file.delete(save=False)
+            # Supprime l'enregistrement en base de données
+            old_attachment.delete()
+        
+        # Enregistrement du nouveau lot de fichiers
+        for f in files_list:
+            SubmissionAttachment.objects.create(submission=submission, file=f)
+
+    return submission

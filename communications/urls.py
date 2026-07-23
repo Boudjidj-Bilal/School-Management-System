@@ -9,7 +9,8 @@ from .views import (
     announcement_dashboard_view,
     api_create_announcement,
     api_get_announcements,
-    api_mark_as_read
+    api_mark_as_read,
+    homework_detail_view
 )
 
 app_name = 'communications'
@@ -18,6 +19,7 @@ urlpatterns = [
     # Vue principale (HTML)
     path('', messaging_dashboard_view, name='dashboard'),
     path('Annonces/', announcement_dashboard_view, name='dashboard_annonce'),
+    path('homework/<int:announcement_id>/', homework_detail_view, name='homework_detail'),
 
 
     # APIs JSON

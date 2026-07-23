@@ -1,13 +1,9 @@
 from django.db import models
-from django.db.models import Q
-from users.models import Staff, Parent
 from schools.models import School
 from django.core.exceptions import ValidationError
 from django.utils import timezone
 
-
-from users.models import User, Staff, Student
-
+from users.models import User, Student
 
 # --> Le cœur de l'annonce (Contenu unique)
 class Announcement(models.Model):
@@ -31,6 +27,12 @@ class Announcement(models.Model):
     school = models.ForeignKey(
         School, on_delete=models.CASCADE, related_name="school_announcements",
         null=True, blank=True
+    )
+
+    # Si l'annonce de type devoir demande un rendu de la part des élèves.
+    requires_submission = models.BooleanField(
+        default=False, 
+        help_text="Coché si ce devoir nécessite un rendu de la part des élèves."
     )
 
     created_at = models.DateTimeField(auto_now_add=True)
@@ -99,73 +101,47 @@ class AnnouncementRecipient(models.Model):
         state = "Lu" if self.is_read else "Non lu"
         return f"{self.user.username} -> {self.announcement.title} ({state})"
 
-
-
-# --> Représente une conversation (Fil de discussion)
-# class Messaging(models.Model):
-#     """
-#     Une conversation lie TOUJOURS un Professeur (Teacher) à :
-#     - SOIT un Parent
-#     - SOIT un Élève
-#     """
-#     teacher = models.ForeignKey(
-#         Staff, on_delete=models.CASCADE, related_name="messagings"
-#     )
+class HomeworkSubmission(models.Model):
+    # L'annonce concernée (qui doit obligatoirement être de type HOMEWORK)
+    announcement = models.ForeignKey(
+        Announcement, 
+        on_delete=models.CASCADE, 
+        related_name="submissions"
+    )
     
-#     # Destinataire A : Le Parent (Optionnel)
-#     parent = models.ForeignKey(
-#         Parent, on_delete=models.CASCADE, related_name="messagings",
-#         null=True, blank=True
-#     )
+    # L'élève qui rend le devoir (lié au profil Student ou directement à User)
+    student = models.ForeignKey(
+        Student, 
+        on_delete=models.CASCADE, 
+        related_name="homework_submissions"
+    )
     
-#     # Destinataire B : L'Élève (Optionnel) - [NOUVEAU]
-#     student = models.ForeignKey(
-#         Student, on_delete=models.CASCADE, related_name="messagings",
-#         null=True, blank=True
-#     )
-
-#     # Statut global de la conversation (pour soft delete / archivage manuel)
-#     # Note : Le blocage par année se fera via la logique métier (utils), pas ce champ.
-#     is_active = models.BooleanField(default=True)
+    # Commentaire optionnel de l'élève
+    comment = models.TextField(blank=True, null=True)
     
-#     # Pour le tri : date du dernier message (mis à jour à chaque envoi)
-#     last_message_date = models.DateTimeField(auto_now_add=True)
+# Traçabilité des dates
+    submitted_at = models.DateTimeField(auto_now_add=True)  # Date de création du rendu
+    updated_at = models.DateTimeField(auto_now=True)        # Date de la dernière modification
 
-#     class Meta:
-#         ordering = ['-last_message_date'] # Les conversations récentes en premier
-#         constraints = [
-#             # Unicité Professeur <-> Parent
-#             models.UniqueConstraint(
-#                 fields=["teacher", "parent"],
-#                 condition=Q(student__isnull=True),
-#                 name="unique_messaging_teacher_parent"
-#             ),
-#             # Unicité Professeur <-> Élève
-#             models.UniqueConstraint(
-#                 fields=["teacher", "student"],
-#                 condition=Q(parent__isnull=True),
-#                 name="unique_messaging_teacher_student"
-#             )
-#         ]
+    class Meta:
+        # Un élève ne fait qu'un seul rendu principal par devoir (ou on gère des versions)
+        unique_together = ("announcement", "student")
 
-#     def clean(self):
-#         """Validation pour s'assurer qu'on a soit un parent, soit un élève, mais pas les deux."""
-#         if self.parent and self.student:
-#             raise ValidationError("Une conversation ne peut pas lier un professeur à un parent ET un élève en même temps.")
-#         if not self.parent and not self.student:
-#             raise ValidationError("Une conversation doit avoir un interlocuteur (Parent ou Élève).")
+    def __str__(self):
+        return f"Rendu de {self.student} pour {self.announcement.title}"
 
-#     def save(self, *args, **kwargs):
-#         self.clean()
-#         super().save(*args, **kwargs)
 
-#     def __str__(self):
-#         if self.parent:
-#             return f"Discussion : {self.teacher.user.last_name} <-> {self.parent.user.last_name} (Parent)"
-#         elif self.student:
-#             return f"Discussion : {self.teacher.user.last_name} <-> {self.student.user.last_name} (Élève)"
-#         return f"Discussion {self.id}"
+class SubmissionAttachment(models.Model):
+    submission = models.ForeignKey(
+        HomeworkSubmission, 
+        on_delete=models.CASCADE, 
+        related_name="files"
+    )
+    file = models.FileField(upload_to="homework_submissions/%Y/%m/")
+    uploaded_at = models.DateTimeField(auto_now_add=True)
 
+    def __str__(self):
+        return f"Fichier de rendu pour {self.submission}"
 
 class Messaging(models.Model):
 

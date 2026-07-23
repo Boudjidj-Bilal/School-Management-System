@@ -57,6 +57,12 @@ document.addEventListener('DOMContentLoaded', () => {
     const loader = document.getElementById('loader');
     const badgeInboxUnread = document.getElementById('badge-inbox-unread');
     const notificationArea = document.getElementById('notification-area');
+    // Éléments spécifiques aux Devoirs / Rendus
+    const announcementTypeSelect = document.querySelector('select[name="type"]');
+    const requiresSubmissionContainer = document.getElementById('requires-submission-container');
+    const homeworkActionContainer = document.getElementById('homework-action-container');
+    const linkHomeworkDetail = document.getElementById('link-homework-detail');
+    const homeworkLinkText = document.getElementById('homework-link-text');
 
     // Modale Vue
     const modalView = document.getElementById('modal-view');
@@ -85,6 +91,21 @@ document.addEventListener('DOMContentLoaded', () => {
     const fileInput = document.getElementById('file-input');
     const fileList = document.getElementById('file-list');
 
+
+    // Gestion dynamique de l'affichage du champ "Rendu requis" selon le type d'annonce sélectionné
+    if (announcementTypeSelect && requiresSubmissionContainer) {
+        function toggleSubmissionField() {
+            if (announcementTypeSelect.value === 'HOMEWORK') {
+                requiresSubmissionContainer.classList.remove('hidden');
+            } else {
+                requiresSubmissionContainer.classList.add('hidden');
+                const checkbox = document.getElementById('id_requires_submission');
+                if (checkbox) checkbox.checked = false;
+            }
+        }
+        announcementTypeSelect.addEventListener('change', toggleSubmissionField);
+        toggleSubmissionField(); // État initial à l'ouverture de la modale
+    }
 
     // =================================================================
     // 0. UTILITAIRE NOTIFICATIONS
@@ -203,6 +224,21 @@ document.addEventListener('DOMContentLoaded', () => {
             if (item.type_code === 'TEST') iconClass = 'fa-file-alt text-red-500';
             if (item.type_code === 'COURSE') iconClass = 'fa-graduation-cap text-green-500';
 
+            // --- CRÉATION DE LA MENTION VISIBLE POUR LES DEVOIRS AVEC RENDU ---
+            let homeworkBadge = '';
+            if (item.type_code === 'HOMEWORK') {
+                if (item.requires_submission) {
+                    homeworkBadge = `<span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold bg-amber-100 text-amber-800 ml-2">
+                        <i class="fas fa-upload mr-1"></i> Avec rendu
+                    </span>`;
+                } else {
+                    homeworkBadge = `<span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold bg-gray-100 text-gray-600 ml-2">
+                        Sans rendu
+                    </span>`;
+                }
+            }
+            // -------------------------------------------------------------
+
             let infoLine = "";
             if (type === 'inbox') {
                 infoLine = `De : <span class="font-medium">${item.sender}</span>`;
@@ -219,7 +255,10 @@ document.addEventListener('DOMContentLoaded', () => {
                             <i class="fas ${iconClass} text-xl"></i>
                         </div>
                         <div class="min-w-0">
-                            <h4 class="text-base font-bold text-gray-900 truncate pr-2">${item.title}</h4>
+                            <div class="flex items-center flex-wrap gap-1">
+                                <h4 class="text-base font-bold text-gray-900 truncate">${item.title}</h4>
+                                ${homeworkBadge} <!-- Affichage de la mention ici -->
+                            </div>
                             <p class="text-sm text-gray-500">
                                 ${infoLine}
                                 <span class="mx-1">•</span> ${item.date}
@@ -269,6 +308,36 @@ document.addEventListener('DOMContentLoaded', () => {
         if(viewDate) viewDate.textContent = item.date;
         if(viewContent) viewContent.innerHTML = item.content.replace(/\n/g, '<br>');
         if(viewTypeBadge) viewTypeBadge.textContent = item.type;
+
+        // if (homeworkActionContainer && linkHomeworkDetail) {
+        //     // Si c'est un devoir ET que le rendu est requis
+        //     if (item.type_code === 'HOMEWORK' && item.requires_submission) {
+        //         // On construit dynamiquement l'URL vers la page de détail du devoir
+        //         linkHomeworkDetail.href = `/communications/homework/${item.id}/`;
+        //         homeworkActionContainer.classList.remove('hidden');
+        //     } else {
+        //         homeworkActionContainer.classList.add('hidden');
+        //     }
+        // }
+
+        if (homeworkActionContainer && linkHomeworkDetail) {
+            // Si c'est un devoir ET que le rendu est requis
+            if (item.type_code === 'HOMEWORK' && item.requires_submission) {
+                linkHomeworkDetail.href = `/communications/homework/${item.id}/`;
+                
+                // Si l'utilisateur est l'expéditeur (le prof) ou admin, ou selon le contexte :
+                // On peut adapter le texte du bouton :
+                if (type === 'sent' || item.is_sender) { // (ou si c'est l'onglet "Envoyés")
+                    if (homeworkLinkText) homeworkLinkText.textContent = "Consulter les rendus des élèves";
+                } else {
+                    if (homeworkLinkText) homeworkLinkText.textContent = "Gérer / Déposer mon rendu";
+                }
+                
+                homeworkActionContainer.classList.remove('hidden');
+            } else {
+                homeworkActionContainer.classList.add('hidden');
+            }
+        }
         
         if (item.attachments && item.attachments.length > 0) {
             if(viewAttachmentsContainer) viewAttachmentsContainer.classList.remove('hidden');

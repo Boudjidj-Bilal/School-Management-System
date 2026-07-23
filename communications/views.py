@@ -6,10 +6,12 @@ from django.http import JsonResponse
 from django.views.decorators.http import require_http_methods
 from django.views.decorators.csrf import csrf_exempt
 from django.utils import timezone
- 
+from django.core.exceptions import PermissionDenied
+from django.shortcuts import redirect
+
 # Modèles
 from .models import Messaging, Message, Announcement, AnnouncementRecipient
-from users.models import Staff, Student, Parent, User
+from users.models import User
 from schools.models import School
 
 # Utilitaires
@@ -21,7 +23,8 @@ from .utils import (
     can_users_message,
     create_announcement_logic,
     get_available_targets,
-    get_or_create_conversation
+    get_homework_detail_context,
+    handle_student_submission
 )
 
 
@@ -329,6 +332,11 @@ def announcement_dashboard_view(request):
 
     can_view_all = user_type in ['Principal', 'SuperAdministrator']
 
+    is_teacher = False
+
+    if user_type == 'Teacher': 
+        is_teacher = True
+
     # Chargement des cibles possibles (Classes, Groupes) si droit d'envoi
     available_targets = {}
     if can_send and current_year:
@@ -338,6 +346,7 @@ def announcement_dashboard_view(request):
         'user_type': user_type,
         'can_send': can_send,
         'can_view_all': can_view_all,
+        'is_teacher': is_teacher,
         'available_targets': json.dumps(available_targets), # Pour le JS
         'current_year': current_year,
         'announcement_types': Announcement.TYPE_CHOICES,
@@ -412,6 +421,7 @@ def api_get_announcements(request):
             'content': ann.content,
             'type': ann.get_announcement_type_display(),
             'type_code': ann.announcement_type,
+            'requires_submission': ann.requires_submission,  # Ajouté pour gérer les devoirs avec rendu
             'sender': sender_name,
             'date': local_date.strftime('%d/%m/%Y %H:%M'),
             'is_read': recipient.is_read if recipient else False,
@@ -444,14 +454,15 @@ def api_get_announcements(request):
             'title': ann.title,
             'content': ann.content,
             'type': ann.get_announcement_type_display(),
+            'type_code': ann.announcement_type,
+            'requires_submission': ann.requires_submission,  # Ajouté également ici pour les envoyés
             'date': local_date.strftime('%d/%m/%Y %H:%M'),
             'targets_summary': ann.target_display,
             'stats': {'total': total, 'read': read, 'percent': percent},
-            'attachments': []
+            'attachments': [{'url': a.file.url, 'type': a.file_type, 'name': a.file.name.split('/')[-1]} for a in ann.attachments.all()]
         })
 
     # --- 3. ALL (Global École - Proviseur/SuperAdmin) ---
-    # [C'est cette partie qui manquait dans votre fichier]
     if user_type in ['Principal', 'SuperAdministrator']:
         
         # Récupérer toutes les annonces de l'école
@@ -461,7 +472,6 @@ def api_get_announcements(request):
             .order_by('-created_at')
 
         # Optimisation : Récupérer mes propres statuts de lecture pour ces annonces
-        # pour savoir si je dois afficher la case à cocher ou le mode lecture seule
         my_receipts = {
             r.announcement_id: r 
             for r in AnnouncementRecipient.objects.filter(user=user, announcement__in=all_qs)
@@ -469,7 +479,6 @@ def api_get_announcements(request):
 
         for ann in all_qs:
             recipient_record = my_receipts.get(ann.id)
-            # On utilise le même format que inbox
             data['all'].append(format_announcement(ann, recipient_record))
     
     return JsonResponse({'success': True, 'data': data})
@@ -495,22 +504,26 @@ def api_create_announcement(request):
 
     try:
         # Récupération des données du formulaire
-        # Les données complexes (listes d'IDs) sont envoyées sous forme de chaîne JSON dans 'targets'
         targets_json = request.POST.get('targets') 
         if not targets_json:
              return JsonResponse({'success': False, 'message': "Aucun destinataire sélectionné."}, status=400)
         
         targets = json.loads(targets_json)
         
+        # Récupération de la case à cocher 'requires_submission' (envoyée par le formulaire JS)
+        raw_req_sub = request.POST.get('requires_submission')
+        requires_submission = True if raw_req_sub in [True, 'true', 'on', '1', 'True'] else False
+
         form_data = {
             'title': request.POST.get('title'),
             'content': request.POST.get('content'),
             'announcement_type': request.POST.get('type'),
+            'requires_submission': requires_submission,  # Ajouté ici
             'targets': targets
         }
 
         # Récupération des fichiers
-        files = request.FILES.getlist('attachments') # 'attachments' est le name du input file multiple
+        files = request.FILES.getlist('attachments')
 
         # 1. Déterminer l'école de l'utilisateur
         if user_type == "SuperAdministrator":
@@ -579,3 +592,52 @@ def api_mark_as_read(request):
         return JsonResponse({'success': False, 'message': "Annonce introuvable."}, status=404)
     except Exception as e:
         return JsonResponse({'success': False, 'message': str(e)}, status=500)
+    
+
+@login_required
+@require_http_methods(["GET", "POST"])
+def homework_detail_view(request, announcement_id):
+    user = request.user
+    
+    try:
+        context = get_homework_detail_context(announcement_id, user)
+    except PermissionDenied as e:
+        return render(request, "communications/403.html", {"error": str(e)}, status=403)
+
+    announcement = context['announcement']
+
+    # --- TRAITEMENT POST (ÉLÈVE) ---
+    if request.method == "POST":
+        if not context.get('is_student'):
+            return JsonResponse({"error": "Action non autorisée."}, status=403)
+        
+        if not announcement.requires_submission:
+            return JsonResponse({"error": "Ce devoir ne nécessite aucun rendu."}, status=400)
+
+        comment = request.POST.get("comment", "").strip()
+        files_list = request.FILES.getlist("files")
+
+        try:
+            # Appel de la fonction utilitaire que tu voulais utiliser !
+            submission = handle_student_submission(announcement, user, comment, files_list)
+
+            if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+                # On formate explicitement la date locale de la même manière que le template
+                local_updated_at = timezone.localtime(submission.updated_at)
+                formatted_date = local_updated_at.strftime("%d/%m/%Y à %H:%M")
+
+                return JsonResponse({
+                    "success": True, 
+                    "message": "Rendu enregistré avec succès.",
+                    "updated_at": formatted_date
+                })
+            
+            return redirect('homework_detail', announcement_id=announcement.id)
+
+        except Exception as e:
+            if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+                return JsonResponse({"success": False, "error": str(e)}, status=400)
+            context['error'] = f"Une erreur est survenue : {str(e)}"
+
+    # --- RENDU GET DE LA PAGE ---
+    return render(request, "communications/homework_detail.html", context)
