@@ -89,8 +89,21 @@ def login(request):
                             return JsonResponse({"success": False, "message": "Impossible de vous connecter pour le moment."}, status=400)
 
             user_login = login_user(request, username, password)
-            
+
             if user_login:
+                # Si c'est un étudiant, on récupère les coordonnées envoyées par le JSON
+                if user_type == "Student":
+                    latitude = data.get('latitude')
+                    longitude = data.get('longitude')
+                    
+                    print(f"DEBUG - Coordonnées reçues pour l'étudiant {username} : Lat={latitude}, Lon={longitude}")
+                    
+                    if latitude is not None and longitude is not None:
+                        # On appelle directement notre fonction de service
+                        update_student_location(user_login.student_user, latitude, longitude)
+                    else:
+                        print("DEBUG - Coordonnées absentes ou refusées par l'utilisateur.")
+                
                 return JsonResponse({'success': True, 'message': 'Connexion réussie.'})
             else:
                 return JsonResponse({'success': False, 'message': 'Nom d\'utilisateur ou mot de passe incorrect.'})
@@ -206,6 +219,13 @@ def dashboard_page(request):
             # - Si Parent : SES PROPRES messages (pas ceux de l'enfant)
             msg_user = user if user_type == 'Parent' else target_student.user
             context['widgets']['messaging'] = get_dashboard_messaging_stats(msg_user)
+
+            # 6. Géolocalisation (Récupération de la dernière position via le modèle StudentLocation)
+            last_location = target_student.locations.order_by('-updated_at').first()
+            context['widgets']['geolocation'] = {
+                'address': last_location.address_text if last_location else None,
+                'updated_at': last_location.updated_at if last_location else None
+            }
 
 
     # B. PROFESSEUR
@@ -1010,3 +1030,39 @@ def api_manage_profile_picture(request):
             
         except Exception as e:
             return JsonResponse({'success': False, 'message': f'Erreur lors de la suppression : {str(e)}'}, status=500)
+        
+
+# GEOLOCALISATION ELEVE
+@login_required
+@require_POST
+def api_save_student_location(request):
+    """
+    Reçoit les coordonnées GPS de l'élève, interroge Nominatim 
+    et met à jour la position en BDD, puis renvoie un succès JSON.
+    """
+    try:
+        data = json.loads(request.body)
+        latitude = data.get('latitude')
+        longitude = data.get('longitude')
+
+        if latitude is None or longitude is None:
+            return JsonResponse({'success': False, 'message': 'Coordonnées manquantes.'}, status=400)
+
+        # Vérification du profil étudiant
+        try:
+            student_profile = request.user.student_user
+        except ObjectDoesNotExist:
+            return JsonResponse({'success': False, 'message': 'Utilisateur non autorisé.'}, status=403)
+
+        # Appel du service (Nominatim + Rate Limiting + sauvegarde)
+        success = update_student_location(student_profile, latitude, longitude)
+
+        if success:
+            return JsonResponse({'success': True, 'message': 'Position enregistrée avec succès.'})
+        else:
+            return JsonResponse({'success': False, 'message': 'Erreur lors de la géolocalisation.'}, status=500)
+
+    except json.JSONDecodeError:
+        return JsonResponse({'success': False, 'message': 'Données JSON invalides.'}, status=400)
+    except Exception as e:
+        return JsonResponse({'success': False, 'message': str(e)}, status=500)

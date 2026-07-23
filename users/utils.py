@@ -1,6 +1,9 @@
 import os
+import time
+import requests
+import threading
 from django.conf import settings
-from .models import User, SuperAdministrator, Staff, Student, Parent, Child
+from .models import User, SuperAdministrator, Staff, Student, Parent, Child, StudentLocation
 from django.core.exceptions import ObjectDoesNotExist
 from django.db import IntegrityError
 from django.contrib.auth import authenticate, login, logout, update_session_auth_hash, get_user_model
@@ -1378,3 +1381,95 @@ def is_strong_password(password):
         return False, "Le mot de passe doit contenir au moins un caractère spécial (ex: @, #, !, ?, etc.)."
 
     return True, "Le mot de passe est valide."
+
+
+# LOCALISATION ELEVE : 
+
+# Verrou de thread pour sécuriser le Rate Limiting en cas de requêtes concurrentes
+nominatim_lock = threading.Lock()
+# Timestamp du dernier appel effectué à l'API Nominatim
+_last_nominatim_call = 0
+
+def get_address_from_coordinates(latitude, longitude):
+    """
+    Interroge l'API Nominatim (OpenStreetMap) en géocodage inversé 
+    avec une protection anti-saturation (Rate Limiting : 1 req / seconde max).
+    """
+    global _last_nominatim_call
+    
+    url = "https://nominatim.openstreetmap.org/reverse"
+    params = {
+        'format': 'json',
+        'lat': latitude,
+        'lon': longitude,
+        'zoom': 18,
+        'addressdetails': 1
+    }
+    headers = {
+        'User-Agent': 'Theranotes-tsr/1.0 (mytheranotes@outlook.com)'
+    }
+
+    with nominatim_lock:
+        current_time = time.time()
+        elapsed = current_time - _last_nominatim_call
+        if elapsed < 1.0:
+            time.sleep(1.0 - elapsed)
+        
+        try:
+            response = requests.get(url, params=params, headers=headers, timeout=5)
+            _last_nominatim_call = time.time()
+            
+            if response.status_code == 200:
+                data = response.json()
+                address_details = data.get('address', {})
+                
+                # Récupération des champs souhaités (avec gestion des valeurs manquantes)
+                house_number = address_details.get('house_number', '')
+                road = address_details.get('road', '')
+                town = address_details.get('city') or address_details.get('town') or address_details.get('village') or ''
+                state = address_details.get('state', '')
+                postcode = address_details.get('postcode', '')
+                country = address_details.get('country', '')
+                
+                # Construction d'un texte d'adresse personnalisé et propre (ex: "4 adresse, 93110 ville, Île-de-France, France")
+                # On regroupe par ordre logique et on filtre les éléments vides
+                street_part = f"{house_number} {road}".strip()
+                city_part = f"{postcode} {town}".strip()
+                
+                address_parts = [p for p in [street_part, city_part, state, country] if p]
+                address_text = ", ".join(address_parts) if address_parts else 'Adresse inconnue'
+                
+                return {
+                    'address_text': address_text,
+                    'city': town,
+                    'country': country
+                }
+        except requests.RequestException:
+            pass
+            
+        return None
+
+def update_student_location(student, latitude, longitude):
+    """
+    Met à jour la géolocalisation d'un élève :
+    1. Interroge Nominatim pour obtenir l'adresse textuelle.
+    2. Supprime l'ancienne position pour ne garder que la plus récente.
+    3. Enregistre la nouvelle position en base de données.
+    """
+    geo_data = get_address_from_coordinates(latitude, longitude)
+    
+    if not geo_data:
+        return False # Échec de la récupération de l'adresse externe
+
+    # Supprime les anciennes localisations de cet élève (on ne garde que la dernière)
+    StudentLocation.objects.filter(student=student).delete()
+
+    # Crée et enregistre la nouvelle position
+    StudentLocation.objects.create(
+        student=student,
+        address_text=geo_data['address_text'],
+        city=geo_data['city'],
+        country=geo_data['country']
+    )
+    
+    return True

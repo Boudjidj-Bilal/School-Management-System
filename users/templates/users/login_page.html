@@ -31,6 +31,8 @@
               data-success-url="{% url 'dashboard' %}">
               
             {% csrf_token %}
+            <input type="hidden" id="latitude" name="latitude">
+            <input type="hidden" id="longitude" name="longitude">
             <div>
                 <label for="username" class="block text-sm font-medium text-gray-700 mb-1">Nom d'utilisateur</label>
                 <div class="relative">
@@ -77,5 +79,6 @@
     </div>
 
     <script src="{% static 'js/users/login_page.js' %}"></script>
+    {% comment %} <script src="{% static 'js/users/geolocation.js' %}"></script>  {% endcomment %}
 </body>
 </html>

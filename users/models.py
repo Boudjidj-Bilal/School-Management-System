@@ -157,3 +157,26 @@ class Child(models.Model):
 
     def __str__(self):
         return f"{self.student.user.username} child of {self.parent.user.username} {self.student.school.name}"
+
+
+class StudentLocation(models.Model):
+    """
+    Stocke la dernière position géographique textuelle d'un élève.
+    Lié en ForeignKey pour permettre une relation propre.
+    """
+    student = models.ForeignKey(
+        Student, 
+        on_delete=models.CASCADE, 
+        related_name="locations"
+    )
+    
+    # Informations textuelles issues de Nominatim
+    address_text = models.TextField(verbose_name="Adresse complète")
+    city = models.CharField(max_length=150, blank=True, null=True, verbose_name="Ville")
+    country = models.CharField(max_length=100, blank=True, null=True, verbose_name="Pays")
+    
+    # Traçabilité de la dernière mise à jour
+    updated_at = models.DateTimeField(auto_now=True, verbose_name="Dernière mise à jour")
+
+    def __str__(self):
+        return f"Position de {self.student.user.username} - {self.updated_at.strftime('%d/%m/%Y à %H:%M')}"
