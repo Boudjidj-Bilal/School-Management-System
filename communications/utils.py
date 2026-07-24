@@ -696,14 +696,16 @@ def get_homework_detail_context(announcement_id, user):
         'is_student': False,
     }
 
+    user_type = get_user_type(user)
+
     # Cas du Professeur (Créateur ou SuperAdmin)
-    if hasattr(user, 'staff_user') and (announcement.sender == user or user.is_superuser):
+    if announcement.sender == user or user_type == "Principal" or user_type == "SuperAdministrator":
         context['is_teacher'] = True
         context['submissions'] = announcement.submissions.select_related('student__user').prefetch_related('files')
         return context
 
     # Cas de l'Élève destinataire
-    elif hasattr(user, 'student_user'):
+    elif user_type == "Student":
         student_profile = user.student_user
         
         is_recipient = announcement.recipients.filter(user=user).exists()

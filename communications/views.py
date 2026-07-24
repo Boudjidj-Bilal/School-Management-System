@@ -597,12 +597,28 @@ def api_mark_as_read(request):
 @login_required
 @require_http_methods(["GET", "POST"])
 def homework_detail_view(request, announcement_id):
+
     user = request.user
-    
-    try:
-        context = get_homework_detail_context(announcement_id, user)
-    except PermissionDenied as e:
-        return render(request, "communications/403.html", {"error": str(e)}, status=403)
+
+    user_type = get_user_type(user)
+
+    if user_type not in ['Teacher', 'Parent', 'Student', "Principal", "SuperAdministrator"]:
+        return render(request, "404.html", status=404)
+
+    if user_type == "Parent":
+        student = get_student_context(request)
+        user_child = student.user        
+        try:
+            context = get_homework_detail_context(announcement_id, user_child)
+            context["is_student"] = False
+            context["is_parent"] = True
+        except PermissionDenied as e:
+            return render(request, "404.html", status=404)
+    else:   
+        try:
+            context = get_homework_detail_context(announcement_id, user)
+        except PermissionDenied as e:
+            return render(request, "404.html", status=404)
 
     announcement = context['announcement']
 

@@ -154,7 +154,7 @@
 
 
         <!-- ================= SECTION ÉLÈVE : DÉPOSER / MODIFIER SON RENDU ================= -->
-        {% if is_student %}
+        {% if is_student or is_parent %}
             <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
                 <div class="p-6 border-b border-gray-200 bg-indigo-50">
                     <h3 class="text-lg font-bold text-indigo-900 flex items-center">
@@ -227,12 +227,14 @@
                             </div>
 
                             <!-- Bouton de soumission -->
-                            <div class="flex justify-end pt-2">
-                                <button type="submit" id="btn-submit-submission" class="px-6 py-2.5 bg-indigo-600 text-white font-semibold rounded-lg shadow-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition-transform transform hover:scale-105 flex items-center">
-                                    <i class="fas fa-paper-plane mr-2"></i> 
-                                    <span id="btn-submit-text">{% if my_submission %}Modifier mon rendu{% else %}Envoyer mon rendu{% endif %}</span>
-                                </button>
-                            </div>
+                            {% if is_student %}
+                                <div class="flex justify-end pt-2">
+                                    <button type="submit" id="btn-submit-submission" class="px-6 py-2.5 bg-indigo-600 text-white font-semibold rounded-lg shadow-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition-transform transform hover:scale-105 flex items-center">
+                                        <i class="fas fa-paper-plane mr-2"></i> 
+                                        <span id="btn-submit-text">{% if my_submission %}Modifier mon rendu{% else %}Envoyer mon rendu{% endif %}</span>
+                                    </button>
+                                </div>
+                            {% endif %}
                         </form>
 
                     {% endif %}
