@@ -1,13 +1,16 @@
 document.addEventListener('DOMContentLoaded', () => {
     
-    // MODIFICATION : Récupération sécurisée du Token CSRF depuis le champ caché
-    // au lieu de la variable globale window.DASHBOARD_CONFIG
+    // Récupération sécurisée du Token CSRF depuis le champ caché
     const csrfTokenInput = document.getElementById('csrf-token');
     const CSRF_TOKEN = csrfTokenInput ? csrfTokenInput.value : '';
 
     // --- 1. GESTION SÉLECTEUR D'ÉCOLE (SuperAdmin) ---
     const schoolSelector = document.getElementById('school-selector');
     if (schoolSelector) {
+        // NOUVEAU : Récupération des traductions depuis les data-attributes du select
+        const msgErrorSchool = schoolSelector.dataset.msgErrorSchool || "Erreur lors du changement d'école :";
+        const msgErrorNetwork = schoolSelector.dataset.msgErrorNetwork || "Erreur de communication avec le serveur.";
+
         schoolSelector.addEventListener('change', async (event) => {
             const schoolId = event.target.value;
             // Récupération de l'URL depuis l'attribut data-url
@@ -33,14 +36,15 @@ document.addEventListener('DOMContentLoaded', () => {
                     // Rechargement pour appliquer le contexte de l'école
                     window.location.reload();
                 } else {
-                    alert("Erreur lors du changement d'école : " + result.message);
+                    // Utilisation du texte traduit
+                    alert(`${msgErrorSchool} ${result.message}`);
                     // En cas d'erreur, on réactive le select
                     schoolSelector.disabled = false;
                     schoolSelector.classList.remove('opacity-50', 'cursor-wait');
                 }
             } catch (error) {
                 console.error("Erreur:", error);
-                alert("Erreur de communication avec le serveur.");
+                alert(msgErrorNetwork);
                 schoolSelector.disabled = false;
                 schoolSelector.classList.remove('opacity-50', 'cursor-wait');
             }
@@ -50,6 +54,10 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- 2. GESTION SÉLECTEUR D'ENFANT (Parent) ---
     const childSelector = document.getElementById('child-selector');
     if (childSelector) {
+        // NOUVEAU : Récupération des traductions depuis les data-attributes du select
+        const msgErrorChild = childSelector.dataset.msgErrorChild || "Erreur :";
+        const msgErrorNetwork = childSelector.dataset.msgErrorNetwork || "Erreur de communication avec le serveur.";
+
         childSelector.addEventListener('change', async (event) => {
             const childId = event.target.value;
             // Récupération de l'URL depuis l'attribut data-url
@@ -75,14 +83,15 @@ document.addEventListener('DOMContentLoaded', () => {
                     // Rechargement pour appliquer le contexte de l'enfant
                     window.location.reload();
                 } else {
-                    alert("Erreur : " + result.message);
+                    // Utilisation du texte traduit
+                    alert(`${msgErrorChild} ${result.message}`);
                     // En cas d'erreur, on réactive
                     childSelector.disabled = false;
                     childSelector.classList.remove('opacity-50', 'cursor-wait');
                 }
             } catch (error) {
                 console.error("Erreur:", error);
-                alert("Erreur de communication avec le serveur.");
+                alert(msgErrorNetwork);
                 childSelector.disabled = false;
                 childSelector.classList.remove('opacity-50', 'cursor-wait');
             }

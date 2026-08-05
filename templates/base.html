@@ -1,19 +1,15 @@
-{% load static %}
+{% load static i18n %}
 <!DOCTYPE html>
-<html lang="fr">
+<html lang="{{ LANGUAGE_CODE }}" dir="{% if LANGUAGE_CODE == 'ar' %}rtl{% else %}ltr{% endif %}">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %}Tableau de bord{% endblock %}</title>
+    <title>{% block title %}{% trans "Tableau de bord" %}{% endblock %}</title>
     <link rel="icon" href="{% static 'img/logo_mini.jpg' %}">
 
-    <!-- CSS Local (compilé par Tailwind) -->
     <link rel="stylesheet" href="{% static 'css/style.css' %}">
-    
-    <!-- FontAwesome Local -->
     <link rel="stylesheet" href="{% static 'css/all.min.css' %}">
     
-    <!-- Police par défaut (Système) pour éviter l'appel Google Fonts -->
     <style>
         body {
             font-family: 'Inter', sans-serif;
@@ -23,26 +19,30 @@
 </head>
 <body class="bg-gray-100 min-h-screen flex flex-col relative">
 
+    <!-- HEADER MOBILE UNIQUEMENT -->
     <header class="lg:hidden bg-white shadow-sm border-b border-gray-200 sticky top-0 z-40 h-16">
         <div class="flex items-center justify-between px-4 h-full relative">
             
+            <!-- Le Hamburger : Grâce à Flexbox (justify-between), en Arabe, ce bloc passera TOUT SEUL à droite -->
             <div class="w-12 flex justify-start">
                 <button id="mobile-menu-btn" class="text-gray-600 hover:text-blue-600 transition-colors focus:outline-none p-2 rounded-md hover:bg-gray-50">
                     <i class="fas fa-bars text-xl"></i>
                 </button>
             </div>
 
+            <!-- LE LOGO MOBILE : On utilise left-1/2 (et non start-1/2) pour forcer un centrage physique parfait peu importe la langue -->
             <div class="absolute left-1/2 top-1/2 transform -translate-x-1/2 -translate-y-1/2">
                 <a href="{% url 'dashboard' %}">
-                    <img src="{% static 'img/logo-transparent-svg.svg' %}" alt="Logo" class="h-20 w-auto object-contain">
+                    <img src="{% static 'img/logo-transparent-svg.svg' %}" alt="{% trans 'Logo' %}" class="h-20 w-auto object-contain">
                 </a>
             </div>
 
+            <!-- Déconnexion : Passera tout seul à gauche en Arabe -->
             <div class="w-12 flex justify-end">
                 {% if request.user.is_authenticated %}
                 <form action="{% url 'logout' %}" method="post" class="m-0 p-0">
                     {% csrf_token %}
-                    <button type="submit" class="text-gray-400 hover:text-red-500 transition-colors p-2 rounded-md hover:bg-red-50" title="Déconnexion">
+                    <button type="submit" class="text-gray-400 hover:text-red-500 transition-colors p-2 rounded-md hover:bg-red-50" title="{% trans 'Déconnexion' %}">
                         <i class="fas fa-power-off text-lg"></i>
                     </button>
                 </form>
@@ -52,6 +52,7 @@
         </div>
     </header>
 
+    <!-- HEADER ORDINATEUR UNIQUEMENT -->
     <div class="hidden lg:block">
         {% if request.user.is_authenticated %}
         {% include 'menu.html' %}
@@ -63,14 +64,17 @@
         <div id="sidebar-overlay" class="fixed inset-0 bg-black bg-opacity-50 z-40 hidden lg:hidden transition-opacity opacity-0 backdrop-blur-sm"></div>
 
         {% if request.user.is_authenticated %}
+        <!-- SIDEBAR -->
         <aside id="sidebar-wrapper" class="
-            fixed inset-y-0 left-0 z-50 w-72 
-            transform -translate-x-full lg:translate-x-0 transition-transform duration-300 ease-in-out
+            fixed inset-y-0 start-0 z-50 w-72 
+            transform 
+            {% if LANGUAGE_CODE == 'ar' %} translate-x-full {% else %} -translate-x-full {% endif %} 
+            lg:translate-x-0 transition-transform duration-300 ease-in-out
             h-screen flex flex-col
             lg:static lg:h-auto lg:w-64 lg:shadow-none lg:block flex-shrink-0
         ">
             <div class="lg:hidden flex items-center justify-between p-4">
-                <span class="font-bold text-white text-lg">Menu</span>
+                <span class="font-bold text-white text-lg">{% trans "Menu" %}</span>
                 <button id="close-sidebar-btn" class="text-white hover:text-gray-300 p-2">
                     <i class="fas fa-times text-xl"></i>
                 </button>
@@ -91,9 +95,6 @@
 
     {% include 'footer.html' %}
 
-    <!-- Chargement des scripts JS -->
-    
-    <!-- Script global pour le layout (Menu mobile, Sidebar) -->
     <script src="{% static 'js/base.js' %}"></script>
 
     {% block extra_js %}

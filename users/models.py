@@ -2,6 +2,7 @@ from django.db import models
 from django.contrib.auth.models import AbstractBaseUser, PermissionsMixin
 from .managers import CustomUserManager
 
+from django.utils.translation import gettext_lazy as _
 
 # --- Fonction utilitaire pour le chemin de l'image ---
 def user_profile_image_path(instance, filename):
@@ -33,7 +34,7 @@ class User(AbstractBaseUser, PermissionsMixin):
         upload_to=user_profile_image_path, 
         null=True, 
         blank=True,
-        verbose_name="Photo de profil"
+        verbose_name=_("Photo de profil")
     )
 
     # Permissions / statut
@@ -123,7 +124,7 @@ class Student(models.Model):
     national_number = models.CharField(max_length=50, blank=True, null=True)
 
     def __str__(self):
-        return f"Élève: {self.user.username} - {self.school.name}"
+        return _("Élève: {username} - {school_name}").format(username=self.user.username, school_name=self.school.name)
     
 
 # --> Parents liés à une école et à un ou plusieurs enfants
@@ -156,7 +157,7 @@ class Child(models.Model):
         unique_together = ("student", "parent")  # empêche les doublons
 
     def __str__(self):
-        return f"{self.student.user.username} child of {self.parent.user.username} {self.student.school.name}"
+        return _("{student_username} child of {parent_username} {school_name}").format(student_username=self.student.user.username, parent_username=self.parent.user.username, school_name=self.student.school.name)
 
 
 class StudentLocation(models.Model):
@@ -171,12 +172,12 @@ class StudentLocation(models.Model):
     )
     
     # Informations textuelles issues de Nominatim
-    address_text = models.TextField(verbose_name="Adresse complète")
-    city = models.CharField(max_length=150, blank=True, null=True, verbose_name="Ville")
-    country = models.CharField(max_length=100, blank=True, null=True, verbose_name="Pays")
+    address_text = models.TextField(verbose_name=_("Adresse complète"))
+    city = models.CharField(max_length=150, blank=True, null=True, verbose_name=_("Ville"))
+    country = models.CharField(max_length=100, blank=True, null=True, verbose_name=_("Pays"))
     
     # Traçabilité de la dernière mise à jour
-    updated_at = models.DateTimeField(auto_now=True, verbose_name="Dernière mise à jour")
+    updated_at = models.DateTimeField(auto_now=True, verbose_name=_("Dernière mise à jour"))
 
     def __str__(self):
-        return f"Position de {self.student.user.username} - {self.updated_at.strftime('%d/%m/%Y à %H:%M')}"
+        return _("Position de {username} - {date}").format(username=self.student.user.username, date=self.updated_at.strftime('%d/%m/%Y à %H:%M'))

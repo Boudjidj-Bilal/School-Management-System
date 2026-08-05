@@ -3,6 +3,7 @@ from schools.models import TermYearLevel
 from subjects.models import TeacherSubject
 from users.models import Student
 from classes.models import Class
+from django.utils.translation import gettext_lazy as _
 
 # Représente une évaluation (un devoir, un examen)
 class Evaluation(models.Model):
@@ -15,7 +16,7 @@ class Evaluation(models.Model):
     max_grade = models.FloatField(default=20.0) 
 
     # Permet de distinguer les examens/projets importants des contrôles classiques
-    is_main_grade = models.BooleanField(default=False, verbose_name="Est une note principale")
+    is_main_grade = models.BooleanField(default=False, verbose_name=_("Est une note principale"))
 
     # Liens
     term_year = models.ForeignKey(
@@ -33,7 +34,7 @@ class Evaluation(models.Model):
 
     def __str__(self):
         # Petit indicateur visuel dans l'admin si c'est une note principale
-        prefix = "[PRINCIPAL] " if self.is_main_grade else ""
+        prefix = _("[PRINCIPAL]") if self.is_main_grade else ""
         return f"{prefix}{self.name} (/{self.max_grade}) - {self.student_class.name} ({self.teacher_subject.subject.name})"
 
 # Représente la note spécifique d'un élève pour une évaluation
@@ -87,21 +88,21 @@ class Appreciation(models.Model):
 
     def __str__(self):
         if self.is_global:
-            return f"Appréciation Globale pour {self.student} ({self.term_year})"
+            return _("Appréciation Globale pour {student} ({term_year})").format(student=self.student, term_year=self.term_year)
         return f"Appréciation {self.teacher_subject} pour {self.student} ({self.term_year})"
 
 
 # --> Représente une mention attribuée à un élève (Assez bien, Bien, Très bien...)
 class Mention(models.Model):
     MENTION_CHOICES = [
-        ("AB", "Assez Bien"),
-        ("B", "Bien"),
-        ("TB", "Très Bien"),
-        ("EX", "Excellent"),
-        ("FE", "Félicitations"),
-        ("EN", "Encouragements"),
-        ("AV", "Avertissement Travail"),
-        ("AC", "Avertissement Conduite"),
+        ("AB", _("Assez Bien")),
+        ("B", _("Bien")),
+        ("TB", _("Très Bien")),
+        ("EX", _("Excellent")),
+        ("FE", _("Félicitations")),
+        ("EN", _("Encouragements")),
+        ("AV", _("Avertissement Travail")),
+        ("AC", _("Avertissement Conduite")),
     ]
 
     mention_type = models.CharField(max_length=2, choices=MENTION_CHOICES)  # type de mention

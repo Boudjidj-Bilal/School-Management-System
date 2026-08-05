@@ -5,6 +5,7 @@ from schools.models import TermYearLevel
 from django.core.files.storage import FileSystemStorage
 from django.conf import settings
 import os
+from django.utils.translation import gettext_lazy as _
 
 # ======================================
 # MODÈLE BULLETIN SCOLAIRE (Généré auto)
@@ -35,7 +36,7 @@ class ReportCard(models.Model):
     )
     
     # Pour savoir si l'élève/parent peut le voir
-    is_published = models.BooleanField(default=False, verbose_name="Publié")
+    is_published = models.BooleanField(default=False, verbose_name=_("Publié"))
     
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -48,7 +49,7 @@ class ReportCard(models.Model):
         verbose_name = "Bulletin Scolaire"
 
     def __str__(self):
-        return f"Bulletin - {self.student} - {self.term}"
+        return _("Bulletin - {student} - {term}").format(student=self.student, term=self.term)
 
 
 # ===================================
@@ -56,11 +57,11 @@ class ReportCard(models.Model):
 # ===================================
 class StudentDocument(models.Model):
     CATEGORIES = (
-        ('ADMIN', 'Administratif'),
-        ('CERTIFICATE', 'Certificat de scolarité'),
-        ('SANCTION', 'Sanction / Discipline'),
-        ('MEDICAL', 'Médical'),
-        ('OTHER', 'Autre'),
+        ('ADMIN', _('Administratif')),
+        ('CERTIFICATE', _('Certificat de scolarité')),
+        ('SANCTION', _('Sanction / Discipline')),
+        ('MEDICAL', _('Médical')),
+        ('OTHER', _('Autre')),
     )
 
     student = models.ForeignKey(
@@ -77,7 +78,7 @@ class StudentDocument(models.Model):
         related_name='uploaded_documents'
     )
     
-    title = models.CharField(max_length=255, verbose_name="Titre du document")
+    title = models.CharField(max_length=255, verbose_name=_("Titre du document"))
     category = models.CharField(max_length=20, choices=CATEGORIES, default='ADMIN')
     
     file = models.FileField(

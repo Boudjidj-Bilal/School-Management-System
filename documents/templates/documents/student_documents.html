@@ -1,30 +1,31 @@
 {% extends 'base.html' %}
-{% load static %}
+{% load static i18n %}
 
-{% block title %}Mes Documents - {{ student.user.first_name }} {{ student.user.last_name }}{% endblock %}
+{% block title %}{% trans "Mes Documents" %} - {{ student.user.first_name }} {{ student.user.last_name }}{% endblock %}
 
 {% block content %}
 <div class="container mx-auto px-4 py-8">
 
     <header class="mb-10 border-b border-gray-200 pb-6">
-        <h1 class="text-3xl font-extrabold text-gray-900 flex items-center">
-            <i class="fas fa-folder-open text-indigo-600 mr-3"></i>
-            Espace Documents
+        <h1 class="text-3xl font-extrabold text-gray-900 flex items-center gap-3">
+            <i class="fas fa-folder-open text-indigo-600"></i>
+            <span>{% trans "Espace Documents" %}</span>
         </h1>
-        <p class="mt-2 text-lg text-gray-600">
-            Dossier numérique de <span class="font-semibold text-gray-800">{{ student.user.first_name }} {{ student.user.last_name }}</span>
-            <span class="mx-2">|</span>
+        <div class="mt-2 text-lg text-gray-600 flex flex-wrap items-center gap-2">
+            <span>{% trans "Dossier numérique de" %} <span class="font-semibold text-gray-800">{{ student.user.first_name }} {{ student.user.last_name }}</span></span>
+            <span>|</span>
             <span class="text-sm bg-gray-100 text-gray-600 px-2 py-1 rounded">
-                Classe : {{ student.class_years.last.student_class.name|default:"Aucune classe" }}
-            </span>        </p>
+                {% trans "Classe :" %} {{ student.class_years.last.student_class.name|default:_("Aucune classe") }}
+            </span>
+        </div>
     </header>
 
     <section class="mb-12">
-        <h2 class="text-xl font-bold text-gray-800 mb-6 flex items-center">
-            <span class="bg-indigo-100 text-indigo-800 p-2 rounded-lg mr-3">
+        <h2 class="text-xl font-bold text-gray-800 mb-6 flex items-center gap-3">
+            <span class="bg-indigo-100 text-indigo-800 p-2 rounded-lg">
                 <i class="fas fa-graduation-cap"></i>
             </span>
-            Bulletins Officiels
+            <span>{% trans "Bulletins Officiels" %}</span>
         </h2>
 
         {% if report_cards %}
@@ -33,29 +34,29 @@
             {% for year_group in year_list %}
                 <div class="mb-8">
                     <h3 class="text-lg font-bold text-gray-700 border-b border-gray-200 pb-2 mb-4">
-                        Année Scolaire : {{ year_group.grouper.name }}
+                        {% trans "Année Scolaire :" %} {{ year_group.grouper.name }}
                     </h3>
 
                     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                         {% for rc in year_group.list %}
                         <div class="bg-white rounded-xl shadow-md border border-gray-200 hover:shadow-lg transition duration-200 overflow-hidden relative">
-                            <div class="absolute top-0 right-0 bg-indigo-600 text-white text-xs font-bold px-3 py-1 rounded-bl-lg">
+                            <div class="absolute top-0 end-0 bg-indigo-600 text-white text-xs font-bold px-3 py-1 rounded-bs-lg" dir="ltr">
                                 {{ rc.term.level.get_term_type_display }} {{ rc.term.counter }}
                             </div>
 
                             <div class="p-6">
-                                <div class="flex items-center mb-4">
-                                    <div class="h-10 w-10 rounded-full bg-red-50 flex items-center justify-center text-red-500 text-xl mr-3">
+                                <div class="flex items-center gap-3 mb-4">
+                                    <div class="h-10 w-10 rounded-full bg-red-50 flex items-center justify-center text-red-500 text-xl flex-shrink-0">
                                         <i class="fas fa-file-pdf"></i>
                                     </div>
                                     <div>
-                                        <p class="text-xs text-gray-500">Publié le {{ rc.updated_at|date:"d/m/Y" }}</p>
-                                        <p class="font-bold text-gray-900">{{ rc.term.level.get_term_type_display }} {{ rc.term.counter }}</p>
+                                        <p class="text-xs text-gray-500">{% trans "Publié le" %} <span dir="ltr">{{ rc.updated_at|date:"d/m/Y" }}</span></p>
+                                        <p class="font-bold text-gray-900" dir="ltr">{{ rc.term.level.get_term_type_display }} {{ rc.term.counter }}</p>
                                     </div>
                                 </div>
                                 
                                 <a href="{% url 'documents:download_report_card' report_card_id=rc.id %}" target="_blank" class="block w-full text-center px-4 py-2 border border-indigo-600 text-indigo-600 font-medium rounded-lg hover:bg-indigo-50 transition">
-                                    Voir le bulletin
+                                    {% trans "Voir le bulletin" %}
                                 </a>
                             </div>
                         </div>
@@ -65,19 +66,18 @@
             {% endfor %}
 
         {% else %}
-            <div class="bg-gray-50 border-l-4 border-gray-300 p-6 rounded-r-lg">
-                <p class="text-gray-500 italic">Aucun bulletin disponible.</p>
+            <div class="bg-gray-50 border-s-4 border-gray-300 p-6 rounded-e-lg">
+                <p class="text-gray-500 italic">{% trans "Aucun bulletin disponible." %}</p>
             </div>
         {% endif %}
     </section>
 
-
     <section>
-        <h2 class="text-xl font-bold text-gray-800 mb-6 flex items-center">
-            <span class="bg-teal-100 text-teal-800 p-2 rounded-lg mr-3">
+        <h2 class="text-xl font-bold text-gray-800 mb-6 flex items-center gap-3">
+            <span class="bg-teal-100 text-teal-800 p-2 rounded-lg">
                 <i class="fas fa-file-alt"></i>
             </span>
-            Documents Administratifs & Divers
+            <span>{% trans "Documents Administratifs & Divers" %}</span>
         </h2>
 
         <div class="bg-white rounded-xl shadow border border-gray-200 overflow-hidden">
@@ -86,11 +86,11 @@
                     {% for doc in documents %}
                     <li class="p-4 hover:bg-gray-50 transition duration-150 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                         
-                        <div class="flex items-start">
+                        <div class="flex items-start gap-4">
                             <div class="flex-shrink-0 mt-1">
                                 <i class="fas fa-file-lines text-gray-400 text-xl"></i>
                             </div>
-                            <div class="ml-4">
+                            <div>
                                 <h4 class="text-sm font-bold text-gray-900">{{ doc.title }}</h4>
                                 <div class="flex flex-wrap gap-2 mt-1">
                                     <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium 
@@ -101,15 +101,15 @@
                                         {{ doc.get_category_display }}
                                     </span>
                                     
-                                    <span class="text-xs text-gray-500 flex items-center">
-                                        <i class="far fa-clock mr-1"></i> {{ doc.created_at|date:"d/m/Y" }}
+                                    <span class="text-xs text-gray-500 flex items-center gap-1" dir="ltr">
+                                        <i class="far fa-clock"></i> <span>{{ doc.created_at|date:"d/m/Y" }}</span>
                                     </span>
-                                    <span class="text-xs text-gray-500 flex items-center">
-                                        <i class="far fa-user mr-1"></i> 
+                                    <span class="text-xs text-gray-500 flex items-center gap-1">
+                                        <i class="far fa-user"></i> 
                                         {% if doc.uploaded_by %}
-                                            Par : {{ doc.uploaded_by.last_name }} {{ doc.uploaded_by.first_name|slice:":1" }}.
+                                            <span>{% trans "Par :" %} {{ doc.uploaded_by.last_name }} {{ doc.uploaded_by.first_name|slice:":1" }}.</span>
                                         {% else %}
-                                            Par : Administration
+                                            <span>{% trans "Par : Administration" %}</span>
                                         {% endif %}
                                     </span>
                                 </div>
@@ -117,8 +117,9 @@
                         </div>
 
                         <div class="flex-shrink-0">
-                            <a href="{% url 'documents:download_student_document' document_id=doc.id %}" target="_blank" class="inline-flex items-center px-3 py-1.5 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none">
-                                <i class="fas fa-download mr-1.5 text-gray-400"></i> Ouvrir
+                            <a href="{% url 'documents:download_student_document' document_id=doc.id %}" target="_blank" class="inline-flex items-center gap-2 px-3 py-1.5 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none">
+                                <i class="fas fa-download text-gray-400"></i> 
+                                <span>{% trans "Ouvrir" %}</span>
                             </a>
                         </div>
                     </li>
@@ -129,7 +130,7 @@
                     <div class="inline-flex items-center justify-center h-12 w-12 rounded-full bg-gray-100 mb-4">
                         <i class="fas fa-folder-open text-gray-400"></i>
                     </div>
-                    <p class="text-gray-500">Aucun document administratif disponible.</p>
+                    <p class="text-gray-500">{% trans "Aucun document administratif disponible." %}</p>
                 </div>
             {% endif %}
         </div>

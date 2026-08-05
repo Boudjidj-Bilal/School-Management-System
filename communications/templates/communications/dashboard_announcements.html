@@ -1,7 +1,7 @@
 {% extends 'base.html' %}
-{% load static %}
+{% load static i18n %}
 
-{% block title %}Annonces & Informations{% endblock %}
+{% block title %}{% trans "Annonces & Informations" %}{% endblock %}
 
 {% block content %}
 {% csrf_token %}
@@ -12,49 +12,82 @@
 {% url 'communications:api_announcement_create' as api_create_url %}
 {% url 'communications:api_announcement_read' as api_read_url %}
 
-<!-- Conteneur principal avec Configuration Injectée -->
+<!-- Conteneur principal avec Configuration Injectée et Traductions JS -->
 <div id="announcements-container" 
      class="bg-white rounded-xl shadow-lg border border-gray-200 min-h-[calc(100vh-140px)] flex flex-col"
      data-api-list-url="{{ api_list_url }}"
      data-api-create-url="{{ api_create_url }}"
      data-api-read-url="{{ api_read_url }}"
-     data-can-send="{{ can_send|yesno:'true,false' }}">
+     data-can-send="{{ can_send|yesno:'true,false' }}"
+     
+     data-msg-load-error="{% trans 'Erreur de chargement.' %}"
+     data-msg-load-error-toast="{% trans 'Impossible de charger les annonces.' %}"
+     data-msg-no-announcements="{% trans 'Aucune annonce.' %}"
+     data-msg-multiple-recipients="{% trans 'Destinataires multiples' %}"
+     data-msg-with-submission="{% trans 'Avec rendu' %}"
+     data-msg-without-submission="{% trans 'Sans rendu' %}"
+     data-msg-sender="{% trans 'De :' %}"
+     data-msg-recipient="{% trans 'Pour :' %}"
+     data-msg-me="{% trans 'Moi' %}"
+     data-msg-view-submissions="{% trans 'Consulter les rendus des élèves' %}"
+     data-msg-manage-submission="{% trans 'Gérer / Déposer mon rendu' %}"
+     data-msg-download="{% trans 'Télécharger' %}"
+     data-msg-just-now="{% trans 'à l’instant' %}"
+     data-msg-read-success="{% trans 'Annonce marquée comme lue.' %}"
+     data-msg-read-error="{% trans 'Erreur lors de la validation.' %}"
+     data-msg-no-recipient-error="{% trans 'Veuillez sélectionner au moins un destinataire.' %}"
+     data-msg-sending="{% trans 'Envoi...' %}"
+     data-msg-send-success="{% trans 'Annonce envoyée avec succès !' %}"
+     data-msg-tech-error="{% trans 'Erreur technique lors de l’envoi.' %}"
+     data-msg-classes="{% trans 'Classes' %}"
+     data-msg-staff="{% trans 'Personnel' %}"
+     data-msg-no-recipient-available="{% trans 'Aucun destinataire disponible.' %}"
+     data-msg-recipient-summary="{% trans '{count} destinataire(s) sélectionné(s)' %}">
     
     <!-- EN-TÊTE -->
     <div class="p-6 border-b border-gray-200 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>
-            <h1 class="text-2xl font-bold text-gray-900 flex items-center">
-                <i class="fas fa-bullhorn text-indigo-600 mr-3"></i>
-                Annonces
+            <!-- Séparation icône + texte avec gap-3 -->
+            <h1 class="text-2xl font-bold text-gray-900 flex items-center gap-3">
+                <i class="fas fa-bullhorn text-indigo-600"></i>
+                <span>{% trans "Annonces" %}</span>
             </h1>
-            <p class="text-gray-500 text-sm mt-1">Informations, devoirs et actualités de l'établissement.</p>
+            <p class="text-gray-500 text-sm mt-1">{% trans "Informations, devoirs et actualités de l'établissement." %}</p>
         </div>
 
         {% if can_send %}
-        <button id="btn-create-announcement" class="px-6 py-2.5 bg-indigo-600 text-white font-semibold rounded-lg shadow-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-transform transform hover:scale-105 flex items-center">
-            <i class="fas fa-plus-circle mr-2"></i> Nouvelle Annonce
+        <!-- Séparation icône + texte avec gap-2 -->
+        <button id="btn-create-announcement" class="px-6 py-2.5 bg-indigo-600 text-white font-semibold rounded-lg shadow-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-transform transform hover:scale-105 flex items-center gap-2">
+            <i class="fas fa-plus-circle"></i> 
+            <span>{% trans "Nouvelle Annonce" %}</span>
         </button>
         {% endif %}
     </div>
 
     <!-- ONGLETS DE NAVIGATION -->
-    <div class="px-6 pt-4 border-b border-gray-200">
-        <nav class="-mb-px flex space-x-8" aria-label="Tabs">
-            <button data-tab="inbox" class="tab-btn active-tab border-indigo-500 text-indigo-600 whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm flex items-center">
-                <i class="fas fa-inbox mr-2"></i> Reçus
-                <span id="badge-inbox-unread" class="hidden ml-2 bg-red-500 text-white text-xs font-bold px-2 py-0.5 rounded-full">0</span>
+    <div class="px-6 pt-4 border-b border-gray-200 overflow-x-auto">
+        <nav class="-mb-px flex gap-8" aria-label="Tabs">
+            <!-- Séparation icône + texte avec gap-2 -->
+            <button data-tab="inbox" class="tab-btn active-tab border-indigo-500 text-indigo-600 whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm flex items-center gap-2">
+                <i class="fas fa-inbox"></i> 
+                <span>{% trans "Reçus" %}</span>
+                <span id="badge-inbox-unread" class="hidden ms-2 bg-red-500 text-white text-xs font-bold px-2 py-0.5 rounded-full" dir="ltr">0</span>
             </button>
             
             {% if can_send %}
-            <button data-tab="sent" class="tab-btn border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm flex items-center">
-                <i class="fas fa-paper-plane mr-2"></i> Envoyés
+            <!-- Séparation icône + texte avec gap-2 -->
+            <button data-tab="sent" class="tab-btn border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm flex items-center gap-2">
+                <i class="fas fa-paper-plane"></i> 
+                <span>{% trans "Envoyés" %}</span>
             </button>
             {% endif %}
 
             <!-- Onglet pour Proviseur/SuperAdmin -->
             {% if can_view_all %}
-            <button data-tab="all" class="tab-btn border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm flex items-center">
-                <i class="fas fa-globe mr-2"></i> Annonces
+            <!-- Séparation icône + texte avec gap-2 -->
+            <button data-tab="all" class="tab-btn border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm flex items-center gap-2">
+                <i class="fas fa-globe"></i> 
+                <span>{% trans "Annonces" %}</span>
             </button>
             {% endif %}
         </nav>
@@ -83,8 +116,8 @@
                 <div class="w-20 h-20 bg-gray-200 rounded-full flex items-center justify-center mb-4">
                     <i class="far fa-folder-open text-4xl text-gray-400"></i>
                 </div>
-                <h3 class="text-lg font-medium text-gray-900">Aucune annonce</h3>
-                <p class="text-gray-500 text-sm mt-1">Vous n'avez rien pour le moment.</p>
+                <h3 class="text-lg font-medium text-gray-900">{% trans "Aucune annonce" %}</h3>
+                <p class="text-gray-500 text-sm mt-1">{% trans "Vous n'avez rien pour le moment." %}</p>
             </div>
         </template>
 
@@ -92,14 +125,14 @@
 </div>
 
 <!-- MODALE : LECTURE D'UNE ANNONCE -->
-<div id="modal-view" class="fixed inset-0 z-50 flex items-center justify-center bg-gray-900 bg-opacity-50 hidden opacity-0 transition-opacity duration-300">
-    <div class="bg-white rounded-xl shadow-2xl w-full max-w-2xl mx-4 flex flex-col max-h-[90vh] transform scale-95 transition-transform duration-300">
+<div id="modal-view" class="fixed inset-0 z-50 flex items-center justify-center bg-gray-900 bg-opacity-50 hidden opacity-0 transition-opacity duration-300 p-4">
+    <div class="bg-white rounded-xl shadow-2xl w-full max-w-2xl flex flex-col max-h-[90vh] transform scale-95 transition-transform duration-300 text-start">
         
         <div class="p-5 border-b border-gray-100 flex justify-between items-start">
             <div>
-                <span id="view-type-badge" class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800 mb-2">Info</span>
-                <h3 id="view-title" class="text-xl font-bold text-gray-900 leading-tight">Titre</h3>
-                <p class="text-sm text-gray-500 mt-1">Par <span id="view-sender" class="font-medium text-gray-800">Expéditeur</span> • <span id="view-date">Date</span></p>
+                <span id="view-type-badge" class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800 mb-2">{% trans "Info" %}</span>
+                <h3 id="view-title" class="text-xl font-bold text-gray-900 leading-tight" dir="auto">Titre</h3>
+                <p class="text-sm text-gray-500 mt-1">{% trans "Par" %} <span id="view-sender" class="font-medium text-gray-800" dir="auto">Expéditeur</span> • <span id="view-date" dir="ltr">Date</span></p>
             </div>
             <button class="btn-close-modal text-gray-400 hover:text-gray-600 transition-colors">
                 <i class="fas fa-times text-xl"></i>
@@ -107,47 +140,55 @@
         </div>
 
         <div class="p-6 overflow-y-auto custom-scrollbar space-y-6 flex-1">
-            <div id="view-content" class="prose prose-sm max-w-none text-gray-700"></div>
+            <div id="view-content" class="prose prose-sm max-w-none text-gray-700" dir="auto"></div>
             
             <div id="view-attachments-container" class="hidden pt-4 border-t border-gray-100">
-                <h4 class="text-sm font-semibold text-gray-900 mb-3"><i class="fas fa-paperclip mr-2"></i> Pièces jointes</h4>
+                <!-- Séparation icône + texte avec gap-2 -->
+                <h4 class="text-sm font-semibold text-gray-900 mb-3 flex items-center gap-2">
+                    <i class="fas fa-paperclip"></i> 
+                    <span>{% trans "Pièces jointes" %}</span>
+                </h4>
                 <div id="view-attachments-list" class="grid grid-cols-1 sm:grid-cols-2 gap-3"></div>
             </div>
 
             <div id="view-stats-container" class="hidden p-4 bg-indigo-50 rounded-lg border border-indigo-100">
-                <h4 class="text-sm font-bold text-indigo-900 mb-2">Suivi de lecture</h4>
+                <h4 class="text-sm font-bold text-indigo-900 mb-2">{% trans "Suivi de lecture" %}</h4>
                 <div class="flex items-center justify-between text-sm">
-                    <span><span id="view-stats-read">0</span> / <span id="view-stats-total">0</span> lecteurs</span>
+                    <span dir="ltr"><span id="view-stats-read">0</span> / <span id="view-stats-total">0</span> {% trans "lecteurs" %}</span>
                     <div class="w-32 h-2 bg-indigo-200 rounded-full overflow-hidden">
                         <div id="view-stats-bar" class="h-full bg-indigo-600" style="width: 0%"></div>
                     </div>
-                    <span id="view-stats-percent" class="font-bold text-indigo-700">0%</span>
+                    <span id="view-stats-percent" class="font-bold text-indigo-700" dir="ltr">0%</span>
                 </div>
             </div>
 
             <div id="homework-action-container" class="hidden">
-                <a id="link-homework-detail" href="#" class="inline-flex items-center px-4 py-2 bg-indigo-600 text-white font-semibold text-xs rounded-lg shadow hover:bg-indigo-700 transition-colors">
-                    <i class="fas fa-file-upload mr-2"></i> <span id="homework-link-text">Gérer / Déposer mon rendu</span>
+                <!-- Séparation icône + texte avec gap-2 -->
+                <a id="link-homework-detail" href="#" class="inline-flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white font-semibold text-xs rounded-lg shadow hover:bg-indigo-700 transition-colors">
+                    <i class="fas fa-file-upload"></i> 
+                    <span id="homework-link-text">{% trans "Gérer / Déposer mon rendu" %}</span>
                 </a>
             </div>
 
         </div>
 
-
-
         <div id="view-footer-action" class="p-4 border-t border-gray-100 bg-gray-50 rounded-b-xl flex justify-end items-center">
 
-
-            <label class="flex items-center space-x-3 cursor-pointer select-none" id="label-check-read">
+            <!-- Séparation avec gap-3 -->
+            <label class="flex items-center gap-3 cursor-pointer select-none" id="label-check-read">
                 <input type="checkbox" id="check-read" class="form-checkbox h-5 w-5 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500 transition duration-150 ease-in-out">
-                <span class="text-gray-700 font-medium">J'ai bien lu cette information</span>
+                <span class="text-gray-700 font-medium">{% trans "J'ai bien lu cette information" %}</span>
             </label>
-            <div id="read-confirmation" class="hidden text-green-600 font-medium flex items-center">
-                <i class="fas fa-check-circle mr-2"></i> Lu le <span id="read-date" class="ml-1"></span>
+            <!-- Séparation icône + texte avec gap-2 -->
+            <div id="read-confirmation" class="hidden text-green-600 font-medium items-center gap-2">
+                <i class="fas fa-check-circle"></i> 
+                <span>{% trans "Lu le" %} <span id="read-date" class="ms-1" dir="ltr"></span></span>
             </div>
             <!-- Message pour les non-destinataires -->
-            <div id="read-only-msg" class="hidden text-gray-500 italic text-sm">
-                <i class="fas fa-eye mr-1"></i> Mode consultation (Vous n'êtes pas destinataire)
+            <!-- Séparation icône + texte avec gap-2 -->
+            <div id="read-only-msg" class="hidden text-gray-500 italic text-sm items-center gap-2">
+                <i class="fas fa-eye"></i> 
+                <span>{% trans "Mode consultation (Vous n'êtes pas destinataire)" %}</span>
             </div>
         </div>
     </div>
@@ -155,11 +196,15 @@
 
 {% if can_send %}
 <!-- MODALE CRÉATION -->
-<div id="modal-create" class="fixed inset-0 z-50 flex items-center justify-center bg-gray-900 bg-opacity-50 hidden opacity-0 transition-opacity duration-300">
-    <div class="bg-white rounded-xl shadow-2xl w-full max-w-3xl mx-4 flex flex-col max-h-[90vh] transform scale-95 transition-transform duration-300">
+<div id="modal-create" class="fixed inset-0 z-50 flex items-center justify-center bg-gray-900 bg-opacity-50 hidden opacity-0 transition-opacity duration-300 p-4">
+    <div class="bg-white rounded-xl shadow-2xl w-full max-w-3xl flex flex-col max-h-[90vh] transform scale-95 transition-transform duration-300 text-start">
          <!-- Header -->
         <div class="p-4 border-b border-gray-200 bg-indigo-600 text-white rounded-t-xl flex justify-between items-center">
-            <h3 class="text-lg font-bold"><i class="fas fa-pen-nib mr-2"></i> Rédiger une annonce</h3>
+            <!-- Séparation icône + texte avec gap-2 -->
+            <h3 class="text-lg font-bold flex items-center gap-2">
+                <i class="fas fa-pen-nib"></i> 
+                <span>{% trans "Rédiger une annonce" %}</span>
+            </h3>
             <button class="btn-close-modal text-indigo-100 hover:text-white transition-colors">
                 <i class="fas fa-times text-xl"></i>
             </button>
@@ -170,12 +215,12 @@
                 <!-- Titre et Type -->
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <div class="md:col-span-2">
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Titre <span class="text-red-500">*</span></label>
-                        <input type="text" name="title" required class="w-full border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500" placeholder="Ex: Devoir de Mathématiques">
+                        <label class="block text-sm font-medium text-gray-700 mb-1">{% trans "Titre" %} <span class="text-red-500">*</span></label>
+                        <input type="text" name="title" required dir="auto" class="w-full border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500 text-sm" placeholder="{% trans 'Ex: Devoir de Mathématiques' %}">
                     </div>
                     <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Type</label>
-                        <select name="type" class="w-full border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500">
+                        <label class="block text-sm font-medium text-gray-700 mb-1">{% trans "Type" %}</label>
+                        <select name="type" class="w-full border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500 text-sm bg-white">
                             {% for code, label in announcement_types %}
                                 <option value="{{ code }}">{{ label }}</option>
                             {% endfor %}
@@ -185,11 +230,12 @@
 
                 {% if is_teacher %}
                     <div id="requires-submission-container" class="hidden p-4 bg-amber-50 border border-amber-200 rounded-lg">
-                        <label class="flex items-center space-x-3 cursor-pointer">
-                            <input type="checkbox" name="requires_submission" id="id_requires_submission" class="form-checkbox h-5 w-5 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500">
+                        <!-- Séparation avec gap-3 -->
+                        <label class="flex items-start gap-3 cursor-pointer">
+                            <input type="checkbox" name="requires_submission" id="id_requires_submission" class="form-checkbox h-5 w-5 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500 mt-0.5">
                             <div>
-                                <span class="text-sm font-bold text-amber-900 block">Permettre un rendu de devoir aux élèves</span>
-                                <span class="text-xs text-amber-700">Les élèves destinataires pourront téléverser des documents et un commentaire.</span>
+                                <span class="text-sm font-bold text-amber-900 block">{% trans "Permettre un rendu de devoir aux élèves" %}</span>
+                                <span class="text-xs text-amber-700">{% trans "Les élèves destinataires pourront téléverser des documents et un commentaire." %}</span>
                             </div>
                         </label>
                     </div>
@@ -197,29 +243,29 @@
 
                 <!-- Destinataires (Dynamique selon JS) -->
                 <div class="bg-gray-50 p-4 rounded-lg border border-gray-200">
-                    <label class="block text-sm font-medium text-gray-700 mb-2">Destinataires <span class="text-red-500">*</span></label>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">{% trans "Destinataires" %} <span class="text-red-500">*</span></label>
                     <div id="targets-container" class="space-y-3">
-                        <p class="text-sm text-gray-400 italic">Chargement des listes...</p>
+                        <p class="text-sm text-gray-400 italic">{% trans "Chargement des listes..." %}</p>
                     </div>
                     <div id="targets-summary" class="mt-2 text-xs text-indigo-600 font-medium hidden">
-                        0 destinataire(s) sélectionné(s)
+                        {% trans "0 destinataire(s) sélectionné(s)" %}
                     </div>
                 </div>
 
                 <!-- Contenu -->
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Message <span class="text-red-500">*</span></label>
-                    <textarea name="content" rows="5" required class="w-full border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500" placeholder="Votre message..."></textarea>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">{% trans "Message" %} <span class="text-red-500">*</span></label>
+                    <textarea name="content" rows="5" required dir="auto" class="w-full border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500 text-sm" placeholder="{% trans 'Votre message...' %}"></textarea>
                 </div>
 
                 <!-- Pièces jointes -->
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Pièces jointes</label>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">{% trans "Pièces jointes" %}</label>
                     <div class="border-2 border-dashed border-gray-300 rounded-lg p-4 text-center hover:bg-gray-50 transition-colors cursor-pointer relative">
                         <input type="file" name="attachments" multiple class="absolute inset-0 w-full h-full opacity-0 cursor-pointer" id="file-input">
                         <div class="text-gray-500">
                             <i class="fas fa-cloud-upload-alt text-2xl mb-2 block"></i>
-                            <span class="text-sm">Cliquez ou glissez des fichiers ici</span>
+                            <span class="text-sm">{% trans "Cliquez ou glissez des fichiers ici" %}</span>
                         </div>
                     </div>
                     <div id="file-list" class="mt-2 space-y-2"></div>
@@ -227,11 +273,12 @@
             </div>
 
             <!-- Footer Actions -->
-            <div class="p-4 border-t border-gray-200 bg-gray-50 flex justify-end space-x-3">
-                <button type="button" class="btn-close-modal px-4 py-2 bg-white border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50">Annuler</button>
-                <button type="submit" id="btn-submit-announcement" class="px-6 py-2 bg-indigo-600 text-white font-bold rounded-lg shadow hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition-colors flex items-center">
-                    <span class="btn-text">Envoyer</span>
-                    <i class="fas fa-paper-plane ml-2"></i>
+            <div class="p-4 border-t border-gray-200 bg-gray-50 flex justify-end gap-3">
+                <button type="button" class="btn-close-modal px-4 py-2 bg-white border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 text-sm font-medium">{% trans "Annuler" %}</button>
+                <!-- Séparation icône + texte avec gap-2 -->
+                <button type="submit" id="btn-submit-announcement" class="px-6 py-2 bg-indigo-600 text-white font-bold text-sm rounded-lg shadow hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition-colors flex items-center gap-2">
+                    <span class="btn-text">{% trans "Envoyer" %}</span>
+                    <i class="fas fa-paper-plane"></i>
                 </button>
             </div>
         </form>
@@ -245,6 +292,5 @@
     <!-- Passage des données complexes (Cibles disponibles) via json_script -->
     {{ available_targets|json_script:"available-targets-data" }}
     
-    <!-- MODIFICATION : Suppression du script inline, chargement externe -->
     <script src="{% static 'js/communications/dashboard_announcements.js' %}"></script>
 {% endblock %}

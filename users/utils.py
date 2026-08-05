@@ -10,6 +10,7 @@ from django.contrib.auth import authenticate, login, logout, update_session_auth
 import string
 import secrets
 from django.core.serializers.json import DjangoJSONEncoder
+from django.utils.translation import gettext_lazy as _
 
 
 # Gestion des emails automatique :
@@ -50,13 +51,13 @@ def create_user(**kwargs):
     try:
         # Vérifie si le nom d'utilisateur est fourni
         if "username" not in kwargs or not kwargs["username"]:
-            raise ValueError("Le nom d'utilisateur est requis.")
+            raise ValueError(_("Le nom d'utilisateur est requis."))
         
         # Si un email est fourni, vérifie qu'il n'est pas déjà utilisé
         email = kwargs.get("email")
         if email:
             if User.objects.filter(email__iexact=email).exists():
-                return "Un utilisateur avec cet email existe déjà.", False
+                return _("Un utilisateur avec cet email existe déjà."), False
         
         # Crée l'utilisateur si tout est valide
         user = User.objects.create_user(**kwargs)
@@ -118,7 +119,7 @@ def update_user(user_id, **kwargs):
         user.save()
         return user, True
     except ObjectDoesNotExist:
-        return "Utilisateur non trouvé.", False
+        return _("Utilisateur non trouvé."), False
 
 def deactivate_user(user_id):
     """
@@ -134,7 +135,7 @@ def deactivate_user(user_id):
         user.save()
         return user, True
     except ObjectDoesNotExist:
-        return "Utilisateur non trouvé.", False
+        return _("Utilisateur non trouvé."), False
     
 def activate_user(user_id):
     """
@@ -151,7 +152,7 @@ def activate_user(user_id):
 
         return user, True
     except User.DoesNotExist:
-        return "Utilisateur non trouvé.", False
+        return _("Utilisateur non trouvé."), False
     
 def is_email_unique(email):
     """
@@ -170,7 +171,7 @@ def is_email_unique(email):
         return False
     except Exception as e:
         # Gère les autres erreurs potentielles
-        print(f"Une erreur s'est produite lors de la vérification de l'email : {e}")
+        print(_("Une erreur s'est produite lors de la vérification de l'email : {e}").format(e=e))
         return True
 
 def login_user(request, username, password):
@@ -224,7 +225,7 @@ def change_user_password(user_id, new_password):
     """
     # Vérifie que le mot de passe a au moins 4 caractères
     if len(new_password) < 4:
-        return False, "Le mot de passe doit contenir au moins 4 caractères."
+        return False, _("Le mot de passe doit contenir au moins 4 caractères.")
     
     try:
         # Récupère l'utilisateur par son ID
@@ -237,11 +238,11 @@ def change_user_password(user_id, new_password):
         # Sauvegarde les modifications dans la base de données
         user.save()
         
-        return True, "Mot de passe mis à jour avec succès."
+        return True, _("Mot de passe mis à jour avec succès.")
         
     except User.DoesNotExist:
         # Gère le cas où l'utilisateur n'existe pas
-        return False, "Utilisateur non trouvé."
+        return False, _("Utilisateur non trouvé.")
 
 
 def send_email(subject, message, recipient_list):
@@ -269,7 +270,7 @@ def send_email(subject, message, recipient_list):
         )
         return True
     except SMTPException as e:
-        print(f"Erreur d'envoi d'email: {e}")
+        print(_("Erreur d'envoi d'email: {e}").format(e=e))
         return False
     
 def send_email_create_compte(request, email, username, password):
@@ -283,7 +284,7 @@ def send_email_create_compte(request, email, username, password):
         password (str): Le mot de passe temporaire généré.
     """
     # Sujet de l'email
-    subject = "Votre compte a été créé"
+    subject = _("Votre compte a été créé")
     domain = request.get_host()
     protocol = 'https' if request.is_secure() else 'http'
     reset_url = ""
@@ -291,7 +292,7 @@ def send_email_create_compte(request, email, username, password):
 
     # Message de l'email
     # Utilisation d'un f-string pour insérer dynamiquement les informations
-    message = f"""
+    message = _("""
     Bonjour,
 
     Votre compte utilisateur sur la plateforme de gestion scolaire a été créé.
@@ -310,15 +311,15 @@ def send_email_create_compte(request, email, username, password):
     Cordialement,
 
     L'équipe de l'administration
-    """
+    """).format(username=username, password=password, reset_link=reset_link)
 
     # Envoi de l'email
     try:
         recipient_list = [email]
         send_email(subject, message, recipient_list)
-        print(f"Email envoyé avec succès à {email}")
+        print(_("Email envoyé avec succès à {email}").format(email=email))
     except Exception as e:
-        print(f"Erreur lors de l'envoi de l'email à {email} : {e}")
+        print(_("Erreur lors de l'envoi de l'email à {email} : {e}").format(email=email, e=e))
 
 
 def generate_random_password(length: int = 8, include_digits: bool = True, include_special_chars: bool = True) -> str:
@@ -356,8 +357,8 @@ def send_password_reset_link(user, domain, protocol):
     uid = urlsafe_base64_encode(force_bytes(user.pk))
     reset_url = reverse('password_reset_confirm', kwargs={'uidb64': uid, 'token': token})
     reset_link = f"{protocol}://{domain}{reset_url}" 
-    subject = "Réinitialisation de votre mot de passe"
-    message = f"""
+    subject = _("Réinitialisation de votre mot de passe")
+    message = _("""
     Bonjour,
 
     Vous avez demandé la réinitialisation de votre mot de passe.
@@ -368,7 +369,7 @@ def send_password_reset_link(user, domain, protocol):
     Ce lien est valide pendant 3 jours. Pour des raisons de sécurité, ne le partagez avec personne.
 
     Si vous n'êtes pas à l'origine de cette demande, veuillez ignorer cet email.
-    """
+    """).format(reset_link=reset_link)
     return send_email(subject, message, [user.email])
 
 
@@ -496,11 +497,11 @@ def send_emails_for_year_stage(school, year_stape):
         # Cible : Tous les administrateurs actifs (STAFF_TYPE: PRINCIPAL, ADMINISTRATOR)
         
         # Sujet et message pour l'enregistrement
-        subject = f"Année Scolaire. L'étape d'enregistrement commence : {school.name}"
-        message = f"""
+        subject = _("Année Scolaire. L'étape d'enregistrement commence : {school}").format(school=school.name)
+        message = _("""
 Cher Administrateur,
 
-L'étape d'enregistrement de la nouvelle année scolaire a officiellement commencé pour l'école {school.name}.
+L'étape d'enregistrement de la nouvelle année scolaire a officiellement commencé pour l'école {school}.
 
 Vous pouvez maintenant vous connecter à la plateforme pour :
 1. Valider les inscriptions des nouveaux élèves.
@@ -511,7 +512,7 @@ Veuillez procéder aux vérifications nécessaires pour assurer une transition f
 
 Cordialement,
 L'Équipe de Gestion.
-        """
+        """).format(school=school.name)
 
         # Détermination des types de personnel à cibler pour l'enregistrement
         admin_types = ["PRINCIPAL", "ADMINISTRATOR"]
@@ -531,11 +532,11 @@ L'Équipe de Gestion.
         # Cible : Tous les profs et CPE actifs (STAFF_TYPE: TEACHER, CPE) ainsi que les principal et les administrateurs
 
         # Sujet et message pour le déroulement en cours
-        subject = f"Année Scolaire. Le déroulement normal commence : {school.name}"
-        message = f"""
+        subject = _("Année Scolaire. Le déroulement normal commence : {school}").format(school=school.name)
+        message = _("""
 Cher Membre du Personnel (Professeur / CPE / Administrateur),
 
-L'étape de déroulement normal de l'année scolaire est maintenant activée pour l'école {school.name}.
+L'étape de déroulement normal de l'année scolaire est maintenant activée pour l'école {school}.
 
 La plateforme est pleinement opérationnelle pour :
 1. L'entrée des notes et des appréciations.
@@ -545,8 +546,8 @@ La plateforme est pleinement opérationnelle pour :
 Nous vous souhaitons une excellente année !
 
 Cordialement,
-L'Administration {school.name}.
-        """
+L'Administration {school}.
+        """).format(school=school.name)
         
         # Détermination des types de personnel à cibler pour l'étape en cours
         teaching_staff_types = ["TEACHER", "CPE", "ADMINISTRATOR", "PRINCIPAL"]
@@ -567,14 +568,14 @@ L'Administration {school.name}.
     # 2. Nettoyage et envoi des emails
     
     # Assurer l'unicité des adresses et la validité (ex: filtrer les adresses vides ou par défaut)
-    unique_recipients = list(set([email for email in recipient_emails if email and email != "email_a_remplir@gmail.com"]))
+    unique_recipients = list(set([email for email in recipient_emails if email and email != _("email_a_remplir@gmail.com")]))
     
     if not unique_recipients:
-        print(f"Aucun destinataire trouvé pour l'étape '{year_stape}' à l'école {school.name}.")
+        print(_("Aucun destinataire trouvé pour l'étape '{year_stape}' à l'école {school}.").format(year_stape=year_stape, school=school.name))
         return False
 
     # Envoi
-    print(f"Tentative d'envoi à {len(unique_recipients)} destinataire(s) pour l'étape '{year_stape}'...")
+    print(_("Tentative d'envoi à {len(unique_recipients)} destinataire(s) pour l'étape '{year_stape}'...").format(year_stape=year_stape))
     mail_envoye = send_email(subject, message, unique_recipients)
 
     return mail_envoye
@@ -598,7 +599,7 @@ def create_super_admin(user_id):
     try:
         user = User.objects.get(id=user_id)
         if SuperAdministrator.objects.filter(user=user).exists():
-            return "Cet utilisateur est déjà un super administrateur.", False
+            return _("Cet utilisateur est déjà un super administrateur."), False
         
         super_admin = SuperAdministrator.objects.create(user=user)
         return super_admin, True
@@ -648,7 +649,7 @@ def create_staff(user, staff_type, school, gender, address, birth_date=None):
     """
     try:
         if Staff.objects.filter(user=user).exists():
-            return None, "Cet utilisateur est déjà lié à un membre du personnel."
+            return None, _("Cet utilisateur est déjà lié à un membre du personnel.")
         staff = Staff.objects.create(
             user=user,
             staff_type=staff_type,
@@ -720,7 +721,7 @@ def update_staff(staff_id, **kwargs):
         staff.save()
         return staff, None
     except Staff.DoesNotExist:
-        return None, "Membre du personnel non trouvé."
+        return None, _("Membre du personnel non trouvé.")
     except Exception as e:
         return None, str(e)
 
@@ -795,7 +796,7 @@ def create_student(user, school, gender, address, national_number, birth_date=No
     """
     try:
         if Student.objects.filter(user=user).exists():
-            return None, "Cet utilisateur est déjà lié à un élève."
+            return None, _("Cet utilisateur est déjà lié à un élève.")
         student = Student.objects.create(
             user=user,
             school=school,
@@ -806,9 +807,9 @@ def create_student(user, school, gender, address, national_number, birth_date=No
         )
         return student, None
     except User.DoesNotExist:
-        return None, "Utilisateur non trouvé."
+        return None, _("Utilisateur non trouvé.")
     except ObjectDoesNotExist:
-        return None, "École non trouvée."
+        return None, _("École non trouvée.")
     except Exception as e:
         return None, str(e)
 
@@ -859,7 +860,7 @@ def update_student(student_id, **kwargs):
         student.save()
         return student, None
     except Student.DoesNotExist:
-        return None, "Élève non trouvé."
+        return None, _("Élève non trouvé.")
     except Exception as e:
         return None, str(e)
 
@@ -919,9 +920,9 @@ def deactivate_student(student_id):
         student.user.save()
         return student, True
     except Student.DoesNotExist:
-        return "Élève non trouvé.", False
+        return _("Élève non trouvé."), False
     except Exception as e:
-        return f"Erreur lors de la désactivation de l'élève : {str(e)}", False
+        return _("Erreur lors de la désactivation de l'élève : {error}").format(error=str(e)), False
 
 def activate_student(student_id):
     """
@@ -937,9 +938,9 @@ def activate_student(student_id):
         student.user.save()
         return student, True
     except Student.DoesNotExist:
-        return "Élève non trouvé.", False
+        return _("Élève non trouvé."), False
     except Exception as e:
-        return f"Erreur lors de l'activation de l'élève : {str(e)}", False
+        return _("Erreur lors de l'activation de l'élève : {error}").format(error=str(e)), False
 
 # Fonction pour récupérer un Student à partir d'un user.id
 def get_student_by_user_id(user_id):
@@ -967,7 +968,7 @@ def create_parent(user, school, gender, address, birth_date=None):
     """
     try:
         if Parent.objects.filter(user=user).exists():
-            return None, "Cet utilisateur est déjà lié à un parent."
+            return None, _("Cet utilisateur est déjà lié à un parent.")
         parent = Parent.objects.create(
             user=user,
             school=school,
@@ -977,9 +978,9 @@ def create_parent(user, school, gender, address, birth_date=None):
         )
         return parent, None
     except User.DoesNotExist:
-        return None, "Utilisateur non trouvé."
+        return None, _("Utilisateur non trouvé.")
     except ObjectDoesNotExist:
-        return None, "École non trouvée."
+        return None, _("École non trouvée.")
     except Exception as e:
         return None, str(e)
 
@@ -1012,7 +1013,7 @@ def update_parent(parent_id, **kwargs):
         parent.save()
         return parent, None
     except Parent.DoesNotExist:
-        return None, "Parent non trouvé."
+        return None, _("Parent non trouvé.")
     except Exception as e:
         return None, str(e)
 
@@ -1063,9 +1064,9 @@ def deactivate_parent(parent_id):
         parent.user.save()
         return parent, True
     except Parent.DoesNotExist:
-        return "Parent non trouvé.", False
+        return _("Parent non trouvé."), False
     except Exception as e:
-        return f"Erreur lors de la désactivation du parent : {str(e)}", False
+        return _("Erreur lors de la désactivation du parent : {error}").format(error=str(e)), False
 
 
 def activate_parent(parent_id):
@@ -1082,9 +1083,9 @@ def activate_parent(parent_id):
         parent.user.save()
         return parent, True
     except Parent.DoesNotExist:
-        return "Parent non trouvé.", False
+        return _("Parent non trouvé."), False
     except Exception as e:
-        return f"Erreur lors de l'activation du parent : {str(e)}", False
+        return _("Erreur lors de l'activation du parent : {error}").format(error=str(e)), False
 
 def update_profile_parent_or_student(user_id, **kwargs):
     """
@@ -1105,11 +1106,11 @@ def update_profile_parent_or_student(user_id, **kwargs):
             profile = Student.objects.get(user__id=user_id)
             return update_student(profile.id, **kwargs)
         except Student.DoesNotExist:
-            return "Profil non trouvé pour cet utilisateur.", False
+            return _("Profil non trouvé pour cet utilisateur."), False
         except Exception as e:
-            return f"Erreur lors de la mise à jour du profil de l'élève : {str(e)}", False
+            return _("Erreur lors de la mise à jour du profil de l'élève : {error}").format(error=str(e)), False
     except Exception as e:
-        return f"Erreur lors de la mise à jour du profil du parent : {str(e)}", False
+        return _("Erreur lors de la mise à jour du profil du parent : {error}").format(error=str(e)), False
 
 # Fonction pour récupérer un Parent à partir d'un user.id
 def get_parent_by_user_id(user_id):
@@ -1138,13 +1139,13 @@ def create_child(student_id, parent_id):
         student = Student.objects.get(id=student_id)
         parent = Parent.objects.get(id=parent_id)
         if Child.objects.filter(student=student, parent=parent).exists():
-            return None, "Le lien entre cet élève et ce parent existe déjà."
+            return None, _("Le lien entre cet élève et ce parent existe déjà.")
         child = Child.objects.create(student=student, parent=parent)
         return child, None
     except Student.DoesNotExist:
-        return None, "Élève non trouvé."
+        return None, _("Élève non trouvé.")
     except Parent.DoesNotExist:
-        return None, "Parent non trouvé."
+        return None, _("Parent non trouvé.")
     except Exception as e:
         return None, str(e)
 
@@ -1182,11 +1183,11 @@ def update_child(child_id, new_student_id=None, new_parent_id=None):
         child.save()
         return child, None
     except Child.DoesNotExist:
-        return None, "Lien enfant/parent non trouvé."
+        return None, _("Lien enfant/parent non trouvé.")
     except Student.DoesNotExist:
-        return None, "Nouvel élève non trouvé."
+        return None, _("Nouvel élève non trouvé.")
     except Parent.DoesNotExist:
-        return None, "Nouveau parent non trouvé."
+        return None, _("Nouveau parent non trouvé.")
     except Exception as e:
         return None, str(e)
 
@@ -1327,7 +1328,7 @@ def remove_old_profile_image(user):
             try:
                 os.remove(file_path)
             except Exception as e:
-                print(f"Erreur lors de la suppression de l'image : {e}")
+                print("Erreur lors de la suppression de l'image : {e}")
 
 
 def formater_name(texte):
@@ -1365,22 +1366,22 @@ def is_strong_password(password):
         return False, "Le mot de passe ne peut pas être vide."
 
     if len(password) < 8:
-        return False, "Le mot de passe doit contenir au moins 8 caractères."
+        return False, _("Le mot de passe doit contenir au moins 8 caractères.")
         
     if not re.search(r'[A-Z]', password):
-        return False, "Le mot de passe doit contenir au moins une lettre majuscule."
+        return False, _("Le mot de passe doit contenir au moins une lettre majuscule.")
         
     if not re.search(r'[a-z]', password):
-        return False, "Le mot de passe doit contenir au moins une lettre minuscule."
+        return False, _("Le mot de passe doit contenir au moins une lettre minuscule.")
         
     if not re.search(r'\d', password):
-        return False, "Le mot de passe doit contenir au moins un chiffre."
+        return False, _("Le mot de passe doit contenir au moins un chiffre.")
         
     # [^A-Za-z0-9] signifie "tout ce qui n'est ni une lettre ni un chiffre" (donc un caractère spécial)
     if not re.search(r'[^A-Za-z0-9]', password):
-        return False, "Le mot de passe doit contenir au moins un caractère spécial (ex: @, #, !, ?, etc.)."
+        return False, _("Le mot de passe doit contenir au moins un caractère spécial (ex: @, #, !, ?, etc.).")
 
-    return True, "Le mot de passe est valide."
+    return True, _("Le mot de passe est valide.")
 
 
 # LOCALISATION ELEVE : 
@@ -1437,7 +1438,7 @@ def get_address_from_coordinates(latitude, longitude):
                 city_part = f"{postcode} {town}".strip()
                 
                 address_parts = [p for p in [street_part, city_part, state, country] if p]
-                address_text = ", ".join(address_parts) if address_parts else 'Adresse inconnue'
+                address_text = ", ".join(address_parts) if address_parts else _('Adresse inconnue')
                 
                 return {
                     'address_text': address_text,

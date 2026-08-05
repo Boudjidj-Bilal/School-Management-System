@@ -14,6 +14,7 @@ from subjects.models import TeacherSubject
 
 from django.db import IntegrityError, transaction
 
+from django.utils.translation import gettext_lazy as _
 
 @require_http_methods(["GET", "POST"])
 @csrf_exempt
@@ -60,37 +61,37 @@ def classroom_management(request):
             if action == 'create':
                 # Création d'une nouvelle salle
                 if not name:
-                    return JsonResponse({'success': False, 'message': 'Le nom de la salle est obligatoire.'}, status=400)
+                    return JsonResponse({'success': False, 'message': _('Le nom de la salle est obligatoire.')}, status=400)
                 
                 # Vérification de l'unicité
                 if Classroom.objects.filter(school=school_filter, name__iexact=name).exists():
-                    return JsonResponse({'success': False, 'message': f'La salle "{name}" existe déjà dans cette école.'}, status=400)
+                    return JsonResponse({'success': False, 'message': _('La salle "{name}" existe déjà dans cette école.').format(name=name)}, status=400)
 
                 classroom = Classroom.objects.create(name=name, is_active=True, school=school_filter)
                 return JsonResponse({
                     'success': True, 
-                    'message': f'La salle "{classroom.name}" a été créée avec succès.',
+                    'message': _('La salle "{class_name}" a été créée avec succès.').format(class_name=classroom.name),
                     'classroom': {'id': classroom.id, 'name': classroom.name, 'is_active': classroom.is_active}
                 }, status=201)
 
             elif action == 'update' or action == 'toggle_active':
                 # Modification ou changement de statut
                 if not classroom_id:
-                    return JsonResponse({'success': False, 'message': 'ID de la salle manquant.'}, status=400)
+                    return JsonResponse({'success': False, 'message': _('ID de la salle manquant.')}, status=400)
                 
                 try:
                     # On s'assure que la salle appartient bien à l'école gérée par l'utilisateur
                     classroom = Classroom.objects.get(pk=classroom_id, school=school_filter)
                 except Classroom.DoesNotExist:
-                    return JsonResponse({'success': False, 'message': 'Salle de classe non trouvée ou non rattachée à cette école.'}, status=404)
+                    return JsonResponse({'success': False, 'message': _('Salle de classe non trouvée ou non rattachée à cette école.')}, status=404)
 
                 if action == 'update':
                     if not name:
-                        return JsonResponse({'success': False, 'message': 'Le nom de la salle est obligatoire.'}, status=400)
+                        return JsonResponse({'success': False, 'message': _('Le nom de la salle est obligatoire.')}, status=400)
 
                     # Vérification de l'unicité (en excluant la salle elle-même)
                     if Classroom.objects.filter(school=school_filter, name__iexact=name).exclude(pk=classroom_id).exists():
-                        return JsonResponse({'success': False, 'message': f'Le nom "{name}" est déjà utilisé.'}, status=400)
+                        return JsonResponse({'success': False, 'message': _('Le nom "{name}" est déjà utilisé.').format(name=name)}, status=400)
                     
                     classroom.name = name
                     classroom.is_active = bool(is_active_data) # Gère l'état actif lors de la modification
@@ -98,7 +99,7 @@ def classroom_management(request):
 
                     return JsonResponse({
                         'success': True, 
-                        'message': f'La salle "{classroom.name}" a été mise à jour.',
+                        'message': _('La salle "{name}" a été mise à jour.').format(name=classroom.name),
                         'classroom': {'id': classroom.id, 'name': classroom.name, 'is_active': classroom.is_active}
                     }, status=200)
 
@@ -118,26 +119,26 @@ def classroom_management(request):
                             authorisation = get_authorisation_stape_run_year(school)
 
                         if not authorisation: 
-                            return JsonResponse({'success': False, 'message': "Vous ne pouvez pas désactiver une salle de classe lorsque l'école est dans sa phase de déroulement."}, status=404)
+                            return JsonResponse({'success': False, 'message': _("Vous ne pouvez pas désactiver une salle de classe lorsque l'école est dans sa phase de déroulement.")}, status=404)
 
                     classroom.is_active = new_status
                     classroom.save()
-                    status_verb = "activée" if new_status else "désactivée"
+                    status_verb = _("activée") if new_status else _("désactivée")
                     
                     return JsonResponse({
                         'success': True, 
-                        'message': f'La salle "{classroom.name}" a été {status_verb} avec succès.',
+                        'message': _('La salle "{name}" a été {status_verb} avec succès.').format(name=classroom.name, status_verb=status_verb),
                         'classroom': {'id': classroom.id, 'name': classroom.name, 'is_active': classroom.is_active}
                     }, status=200)
             
             else:
-                return JsonResponse({'success': False, 'message': 'Action non reconnue.'}, status=400)
+                return JsonResponse({'success': False, 'message': _('Action non reconnue.')}, status=400)
 
         except json.JSONDecodeError:
-            return JsonResponse({'success': False, 'message': 'Données JSON invalides.'}, status=400)
+            return JsonResponse({'success': False, 'message': _('Données JSON invalides.')}, status=400)
         except Exception as e:
             # Pensez à logger l'erreur 'e' en production
-            return JsonResponse({'success': False, 'message': f'Une erreur interne du serveur est survenue: {str(e)}'}, status=500)
+            return JsonResponse({'success': False, 'message': _('Une erreur interne du serveur est survenue: {error}').format(error=str(e))}, status=500)
 
     # --- 4. Gestion des requêtes GET (Affichage de la page) ---
     classrooms = Classroom.objects.filter(school=school_filter).order_by('name')
@@ -195,7 +196,7 @@ def level_management(request):
             if not stape_creation_year:
                 return JsonResponse(
                     {"success": False, 
-                     "message": "Opération non autorisée. La gestion des niveaux n'est possible que lorsque l'année scolaire est à l'étape de Création."}, 
+                     "message": _("Opération non autorisée. La gestion des niveaux n'est possible que lorsque l'année scolaire est à l'étape de Création.")}, 
                     status=400
                 )
 
@@ -210,7 +211,7 @@ def level_management(request):
             if action == 'create' or action == 'update':
                 # Validation des champs obligatoires
                 if not level_code or not term_type:
-                    return JsonResponse({'success': False, 'message': 'Le code de niveau et le type de niveau sont obligatoires.'}, status=400)
+                    return JsonResponse({'success': False, 'message': _('Le code de niveau et le type de niveau sont obligatoires.')}, status=400)
                 
                 # Validation des choix (optionnel mais recommandé pour la sécurité)
                 # On utilise les choix définis dans le modèle Level
@@ -218,15 +219,15 @@ def level_management(request):
                 valid_terms = [choice[0] for choice in Level.TERM_TYPE_CHOICES]
                 
                 if level_code not in valid_levels:
-                    return JsonResponse({'success': False, 'message': f'Code de niveau invalide: {level_code}.'}, status=400)
+                    return JsonResponse({'success': False, 'message': _('Code de niveau invalide: {level_code}.').format(level_code=level_code)}, status=400)
                 
                 if term_type not in valid_terms:
-                    return JsonResponse({'success': False, 'message': f'Type de niveau invalide: {term_type}.'}, status=400)
+                    return JsonResponse({'success': False, 'message': _('Type de niveau invalide: {term_type}.').format(term_type=term_type)}, status=400)
                 
                 # Vérification d'unicité (un niveau ne doit pas être créé deux fois pour la même école)
                 if Level.objects.filter(school=school_filter, level=level_code).exists() and action == 'create':
                     # Dans ce cas, nous renvoyons un message d'erreur si l'on tente de créer un niveau existant.
-                    return JsonResponse({'success': False, 'message': f'Le niveau {Level.objects.get(level=level_code).get_level_display()} est déjà défini pour cette école.'}, status=409) # 409 Conflict
+                    return JsonResponse({'success': False, 'message': _('Le niveau {level} est déjà défini pour cette école.').format(level=Level.objects.get(level=level_code).get_level_display())}, status=409) # 409 Conflict
 
                 if action == 'create':
                     level = Level.objects.create(
@@ -239,13 +240,13 @@ def level_management(request):
 
                     return JsonResponse({
                         'success': True, 
-                        'message': f'Niveau "{level_display_name}" créé avec succès.',
+                        'message': _('Niveau "{name}" créé avec succès.').format(name=level_display_name),
                         'level_id': level.id, 
                         'level_display': level_display_name # Utile pour le JS
                     }, status=201)
                 elif action == 'update':
                     if not level_id:
-                        return JsonResponse({'success': False, 'message': 'ID du niveau manquant pour la mise à jour.'}, status=400)
+                        return JsonResponse({'success': False, 'message': _('ID du niveau manquant pour la mise à jour.')}, status=400)
                     
                     try:
                         level_obj = Level.objects.get(pk=level_id, school=school_filter)
@@ -253,43 +254,43 @@ def level_management(request):
                         # Si l'utilisateur change le code de niveau, vérifiez si le nouveau code existe déjà
                         if level_obj.level != level_code and Level.objects.filter(school=school_filter, level=level_code).exclude(pk=level_id).exists():
                             # return JsonResponse({'success': False, 'message': f'Le niveau {Level.LEVEL_CHOICES[Level.LEVEL_CHOICES.index((level_code, Level.LEVEL_CHOICES[Level.LEVEL_CHOICES.index((level_code, ""))[1]])[1])]} existe déjà pour cette école.'}, status=409)
-                            return JsonResponse({'success': False, 'message': f'Le niveau {next((display for code, display in Level.LEVEL_CHOICES if code == level_code), level_code)} existe déjà pour cette école.'}, status=409)
+                            return JsonResponse({'success': False, 'message': _('Le niveau {level} existe déjà pour cette école.').format(level=next((display for code, display in Level.LEVEL_CHOICES if code == level_code), level_code))}, status=409)
 
                         level_obj.level = level_code
                         level_obj.term_type = term_type
                         level_obj.save()
-                        return JsonResponse({'success': True, 'message': f'Niveau mis à jour avec succès.'}, status=200)
+                        return JsonResponse({'success': True, 'message': _('Niveau mis à jour avec succès.')}, status=200)
                     
                     except Level.DoesNotExist:
-                        return JsonResponse({'success': False, 'message': 'Niveau non trouvé pour cette école.'}, status=404)
+                        return JsonResponse({'success': False, 'message': _('Niveau non trouvé pour cette école.')}, status=404)
 
             elif action == 'delete':
                 # Si une année actuelle existe, on vérifie l'étape de celle ci :
                 if current_year:
                     if not current_year.creation == True:
-                        return JsonResponse({"success": False, "message": "L'année actuelle doit être à l'étape de la création. Impossible de supprimer un niveau ."}, status=400) 
+                        return JsonResponse({"success": False, "message": _("L'année actuelle doit être à l'étape de la création. Impossible de supprimer un niveau.")}, status=400) 
 
                 if not level_id:
-                    return JsonResponse({'success': False, 'message': 'ID du niveau manquant pour la suppression.'}, status=400)
+                    return JsonResponse({'success': False, 'message': _('ID du niveau manquant pour la suppression.')}, status=400)
                 
                 try:
                     level_obj = Level.objects.get(pk=level_id, school=school_filter)
                     level_name = level_obj.get_level_display() # Utilisation de get_level_display() pour le nom convivial
                     level_obj.delete()
-                    return JsonResponse({'success': True, 'message': f'Niveau "{level_name}" supprimé.'}, status=200)
+                    return JsonResponse({'success': True, 'message': _('Niveau "{level_name}" supprimé.').format(level_name=level_name)}, status=200)
                 except Level.DoesNotExist:
-                    return JsonResponse({'success': False, 'message': 'Niveau non trouvé pour cette école.'}, status=404)
+                    return JsonResponse({'success': False, 'message': _('Niveau non trouvé pour cette école.')}, status=404)
 
             else:
-                 return JsonResponse({'success': False, 'message': 'Action non reconnue.'}, status=400)
+                 return JsonResponse({'success': False, 'message': _('Action non reconnue.')}, status=400)
 
         except json.JSONDecodeError:
-            return JsonResponse({'success': False, 'message': 'Données JSON invalides.'}, status=400)
+            return JsonResponse({'success': False, 'message': _('Données JSON invalides.')}, status=400)
         except IntegrityError:
-             return JsonResponse({'success': False, 'message': 'Erreur d\'intégrité de la base de données. Vérifiez les contraintes.'}, status=400)
+             return JsonResponse({'success': False, 'message': _('Erreur d’intégrité de la base de données. Vérifiez les contraintes.')}, status=400)
         except Exception as e:
             # Log l'erreur 'e'
-            return JsonResponse({'success': False, 'message': f'Une erreur interne du serveur est survenue: {str(e)}'}, status=500)
+            return JsonResponse({'success': False, 'message': _('Une erreur interne du serveur est survenue: {error}').format(error=str(e))}, status=500)
 
     # --- 5. Gestion des requêtes GET (Affichage de la page) ---
     
@@ -358,7 +359,7 @@ def class_management(request):
     if stape_creation_year and request.method == 'POST':
         return JsonResponse(
             {"success": False, 
-             "message": "Opération non autorisée. La gestion des classes (Création/Modification/Suppression) n'est possible que lorsque l'année scolaire est à l'étape de Création."}, 
+             "message": _("Opération non autorisée. La gestion des classes (Création/Modification/Suppression) n'est possible que lorsque l'année scolaire est à l'étape de Création.")}, 
             status=403
         )
     
@@ -388,19 +389,19 @@ def class_management(request):
                     level_id = data.get('level_id')
                     
                     if not class_name or not level_id:
-                        return JsonResponse({'success': False, 'message': 'Le nom de la classe et le niveau sont obligatoires.'}, status=400)
+                        return JsonResponse({'success': False, 'message': _('Le nom de la classe et le niveau sont obligatoires.')}, status=400)
 
                     try:
                         # Assurez que le niveau appartient bien à l'école de l'utilisateur
                         level_obj = Level.objects.get(pk=level_id, school=school_filter)
                     except Level.DoesNotExist:
-                        return JsonResponse({'success': False, 'message': 'Niveau scolaire non trouvé ou non valide pour cette école.'}, status=404)
+                        return JsonResponse({'success': False, 'message': _('Niveau scolaire non trouvé ou non valide pour cette école.')}, status=404)
                     
                     # Vérifier l'unicité du nom de la classe DANS CE NIVEAU
                     if Class.objects.filter(name__iexact=class_name, level=level_obj).exists():
                          return JsonResponse(
                             {'success': False, 
-                             'message': f'Une classe nommée "{class_name}" existe déjà pour le niveau {level_obj.get_level_display()}.'}, 
+                             'message': _('Une classe nommée "{class_name}" existe déjà pour le niveau {level}.').format(class_name=class_name, level=level_obj.get_level_display())}, 
                             status=409 # Conflict
                         )
 
@@ -412,7 +413,7 @@ def class_management(request):
                     
                     return JsonResponse(
                         {'success': True, 
-                         'message': f'La classe "{new_class.name}" a été créée avec succès.',
+                         'message': _('La classe "{name}" a été créée avec succès.').format(name=new_class.name),
                          'class_id': new_class.id}, 
                         status=201
                     )
@@ -424,20 +425,20 @@ def class_management(request):
                     level_id = data.get('level_id')
 
                     if not class_id or not class_name or not level_id:
-                        return JsonResponse({'success': False, 'message': 'L\'ID de la classe, le nom et le niveau sont obligatoires pour la mise à jour.'}, status=400)
+                        return JsonResponse({'success': False, 'message': _('L’ID de la classe, le nom et le niveau sont obligatoires pour la mise à jour.')}, status=400)
                     
                     try:
                         # Assurez que la classe appartient bien à l'école via le niveau
                         class_obj = Class.objects.get(pk=class_id, level__school=school_filter)
                         level_obj = Level.objects.get(pk=level_id, school=school_filter) # Nouveau niveau
                     except (Class.DoesNotExist, Level.DoesNotExist):
-                        return JsonResponse({'success': False, 'message': 'Classe ou Niveau non trouvé/valide pour cette école.'}, status=404)
+                        return JsonResponse({'success': False, 'message': _('Classe ou Niveau non trouvé/valide pour cette école.')}, status=404)
 
                     # Vérifier l'unicité du nouveau nom DANS le nouveau niveau, en excluant la classe actuelle
                     if Class.objects.filter(name__iexact=class_name, level=level_obj).exclude(pk=class_id).exists():
                          return JsonResponse(
                             {'success': False, 
-                             'message': f'Le nom de classe "{class_name}" existe déjà dans le niveau {level_obj.get_level_display()}.'}, 
+                             'message': _('Le nom de classe "{class_name}" existe déjà dans le niveau {level}.').format(class_name=class_name, level=level_obj.get_level_display())}, 
                             status=409
                         )
 
@@ -446,14 +447,14 @@ def class_management(request):
                     class_obj.level = level_obj
                     class_obj.save()
                     
-                    return JsonResponse({'success': True, 'message': f'La classe "{class_name}" a été mise à jour avec succès.'}, status=200)
+                    return JsonResponse({'success': True, 'message': _('La classe "{class_name}" a été mise à jour avec succès.').format(class_name=class_name)}, status=200)
 
                 # --- C. Logique de Suppression ('delete') ---
                 elif action == 'delete':
                     class_id = data.get('class_id')
 
                     if not class_id:
-                        return JsonResponse({'success': False, 'message': 'ID de la classe manquant pour la suppression.'}, status=400)
+                        return JsonResponse({'success': False, 'message': _('ID de la classe manquant pour la suppression.')}, status=400)
                     
                     try:
                         class_obj = Class.objects.get(pk=class_id, level__school=school_filter)
@@ -461,20 +462,20 @@ def class_management(request):
                         
                         # La suppression du Class entraînera la suppression en cascade des ClassStudentYear et ClassTeacherYear associées.
                         class_obj.delete()
-                        return JsonResponse({'success': True, 'message': f'La classe "{class_name}" a été supprimée.'}, status=200)
+                        return JsonResponse({'success': True, 'message': _('La classe "{class_name}" a été supprimée.').format(class_name=class_name)}, status=200)
                     except Class.DoesNotExist:
-                        return JsonResponse({'success': False, 'message': 'Classe non trouvée pour cette école.'}, status=404)
+                        return JsonResponse({'success': False, 'message': _('Classe non trouvée pour cette école.')}, status=404)
 
                 else:
-                    return JsonResponse({'success': False, 'message': 'Action non reconnue.'}, status=400)
+                    return JsonResponse({'success': False, 'message': _('Action non reconnue.')}, status=400)
 
 
         except json.JSONDecodeError:
-            return JsonResponse({'success': False, 'message': 'Données JSON invalides.'}, status=400)
+            return JsonResponse({'success': False, 'message': _('Données JSON invalides.')}, status=400)
         except IntegrityError:
-             return JsonResponse({'success': False, 'message': 'Erreur d\'intégrité de la base de données. Opération annulée.'}, status=400)
+             return JsonResponse({'success': False, 'message': _('Erreur d’intégrité de la base de données. Opération annulée.')}, status=400)
         except Exception as e:
-            return JsonResponse({'success': False, 'message': f'Une erreur interne du serveur est survenue: {str(e)}'}, status=500)
+            return JsonResponse({'success': False, 'message': _('Une erreur interne du serveur est survenue: {error}').format(error=str(e))}, status=500)
 
     # --- 6. Gestion des requêtes GET (Affichage de la page) ---
     stape_creation_year_html = current_year and current_year.creation
@@ -638,22 +639,22 @@ def toggle_class_assignment_api(request, pk):
     allowed_roles = ["SuperAdministrator", "Principal", "Administrator"] 
     
     if user_type not in allowed_roles:
-        return JsonResponse({"success": False, "message": "Permission refusée. Rôle non autorisé."}, status=403) 
+        return JsonResponse({"success": False, "message": _("Permission refusée. Rôle non autorisé.")}, status=403) 
 
     try:
         school_filter = get_user_school(request.user, request.session.get('selected_school_id'))
     except School.DoesNotExist:
-        return JsonResponse({"success": False, "message": "École introuvable."}, status=404)
+        return JsonResponse({"success": False, "message": _("École introuvable.")}, status=404)
         
     try:
         current_class = Class.objects.get(pk=pk)
     except Class.DoesNotExist:
-         return JsonResponse({"success": False, "message": "Classe introuvable."}, status=404)
+         return JsonResponse({"success": False, "message": _("Classe introuvable.")}, status=404)
 
     current_year = get_current_year_for_school(school_filter)
     
     if current_class.level.school != school_filter:
-        return JsonResponse({"success": False, "message": "Accès classe refusé. La classe n'appartient pas à votre école."}, status=403)
+        return JsonResponse({"success": False, "message": _("Accès classe refusé. La classe n'appartient pas à votre école.")}, status=403)
     
     try:
         data = json.loads(request.body)
@@ -668,7 +669,7 @@ def toggle_class_assignment_api(request, pk):
                     try:
                         student = Student.objects.get(pk=student_id)
                     except Student.DoesNotExist:
-                        return JsonResponse({'success': False, 'message': 'Élève introuvable.'}, status=404)
+                        return JsonResponse({'success': False, 'message': _('Élève introuvable.')}, status=404)
                         
                     entity_name = student.user.username
 
@@ -697,7 +698,7 @@ def toggle_class_assignment_api(request, pk):
                          assignment.is_active = True
                          assignment.save()
                     
-                    message = f"L'élève {entity_name} a été affecté à {current_class}. Anciennes classes désaffectées."
+                    message = _("L'élève {entity_name} a été affecté à {current_class}. Anciennes classes désaffectées.").format(entity_name=entity_name, current_class=current_class)
                     
                     return JsonResponse({
                         'success': True, 
@@ -718,9 +719,9 @@ def toggle_class_assignment_api(request, pk):
                     ).update(is_active=False, is_delegate=False) # Désactive le statut délégué au passage
                     
                     if deleted_count > 0:
-                        message = f"L'élève a été retiré de {current_class}."
+                        message = _("L'élève a été retiré de {current_class}.").format(current_class=current_class)
                     else:
-                        message = f"Affectation élève active non trouvée pour désactivation."
+                        message = _("Affectation élève active non trouvée pour désactivation.")
                     
                     return JsonResponse({'success': True, 'message': message})
 
@@ -731,13 +732,13 @@ def toggle_class_assignment_api(request, pk):
                     try:
                         assignment = ClassStudentYear.objects.get(pk=assignment_pk)
                     except ClassStudentYear.DoesNotExist:
-                        return JsonResponse({'success': False, 'message': 'Affectation élève introuvable.'}, status=404)
+                        return JsonResponse({'success': False, 'message': _('Affectation élève introuvable.')}, status=404)
 
                     assignment.is_delegate = is_delegate
                     assignment.save()
                     
-                    status_text = "Délégué" if is_delegate else "Non Délégué"
-                    message = f"Statut élève mis à jour: {status_text}."
+                    status_text = _("Délégué") if is_delegate else _("Non Délégué")
+                    message = _("Statut élève mis à jour: {status_text}.").format(status_text=status_text)
                     
                     return JsonResponse({'success': True, 'message': message, 'is_delegate': is_delegate})
 
@@ -751,7 +752,7 @@ def toggle_class_assignment_api(request, pk):
                     try:
                         teacher_subject = TeacherSubject.objects.get(pk=teacher_subject_id)
                     except TeacherSubject.DoesNotExist:
-                        return JsonResponse({'success': False, 'message': 'Affectation Professeur/Matière introuvable.'}, status=404)
+                        return JsonResponse({'success': False, 'message': _('Affectation Professeur/Matière introuvable.')}, status=404)
                         
                     teacher_name = teacher_subject.teacher.user.username
                     subject_name = teacher_subject.subject.name
@@ -784,7 +785,7 @@ def toggle_class_assignment_api(request, pk):
                             'teacher_subject_id': str(teacher_subject.pk)
                         })
                     except IntegrityError:
-                         message = f"Erreur d'intégrité : Affectation Professeur/Matière déjà enregistrée."
+                         message = _("Erreur d'intégrité : Affectation Professeur/Matière déjà enregistrée.")
                          return JsonResponse({'success': False, 'message': message}, status=400)
 
 
@@ -800,9 +801,9 @@ def toggle_class_assignment_api(request, pk):
                     ).update(is_active=False, is_main_teacher=False) # Désactive le statut principal
                     
                     if deleted_count > 0:
-                        message = f"L'affectation professeur/matière a été retirée."
+                        message = _("L'affectation professeur/matière a été retirée.")
                     else:
-                        message = f"Affectation professeur/classe active non trouvée pour désactivation."
+                        message = _("Affectation professeur/classe active non trouvée pour désactivation.")
                     
                     return JsonResponse({'success': True, 'message': message})
 
@@ -814,7 +815,7 @@ def toggle_class_assignment_api(request, pk):
                     try:
                         assignment = ClassTeacherYear.objects.get(pk=assignment_pk)
                     except ClassTeacherYear.DoesNotExist:
-                        return JsonResponse({'success': False, 'message': 'Affectation professeur introuvable.'}, status=404)
+                        return JsonResponse({'success': False, 'message': _('Affectation professeur introuvable.')}, status=404)
 
                     # CONFORMITÉ : Un seul professeur principal par classe/année
                     if is_main_teacher:
@@ -829,15 +830,15 @@ def toggle_class_assignment_api(request, pk):
                     assignment.is_main_teacher = is_main_teacher
                     assignment.save()
                     
-                    status_text = "Principal" if is_main_teacher else "Non Principal"
-                    message = f"Statut professeur mis à jour: {status_text}."
+                    status_text = _("Principal") if is_main_teacher else _("Non Principal")
+                    message = _("Statut professeur mis à jour: {status_text}.").format(status_text=status_text)
                     
                     return JsonResponse({'success': True, 'message': message, 'is_main_teacher': is_main_teacher})
 
         else:
-            return JsonResponse({'success': False, 'message': 'Action non reconnue.'}, status=400)
+            return JsonResponse({'success': False, 'message': _('Action non reconnue.')}, status=400)
 
     except json.JSONDecodeError:
-        return JsonResponse({'success': False, 'message': 'Requête invalide (JSON non valide).'}, status=400)
+        return JsonResponse({'success': False, 'message': _('Requête invalide (JSON non valide).')}, status=400)
     except Exception as e:
-        return JsonResponse({'success': False, 'message': f'Erreur interne du serveur: {str(e)}'}, status=500)
+        return JsonResponse({'success': False, 'message': _('Erreur interne du serveur: {error}').format(error=str(e))}, status=500)

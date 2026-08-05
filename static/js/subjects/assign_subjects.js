@@ -7,9 +7,15 @@ document.addEventListener('DOMContentLoaded', () => {
     const statusMessageEl = document.getElementById('status-message');
     const subjectLegendEl = document.getElementById('subject-legend');
     
-    // MODIFICATION 1 : Récupération de l'URL API depuis le template HTML
-    // Cela évite d'avoir une URL "/subjects/api/..." en dur dans le code
+    // Récupération de l'URL API
     const API_TOGGLE_URL = subjectsDataEl.dataset.apiUrl; 
+
+    // Récupération des traductions depuis le HTML
+    const msgErrorInit = subjectsDataEl.dataset.msgErrorInit;
+    const msgLinking = subjectsDataEl.dataset.msgLinking;
+    const msgUnlinking = subjectsDataEl.dataset.msgUnlinking;
+    const msgErrorServer = subjectsDataEl.dataset.msgErrorServer;
+    const msgErrorNetwork = subjectsDataEl.dataset.msgErrorNetwork;
 
     let subjectsData = [];
     let linksData = {};
@@ -19,8 +25,7 @@ document.addEventListener('DOMContentLoaded', () => {
         linksData = JSON.parse(linksDataEl.dataset.links || '{}');
     } catch (e) {
         console.error("Erreur critique lors du parsing des données :", e);
-        // Afficher une erreur si les données JSON ne sont pas valides
-        displayStatusMessage("Erreur de chargement des données initiales. Vérifiez la console.", false);
+        displayStatusMessage(msgErrorInit, false);
         return; 
     }
     
@@ -30,8 +35,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
     /**
      * Affiche un message de statut à l'utilisateur.
-     * @param {string} message - Le message à afficher.
-     * @param {boolean} isSuccess - True pour le succès, false pour l'erreur.
      */
     const displayStatusMessage = (message, isSuccess) => {
         statusMessageEl.textContent = message;
@@ -54,48 +57,39 @@ document.addEventListener('DOMContentLoaded', () => {
     
     /**
      * Crée la pastille HTML d'une matière.
-     * @param {Object} subject - Objet de la matière {id, name, color}.
-     * @param {boolean} isAssigned - Indique si elle est déjà attribuée.
-     * @param {string} teacherId - ID du professeur (requis si c'est un tag cliquable).
-     * @param {boolean} isLegend - Indique si c'est pour la légende (non cliquable).
-     * @returns {HTMLElement} L'élément span créé.
      */
     const createSubjectTag = (subject, isAssigned, teacherId, isLegend = false) => {
         const tag = document.createElement('span');
         tag.dataset.subjectId = subject.id;
         tag.dataset.subjectName = subject.name;
-        tag.dataset.teacherId = teacherId || ''; // Peut être vide pour la légende
+        tag.dataset.teacherId = teacherId || ''; 
 
-        // Classes de base
         let classes = [
             'px-3', 'py-1', 'rounded-full', 'select-none', 
             'transition', 'duration-150', 'ease-in-out', 'whitespace-nowrap'
         ];
 
-        // Style pour la légende (non cliquable)
         if (isLegend) {
             tag.textContent = subject.name;
             classes.push('text-xs', 'font-normal', 'shadow-sm', 'bg-gray-200', 'text-gray-800');
             tag.style.cursor = 'default';
         } 
-        // Style pour l'attribution dans le tableau (cliquable)
         else {
             classes.push('cursor-pointer', 'shadow-sm', 'text-sm', 'font-medium');
 
             if (isAssigned) {
-                // Style Attribué (Linké)
                 tag.textContent = subject.name;
                 classes.push(
-                    'bg-white', // Fond blanc (ou transparent du parent)
+                    'bg-white', 
                     'text-gray-900', 
                     'border', 
                     'border-gray-400', 
-                    'hover:bg-gray-100', // Gris très léger au survol
+                    'hover:bg-gray-100', 
                     'font-semibold'
-                );                tag.dataset.action = 'unlink';
+                );                
+                tag.dataset.action = 'unlink';
                 tag.addEventListener('click', (e) => handleAssignmentToggle(teacherId, subject.id, subject.name, 'unlink', e.currentTarget));
             } else {
-                // Style Non Attribué (Fantôme pour Link)
                 tag.textContent = `+ ${subject.name}`;
                 classes.push('bg-gray-50', 'text-gray-400', 'border', 'border-dashed', 'border-gray-300', 'hover:bg-primary-light', 'hover:border-primary-blue', 'text-xs');
                 tag.dataset.action = 'link';
@@ -107,28 +101,20 @@ document.addEventListener('DOMContentLoaded', () => {
         return tag;
     };
 
-
     /**
      * Gère le clic sur une pastille de matière pour attribuer/retirer via l'API.
-     * @param {string} teacherId - ID du professeur.
-     * @param {string} subjectId - ID de la matière.
-     * @param {string} subjectName - Nom de la matière.
-     * @param {string} action - 'link' (ajouter) ou 'unlink' (retirer).
-     * @param {HTMLElement} tagElement - L'élément cliqué pour désactiver pendant l'appel.
      */
     const handleAssignmentToggle = async (teacherId, subjectId, subjectName, action, tagElement) => {
-        // Sauvegarde de l'état original pour la restauration en cas d'erreur
         const originalText = tagElement.textContent; 
         const originalClasses = tagElement.className; 
         const isLinking = action === 'link';
 
-        // Désactiver et indiquer le chargement
-        tagElement.textContent = isLinking ? 'Attribution...' : 'Retrait...';
+        // Utilisation des messages traduits
+        tagElement.textContent = isLinking ? msgLinking : msgUnlinking;
         tagElement.classList.add('opacity-50', 'pointer-events-none'); 
-        tagElement.classList.remove('hover:bg-indigo-700', 'hover:border-primary-blue'); // Nettoyer les hover
+        tagElement.classList.remove('hover:bg-indigo-700', 'hover:border-primary-blue'); 
 
         try {
-            // MODIFICATION 2 : Utilisation de la variable API_TOGGLE_URL au lieu de l'URL en dur
             if (!API_TOGGLE_URL) throw new Error("URL de l'API introuvable dans le DOM.");
 
             const response = await fetch(API_TOGGLE_URL, { 
@@ -140,72 +126,64 @@ document.addEventListener('DOMContentLoaded', () => {
                 body: JSON.stringify({
                     teacher_id: teacherId,
                     subject_id: subjectId,
-                    action: action // 'link' ou 'unlink'
+                    action: action
                 })
             });
 
             const result = await response.json();
 
             if (!response.ok || !result.success) {
-                throw new Error(result.message || "Erreur serveur lors de la mise à jour.");
+                throw new Error(result.message || msgErrorServer);
             }
 
             // --- Succès ---
-            displayStatusMessage(result.message, true);
+            displayStatusMessage(result.message, true); // Le message du backend est déjà traduit
             
             const assignmentContainer = document.getElementById(`assignments-${teacherId}`);
             const subject = subjectsData.find(s => s.id === subjectId);
 
-            // 1. Suppression de l'ancien tag (linké ou unlinked)
             tagElement.remove();
             
-            // 2. Création et insertion du nouveau tag avec l'état opposé
-            const newTag = createSubjectTag(subject, isLinking, teacherId, false); // isLinking est le nouvel état d'attribution
+            const newTag = createSubjectTag(subject, isLinking, teacherId, false);
             
-            // Ajouter le nouveau tag à la fin du conteneur
             assignmentContainer.appendChild(newTag);
 
         } catch (error) {
             console.error("Erreur d'attribution:", error);
-            displayStatusMessage(error.message || "Erreur réseau ou serveur. Veuillez réessayer.", false);
+            displayStatusMessage(error.message || msgErrorNetwork, false);
 
-            // --- Échec: Restauration de l'état visuel ---
+            // --- Échec: Restauration ---
             tagElement.textContent = originalText;
             tagElement.className = originalClasses;
             
         } finally {
-            // Réactiver le tag (il a été supprimé ou restauré)
             if (tagElement.parentNode) {
                 tagElement.classList.remove('opacity-50', 'pointer-events-none'); 
             }
         }
     };
 
-
     // 2. Initialisation : Affichage de la légende des matières
     if (subjectsData.length > 0) {
         subjectsData.forEach(subject => {
-            const tag = createSubjectTag(subject, false, null, true); // true pour isLegend
+            const tag = createSubjectTag(subject, false, null, true); 
             subjectLegendEl.appendChild(tag);
         });
     }
 
-    
     // 3. Initialisation : Remplissage du tableau des attributions
     const teacherRows = document.querySelectorAll('#teacher-assignment-body tr[data-teacher-id]');
     
     teacherRows.forEach(row => {
         const teacherId = row.dataset.teacherId;
         const assignmentContainer = document.getElementById(`assignments-${teacherId}`);
-        // linksData[teacherId] est un tableau d'IDs de matières attribuées
         const assignedSubjectIds = linksData[teacherId] || [];
 
-        // Pour chaque matière, déterminer si elle est attribuée ou non
         subjectsData.forEach(subject => {
             const subjectId = subject.id;
             const isAssigned = assignedSubjectIds.includes(subjectId);
             
-            const tag = createSubjectTag(subject, isAssigned, teacherId, false); // false pour isLegend
+            const tag = createSubjectTag(subject, isAssigned, teacherId, false); 
             assignmentContainer.appendChild(tag);
         });
         

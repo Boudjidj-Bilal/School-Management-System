@@ -1,6 +1,6 @@
 /**
  * Gestion des exceptions scolaires (Jours et Horaires).
- * VERSION SÉCURISÉE (CSP Compliant).
+ * VERSION SÉCURISÉE (CSP Compliant) ET MULTILINGUE.
  */
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -12,6 +12,25 @@ document.addEventListener('DOMContentLoaded', () => {
     // Récupération sécurisée
     const CSRF_TOKEN = csrfInput ? csrfInput.value : '';
     const API_URL = container ? container.getAttribute('data-api-url') : '';
+
+    // Traductions dynamiques depuis le HTML
+    const msgEdit = container ? container.getAttribute('data-msg-edit') : 'Modifier';
+    const msgDelete = container ? container.getAttribute('data-msg-delete') : 'Supprimer';
+    const msgBreak = container ? container.getAttribute('data-msg-break') : "Pause de l'année";
+    const msgFromToDate = container ? container.getAttribute('data-msg-from-to-date') : 'Du {start} au {end}';
+    const msgFromToTime = container ? container.getAttribute('data-msg-from-to-time') : 'De {start} à {end}';
+    const msgEditDay = container ? container.getAttribute('data-msg-edit-day') : 'Modifier l\'Exception Journalière';
+    const msgAddDay = container ? container.getAttribute('data-msg-add-day') : 'Ajouter une Exception Journalière';
+    const msgEditTime = container ? container.getAttribute('data-msg-edit-time') : 'Modifier l\'Exception Horaire';
+    const msgAddTime = container ? container.getAttribute('data-msg-add-time') : 'Ajouter une Exception Horaire';
+    const msgSave = container ? container.getAttribute('data-msg-save') : 'Sauvegarder les modifications';
+    const msgCreate = container ? container.getAttribute('data-msg-create') : 'Créer';
+    const msgConfirmDeleteDay = container ? container.getAttribute('data-msg-confirm-delete-day') : "Êtes-vous sûr de vouloir supprimer ce jour d'exception ?";
+    const msgConfirmDeleteTime = container ? container.getAttribute('data-msg-confirm-delete-time') : "Êtes-vous sûr de vouloir supprimer cet horaire d'exception ?";
+    const msgProcessing = container ? container.getAttribute('data-msg-processing') : 'Traitement...';
+    const msgSuccess = container ? container.getAttribute('data-msg-success') : 'Succès';
+    const msgError = container ? container.getAttribute('data-msg-error') : 'Erreur';
+    const msgNetworkError = container ? container.getAttribute('data-msg-network-error') : 'Erreur de connexion au serveur.';
 
     let exceptionDays = [];
     let exceptionTimes = [];
@@ -55,14 +74,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- 3. UTILITAIRES DE FORMATAGE ---
 
-    /** Formatte une date ISO (YYYY-MM-DD) en DD/MM/YYYY */
     function formatDate(isoDate) {
         if (!isoDate) return 'N/A';
         const [year, month, day] = isoDate.split('-');
         return `${day}/${month}/${year}`;
     }
 
-    /** Formatte une heure ISO (HH:MM:SS) en HH:MM */
     function formatTime(isoTime) {
         if (!isoTime) return 'N/A';
         const parts = isoTime.split(':');
@@ -72,17 +89,19 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- 4. FONCTIONS DE RENDU ---
 
-    /** Crée le HTML d'un bouton d'action avec des attributs data-* pour le JS */
+    /** 
+     * Crée le HTML d'un bouton d'action.
+     * MODIFICATION : Utilisation de "flex items-center gap-2" pour des icônes parfaitement gérées en LTR/RTL 
+     */
     function createActionButtonHtml(text, className, action, id, type, iconHtml = '') {
-        return `<button class="action-btn text-sm font-medium py-1 px-2 rounded-lg transition ${className}"
+        return `<button class="action-btn text-sm font-medium py-1 px-2 rounded-lg transition flex items-center gap-2 ${className}"
                         data-action="${action}" 
                         data-id="${id}" 
                         data-type="${type}">
-                    ${iconHtml} ${text}
+                    ${iconHtml} <span>${text}</span>
                 </button>`;
     }
 
-    /** Met à jour l'affichage de la liste des jours d'exception */
     function renderDayExceptions() {
         dayListContainer.innerHTML = '';
 
@@ -93,17 +112,22 @@ document.addEventListener('DOMContentLoaded', () => {
         noDayMsg.classList.add('hidden');
 
         exceptionDays.forEach(day => {
-            const editBtnHtml = createActionButtonHtml('Modifier', 'text-blue-600 hover:text-blue-800 bg-blue-100 hover:bg-blue-200', 'edit', day.id, 'day', '<i class="fas fa-edit"></i>');
-            const deleteBtnHtml = createActionButtonHtml('Supprimer', 'text-red-600 hover:text-red-800 bg-red-100 hover:bg-red-200', 'delete', day.id, 'day', '<i class="fas fa-trash-alt"></i>');
+            const editBtnHtml = createActionButtonHtml(msgEdit, 'text-blue-600 hover:text-blue-800 bg-blue-100 hover:bg-blue-200', 'edit', day.id, 'day', '<i class="fas fa-edit"></i>');
+            const deleteBtnHtml = createActionButtonHtml(msgDelete, 'text-red-600 hover:text-red-800 bg-red-100 hover:bg-red-200', 'delete', day.id, 'day', '<i class="fas fa-trash-alt"></i>');
             
+            // Formatage de la phrase "Du ... au ..."
+            const dateStr = msgFromToDate.replace('{start}', formatDate(day.start_date)).replace('{end}', formatDate(day.end_date));
+
             const element = document.createElement('div');
             element.className = 'flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 bg-gray-50 rounded-lg shadow-sm hover:bg-gray-100 transition mb-2';
+            
+            // MODIFICATION : "flex gap-2" remplace "space-x-2 flex"
             element.innerHTML = `
                 <div class="mb-2 sm:mb-0">
                     <p class="font-semibold text-gray-800">${day.type}</p>
-                    <p class="text-sm text-gray-600">Du ${formatDate(day.start_date)} au ${formatDate(day.end_date)}</p>
+                    <p class="text-sm text-gray-600" dir="auto">${dateStr}</p>
                 </div>
-                <div class="space-x-2 flex">
+                <div class="flex gap-2">
                     ${editBtnHtml}
                     ${deleteBtnHtml}
                 </div>
@@ -112,7 +136,6 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    /** Met à jour l'affichage de la liste des horaires d'exception */
     function renderTimeExceptions() {
         timeListContainer.innerHTML = '';
 
@@ -123,17 +146,22 @@ document.addEventListener('DOMContentLoaded', () => {
         noTimeMsg.classList.add('hidden');
 
         exceptionTimes.forEach(time => {
-            const editBtnHtml = createActionButtonHtml('Modifier', 'text-blue-600 hover:text-blue-800 bg-blue-100 hover:bg-blue-200', 'edit', time.id, 'time', '<i class="fas fa-edit"></i>');
-            const deleteBtnHtml = createActionButtonHtml('Supprimer', 'text-red-600 hover:text-red-800 bg-red-100 hover:bg-red-200', 'delete', time.id, 'time', '<i class="fas fa-trash-alt"></i>');
+            const editBtnHtml = createActionButtonHtml(msgEdit, 'text-blue-600 hover:text-blue-800 bg-blue-100 hover:bg-blue-200', 'edit', time.id, 'time', '<i class="fas fa-edit"></i>');
+            const deleteBtnHtml = createActionButtonHtml(msgDelete, 'text-red-600 hover:text-red-800 bg-red-100 hover:bg-red-200', 'delete', time.id, 'time', '<i class="fas fa-trash-alt"></i>');
             
+            // Formatage de la phrase "De ... à ..."
+            const timeStr = msgFromToTime.replace('{start}', formatTime(time.start_time)).replace('{end}', formatTime(time.end_time));
+
             const element = document.createElement('div');
             element.className = 'flex items-center justify-between p-4 bg-gray-50 rounded-lg shadow-sm hover:bg-gray-100 transition mb-2';
+            
+            // MODIFICATION : "flex gap-2" remplace "space-x-2 flex"
             element.innerHTML = `
                 <div>
-                    <p class="font-semibold text-gray-800">Pause de l'année</p>
-                    <p class="text-sm text-gray-600">De ${formatTime(time.start_time)} à ${formatTime(time.end_time)}</p>
+                    <p class="font-semibold text-gray-800">${msgBreak}</p>
+                    <p class="text-sm text-gray-600" dir="auto">${timeStr}</p>
                 </div>
-                <div class="space-x-2 flex">
+                <div class="flex gap-2">
                     ${editBtnHtml}
                     ${deleteBtnHtml}
                 </div>
@@ -142,14 +170,13 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    /** Fonction principale de rendu */
     function renderAll() {
         renderDayExceptions();
         renderTimeExceptions();
     }
 
 
-    // --- 5. GESTION DES CLICS (Délégation) ---
+    // --- 5. GESTION DES CLICS ---
 
     function handleListClick(e) {
         const btn = e.target.closest('.action-btn');
@@ -180,8 +207,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
         document.getElementById('exception-type').value = type;
         document.getElementById('exception-id').value = id || '';
-        document.getElementById('crud-modal-title').textContent = id ? `Modifier l'Exception ${type === 'day' ? 'Journalière' : 'Horaire'}` : `Ajouter une Exception ${type === 'day' ? 'Journalière' : 'Horaire'}`;
-        submitText.textContent = id ? 'Sauvegarder les modifications' : 'Créer';
+        
+        if (type === 'day') {
+            document.getElementById('crud-modal-title').textContent = id ? msgEditDay : msgAddDay;
+        } else {
+            document.getElementById('crud-modal-title').textContent = id ? msgEditTime : msgAddTime;
+        }
+        
+        submitText.textContent = id ? msgSave : msgCreate;
 
         const dayFields = document.getElementById('day-fields');
         const timeFields = document.getElementById('time-fields');
@@ -234,8 +267,9 @@ document.addEventListener('DOMContentLoaded', () => {
         itemToDelete = { id: id, type: type };
         
         const textElement = document.getElementById('delete-confirmation-text');
-        const label = type === 'day' ? "ce jour d'exception" : "cet horaire d'exception";
-        if(textElement) textElement.textContent = `Êtes-vous sûr de vouloir supprimer ${label} ? Cette action est irréversible.`;
+        if(textElement) {
+            textElement.textContent = type === 'day' ? msgConfirmDeleteDay : msgConfirmDeleteTime;
+        }
 
         deleteModal.classList.remove('hidden');
     }
@@ -253,7 +287,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 handleApiCall({
                     action: 'delete',
                     exception_type: itemToDelete.type,
-                    // Utilisation correcte de exception_id pour le backend
                     exception_id: itemToDelete.id 
                 }, 'delete');
             }
@@ -267,7 +300,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (actionType === 'crud') {
             crudSubmitBtn.disabled = true;
             loadingSpinner.classList.remove('hidden');
-            submitText.textContent = 'Traitement...';
+            submitText.textContent = msgProcessing;
         }
 
         try {
@@ -285,9 +318,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const result = await response.json();
 
             if (result.success) {
-                // Mise à jour locale des données
                 if (dataPayload.action === 'delete') {
-                    // Pour le delete, on utilise exception_id
                     if (dataPayload.exception_type === 'day') {
                         exceptionDays = exceptionDays.filter(d => d.id != dataPayload.exception_id);
                     } else {
@@ -295,12 +326,9 @@ document.addEventListener('DOMContentLoaded', () => {
                     }
                     closeDeleteModal();
                 } else {
-                    // Pour update/create
                     if (result.data) {
                         if (dataPayload.action === 'update') {
-                            // Pour l'update, on utilise exception_id du payload
                             const updateId = dataPayload.exception_id;
-                            
                             if (dataPayload.exception_type === 'day') {
                                 const idx = exceptionDays.findIndex(d => d.id == updateId);
                                 if(idx !== -1) exceptionDays[idx] = result.data;
@@ -323,17 +351,17 @@ document.addEventListener('DOMContentLoaded', () => {
                 renderAll();
 
             } else {
-                showFeedbackModal(result.message || "Erreur lors de l'opération", false);
+                showFeedbackModal(result.message || msgError, false);
             }
 
         } catch (error) {
             console.error("Erreur API:", error);
-            showFeedbackModal('Erreur de connexion au serveur.', false);
+            showFeedbackModal(msgNetworkError, false);
         } finally {
             if (actionType === 'crud') {
                 crudSubmitBtn.disabled = false;
                 loadingSpinner.classList.add('hidden');
-                submitText.textContent = currentAction === 'create' ? 'Créer' : 'Modifier';
+                submitText.textContent = currentAction === 'create' ? msgCreate : msgEdit;
             }
         }
     }
@@ -344,8 +372,6 @@ document.addEventListener('DOMContentLoaded', () => {
         const data = {};
         formData.forEach((value, key) => data[key] = value);
         
-        // Préparation Payload
-        // CORRECTION MAJEURE ICI : Utilisation de 'exception_id' au lieu de 'id'
         const payload = {
             action: currentAction,
             exception_type: currentExceptionType,
@@ -374,10 +400,10 @@ document.addEventListener('DOMContentLoaded', () => {
         const content = document.getElementById('feedback-content');
 
         if (isSuccess) {
-            title.textContent = "Succès";
+            title.textContent = msgSuccess;
             iconContainer.innerHTML = '<i class="fas fa-check-circle text-green-500 text-2xl"></i>';
         } else {
-            title.textContent = "Erreur";
+            title.textContent = msgError;
             iconContainer.innerHTML = '<i class="fas fa-times-circle text-red-500 text-2xl"></i>';
         }
         messageP.textContent = message;
@@ -388,10 +414,13 @@ document.addEventListener('DOMContentLoaded', () => {
         content.classList.add('scale-100');
     }
 
-    document.getElementById('feedback-close-btn').addEventListener('click', () => {
-        feedbackModal.classList.add('hidden');
-        feedbackModal.classList.remove('opacity-100');
-    });
+    const feedbackCloseBtn = document.getElementById('feedback-close-btn');
+    if (feedbackCloseBtn) {
+        feedbackCloseBtn.addEventListener('click', () => {
+            feedbackModal.classList.add('hidden');
+            feedbackModal.classList.remove('opacity-100');
+        });
+    }
 
     // --- INITIALISATION ---
     renderAll();

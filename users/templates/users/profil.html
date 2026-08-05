@@ -1,14 +1,14 @@
 {% extends 'base.html' %}
-{% load static %}
+{% load static i18n %}
 
-{% block title %}Mon Profil{% endblock %}
+{% block title %}{% trans "Mon Profil" %}{% endblock %}
 
 {% block content %}
 <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
     
     <div class="mb-8">
-        <h1 class="text-3xl font-bold text-gray-900">Mon Profil</h1>
-        <p class="mt-1 text-sm text-gray-500">Gérez vos informations personnelles et votre sécurité.</p>
+        <h1 class="text-3xl font-bold text-gray-900">{% trans "Mon Profil" %}</h1>
+        <p class="mt-1 text-sm text-gray-500">{% trans "Gérez vos informations personnelles et votre sécurité." %}</p>
     </div>
 
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -24,83 +24,84 @@
                             
                             <img id="profile-image-display" 
                                  src="{% if user.profile_picture %}{{ user.profile_picture.url }}{% else %}#{% endif %}" 
-                                 alt="Photo de profil" 
+                                 alt="{% trans 'Photo de profil' %}" 
                                  class="w-full h-full rounded-full object-cover {% if not user.profile_picture %}hidden{% endif %}">
 
                             <div id="profile-initials-display" class="w-full h-full rounded-full bg-indigo-100 flex items-center justify-center text-4xl font-bold text-indigo-600 uppercase {% if user.profile_picture %}hidden{% endif %}">
                                 {{ user.username|slice:":1" }}
                             </div>
 
-                            <!-- MODIFICATION : Suppression du onclick inline. Ajout de l'ID 'trigger-upload-btn' pour le JS -->
                             <div id="trigger-upload-btn"
                                  class="absolute inset-0 bg-black bg-opacity-40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer rounded-full">
                                 <i class="fas fa-camera text-white text-2xl"></i>
                             </div>
                         </div>
 
+                        <!-- MODIFICATION RTL : Bouton suppression centré avec décalage -->
                         <button id="btn-delete-photo" 
-                                class="absolute bottom-0 right-1/2 translate-x-10 translate-y-2 bg-red-500 text-white rounded-full p-2 shadow-md hover:bg-red-600 transition-colors {% if not user.profile_picture %}hidden{% endif %}"
-                                title="Supprimer la photo">
+                                class="absolute bottom-0 end-1/2 translate-x-10 rtl:-translate-x-10 translate-y-2 bg-red-500 text-white rounded-full p-2 shadow-md hover:bg-red-600 transition-colors {% if not user.profile_picture %}hidden{% endif %}"
+                                title="{% trans 'Supprimer la photo' %}">
                             <i class="fas fa-trash-alt text-xs"></i>
                         </button>
 
-                        <!-- MODIFICATION : Ajout de data-api-url pour l'upload d'image -->
                         <input type="file" id="profile-image-input" 
                                accept="image/*" 
                                class="hidden"
-                               data-api-url="{% url 'api_manage_profile_picture' %}">
+                               data-api-url="{% url 'api_manage_profile_picture' %}"
+                               data-msg-error-update="{% trans 'Impossible de mettre à jour la photo.' %}"
+                               data-msg-error-prefix="{% trans 'Erreur :' %}">
                     </div>
+                    
                     <div class="text-center mt-4">
                         {% if user.first_name and user.last_name %}
                             <h2 class="text-xl font-bold text-gray-900">{{ user.first_name }} {{ user.last_name }}</h2>
-                            <p class="text-sm text-gray-500">@{{ user.username }}</p>
+                            <p class="text-sm text-gray-500" dir="ltr">@{{ user.username }}</p>
                         {% else %}
-                            <h2 class="text-xl font-bold text-gray-900">{{ user.username }}</h2>
+                            <h2 class="text-xl font-bold text-gray-900" dir="ltr">@{{ user.username }}</h2>
                         {% endif %}
 
-                        
                         <div class="mt-4">
                             <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-indigo-100 text-indigo-800">
-                                {% if user_type == 'Teacher' %}Professeur
-                                {% elif user_type == 'Student' %}Élève
-                                {% elif user_type == 'Parent' %}Parent
-                                {% elif user_type == 'Principal' %}Proviseur
-                                {% elif user_type == 'SuperAdministrator' %}Super Admin
-                                {% elif user_type == 'Administrator' %}Administrateur
+                                {% if user_type == 'Teacher' %}{% trans "Professeur" %}
+                                {% elif user_type == 'Student' %}{% trans "Élève" %}
+                                {% elif user_type == 'Parent' %}{% trans "Parent" %}
+                                {% elif user_type == 'Principal' %}{% trans "Proviseur" %}
+                                {% elif user_type == 'SuperAdministrator' %}{% trans "Super Admin" %}
+                                {% elif user_type == 'Administrator' %}{% trans "Administrateur" %}
                                 {% else %}{{ user_type }}{% endif %}
                             </span>
                         </div>
                     </div>
 
                     <div class="mt-6 border-t border-gray-100 pt-6 space-y-3">
-                        <div class="flex items-center text-sm text-gray-600">
-                            <i class="fas fa-envelope w-5 text-gray-400 text-center mr-2"></i>
-                            <span class="truncate">{{ user.email }}</span>
+                        <!-- MODIFICATION RTL : Utilisation de Flex + Gap pour un espacement infaillible -->
+                        <div class="flex items-center gap-2 text-sm text-gray-600">
+                            <i class="fas fa-envelope w-5 text-gray-400 text-center"></i>
+                            <span class="truncate" dir="ltr">{{ user.email }}</span>
                         </div>
                         
-                        <!-- Numéro d'identification (ex: INE) pour les élèves uniquement -->
                         {% if user_type == 'Student' and user.student_user.national_number %}
-                        <div class="flex items-center text-sm text-gray-600" title="Numéro d'identification national">
-                            <i class="fas fa-id-card w-5 text-gray-400 text-center mr-2"></i>
+                        <div class="flex items-center gap-2 text-sm text-gray-600" title="{% trans 'Numéro immatriculation' %}">
+                            <i class="fas fa-id-card w-5 text-gray-400 text-center"></i>
                             <span>{{ user.student_user.national_number }}</span>
                         </div>
                         {% endif %}
 
                         {% if user.phone_number %}
-                        <div class="flex items-center text-sm text-gray-600">
-                            <i class="fas fa-phone w-5 text-gray-400 text-center mr-2"></i>
-                            <span>{{ user.phone_number }}</span>
+                        <div class="flex items-center gap-2 text-sm text-gray-600">
+                            <i class="fas fa-phone w-5 text-gray-400 text-center"></i>
+                            <span dir="ltr">{{ user.phone_number }}</span>
                         </div>
                         {% endif %}
                         
                         {% if user.staff_user.school %}
-                        <div class="flex items-center text-sm text-gray-600">
-                            <i class="fas fa-school w-5 text-gray-400 text-center mr-2"></i>
+                        <div class="flex items-center gap-2 text-sm text-gray-600">
+                            <i class="fas fa-school w-5 text-gray-400 text-center"></i>
                             <span>{{ user.staff_user.school.name }}</span>
                         </div>
                         {% elif user.student_user.school %}
-                        <div class="flex items-center text-sm text-gray-600">
-                            <i class="fas fa-school w-5 text-gray-400 text-center mr-2"></i>
+                        <div class="flex items-center gap-2 text-sm text-gray-600">
+                            <i class="fas fa-school w-5 text-gray-400 text-center"></i>
                             <span>{{ user.student_user.school.name }}</span>
                         </div>
                         {% endif %}
@@ -113,80 +114,104 @@
             
             <div class="bg-white shadow rounded-lg">
                 <div class="px-6 py-5 border-b border-gray-200">
-                    <h3 class="text-lg font-medium leading-6 text-gray-900">
-                        <i class="fas fa-lock mr-2 text-indigo-500"></i> Sécurité
+                    <h3 class="flex items-center gap-2 text-lg font-medium leading-6 text-gray-900">
+                        <i class="fas fa-lock text-indigo-500"></i> {% trans "Sécurité" %}
                     </h3>
-                    <p class="mt-1 text-sm text-gray-500">Mettre à jour votre mot de passe.</p>
+                    <p class="mt-1 text-sm text-gray-500">{% trans "Mettre à jour votre mot de passe." %}</p>
                 </div>
                 
                 <div class="p-6">
                     <div id="message-area" class="hidden mb-6 rounded-md p-4"></div>
 
-                    <!-- MODIFICATION : Ajout de data-api-url pour le changement de mot de passe -->
-                    <form id="change-password-form" class="space-y-6" data-api-url="{% url 'api_change_password' %}">
-                        {% csrf_token %}
+                        <form id="change-password-form" class="space-y-6" data-api-url="{% url 'api_change_password' %}"
+                            data-msg-mismatch="{% trans 'Les nouveaux mots de passe ne correspondent pas.' %}"
+                            data-msg-short="{% trans 'Le mot de passe doit faire au moins 4 caractères.' %}"
+                            data-msg-tech-error="{% trans 'Une erreur technique est survenue.' %}"
+                            data-msg-processing="{% trans 'Traitement...' %}">
+                            {% csrf_token %}
                         
-                        <div>
-                            <label for="current_password" class="block text-sm font-medium text-gray-700">Mot de passe actuel</label>
-                            <div class="mt-1 relative rounded-md shadow-sm">
-                                <input type="password" name="current_password" id="current_password" required
-                                        class="block w-full pr-10 border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm p-2.5 border"
+                            <div>
+                                <label for="current_password" class="block text-sm font-medium text-gray-700">
+                                    {% trans "Mot de passe actuel" %}
+                                </label>
+                                
+                                <!-- 1. Le parent devient Flex. C'est lui qui porte les bordures et l'effet focus -->
+                                <div class="mt-1 flex items-center gap-2 px-3 bg-white border border-gray-300 rounded-md shadow-sm focus-within:ring-1 focus-within:ring-indigo-500 focus-within:border-indigo-500">
+                                    
+                                    <!-- 2. L'input prend tout l'espace (flex-1) et on lui enlève ses bordures (border-none) -->
+                                    <input type="password" name="current_password" id="current_password" required
+                                        class="flex-1 block w-full border-none p-2.5 bg-transparent focus:ring-0 sm:text-sm"
                                         placeholder="••••••••">
-                                <div class="absolute inset-y-0 right-0 pr-3 flex items-center cursor-pointer toggle-password" data-target="current_password">
-                                    <i class="far fa-eye text-gray-400 hover:text-gray-600"></i>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="border-t border-gray-100 my-4"></div>
-
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            <div>
-                                <label for="new_password" class="block text-sm font-medium text-gray-700">Nouveau mot de passe</label>
-                                <div class="mt-1 relative rounded-md shadow-sm">
-                                    <input type="password" name="new_password" id="new_password" required minlength="4"
-                                            class="block w-full pr-10 border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm p-2.5 border"
-                                            placeholder="4 caractères min.">
-                                    <div class="absolute inset-y-0 right-0 pr-3 flex items-center cursor-pointer toggle-password" data-target="new_password">
+                                        
+                                    <!-- 3. L'icône se place naturellement à côté, séparée par le gap-2 -->
+                                    <div class="cursor-pointer toggle-password flex-shrink-0" data-target="current_password">
                                         <i class="far fa-eye text-gray-400 hover:text-gray-600"></i>
                                     </div>
+                                    
                                 </div>
                             </div>
 
-                            <div>
-                                <label for="confirm_password" class="block text-sm font-medium text-gray-700">Confirmer le mot de passe</label>
-                                <div class="mt-1 relative rounded-md shadow-sm">
-                                    <input type="password" name="confirm_password" id="confirm_password" required minlength="4"
-                                            class="block w-full pr-10 border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm p-2.5 border"
-                                            placeholder="Répétez le mot de passe">
-                                    <div class="absolute inset-y-0 right-0 pr-3 flex items-center cursor-pointer toggle-password" data-target="confirm_password">
-                                        <i class="far fa-eye text-gray-400 hover:text-gray-600"></i>
+                            <div class="border-t border-gray-100 my-4"></div>
+                        
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+    
+                                <!-- Nouveau mot de passe -->
+                                <div>
+                                    <label for="new_password" class="block text-sm font-medium text-gray-700">{% trans "Nouveau mot de passe" %}</label>
+                                    
+                                    <!-- Conteneur Flex qui agit comme l'input visuel -->
+                                    <div class="mt-1 flex items-center gap-2 px-3 bg-white border border-gray-300 rounded-md shadow-sm focus-within:ring-1 focus-within:ring-indigo-500 focus-within:border-indigo-500">
+                                        
+                                        <input type="password" name="new_password" id="new_password" required minlength="4"
+                                                class="flex-1 block w-full border-none p-2.5 bg-transparent focus:ring-0 sm:text-sm"
+                                                placeholder="{% trans '8 caractères min.' %}" dir="ltr">
+                                                
+                                        <div class="cursor-pointer toggle-password flex-shrink-0" data-target="new_password">
+                                            <i class="far fa-eye text-gray-400 hover:text-gray-600"></i>
+                                        </div>
                                     </div>
                                 </div>
+                            
+                                <!-- Confirmer le mot de passe -->
+                                <div>
+                                    <label for="confirm_password" class="block text-sm font-medium text-gray-700">{% trans "Confirmer le mot de passe" %}</label>
+                                    
+                                    <!-- Conteneur Flex qui agit comme l'input visuel -->
+                                    <div class="mt-1 flex items-center gap-2 px-3 bg-white border border-gray-300 rounded-md shadow-sm focus-within:ring-1 focus-within:ring-indigo-500 focus-within:border-indigo-500">
+                                        
+                                        <input type="password" name="confirm_password" id="confirm_password" required minlength="4"
+                                                class="flex-1 block w-full border-none p-2.5 bg-transparent focus:ring-0 sm:text-sm"
+                                                placeholder="{% trans 'Répétez le mot de passe' %}" dir="ltr">
+                                                
+                                        <div class="cursor-pointer toggle-password flex-shrink-0" data-target="confirm_password">
+                                            <i class="far fa-eye text-gray-400 hover:text-gray-600"></i>
+                                        </div>
+                                    </div>
+                                </div>
+                                
                             </div>
-                        </div>
-
-                        <div class="text-xs text-gray-500 bg-gray-50 p-3 rounded border border-gray-100">
-                            <p class="font-medium mb-1">Le mot de passe doit contenir :</p>
-                            <ul class="list-disc list-inside space-y-1 pl-1">
-                                <li>Au moins 8 caractères</li>
-                                <li>Au moins une majuscule</li>
-                                <li>Au moins une minuscule</li>
-                                <li>Au moins un chiffre</li>
-                                <li>Au moins un caractère spécial</li>
-                                <li>Ne doit pas être trop similaire à vos informations personnelles</li>
-                            </ul>
-                        </div>
-
-                        <div class="flex justify-end">
-                            <button type="submit" id="btn-save-password" class="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-all">
-                                Enregistrer le nouveau mot de passe
-                            </button>
-                        </div>
-                    </form>
+                            
+                            <div class="text-xs text-gray-500 bg-gray-50 p-3 rounded border border-gray-100">
+                                <p class="font-medium mb-1">{% trans "Le mot de passe doit contenir :" %}</p>
+                                <ul class="list-disc list-outside space-y-1 ps-5">
+                                    <li>{% trans "Au moins 8 caractères" %}</li>
+                                    <li>{% trans "Au moins une majuscule" %}</li>
+                                    <li>{% trans "Au moins une minuscule" %}</li>
+                                    <li>{% trans "Au moins un chiffre" %}</li>
+                                    <li>{% trans "Au moins un caractère spécial" %}</li>
+                                    <li>{% trans "Ne doit pas être trop similaire à vos informations personnelles" %}</li>
+                                </ul>
+                            </div>
+                    
+                            <div class="flex justify-end">
+                                <button type="submit" id="btn-save-password" class="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-all">
+                                    {% trans "Enregistrer le nouveau mot de passe" %}
+                                </button>
+                            </div>
+                        </form>
+                    </div>
                 </div>
             </div>
-
         </div>
     </div>
 </div>
@@ -198,43 +223,45 @@
 
         <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
 
-        <div class="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg w-full">
+        <!-- MODIFICATION RTL : text-start -->
+        <div class="inline-block align-bottom bg-white rounded-lg text-start overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg w-full">
             <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
                 <div class="sm:flex sm:items-start">
+                    
                     <div class="mx-auto flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-red-100 sm:mx-0 sm:h-10 sm:w-10">
                         <i class="fas fa-exclamation-triangle text-red-600"></i>
                     </div>
                     
-                    <div class="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left">
+                    <!-- MODIFICATION RTL : sm:ms-4, sm:text-start -->
+                    <div class="mt-3 text-center sm:mt-0 sm:ms-4 sm:text-start">
                         <h3 class="text-lg leading-6 font-medium text-gray-900" id="modal-title">
-                            Supprimer la photo de profil
+                            {% trans "Supprimer la photo de profil" %}
                         </h3>
                         <div class="mt-2">
                             <p class="text-sm text-gray-500">
-                                Êtes-vous sûr de vouloir supprimer votre photo actuelle ?
+                                {% trans "Êtes-vous sûr de vouloir supprimer votre photo actuelle ?" %}
                             </p>
                         </div>
                     </div>
                 </div>
             </div>
             
-            <div class="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
-                <button type="button" id="confirm-delete-btn" class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-red-600 text-base font-medium text-white hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 sm:ml-3 sm:w-auto sm:text-sm">
-                    Supprimer
+            <!-- MODIFICATION RTL : Boutons inversés avec flex-row-reverse, et sm:ms-3 -->
+            <div class="bg-gray-50 px-4 py-3 sm:px-6 flex flex-col sm:flex-row-reverse gap-3 sm:gap-0"
+                 data-msg-error-delete="{% trans 'Impossible de supprimer la photo.' %}">
+                <button type="button" id="confirm-delete-btn" class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-red-600 text-base font-medium text-white hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 sm:ms-3 sm:w-auto sm:text-sm">
+                    {% trans "Supprimer" %}
                 </button>
-                <!-- MODIFICATION : Suppression du onclick inline. Ajout de l'ID 'modal-cancel-btn' pour le JS -->
-                <button type="button" id="modal-cancel-btn" class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm">
-                    Annuler
+                <button type="button" id="modal-cancel-btn" class="w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:w-auto sm:text-sm">
+                    {% trans "Annuler" %}
                 </button>
             </div>
         </div>
     </div>
 </div>
-<!-- MODIFICATION : Ajout du token CSRF global pour les requêtes AJAX hors formulaire -->
 <input type="hidden" id="csrf-token" value="{{ csrf_token }}">
 {% endblock %}
 
 {% block extra_js %}
-    <!-- MODIFICATION : Suppression du script inline window.PROFILE_CONFIG -->
     <script src="{% static 'js/users/profil.js' %}"></script>
 {% endblock %}

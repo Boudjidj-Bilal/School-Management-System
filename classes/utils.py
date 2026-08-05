@@ -1,8 +1,9 @@
 from django.core.exceptions import ObjectDoesNotExist
 from schools.models import School, Year
 from .models import Level, Classroom, Class, ClassStudentYear, ClassTeacherYear
-from users.models import Staff, Student
+from users.models import Student
 from subjects.models import TeacherSubject
+from django.utils.translation import gettext_lazy as _
 
 """
     Ce fichier centralise les fonctions utilitaires de l'application 'classes'.
@@ -42,9 +43,9 @@ def create_level(level_number, school_id, term_type="TRIMESTRE"):
         )
         return level, None
     except ObjectDoesNotExist:
-        return None, "Erreur: L'école spécifiée n'existe pas."
+        return None, _("Erreur: L'école spécifiée n'existe pas.")
     except Exception as e:
-        return None, f"Erreur lors de la création du niveau : {str(e)}"
+        return None, _("Erreur lors de la création du niveau : {error}").format(error=str(e))
 
 def get_level_by_id(level_id):
     """
@@ -95,9 +96,9 @@ def update_level(level_id, **kwargs):
         level.save()
         return level, None
     except Level.DoesNotExist:
-        return None, "Erreur: Le niveau spécifié n'existe pas."
+        return None, _("Erreur: Le niveau spécifié n'existe pas.")
     except Exception as e:
-        return None, f"Erreur lors de la mise à jour du niveau : {str(e)}"
+        return None, _("Erreur lors de la mise à jour du niveau : {error}").format(error=str(e))
 
 def delete_level(level_id):
     """
@@ -149,9 +150,9 @@ def create_classroom(name, classroom_type, school_id, is_active=True):
         )
         return classroom, None
     except ObjectDoesNotExist:
-        return None, "Erreur: L'école spécifiée n'existe pas."
+        return None, _("Erreur: L'école spécifiée n'existe pas.")
     except Exception as e:
-        return None, f"Erreur lors de la création de la salle de classe : {str(e)}"
+        return None, _("Erreur lors de la création de la salle de classe : {error}").format(error=str(e))
 
 def get_classroom_by_id(classroom_id):
     """
@@ -202,9 +203,9 @@ def update_classroom(classroom_id, **kwargs):
         classroom.save()
         return classroom, None
     except Classroom.DoesNotExist:
-        return None, "Erreur: La salle de classe spécifiée n'existe pas."
+        return None, _("Erreur: La salle de classe spécifiée n'existe pas.")
     except Exception as e:
-        return None, f"Erreur lors de la mise à jour de la salle de classe : {str(e)}"
+        return None, _("Erreur lors de la mise à jour de la salle de classe : {error}").format(error=str(e))
 
 def delete_classroom(classroom_id):
     """
@@ -258,9 +259,9 @@ def create_class(name, level_id, is_valid=True):
         )
         return class_obj, None
     except ObjectDoesNotExist as e:
-        return None, f"Erreur: L'objet spécifié n'existe pas. Détails: {str(e)}"
+        return None, _("Erreur: L'objet spécifié n'existe pas. Détails: {error}").format(error=str(e))
     except Exception as e:
-        return None, f"Erreur lors de la création de la classe : {str(e)}"
+        return None, _("Erreur lors de la création de la classe : {error}").format(error=str(e))
 
 def get_class_by_id(class_id):
     """
@@ -354,11 +355,11 @@ def update_class(class_id, **kwargs):
         class_obj.save()
         return class_obj, None
     except Class.DoesNotExist:
-        return None, "Erreur: La classe spécifiée n'existe pas."
+        return None, _("Erreur: La classe spécifiée n'existe pas.")
     except ObjectDoesNotExist as e:
-        return None, f"Erreur: L'objet spécifié n'existe pas. Détails: {str(e)}"
+        return None, _("Erreur: L'objet spécifié n'existe pas. Détails: {error}").format(error=str(e))
     except Exception as e:
-        return None, f"Erreur lors de la mise à jour de la classe : {str(e)}"
+        return None, _("Erreur lors de la mise à jour de la classe : {error}").format(error=str(e))
 
 def delete_class(class_id):
     """
@@ -413,9 +414,9 @@ def create_class_student_year(class_id, student_id, year_id, is_delegate=False):
         )
         return inscription, None
     except ObjectDoesNotExist as e:
-        return None, f"Erreur: L'objet spécifié n'existe pas. Détails: {str(e)}"
+        return None, _("Erreur: L'objet spécifié n'existe pas. Détails: {error}").format(error=str(e))
     except Exception as e:
-        return None, f"Erreur lors de la création de l'inscription : {str(e)}"
+        return None, _("Erreur lors de la création de l'inscription : {error}").format(error=str(e))
 
 def get_class_student_year_by_id(inscription_id):
     """
@@ -470,9 +471,9 @@ def update_class_student_year(inscription_id, **kwargs):
         inscription.save()
         return inscription, None
     except ClassStudentYear.DoesNotExist:
-        return None, "Erreur: L'inscription spécifiée n'existe pas."
+        return None, _("Erreur: L'inscription spécifiée n'existe pas.")
     except Exception as e:
-        return None, f"Erreur lors de la mise à jour de l'inscription : {str(e)}"
+        return None, _("Erreur lors de la mise à jour de l'inscription : {error}").format(error=str(e))
 
 def delete_class_student_year(inscription_id):
     """
@@ -528,9 +529,9 @@ def create_class_teacher_year(class_id, teacher_id, year_id, is_main_teacher=Fal
         )
         return assignment, None
     except ObjectDoesNotExist as e:
-        return None, f"Erreur: L'objet spécifié n'existe pas. Détails: {str(e)}"
+        return None, _("Erreur: L'objet spécifié n'existe pas. Détails: {error}").format(error=str(e))
     except Exception as e:
-        return None, f"Erreur lors de la création de l'affectation : {str(e)}"
+        return None, _("Erreur lors de la création de l'affectation : {error}").format(error=str(e))
 
 def get_class_teacher_year_by_id(assignment_id):
     """
@@ -585,9 +586,9 @@ def update_class_teacher_year(assignment_id, **kwargs):
         assignment.save()
         return assignment, None
     except ClassTeacherYear.DoesNotExist:
-        return None, "Erreur: L'affectation spécifiée n'existe pas."
+        return None, _("Erreur: L'affectation spécifiée n'existe pas.")
     except Exception as e:
-        return None, f"Erreur lors de la mise à jour de l'affectation : {str(e)}"
+        return None, _("Erreur lors de la mise à jour de l'affectation : {error}").format(error=str(e))
 
 def delete_class_teacher_year(assignment_id):
     """

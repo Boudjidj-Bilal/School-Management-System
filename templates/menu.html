@@ -1,16 +1,20 @@
-{% load static %}
-<nav class="bg-gray-800 p-1 pr-3 shadow-lg">
+{% load static i18n %}
+<nav class="bg-gray-800 p-1 pe-3 shadow-lg">
     <div class="container mx-auto flex justify-between items-center">
         <a href="{% url 'dashboard' %}" class="flex items-center text-white text-2xl font-bold">
-            <img src="{% static 'img/logo-noir-transparent-svg.svg' %}" alt="Logo" class="h-20 w-auto object-contain">
+            <img src="{% static 'img/logo-noir-transparent-svg.svg' %}" alt="{% trans 'Logo' %}" class="h-20 w-auto object-contain">
             {% if user_school %}
-                <span class="ml-4 text-sm font-normal text-gray-300">| {{ user_school.name }}</span>
+                <span class="ms-4 text-sm font-normal text-gray-300">| {{ user_school.name }}</span>
             {% endif %}
         </a>
-        <div class="flex items-center space-x-4">
-            <span class="text-gray-300 hidden md:inline">Bienvenue, {{ user.username }}</span>
+        
+        <!-- Remplacement de space-x-4 par gap-4 : c'est la méthode la plus propre -->
+        <div class="flex items-center gap-4">
+            <span class="text-gray-300 hidden md:inline">
+                {% blocktrans %}Bienvenue, {{ user.username }}{% endblocktrans %}
+            </span>
             <a href="{% url 'logout' %}" class="bg-red-500 text-white py-2 px-4 rounded-lg hover:bg-red-600 transition duration-300">
-                Déconnexion
+                {% trans "Déconnexion" %}
             </a>
         </div>
     </div>

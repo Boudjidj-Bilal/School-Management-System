@@ -11,6 +11,7 @@ from django.http import HttpResponseForbidden, Http404, FileResponse
 from django.template.loader import render_to_string
 from django.core.files.base import ContentFile
 from django.contrib import messages
+from django.utils.translation import gettext_lazy as _
 
 from django.shortcuts import get_object_or_404
 
@@ -37,12 +38,12 @@ def _generate_and_save_pdf(student, term, request):
     Fonction interne qui génère le PDF et ÉCRASE l'ancien fichier s'il existe.
     """
     if HTML is None:
-        return False, "WeasyPrint n'est pas installé."
+        return False, _("WeasyPrint n'est pas installé.")
 
     # 1. Récupération du contexte complet
     context = get_report_card_context(student, term)
     if not context:
-        return False, "Impossible de récupérer les données (élève non inscrit ?)"
+        return False, _("Impossible de récupérer les données (élève non inscrit ?)")
 
     # Base URL pour les images
     base_url = request.build_absolute_uri('/')
@@ -54,7 +55,7 @@ def _generate_and_save_pdf(student, term, request):
     try:
         pdf_file = HTML(string=html_string, base_url=base_url).write_pdf()
     except Exception as e:
-        return False, f"Erreur WeasyPrint : {e}"
+        return False, _("Erreur WeasyPrint : {e}").format(e)
 
     # 4. Sauvegarde avec ÉCRASEMENT
     
@@ -121,7 +122,7 @@ def manage_class_report_cards(request, class_id, term_id):
         ).first()
 
         if real_current_term:
-            messages.warning(request, f"Redirection : Vous tentiez d'accéder à une archive ({requested_term.year}). Vous avez été redirigé vers l'année en cours.")
+            messages.warning(request, _("Redirection : Vous tentiez d'accéder à une archive ({year}). Vous avez été redirigé vers l'année en cours.").format(year=requested_term.year))
             return redirect('documents:manage_class_report_cards', class_id=class_id, term_id=real_current_term.id)
             
     # Si on est bon, on continue
@@ -156,14 +157,14 @@ def manage_class_report_cards(request, class_id, term_id):
         if action == "generate_all":
             # [REGLE] Le trimestre doit être fini (ou on est admin et on force)
             if not current_term.finished:
-                messages.error(request, "Le trimestre n'est pas terminé. Impossible de générer les bulletins.")
+                messages.error(request, _("Le trimestre n'est pas terminé. Impossible de générer les bulletins."))
             else:
                 students = Student.objects.filter(class_years__student_class=student_class, class_years__year=current_term.year, class_years__is_active=True)
                 count = 0
                 for student in students:
                     success, msg = _generate_and_save_pdf(student, current_term, request)
                     if success: count += 1
-                messages.success(request, f"{count} bulletins générés avec succès.")
+                messages.success(request, _("{count} bulletins générés avec succès.").format(count=count))
         
         # Action : PUBLIER TOUT / DÉPUBLIER TOUT
         elif action in ["publish_all", "unpublish_all"]:
@@ -176,8 +177,8 @@ def manage_class_report_cards(request, class_id, term_id):
                 student__class_years__year=current_term.year
             ).update(is_published=is_pub)
             
-            status_msg = "publiés" if is_pub else "masqués"
-            messages.success(request, f"Les bulletins ont été {status_msg} pour les élèves.")
+            status_msg = _("publiés") if is_pub else _("masqués")
+            messages.success(request, _("Les bulletins ont été {status_msg} pour les élèves.").format(status_msg=status_msg))
 
         return redirect('documents:manage_class_report_cards', class_id=class_id, term_id=term_id)
 
@@ -219,14 +220,14 @@ def regenerate_single_report_card(request, report_card_id):
         return HttpResponseForbidden()
     
     if not rc.term.finished:
-        messages.error(request, "Impossible de régénérer : Le trimestre n'est pas clôturé.")
+        messages.error(request, _("Impossible de régénérer : Le trimestre n'est pas clôturé."))
         return redirect(request.META.get('HTTP_REFERER', '/'))
 
     success, msg = _generate_and_save_pdf(rc.student, rc.term, request)
     if success:
-        messages.success(request, f"Bulletin de {rc.student} mis à jour.")
+        messages.success(request, _("Bulletin de {student} mis à jour.").format(student=rc.student))
     else:
-        messages.error(request, f"Erreur : {msg}")
+        messages.error(request, _("Erreur : {msg}").format(msg=msg))
     
     # Retour à la page précédente
     return redirect(request.META.get('HTTP_REFERER', '/'))
@@ -264,7 +265,7 @@ def upload_document(request):
                     # On filtre pour vérifier que l'élève est bien dans cette école
                     student_qs = student_qs.filter(school=current_school)
                 except AttributeError:
-                    messages.error(request, "Erreur : Votre profil staff est incomplet.")
+                    messages.error(request, _("Erreur : Votre profil staff est incomplet."))
                     return redirect('documents:upload_document')
 
             student = student_qs.first()
@@ -277,12 +278,12 @@ def upload_document(request):
                     category=category,
                     file=pdf_file
                 )
-                messages.success(request, f"Document ajouté avec succès pour {student}.")
+                messages.success(request, _("Document ajouté avec succès pour {student}.").format(student=student))
                 return redirect('documents:upload_document')
             else:
-                messages.error(request, "Élève introuvable ou ne faisant pas partie de votre établissement.")
+                messages.error(request, _("Élève introuvable ou ne faisant pas partie de votre établissement."))
         else:
-            messages.error(request, "Veuillez remplir tous les champs.")
+            messages.error(request, _("Veuillez remplir tous les champs."))
 
     # --- RÉCUPÉRATION DES CLASSES (FILTRÉE PAR ÉCOLE) ---
     try:
@@ -356,7 +357,7 @@ def download_student_document(request, document_id):
 
     # 4. ENVOI DU FICHIER
     if not doc.file:
-        raise Http404("Le fichier physique est introuvable.")
+        raise Http404(_("Le fichier physique est introuvable."))
 
     try:
         response = FileResponse(doc.file.open('rb'), content_type='application/pdf')
@@ -365,9 +366,7 @@ def download_student_document(request, document_id):
         response['Content-Disposition'] = f'inline; filename="{clean_title}.pdf"'
         return response
     except FileNotFoundError:
-        raise Http404("Erreur de lecture du fichier.")
-    
-
+        raise Http404(_("Erreur de lecture du fichier."))
 
 
 # ==============================================================================
@@ -483,7 +482,7 @@ def download_report_card(request, report_card_id):
 
     # 3. Si tout est OK, on envoie le fichier manuellement
     if not rc.file:
-        raise Http404("Le fichier n'existe pas.")
+        raise Http404(_("Le fichier n'existe pas."))
 
     # On ouvre le fichier depuis le dossier privé et on l'envoie
     response = FileResponse(rc.file.open('rb'), content_type='application/pdf')
@@ -522,7 +521,7 @@ def download_school_statistics(request):
         school = get_user_school(user) 
         
         if not school:
-            messages.error(request, "Aucune école associée à votre compte.")
+            messages.error(request, _("Aucune école associée à votre compte."))
             return redirect('home')
             
         return generate_statistics_excel(school=school)
@@ -544,7 +543,7 @@ def teacher_main_classes_dashboard(request):
     try:
         staff = user.staff_user
     except AttributeError:
-        messages.error(request, "Profil enseignant introuvable.")
+        messages.error(request, _("Profil enseignant introuvable."))
         return redirect('home')
 
     # 1. Récupération des classes principales

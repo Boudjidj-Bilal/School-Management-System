@@ -1,6 +1,6 @@
 // ====================================================================
 // LOGIQUE JAVASCRIPT POUR LA MESSAGERIE (messaging.js)
-// VERSION SÉCURISÉE (CSP Compliant)
+// VERSION SÉCURISÉE (CSP Compliant), MULTILINGUE ET COMPATIBLE RTL
 // ====================================================================
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -9,14 +9,24 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- 0. CONFIGURATION & CONTEXTE ---
     const container = document.getElementById('messaging-container');
-    // Récupération robuste du token CSRF
     const csrfInput = document.querySelector('[name=csrfmiddlewaretoken]') || document.getElementById('csrf-token');
 
     if (!container) {
         console.error("ERREUR CRITIQUE : Conteneur #messaging-container introuvable.");
-        showToast("Une erreur est survenue.", "error");
         return;
     }
+
+    // Récupération des traductions dynamiques (data-attributes)
+    const msgErrorGeneric = container.getAttribute('data-msg-error-generic') || "Une erreur est survenue.";
+    const msgNoConversations = container.getAttribute('data-msg-no-conversations') || "Aucune discussion.";
+    const msgStartNewConv = container.getAttribute('data-msg-start-new') || "Commencer une nouvelle";
+    const msgLoading = container.getAttribute('data-msg-loading') || "Chargement...";
+    const msgStartChat = container.getAttribute('data-msg-start-chat') || "Début de la conversation.";
+    const msgLoadingContacts = container.getAttribute('data-msg-loading') || "Chargement...";
+    const msgErrorContactsLoad = container.getAttribute('data-msg-error-contacts') || "Erreur: Impossible de charger les contacts.";
+    const msgNetworkError = container.getAttribute('data-msg-network-error') || "Erreur réseau.";
+    const msgNoContacts = container.getAttribute('data-msg-no-contacts') || "Aucun contact disponible.";
+    const msgNoUserFound = container.getAttribute('data-msg-no-user-found') || "Aucun utilisateur trouvé.";
 
     const CONFIG = {
         userId: container.dataset.userId,
@@ -32,7 +42,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if (!CONFIG.urls.listConversations) {
         console.error("ERREUR CRITIQUE : URLs API non définies. Vérifiez les data-attributes HTML.");
-        showToast("Une erreur est survenue.", "error");
+        showToast(msgErrorGeneric, "error");
         return;
     }
 
@@ -57,7 +67,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const inputArea = document.getElementById('input-area');
     const messageForm = document.getElementById('message-form');
     const messageInput = document.getElementById('message-input');
-    // const blockedMessage = document.getElementById('blocked-message');
 
     // Modale
     const btnNewConv = document.getElementById('btn-new-conversation');
@@ -79,7 +88,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         } catch (error) {
             console.error("Erreur chargement conversations:", error);
-            showToast("Une erreur est survenue.", "error");
+            showToast(msgErrorGeneric, "error");
         }
     }
 
@@ -89,13 +98,12 @@ document.addEventListener('DOMContentLoaded', () => {
         if (conversationList.length === 0) {
             conversationsListEl.innerHTML = `
                 <div class="p-8 text-center text-gray-400">
-                    <p>Aucune discussion.</p>
+                    <p>${msgNoConversations}</p>
                     <button class="mt-2 text-indigo-600 hover:underline text-sm" id="btn-new-conv-link">
-                        Commencer une nouvelle
+                        ${msgStartNewConv}
                     </button>
                 </div>`;
             
-            // Attache le clic sur le lien dans le texte vide
             const linkBtn = document.getElementById('btn-new-conv-link');
             if(linkBtn) {
                 linkBtn.addEventListener('click', (e) => {
@@ -108,21 +116,22 @@ document.addEventListener('DOMContentLoaded', () => {
 
         conversationList.forEach(conv => {
             const isActive = (conv.id === currentConversationId);
-            const activeClass = isActive ? 'bg-white border-l-4 border-indigo-600 shadow-sm' : (conv.unread_count > 0 ? 'bg-indigo-50 border-l-4 border-indigo-500' : 'hover:bg-gray-100 border-l-4 border-transparent');
+            const activeClass = isActive ? 'bg-white border-s-4 border-indigo-600 shadow-sm' : (conv.unread_count > 0 ? 'bg-indigo-50 border-s-4 border-indigo-500' : 'hover:bg-gray-100 border-s-4 border-transparent');
             const textWeight = conv.unread_count > 0 ? 'font-bold text-gray-900' : 'font-medium text-gray-700';
             
             const div = document.createElement('div');
             div.className = `p-4 cursor-pointer transition-all duration-200 border-b border-gray-100 ${activeClass}`;
             div.onclick = () => openConversation(conv.id);
 
+            // Séparateur logique avec gap-3
             div.innerHTML = `
                 <div class="flex justify-between items-start">
-                    <div class="flex items-center overflow-hidden">
-                        <div class="w-10 h-10 rounded-full bg-indigo-100 text-indigo-600 flex-shrink-0 flex items-center justify-center font-bold mr-3 text-sm">
+                    <div class="flex items-center gap-3 overflow-hidden">
+                        <div class="w-10 h-10 rounded-full bg-indigo-100 text-indigo-600 flex-shrink-0 flex items-center justify-center font-bold text-sm">
                             ${getInitials(conv.interlocutor_name)}
                         </div>
                         <div class="min-w-0">
-                            <h4 class="text-sm ${textWeight} truncate">${conv.interlocutor_name}</h4>
+                            <h4 class="text-sm ${textWeight} truncate" dir="auto">${escapeHtml(conv.interlocutor_name)}</h4>
                         </div>
                     </div>
                 </div>
@@ -134,18 +143,17 @@ document.addEventListener('DOMContentLoaded', () => {
     async function openConversation(id) {
         currentConversationId = id;
         
-        // Bascule Responsive
         if (leftCol && rightCol) {
             leftCol.classList.add('hidden');
             rightCol.classList.remove('hidden');
             rightCol.classList.add('flex');
         }
 
-        // UI Reset
         if (chatHeader) chatHeader.classList.remove('hidden');
         if (messagesContainer) {
             messagesContainer.classList.remove('hidden');
-            messagesContainer.innerHTML = '<div class="flex justify-center items-center h-full text-gray-400"><i class="fas fa-spinner fa-spin mr-2"></i> Chargement...</div>';
+            // Séparation icône + texte avec gap-2
+            messagesContainer.innerHTML = `<div class="flex justify-center items-center gap-2 h-full text-gray-400"><i class="fas fa-spinner fa-spin"></i> <span>${msgLoading}</span></div>`;
         }
 
         try {
@@ -157,7 +165,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (headerName) headerName.textContent = data.interlocutor_name;
                 if (headerAvatar) headerAvatar.textContent = getInitials(data.interlocutor_name);
                 if (headerRole) headerRole.textContent = data.interlocutor_role;
-                if (headerStatusIndicator) headerStatusIndicator.className = `w-2 h-2 rounded-full mr-1 ${data.is_active ? 'bg-green-500' : 'bg-gray-400'}`;
+                if (headerStatusIndicator) headerStatusIndicator.className = `w-2 h-2 rounded-full flex-shrink-0 ${data.is_active ? 'bg-green-500' : 'bg-gray-400'}`;
 
                 if (inputArea) inputArea.classList.remove('hidden');
 
@@ -173,17 +181,16 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
 
                 const sendBtn = document.getElementById('send-btn');
-
                 if (sendBtn) {
                     sendBtn.disabled = !data.is_active;
                 }
 
                 renderMessages(data.messages);
-                loadConversations(); // Update unread counts
+                loadConversations();
             }
         } catch (error) {
             console.error("Erreur API messages:", error);
-            showToast("Une erreur est survenue.", "error");
+            showToast(msgErrorGeneric, "error");
         }
     }
 
@@ -202,10 +209,11 @@ document.addEventListener('DOMContentLoaded', () => {
         messagesContainer.innerHTML = '';
         
         if (messages.length === 0) {
+            // Séparation icône + texte verticale avec gap-2
             messagesContainer.innerHTML = `
-                <div class="flex flex-col items-center justify-center h-full text-gray-400 space-y-2">
+                <div class="flex flex-col items-center justify-center gap-2 h-full text-gray-400">
                     <i class="fas fa-paper-plane text-2xl text-gray-300"></i>
-                    <p class="text-sm">Début de la conversation.</p>
+                    <span class="text-sm">${msgStartChat}</span>
                 </div>`;
             return;
         }
@@ -219,12 +227,12 @@ document.addEventListener('DOMContentLoaded', () => {
                 <div class="max-w-[75%] flex flex-col ${isMe ? 'items-end' : 'items-start'}">
                     <div class="px-4 py-2 rounded-2xl shadow-sm text-sm break-words ${
                         isMe 
-                        ? 'bg-indigo-600 text-white rounded-br-none' 
-                        : 'bg-white text-gray-800 border border-gray-100 rounded-bl-none'
-                    }">
+                        ? 'bg-indigo-600 text-white rounded-ee-none' 
+                        : 'bg-white text-gray-800 border border-gray-100 rounded-es-none'
+                    }" dir="auto">
                         ${escapeHtml(msg.content).replace(/\n/g, '<br>')}
                     </div>
-                    <span class="text-[10px] text-gray-400 mt-1 px-1">
+                    <span class="text-[10px] text-gray-400 mt-1 px-1" dir="ltr">
                         ${msg.date}
                     </span>
                 </div>
@@ -269,10 +277,10 @@ document.addEventListener('DOMContentLoaded', () => {
                     
                     bubbleDiv.innerHTML = `
                         <div class="max-w-[75%] flex flex-col items-end">
-                            <div class="px-4 py-2 rounded-2xl shadow-sm text-sm bg-indigo-600 text-white rounded-br-none break-words">
+                            <div class="px-4 py-2 rounded-2xl shadow-sm text-sm bg-indigo-600 text-white rounded-ee-none break-words" dir="auto">
                                 ${escapeHtml(msg.content).replace(/\n/g, '<br>')}
                             </div>
-                            <span class="text-[10px] text-gray-400 mt-1 px-1">
+                            <span class="text-[10px] text-gray-400 mt-1 px-1" dir="ltr">
                                 ${msg.date}
                             </span>
                         </div>
@@ -288,7 +296,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             } catch (e) {
                 console.error(e);
-                showToast("Une erreur est survenue.", "error");
+                showToast(msgErrorGeneric, "error");
             }
         });
 
@@ -308,15 +316,12 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-
     // --- 3. MODALE NOUVELLE DISCUSSION ---
 
     function openModalNewConv() {
-        console.log("Ouverture modale...");
         if (modal) {
             modal.classList.remove('hidden');
             
-            // Force le repaint pour l'animation
             setTimeout(() => {
                 modal.classList.remove('opacity-0');
                 const modalCard = modal.querySelector('div.bg-white');
@@ -329,7 +334,7 @@ document.addEventListener('DOMContentLoaded', () => {
             loadContacts();
         } else {
             console.error("Modale introuvable dans le DOM");
-            showToast("Une erreur est survenue.", "error");
+            showToast(msgErrorGeneric, "error");
         }
     }
 
@@ -361,35 +366,32 @@ document.addEventListener('DOMContentLoaded', () => {
 
     async function loadContacts() {
         if (!contactsListEl) return;
-        contactsListEl.innerHTML = '<div class="p-8 text-center text-gray-500"><i class="fas fa-spinner fa-spin mr-2"></i> Chargement...</div>';
+        // Séparation icône + texte avec gap-2
+        contactsListEl.innerHTML = `<div class="p-8 text-center text-gray-500 flex items-center justify-center gap-2"><i class="fas fa-spinner fa-spin"></i> <span>${msgLoadingContacts}</span></div>`;
         
         try {
-            console.log("Appel API Contacts:", CONFIG.urls.listContacts);
             const response = await fetch(CONFIG.urls.listContacts);
             const data = await response.json();
-            
-            console.log("Données contacts reçues:", data);
 
             if (data.success) {
                 renderContacts(data.contacts);
             } else {
-                contactsListEl.innerHTML = '<p class="text-center text-red-500 p-4">Erreur: Impossible de charger les contacts.</p>';
+                contactsListEl.innerHTML = `<p class="text-center text-red-500 p-4">${msgErrorContactsLoad}</p>`;
             }
         } catch (e) {
             console.error("Erreur fetch contacts:", e);
-            showToast("Une erreur est survenue.", "error");
-            contactsListEl.innerHTML = '<p class="text-center text-red-500 p-4">Erreur réseau.</p>';
+            showToast(msgErrorGeneric, "error");
+            contactsListEl.innerHTML = `<p class="text-center text-red-500 p-4">${msgNetworkError}</p>`;
         }
     }
 
     function renderContacts(contacts) {
         if (!contacts || contacts.length === 0) {
-            contactsListEl.innerHTML = '<div class="p-8 text-center text-gray-400">Aucun contact disponible.</div>';
+            contactsListEl.innerHTML = `<div class="p-8 text-center text-gray-400">${msgNoContacts}</div>`;
             return;
         }
 
-        // Sauvegarde globale pour la recherche (limité à ce scope)
-        window.availableContacts = contacts; // Pourrait être déplacé dans un state local si nécessaire
+        window.availableContacts = contacts;
 
         let html = '';
         contacts.forEach(contact => {
@@ -436,29 +438,25 @@ document.addEventListener('DOMContentLoaded', () => {
     
         const displayLabel = `${contact.name} (@${contact.username})`;
     
+        // Séparateur logique avec gap-3
         return `
             <div
-                class="contact-item p-3 hover:bg-gray-50 cursor-pointer flex items-center transition-colors border-b border-gray-50"
+                class="contact-item p-3 hover:bg-gray-50 cursor-pointer flex items-center gap-3 transition-colors border-b border-gray-50"
                 data-id="${contact.id}"
                 data-type="${contact.type}"
             >
-    
-                <div class="w-10 h-10 rounded-full ${current.color} flex-shrink-0 flex items-center justify-center mr-3">
+                <div class="w-10 h-10 rounded-full ${current.color} flex-shrink-0 flex items-center justify-center">
                     <i class="fas ${current.icon}"></i>
                 </div>
     
                 <div class="min-w-0 flex-1">
-    
-                    <p class="font-semibold text-gray-800 text-sm truncate">
+                    <p class="font-semibold text-gray-800 text-sm truncate" dir="auto">
                         ${escapeHtml(displayLabel)}
                     </p>
-    
-                    <p class="text-xs text-gray-500 truncate">
+                    <p class="text-xs text-gray-500 truncate" dir="auto">
                         ${escapeHtml(contact.role)}
                     </p>
-    
                 </div>
-    
             </div>
         `;
     }
@@ -469,7 +467,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 const targetId = item.dataset.id;
                 const targetType = item.dataset.type;
                 
-                // Feedback visuel immédiat
                 item.style.opacity = '0.5';
                 item.style.pointerEvents = 'none';
 
@@ -489,13 +486,12 @@ document.addEventListener('DOMContentLoaded', () => {
                         openConversation(data.conversation_id);
                     } else {
                         showToast(data.message, "error");
-                        // Restore item state
                         item.style.opacity = '1';
                         item.style.pointerEvents = 'auto';
                     }
                 } catch (e) {
                     console.error(e);
-                    showToast("Une erreur est survenue.", "error");
+                    showToast(msgErrorGeneric, "error");
                     item.style.opacity = '1';
                     item.style.pointerEvents = 'auto';
                 }
@@ -505,7 +501,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if (contactSearch) {
         contactSearch.addEventListener('input', (e) => {
-    
             const term = e.target.value.trim().toLowerCase();
     
             if (!window.availableContacts) {
@@ -513,23 +508,19 @@ document.addEventListener('DOMContentLoaded', () => {
             }
     
             const filtered = window.availableContacts.filter(contact => {
-    
                 return (
                     contact.name.toLowerCase().includes(term) ||
                     contact.username.toLowerCase().includes(term) ||
                     contact.role.toLowerCase().includes(term)
                 );
-    
             });
     
             if (filtered.length === 0) {
-    
                 contactsListEl.innerHTML = `
                     <div class="p-8 text-center text-gray-400">
-                        Aucun utilisateur trouvé.
+                        ${msgNoUserFound}
                     </div>
                 `;
-    
                 return;
             }
     
@@ -538,14 +529,12 @@ document.addEventListener('DOMContentLoaded', () => {
                 .join("");
     
             attachContactListeners();
-    
         });
     }
 
+    // Affichage des toasts avec gap-2
     function showToast(message, type = "error") {
-
         const container = document.getElementById("toast-container");
-    
         if (!container) return;
     
         const colors = {
@@ -575,7 +564,7 @@ document.addEventListener('DOMContentLoaded', () => {
             max-w-[420px]
             flex
             items-center
-            gap-3
+            gap-2
             pointer-events-auto
             opacity-0
             translate-x-8
@@ -584,8 +573,8 @@ document.addEventListener('DOMContentLoaded', () => {
         `;
     
         toast.innerHTML = `
-            <i class="fas ${icons[type]} text-lg"></i>
-            <span class="flex-1">${escapeHtml(message)}</span>
+            <i class="fas ${icons[type]} text-lg flex-shrink-0"></i>
+            <span class="flex-1" dir="auto">${escapeHtml(message)}</span>
         `;
     
         container.appendChild(toast);
@@ -595,16 +584,12 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     
         setTimeout(() => {
-    
             toast.classList.add("opacity-0", "translate-x-8");
-    
             setTimeout(() => {
                 toast.remove();
             }, 300);
-    
         }, 4000);
     }
-
 
     // --- UTILITAIRES UI ---
 

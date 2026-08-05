@@ -1,6 +1,7 @@
 from django.db import models
 from schools.models import School
 from users.models import Staff
+from django.utils.translation import gettext_lazy as _
 
 
 # --> Représente une matière scolaire (ex: Mathématiques, Histoire, Physique...)
@@ -41,4 +42,4 @@ class TeacherSubject(models.Model):
         unique_together = ("subject", "teacher")  # empêche doublons (même prof - même matière)
 
     def __str__(self):
-        return f"{self.teacher} teaches {self.subject}"
+        return _("{teacher} teaches {subject}").format(teacher=self.teacher, subject=self.subject)

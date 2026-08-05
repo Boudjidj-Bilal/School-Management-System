@@ -1,10 +1,11 @@
-{% load static %}
+{% load static i18n %}
 <!DOCTYPE html>
-<html lang="fr">
+<!-- MODIFICATION : Langue et direction dynamiques -->
+<html lang="{{ LANGUAGE_CODE }}" dir="{% if LANGUAGE_CODE == 'ar' %}rtl{% else %}ltr{% endif %}">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Erreur</title>
+    <title>{% trans "Erreur" %}</title>
     <link rel="icon" href="{% static 'img/logo_mini.jpg' %}">
     <link rel="stylesheet" href="{% static 'css/style.css' %}">
     
@@ -22,11 +23,12 @@
             <div class="text-4xl text-red-500 mb-2">
                 <i class="fas fa-exclamation-triangle"></i>
             </div>
-            <h1 class="text-2xl font-bold text-gray-800">Une erreur est survenue</h1>
+            <h1 class="text-2xl font-bold text-gray-800">{% trans "Une erreur est survenue" %}</h1>
+            <!-- Le contenu de la variable {{ message }} doit être traduit côté Python -->
             <p class="text-sm text-gray-600 mt-2">{{ message }}</p>
         </div>
         <div class="mt-4 text-center text-sm">
-            <a href="{% url 'login' %}" class="font-medium text-blue-600 hover:text-blue-500">Retour à la connexion</a>
+            <a href="{% url 'login' %}" class="font-medium text-blue-600 hover:text-blue-500">{% trans "Retour à la connexion" %}</a>
         </div>
     </div>
 </body>

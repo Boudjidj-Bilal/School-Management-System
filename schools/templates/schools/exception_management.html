@@ -1,42 +1,62 @@
 {% extends 'base.html' %}
-{% load static %}
+{% load static i18n %}
 
-{% block title %}Gestion des exceptions du calendrier{% endblock %}
+{% block title %}{% trans "Gestion des exceptions du calendrier" %}{% endblock %}
 
 {% block content %}
     <!-- Jeton CSRF pour le DOM -->
     {% csrf_token %} 
     <input type="hidden" id="csrf-token" value="{{ csrf_token }}">
     
-    <!-- Conteneur principal avec configuration API -->
+    <!-- Conteneur principal avec configuration API et traductions dynamiques pour JS -->
     <div id="exception-manager-container" 
          class="max-w-4xl mx-auto p-4 sm:p-8 bg-gray-50 min-h-screen"
-         data-api-url="{% url 'exception_management' %}">
+         data-api-url="{% url 'exception_management' %}"
+         data-msg-edit="{% trans 'Modifier' %}"
+         data-msg-delete="{% trans 'Supprimer' %}"
+         data-msg-break="{% trans 'Pause de l’année' %}"
+         data-msg-from-to-date="{% trans 'Du {start} au {end}' %}"
+         data-msg-from-to-time="{% trans 'De {start} à {end}' %}"
+         data-msg-edit-day="{% trans 'Modifier l’Exception Journalière' %}"
+         data-msg-add-day="{% trans 'Ajouter une Exception Journalière' %}"
+         data-msg-edit-time="{% trans 'Modifier l’Exception Horaire' %}"
+         data-msg-add-time="{% trans 'Ajouter une Exception Horaire' %}"
+         data-msg-save="{% trans 'Sauvegarder les modifications' %}"
+         data-msg-create="{% trans 'Créer' %}"
+         data-msg-confirm-delete-day="{% trans 'Êtes-vous sûr de vouloir supprimer ce jour d’exception ?' %}"
+         data-msg-confirm-delete-time="{% trans 'Êtes-vous sûr de vouloir supprimer cet horaire d’exception ?' %}"
+         data-msg-processing="{% trans 'Traitement...' %}"
+         data-msg-success="{% trans 'Succès' %}"
+         data-msg-error="{% trans 'Erreur' %}"
+         data-msg-network-error="{% trans 'Erreur de connexion au serveur.' %}">
 
         <!-- En-tête -->
         <header class="mb-8">
-            <h1 class="text-3xl font-extrabold text-gray-900 mb-2">Gestion des exceptions scolaires</h1>
-            <p class="text-lg text-indigo-600 font-semibold">École: {{ school.name|default:'N/A' }} (Année: {{ current_year.name|default:'N/A' }})</p>
+            <h1 class="text-3xl font-extrabold text-gray-900 mb-2">{% trans "Gestion des exceptions scolaires" %}</h1>
+            <p class="text-lg text-indigo-600 font-semibold">{% trans "École:" %} {{ school.name|default:'N/A' }} ({% trans "Année:" %} {{ current_year.name|default:'N/A' }})</p>
         </header>
         
         <!-- Section d'Explication -->
-        <div class="bg-blue-100 border-l-4 border-blue-500 text-blue-800 p-4 mb-8 rounded-lg shadow-inner" role="alert">
-            <div class="flex items-center">
-                <i class="fas fa-info-circle text-xl mr-3"></i>
-                <h2 class="font-bold text-lg">Comprendre les exceptions du calendrier</h2>
+        <!-- MODIFICATION RTL : border-l-4 devient border-s-4 -->
+        <div class="bg-blue-100 border-s-4 border-blue-500 text-blue-800 p-4 mb-8 rounded-lg shadow-inner" role="alert">
+            <!-- MODIFICATION : gap-3 remplace mr-3 -->
+            <div class="flex items-center gap-3">
+                <i class="fas fa-info-circle text-xl"></i>
+                <h2 class="font-bold text-lg">{% trans "Comprendre les exceptions du calendrier" %}</h2>
             </div>
             <div class="mt-2 text-sm space-y-3">
                 <p>
-                    Ces exceptions vous permettent d'affiner la planification de l'année scolaire. Elles sont <strong>fortement recommandées</strong> pour garantir un planning précis, mais ne sont pas obligatoires.
-                    <span class="font-semibold text-red-700">Attention : La gestion des exceptions n'est possible que lorsque l'année scolaire est à l'étape de la <strong>création</strong>.</span>
+                    {% trans "Ces exceptions vous permettent d'affiner la planification de l'année scolaire. Elles sont <strong>fortement recommandées</strong> pour garantir un planning précis, mais ne sont pas obligatoires." %}
+                    <span class="font-semibold text-red-700">{% trans "Attention : La gestion des exceptions n'est possible que lorsque l'année scolaire est à l'étape de la <strong>création</strong>." %}</span>
                 </p>
-                <ul class="list-disc list-inside ml-4 space-y-1">
+                <!-- MODIFICATION RTL : ml-4 devient ms-4 -->
+                <ul class="list-disc list-inside ms-4 space-y-1">
                     <li>
-                        <strong>Jours d'exception :</strong> Ils définissent des périodes (jours, semaines) où il n'y a <strong>pas de cours</strong>.
-                        <br> <strong>Exemple : </strong>Vacances scolaires, jours fériés, journées pédagogiques. Si la <strong>Date de début est la même que la Date de fin</strong>, il s'agit d'un <strong>jour unique</strong> sans cours.
+                        {% trans "<strong>Jours d'exception :</strong> Ils définissent des périodes (jours, semaines) où il n'y a <strong>pas de cours</strong>." %}
+                        <br> <strong>{% trans "Exemple :" %} </strong>{% trans "Vacances scolaires, jours fériés, journées pédagogiques. Si la <strong>Date de début est la même que la Date de fin</strong>, il s'agit d'un <strong>jour unique</strong> sans cours." %}
                     </li>
                     <li>
-                        <strong>Horaires d'exception :</strong> Ils permettent de définir les <strong>pauses</strong> annuelle (heure de début et de fin). Ces horaires sont appliqués de manière récurrente durant toute l'année scolaire. Si les horaires des pauses de votre établissement changent en fonction des jours, n'utilisez pas cette fonctionnalité.
+                        {% trans "<strong>Horaires d'exception :</strong> Ils permettent de définir les <strong>pauses</strong> annuelle (heure de début et de fin). Ces horaires sont appliqués de manière récurrente durant toute l'année scolaire. Si les horaires des pauses de votre établissement changent en fonction des jours, n'utilisez pas cette fonctionnalité." %}
                     </li>
                 </ul>
             </div>
@@ -48,31 +68,33 @@
             <!-- Colonne 1: Jours d'exception -->
             <div class="bg-white p-6 rounded-xl shadow-2xl border border-gray-200">
                 <div class="flex justify-between items-center mb-6">
-                    <h2 class="text-2xl font-bold text-gray-800">Jours d'exception</h2>
-                    <!-- MODIFICATION : Suppression onclick, ajout ID -->
+                    <h2 class="text-2xl font-bold text-gray-800">{% trans "Jours d'exception" %}</h2>
+                    <!-- MODIFICATION : Flex et gap-2 pour le bouton -->
                     <button id="btn-add-day" 
-                            class="bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-2 px-4 rounded-xl shadow-lg transition duration-150 ease-in-out transform hover:scale-[1.02] flex items-center">
-                        <i class="fas fa-calendar-alt mr-2"></i> Ajouter un Jour
+                            class="bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-2 px-4 rounded-xl shadow-lg transition duration-150 ease-in-out transform hover:scale-[1.02] flex items-center gap-2">
+                        <i class="fas fa-calendar-alt"></i> 
+                        <span>{% trans "Ajouter un Jour" %}</span>
                     </button>
                 </div>
                 
                 <div id="day-list" class="space-y-3"></div>
-                <p id="no-day-exceptions" class="text-center text-gray-500 mt-4 hidden">Aucun jour d'exception défini.</p>
+                <p id="no-day-exceptions" class="text-center text-gray-500 mt-4 hidden">{% trans "Aucun jour d'exception défini." %}</p>
             </div>
 
             <!-- Colonne 2: Horaires d'exception -->
             <div class="bg-white p-6 rounded-xl shadow-2xl border border-gray-200">
                 <div class="flex justify-between items-center mb-6">
-                    <h2 class="text-2xl font-bold text-gray-800">Horaires d'exception</h2>
-                    <!-- MODIFICATION : Suppression onclick, ajout ID -->
+                    <h2 class="text-2xl font-bold text-gray-800">{% trans "Horaires d'exception" %}</h2>
+                    <!-- MODIFICATION : Flex et gap-2 pour le bouton -->
                     <button id="btn-add-time" 
-                            class="bg-green-600 hover:bg-green-700 text-white font-semibold py-2 px-4 rounded-xl shadow-lg transition duration-150 ease-in-out transform hover:scale-[1.02] flex items-center">
-                        <i class="fas fa-clock mr-2"></i> Ajouter un Horaire
+                            class="bg-green-600 hover:bg-green-700 text-white font-semibold py-2 px-4 rounded-xl shadow-lg transition duration-150 ease-in-out transform hover:scale-[1.02] flex items-center gap-2">
+                        <i class="fas fa-clock"></i> 
+                        <span>{% trans "Ajouter un Horaire" %}</span>
                     </button>
                 </div>
 
                 <div id="time-list" class="space-y-3"></div>
-                <p id="no-time-exceptions" class="text-center text-gray-500 mt-4 hidden">Aucun horaire d'exception défini.</p>
+                <p id="no-time-exceptions" class="text-center text-gray-500 mt-4 hidden">{% trans "Aucun horaire d'exception défini." %}</p>
             </div>
         </div>
 
@@ -81,7 +103,7 @@
     <!-- Modal CRUD (Création/Modification) -->
     <div id="crud-modal" class="fixed inset-0 bg-gray-900 bg-opacity-75 z-50 flex items-center justify-center hidden">
         <div class="bg-white rounded-xl shadow-2xl w-full max-w-lg p-6 m-4" id="crud-modal-content">
-            <h3 id="crud-modal-title" class="text-xl font-semibold text-gray-800 mb-4 border-b pb-2">Ajouter/Modifier une exception</h3>
+            <h3 id="crud-modal-title" class="text-xl font-semibold text-gray-800 mb-4 border-b pb-2">{% trans "Ajouter/Modifier une exception" %}</h3>
             
             <form id="exception-form">
                 <input type="hidden" id="exception-type" name="exception_type">
@@ -90,19 +112,19 @@
                 <!-- Champs pour exceptionDay -->
                 <div id="day-fields" class="space-y-4">
                     <div>
-                        <label for="day-type" class="block text-sm font-medium text-gray-700">Type d'exception</label>
+                        <label for="day-type" class="block text-sm font-medium text-gray-700">{% trans "Type d'exception" %}</label>
                         <input type="text" id="day-type" name="type" 
-                               placeholder="Ex: Vacances d'été, Jour férié" 
+                               placeholder="{% trans 'Ex: Vacances d’été, Jour férié' %}" 
                                class="mt-1 block w-full border border-gray-300 rounded-lg shadow-sm p-3 focus:ring-indigo-500 focus:border-indigo-500">
                     </div>
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div>
-                            <label for="start-date" class="block text-sm font-medium text-gray-700">Date de début</label>
+                            <label for="start-date" class="block text-sm font-medium text-gray-700">{% trans "Date de début" %}</label>
                             <input type="date" id="start-date" name="start_date" 
                                    class="mt-1 block w-full border border-gray-300 rounded-lg shadow-sm p-3 focus:ring-indigo-500 focus:border-indigo-500">
                         </div>
                         <div>
-                            <label for="end-date" class="block text-sm font-medium text-gray-700">Date de fin</label>
+                            <label for="end-date" class="block text-sm font-medium text-gray-700">{% trans "Date de fin" %}</label>
                             <input type="date" id="end-date" name="end_date" 
                                    class="mt-1 block w-full border border-gray-300 rounded-lg shadow-sm p-3 focus:ring-indigo-500 focus:border-indigo-500">
                         </div>
@@ -111,27 +133,30 @@
 
                 <!-- Champs pour exceptionTime -->
                 <div id="time-fields" class="space-y-4 hidden">
-                    <p class="text-sm text-gray-500 mb-4">Définit la pause déjeuner annuelle (heure de début et de fin).</p>
+                    <p class="text-sm text-gray-500 mb-4">{% trans "Définit la pause déjeuner annuelle (heure de début et de fin)." %}</p>
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div>
-                            <label for="start-time" class="block text-sm font-medium text-gray-700">Heure de début</label>
+                            <label for="start-time" class="block text-sm font-medium text-gray-700">{% trans "Heure de début" %}</label>
                             <input type="time" id="start-time" name="start_time" 
                                    class="mt-1 block w-full border border-gray-300 rounded-lg shadow-sm p-3 focus:ring-green-500 focus:border-green-500">
                         </div>
                         <div>
-                            <label for="end-time" class="block text-sm font-medium text-gray-700">Heure de fin</label>
+                            <label for="end-time" class="block text-sm font-medium text-gray-700">{% trans "Heure de fin" %}</label>
                             <input type="time" id="end-time" name="end_time" 
                                    class="mt-1 block w-full border border-gray-300 rounded-lg shadow-sm p-3 focus:ring-green-500 focus:border-green-500">
                         </div>
                     </div>
                 </div>
 
-                <div class="mt-6 flex justify-end space-x-3">
-                    <!-- MODIFICATION : Ajout ID pour le JS -->
-                    <button type="button" id="btn-close-crud" class="px-4 py-2 bg-gray-300 hover:bg-gray-400 text-gray-800 font-medium rounded-lg transition duration-150 ease-in-out">Annuler</button>
-                    <button type="submit" id="crud-submit-button" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-medium rounded-lg shadow-md transition duration-150 ease-in-out">
-                        <span id="submit-text">Créer</span>
-                        <span id="loading-spinner" class="hidden animate-spin h-5 w-5 border-4 border-white border-t-transparent rounded-full ml-2"></span>
+                <!-- MODIFICATION : space-x-3 devient gap-3 -->
+                <div class="mt-6 flex justify-end gap-3">
+                    <button type="button" id="btn-close-crud" class="px-4 py-2 bg-gray-300 hover:bg-gray-400 text-gray-800 font-medium rounded-lg transition duration-150 ease-in-out">
+                        {% trans "Annuler" %}
+                    </button>
+                    <!-- MODIFICATION : flex et gap-2 ajoutés pour le spinner -->
+                    <button type="submit" id="crud-submit-button" class="flex items-center justify-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-medium rounded-lg shadow-md transition duration-150 ease-in-out">
+                        <span id="submit-text">{% trans "Créer" %}</span>
+                        <span id="loading-spinner" class="hidden animate-spin h-5 w-5 border-4 border-white border-t-transparent rounded-full"></span>
                     </button>
                 </div>
             </form>
@@ -143,17 +168,17 @@
         <div id="feedback-content" class="bg-white rounded-xl p-6 shadow-2xl border border-gray-200 max-w-md w-full transform transition-transform duration-300 scale-95">
             
             <div class="flex items-start">
-                <div id="feedback-icon" class="flex-shrink-0 mr-4 mt-1"></div>
+                <!-- MODIFICATION RTL : mr-4 devient me-4 -->
+                <div id="feedback-icon" class="flex-shrink-0 me-4 mt-1"></div>
                 <div>
-                    <h3 id="feedback-title" class="text-lg font-bold text-gray-900 mb-1">Notification</h3>
+                    <h3 id="feedback-title" class="text-lg font-bold text-gray-900 mb-1">{% trans "Notification" %}</h3>
                     <p id="feedback-message" class="text-sm text-gray-600"></p>
                 </div>
             </div>
 
             <div class="flex justify-end mt-6">
-                <!-- MODIFICATION : Suppression onclick, ID existant -->
                 <button id="feedback-close-btn" class="px-5 py-2 text-white rounded-lg text-sm font-semibold transition duration-300 focus:outline-none focus:ring-2 focus:ring-opacity-50 bg-indigo-600 hover:bg-indigo-700">
-                    Fermer
+                    {% trans "Fermer" %}
                 </button>
             </div>
         </div>
@@ -167,24 +192,23 @@
                     <i class="fas fa-exclamation-triangle text-red-600 text-xl"></i>
                 </div>
                 
-                <h3 class="text-lg leading-6 font-bold text-gray-900" id="modal-title">Confirmer la suppression</h3>
+                <h3 class="text-lg leading-6 font-bold text-gray-900" id="modal-title">{% trans "Confirmer la suppression" %}</h3>
                 
                 <div class="mt-2">
                     <p class="text-sm text-gray-500" id="delete-confirmation-text">
-                        Êtes-vous sûr de vouloir supprimer cette exception ? Cette action est irréversible.
+                        {% trans "Êtes-vous sûr de vouloir supprimer cette exception ? Cette action est irréversible." %}
                     </p>
                 </div>
             </div>
 
             <div class="mt-6 flex gap-3 justify-center">
-                <!-- MODIFICATION : Ajout ID pour le JS -->
                 <button type="button" id="btn-cancel-delete"
                     class="w-full inline-flex justify-center rounded-lg border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:text-sm transition-colors">
-                    Annuler
+                    {% trans "Annuler" %}
                 </button>
                 <button type="button" id="confirm-delete-btn"
                     class="w-full inline-flex justify-center rounded-lg border border-transparent shadow-sm px-4 py-2 bg-red-600 text-base font-medium text-white hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 sm:text-sm transition-colors">
-                    Supprimer
+                    {% trans "Supprimer" %}
                 </button>
             </div>
         </div>

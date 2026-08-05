@@ -1,21 +1,47 @@
 document.addEventListener('DOMContentLoaded', () => {
-    // Définition de l'ordre des étapes de l'année scolaire
-    const STATUS_ORDER = [
-        { key: 'creation', label: 'Création' },
-        { key: 'registration', label: 'Enregistrement' },
-        { key: 'running', label: 'Déroulement en cours' },
-        { key: 'end_year', label: 'Fin d\'année' },
-        { key: 'finished', label: 'Terminée' }
-    ];
-
+    
     // Éléments du DOM
     const yearForm = document.getElementById('year-form');
+    const container = document.getElementById('year-management-container'); // Le conteneur principal (à ajouter dans le HTML)
+
+    // Récupération des traductions depuis les data-attributes du conteneur
+    const msgCreation = container.getAttribute('data-msg-creation');
+    const msgRegistration = container.getAttribute('data-msg-registration');
+    const msgRunning = container.getAttribute('data-msg-running');
+    const msgEndYear = container.getAttribute('data-msg-end-year');
+    const msgFinished = container.getAttribute('data-msg-finished');
+    const msgSuccess = container.getAttribute('data-msg-success');
+    const msgError = container.getAttribute('data-msg-error');
+    const msgCreateNew = container.getAttribute('data-msg-create-new');
+    const msgCreateBtn = container.getAttribute('data-msg-create-btn');
+    const msgEditYear = container.getAttribute('data-msg-edit-year');
+    const msgSaveEdits = container.getAttribute('data-msg-save-edits');
+    const msgNoYearSelected = container.getAttribute('data-msg-no-year-selected');
+    const msgNetworkError = container.getAttribute('data-msg-network-error');
+    
+    const msgModalTitleForward = container.getAttribute('data-msg-modal-title-forward');
+    const msgModalBodyForward = container.getAttribute('data-msg-modal-body-forward');
+    const msgModalBtnForward = container.getAttribute('data-msg-modal-btn-forward');
+    
+    const msgModalTitleBackward = container.getAttribute('data-msg-modal-title-backward');
+    const msgModalBodyBackward = container.getAttribute('data-msg-modal-body-backward');
+    const msgModalBtnBackward = container.getAttribute('data-msg-modal-btn-backward');
+
+    // Définition de l'ordre des étapes de l'année scolaire (avec labels traduits)
+    const STATUS_ORDER = [
+        { key: 'creation', label: msgCreation },
+        { key: 'registration', label: msgRegistration },
+        { key: 'running', label: msgRunning },
+        { key: 'end_year', label: msgEndYear },
+        { key: 'finished', label: msgFinished }
+    ];
+
     const createBtn = document.getElementById('create-btn');
     const cancelBtn = document.getElementById('cancel-btn');
     const formTitle = document.getElementById('form-title');
     const submitBtn = document.getElementById('submit-btn');
     
-    // Contrôles de statut NOUVEAUX
+    // Contrôles de statut
     const statusControls = document.getElementById('statusControls');
     const prevStatusBtn = document.getElementById('prevStatusBtn');
     const nextStatusBtn = document.getElementById('nextStatusBtn');
@@ -46,27 +72,19 @@ document.addEventListener('DOMContentLoaded', () => {
     const lifecycleConfirmBtn = document.getElementById('lifecycle-confirm-btn');
     const lifecycleCancelBtn = document.getElementById('lifecycle-cancel-btn');
     
-    let pendingDirection = 0; // Pour stocker si on avance (+1) ou recule (-1)
+    let pendingDirection = 0; 
 
-    // URL de l'API
     const apiUrl = '/schools/api/years/'; 
     const schoolId = yearForm.getAttribute('data-school-id');
     const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
 
-    /**
-     * Affiche le modal avec un message de succès ou d'erreur.
-     * @param {string} message - Le corps du message.
-     * @param {boolean} isSuccess - Indique si c'est un succès.
-     */
     function showModal(message, isSuccess) {
-        modalTitle.textContent = isSuccess ? 'Succès' : 'Erreur';
+        modalTitle.textContent = isSuccess ? msgSuccess : msgError;
         modalMessage.innerHTML = message;
 
-        // Définition des classes en fonction du succès/erreur
         const titleClasses = isSuccess ? 'text-green-600' : 'text-red-600';
         const buttonClasses = isSuccess ? 'bg-blue-600 hover:bg-blue-700' : 'bg-red-600 hover:bg-red-700';
 
-        // Nettoyer et appliquer les classes
         modalTitle.classList.remove('text-green-600', 'text-red-600');
         modalCloseBtn.classList.remove('bg-blue-600', 'hover:bg-blue-700', 'bg-red-600', 'hover:bg-red-700');
         
@@ -75,7 +93,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
         messageModal.classList.remove('hidden');
 
-        // Recharge la page si succès après un délai (pour actualiser la liste et les statuts)
         if (isSuccess) {
             setTimeout(() => window.location.reload(), 1500);
         }
@@ -85,36 +102,26 @@ document.addEventListener('DOMContentLoaded', () => {
         messageModal.classList.add('hidden');
     });
 
-    /**
-     * Réinitialise le formulaire au mode "Création".
-     */
     function resetForm() {
         yearForm.reset();
         yearIdInput.value = '';
-        formTitle.textContent = 'Créer une nouvelle année scolaire';
-        submitBtn.textContent = 'Créer l\'année';
+        formTitle.textContent = msgCreateNew;
+        submitBtn.textContent = msgCreateBtn;
         submitBtn.classList.remove('bg-green-600', 'hover:bg-green-700');
         submitBtn.classList.add('bg-blue-600', 'hover:bg-blue-700');
         cancelBtn.style.display = 'none';
         
-        // Cacher les contrôles de statut
-        statusControls.classList.add('hidden'); // NOUVEAU
+        statusControls.classList.add('hidden'); 
         statusDisplay.classList.add('hidden');
         currentYearFlag.classList.add('hidden');
         
-        // Retirer la surbrillance de tous les liens
-        document.querySelectorAll('.year-link').forEach(l => l.classList.remove('bg-gray-200', 'border-indigo-400', 'border-l-4'));
+        // MODIFICATION RTL: border-l-4 devient border-s-4
+        document.querySelectorAll('.year-link').forEach(l => l.classList.remove('bg-gray-200', 'border-indigo-400', 'border-s-4'));
     }
 
-    /**
-     * Détermine le statut actuel de l'année à partir des data-attributes.
-     * @param {object} dataset - Les data-attributes du lien sélectionné.
-     * @returns {object} L'objet statut (key, label) et son index.
-     */
     function getCurrentStatus(dataset) {
-        let currentStatusKey = 'creation'; // Statut par défaut
+        let currentStatusKey = 'creation'; 
         
-        // On parcourt les étapes dans l'ordre pour trouver la première à 'true'
         for (const status of STATUS_ORDER) {
             if (dataset[status.key] === 'true') {
                 currentStatusKey = status.key;
@@ -130,10 +137,6 @@ document.addEventListener('DOMContentLoaded', () => {
         };
     }
 
-    /**
-     * Met à jour le formulaire pour le mode "Modification".
-     * @param {Element} link - L'élément de lien de l'année sélectionnée.
-     */
     function loadYearForEdit(link) {
         const yearId = link.dataset.yearId;
         const yearName = link.dataset.name;
@@ -145,7 +148,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const { status: currentStatus, index: currentStatusIndex } = getCurrentStatus(link.dataset);
 
-        // Remplir les champs
         yearIdInput.value = yearId;
         nameInput.value = yearName;
         startDateInput.value = startDate;
@@ -153,14 +155,12 @@ document.addEventListener('DOMContentLoaded', () => {
         minTimeInput.value = minTime;
         maxTimeInput.value = maxTime;
 
-        // Mettre à jour le titre et les boutons
-        formTitle.textContent = `Modifier l'année : ${yearName}`;
-        submitBtn.textContent = 'Sauvegarder les modifications';
+        formTitle.textContent = `${msgEditYear} : ${yearName}`;
+        submitBtn.textContent = msgSaveEdits;
         submitBtn.classList.remove('bg-blue-600', 'hover:bg-blue-700');
         submitBtn.classList.add('bg-green-600', 'hover:bg-green-700');
         cancelBtn.style.display = 'block';
 
-        // Afficher le statut
         statusDisplay.classList.remove('hidden');
         currentStatusText.textContent = currentStatus.label;
         if (isCurrent) {
@@ -169,28 +169,16 @@ document.addEventListener('DOMContentLoaded', () => {
             currentYearFlag.classList.add('hidden');
         }
 
-        // --- NOUVEAU: Gestion des contrôles de statut (si l'année est l'année actuelle) ---
         if (isCurrent) {
             statusControls.classList.remove('hidden');
-            
-            // Gérer l'état des boutons Précédent/Suivant
-            // Précédent désactivé si on est à la première étape
             prevStatusBtn.disabled = currentStatusIndex <= 0; 
-            // Suivant désactivé si on est à la dernière étape
             nextStatusBtn.disabled = currentStatusIndex >= STATUS_ORDER.length - 1; 
-
         } else {
             statusControls.classList.add('hidden');
         }
     }
 
-    /**
-     * Appelle l'API pour changer le statut de l'année.
-     * @param {string} yearId - L'ID de l'année à modifier.
-     * @param {string} newStatusKey - La clé du nouveau statut (ex: 'registration').
-     */
     async function changeYearStatus(yearId, newStatusKey) {
-        // Désactiver les boutons pendant le traitement
         prevStatusBtn.disabled = true;
         nextStatusBtn.disabled = true;
 
@@ -209,83 +197,61 @@ document.addEventListener('DOMContentLoaded', () => {
             const result = await response.json();
 
             if (response.ok && result.success) {
-                showModal(result.message, true);
+                showModal(result.message, true); // Message backend géré par Django
             } else {
-                // Réactiver les boutons si erreur (pas de rechargement)
                 prevStatusBtn.disabled = false;
                 nextStatusBtn.disabled = false;
-                showModal(result.message || 'Échec du changement de statut.', false);
+                showModal(result.message || msgError, false);
             }
 
         } catch (error) {
-            // Réactiver les boutons si erreur
             prevStatusBtn.disabled = false;
             nextStatusBtn.disabled = false;
-            showModal('Erreur de connexion lors du changement de statut.', false);
+            showModal(msgNetworkError, false);
             console.error('Erreur API changement de statut:', error);
         }
     }
 
-    /**
-     * Gère le clic sur les boutons Précédent/Suivant.
-     * @param {number} direction - -1 pour précédent, 1 pour suivant.
-     */
     function handleStatusChange(direction) {
         const yearId = yearIdInput.value;
         const activeLink = document.querySelector('.year-link.bg-gray-200');
 
         if (!yearId || !activeLink) {
-            showModal('Veuillez sélectionner une année scolaire actuelle.', false);
+            showModal(msgNoYearSelected, false);
             return;
         }
 
-        // Récupérer le statut actuel à partir des data-attributes du lien
         const { index: currentStatusIndex } = getCurrentStatus(activeLink.dataset);
-        
         const newStatusIndex = currentStatusIndex + direction;
 
-        // Vérifier les limites
         if (newStatusIndex >= 0 && newStatusIndex < STATUS_ORDER.length) {
             const newStatusKey = STATUS_ORDER[newStatusIndex].key;
             changeYearStatus(yearId, newStatusKey);
         }
     }
 
-    /**
-     * Ouvre le modal de confirmation pour le cycle de vie
-     * @param {number} direction - -1 (précédent) ou 1 (suivant)
-     */
     function openLifecycleModal(direction) {
         pendingDirection = direction;
         lifecycleModal.classList.remove('hidden');
 
         if (direction === 1) {
-            // Configuration pour AVANCER
-            lifecycleTitle.textContent = "Passer à l'étape suivante ?";
+            lifecycleTitle.textContent = msgModalTitleForward;
             lifecycleTitle.className = "text-lg font-bold leading-6 text-indigo-900";
-            lifecycleMessage.innerHTML = `
-                Vous êtes sur le point d'avancer dans le cycle de vie de l'année. 
-                <br><br>
-                <ul class="list-disc pl-5 text-left text-xs text-gray-500">
-                    <li>Assurez-vous que toutes les tâches de l'étape actuelle sont terminées.</li>
-                    <li>Cette action peut ouvrir l'accès aux utilisateurs.</li>
-                </ul>`;
+            // msgModalBodyForward doit contenir la structure HTML traduite (avec ps-5 au lieu de pl-5)
+            lifecycleMessage.innerHTML = msgModalBodyForward;
             
-            lifecycleConfirmBtn.className = "inline-flex w-full justify-center rounded-md bg-indigo-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 sm:ml-3 sm:w-auto transition-colors";
-            lifecycleConfirmBtn.innerHTML = 'Confirmer et Avancer <i class="fas fa-arrow-right ml-2"></i>';
+            // MODIFICATION : Utilisation de Flex et gap-2 pour le bouton au lieu de text et icone en vrac
+            lifecycleConfirmBtn.className = "inline-flex items-center gap-2 w-full justify-center rounded-md bg-indigo-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 sm:w-auto transition-colors";
+            lifecycleConfirmBtn.innerHTML = `<span>${msgModalBtnForward}</span> <i class="fas fa-arrow-right"></i>`;
         
         } else {
-            // Configuration pour RECULER
-            lifecycleTitle.textContent = "Revenir à l'étape précédente ?";
+            lifecycleTitle.textContent = msgModalTitleBackward;
             lifecycleTitle.className = "text-lg font-bold leading-6 text-orange-800";
-            lifecycleMessage.innerHTML = `
-                <strong class="text-orange-600">Attention :</strong> Vous allez reculer dans le cycle de vie.
-                <br><br>
-                Cela peut avoir des conséquences sur les données enregistrées ou les permissions d'accès. 
-                Êtes-vous sûr de vouloir continuer ?`;
+            lifecycleMessage.innerHTML = msgModalBodyBackward;
 
-            lifecycleConfirmBtn.className = "inline-flex w-full justify-center rounded-md bg-orange-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-orange-500 sm:ml-3 sm:w-auto transition-colors";
-            lifecycleConfirmBtn.innerHTML = '<i class="fas fa-undo mr-2"></i> Confirmer le retour';
+            // MODIFICATION : Utilisation de Flex et gap-2 pour le bouton au lieu de text et icone en vrac
+            lifecycleConfirmBtn.className = "inline-flex items-center gap-2 w-full justify-center rounded-md bg-orange-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-orange-500 sm:w-auto transition-colors";
+            lifecycleConfirmBtn.innerHTML = `<i class="fas fa-undo"></i> <span>${msgModalBtnBackward}</span>`;
         }
     }
 
@@ -294,16 +260,13 @@ document.addEventListener('DOMContentLoaded', () => {
         pendingDirection = 0;
     }
 
-    // Écouteurs INTERNES au modal
     lifecycleCancelBtn.addEventListener('click', closeLifecycleModal);
     
     lifecycleConfirmBtn.addEventListener('click', () => {
-        // C'est ici qu'on lance la vraie action
         handleStatusChange(pendingDirection);
         closeLifecycleModal();
     });
 
-    // Écouteurs pour les boutons de statut (Déclenchent le MODAL maintenant)
     prevStatusBtn.addEventListener('click', (e) => {
         e.preventDefault();
         openLifecycleModal(-1);
@@ -314,28 +277,23 @@ document.addEventListener('DOMContentLoaded', () => {
         openLifecycleModal(1);
     });
 
-    // Gestion de la sélection d'une année
     document.querySelectorAll('.year-link').forEach(link => {
         link.addEventListener('click', (e) => {
             e.preventDefault();
             
-            // Retirer la surbrillance de tous les liens
-            document.querySelectorAll('.year-link').forEach(l => l.classList.remove('bg-gray-200', 'border-indigo-400', 'border-l-4'));
+            // MODIFICATION RTL: border-l-4 devient border-s-4
+            document.querySelectorAll('.year-link').forEach(l => l.classList.remove('bg-gray-200', 'border-indigo-400', 'border-s-4'));
 
-            // Appliquer la surbrillance au lien sélectionné
-            link.classList.add('bg-gray-200', 'border-indigo-400', 'border-l-4');
+            link.classList.add('bg-gray-200', 'border-indigo-400', 'border-s-4');
 
             loadYearForEdit(link);
         });
     });
 
-    // Bouton Créer/Nouvelle Année
     createBtn.addEventListener('click', resetForm);
 
-    // Bouton Annuler la modification
     cancelBtn.addEventListener('click', resetForm);
 
-    // Soumission du formulaire (création/modification des détails de l'année)
     yearForm.addEventListener('submit', async (e) => {
         e.preventDefault();
 
@@ -362,26 +320,24 @@ document.addEventListener('DOMContentLoaded', () => {
             const result = await response.json();
 
             if (response.ok && result.success) {
-                showModal(result.message, true);
+                showModal(result.message, true); // Géré par django
             } else {
-                showModal(result.message || 'Une erreur inconnue est survenue lors de la sauvegarde.', false);
+                showModal(result.message || msgError, false);
             }
 
         } catch (error) {
-            showModal('Erreur de connexion ou du serveur. Veuillez réessayer.', false);
+            showModal(msgNetworkError, false);
             console.error('Erreur lors de la soumission du formulaire:', error);
         }
     });
 
-    // Charger par défaut l'année actuelle si elle existe
     const currentYearLink = document.querySelector('#year-list-current .year-link');
     if (currentYearLink) {
-        // Appliquer la surbrillance initiale à l'année actuelle
-        currentYearLink.classList.add('bg-gray-200', 'border-indigo-400', 'border-l-4'); 
+        // MODIFICATION RTL: border-l-4 devient border-s-4
+        currentYearLink.classList.add('bg-gray-200', 'border-indigo-400', 'border-s-4'); 
         loadYearForEdit(currentYearLink);
-        // On masque le bouton d'annulation pour la sélection initiale de l'année actuelle
         cancelBtn.style.display = 'none'; 
     } else {
-        resetForm(); // Réinitialiser pour un état de création propre
+        resetForm(); 
     }
 });

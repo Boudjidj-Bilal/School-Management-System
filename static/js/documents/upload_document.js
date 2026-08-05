@@ -1,13 +1,18 @@
 /**
  * Gestion du formulaire de dépôt de document (Dropdown & File Input).
- * VERSION SÉCURISÉE (CSP Compliant).
+ * VERSION SÉCURISÉE (CSP Compliant) & MULTILINGUE.
  */
 
 document.addEventListener('DOMContentLoaded', function() {
+    const container = document.getElementById('document-upload-container');
+    if (!container) return;
+
+    // Récupération des traductions dynamiques depuis le DOM
+    const msgSearchPlaceholder = container.getAttribute('data-msg-search-placeholder') || '-- Rechercher un élève --';
+
     const dropdownButton = document.getElementById('dropdown-button');
     const dropdownMenu = document.getElementById('dropdown-menu');
     const searchInput = document.getElementById('student-search-input');
-    const studentList = document.getElementById('student-list');
     const studentOptions = document.querySelectorAll('.student-option');
     
     const hiddenInput = document.getElementById('selected-student-id');

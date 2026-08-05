@@ -1,6 +1,6 @@
 // ====================================================================
 // LOGIQUE JAVASCRIPT POUR l'AFFICHAGE DU PLANNING (view_schedule.js)
-// VERSION SÉCURISÉE (CSP Compliant)
+// VERSION SÉCURISÉE (CSP Compliant) ET MULTILINGUE
 // ====================================================================
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -14,11 +14,25 @@ document.addEventListener('DOMContentLoaded', () => {
         return;
     }
 
+    // Récupération dynamique de la langue active (injectée via HTML)
+    const currentLang = container.getAttribute('data-lang') || 'fr-FR';
+
+    // Traductions
+    const msgErrorInit = container.getAttribute('data-msg-error-init') || 'Erreur critique: Impossible de lire les données du planning.';
+    const msgLoading = container.getAttribute('data-msg-loading') || 'Chargement...';
+    const msgWeekOf = container.getAttribute('data-msg-week-of') || 'Semaine du {date}';
+    const msgWeek = container.getAttribute('data-msg-week') || 'Semaine';
+    const msgServerError = container.getAttribute('data-msg-server-error') || 'Erreur serveur (Status {status}).';
+    const msgNetworkError = container.getAttribute('data-msg-network-error') || 'Erreur de connexion réseau.';
+    const msgConnectionError = container.getAttribute('data-msg-connection-error') || 'Erreur de connexion au serveur : {error}';
+    const msgConfirmDelTitle = container.getAttribute('data-msg-confirm-del-title') || 'Confirmation de Suppression';
+    const msgConfirmDelBody = container.getAttribute('data-msg-confirm-del-body') || 'Êtes-vous sûr de vouloir supprimer ce cours ?<br>Cette action est irréversible.';
+    
     const CONFIG = {
         classPk: container.dataset.classPk,
         isAdmin: container.dataset.isAdmin === 'true',
-        yearMinTime: container.dataset.yearMinTime, // "HH:MM"
-        yearMaxTime: container.dataset.yearMaxTime, // "HH:MM"
+        yearMinTime: container.dataset.yearMinTime, 
+        yearMaxTime: container.dataset.yearMaxTime, 
         yearStartDateIso: container.dataset.yearStartDate,
         yearEndDateIso: container.dataset.yearEndDate,
         currentWeekStartIso: container.dataset.currentWeekStart,
@@ -29,7 +43,7 @@ document.addEventListener('DOMContentLoaded', () => {
         csrfToken: csrfInput ? csrfInput.value : ''
     };
 
-    // État global (local au scope)
+    // État global
     const STATE = {
         courses: [], 
         exceptionTimes: [],
@@ -52,13 +66,11 @@ document.addEventListener('DOMContentLoaded', () => {
     const scheduleContainer = document.getElementById('schedule-container');
     const btnBack = document.getElementById('btn-back');
 
-    // Modale d'action
     const actionModal = document.getElementById('action-modal');
     const modalCourseTitle = document.getElementById('modal-course-title');
     const modalCourseDetails = document.getElementById('modal-course-details');
     const modalCancelBtn = document.getElementById('modal-cancel-btn');
 
-    // Modale de confirmation générique
     const genericConfirmModal = document.getElementById('generic-confirm-modal');
     const genericConfirmTitle = document.getElementById('generic-confirm-title');
     const genericConfirmMessage = document.getElementById('generic-confirm-message');
@@ -86,8 +98,9 @@ document.addEventListener('DOMContentLoaded', () => {
         const icon = type === 'success' ? 'fa-check-circle' : (type === 'error' ? 'fa-times-circle' : 'fa-info-circle');
 
         const notificationDiv = document.createElement('div');
-        notificationDiv.className = `p-4 rounded-xl border shadow-md ${colorMap[type]} flex items-center transition-all duration-300 opacity-0 transform -translate-y-2 mb-4`;
-        notificationDiv.innerHTML = `<i class="fas ${icon} mr-3 text-lg"></i><p class="font-semibold">${message}</p>`;
+        // MODIFICATION : flex items-center gap-3, suppression de mr-3
+        notificationDiv.className = `p-4 rounded-xl border shadow-md ${colorMap[type]} flex items-center gap-3 transition-all duration-300 opacity-0 transform -translate-y-2 mb-4`;
+        notificationDiv.innerHTML = `<i class="fas ${icon} text-lg"></i><p class="font-semibold">${message}</p>`;
 
         notificationArea.prepend(notificationDiv);
         
@@ -116,7 +129,8 @@ document.addEventListener('DOMContentLoaded', () => {
             case 'CANCELLED':
                 return 'opacity-50 line-through';
             case 'TEACHER_ABSENT':
-                return 'opacity-70 border-l-4 border-yellow-500';
+                // MODIFICATION RTL: border-l-4 devient border-s-4
+                return 'opacity-70 border-s-4 border-yellow-500';
             case 'ACTIVE':
             default:
                 return '';
@@ -135,7 +149,8 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function formatSimpleDate(date) {
-        return date.toLocaleDateString('fr-FR', {
+        // Utilisation de la langue dynamique (ex: 'fr-FR' ou 'ar')
+        return date.toLocaleDateString(currentLang, {
             day: 'numeric',
             month: 'short',
             year: 'numeric'
@@ -143,7 +158,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function formatDayHeader(date) {
-        const day = date.toLocaleDateString('fr-FR', { weekday: 'short' }); 
+        const day = date.toLocaleDateString(currentLang, { weekday: 'short' }); 
         const dayNum = String(date.getDate()).padStart(2, '0');
         const monthNum = String(date.getMonth() + 1).padStart(2, '0');
         const dayCapitalized = day.charAt(0).toUpperCase() + day.slice(1);
@@ -164,7 +179,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const json = await response.json();
             
             if (!response.ok) {
-                const message = json.message || `Erreur serveur (Status ${response.status}).`;
+                const message = json.message || msgServerError.replace('{status}', response.status);
                 showNotification(message, 'error');
                 return { success: false, ...json };
             }
@@ -177,8 +192,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
         } catch (error) {
             console.error("Erreur API:", error);
-            showNotification(`Erreur de connexion au serveur : ${error.message}`, 'error');
-            return { success: false, message: "Erreur de connexion réseau." };
+            showNotification(msgConnectionError.replace('{error}', error.message), 'error');
+            return { success: false, message: msgNetworkError };
         }
     }
 
@@ -199,7 +214,6 @@ document.addEventListener('DOMContentLoaded', () => {
         const slotHeight = slotDuration * STATE.minuteHeightPx;
 
         const exceptionSlots = new Set();
-        // Utilisation de STATE.exceptionTimes qui doit être peuplé
         if(STATE.exceptionTimes) {
             STATE.exceptionTimes.forEach(ex => {
                 const exStart = parseTimeToMinutes(ex.start_time);
@@ -214,12 +228,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
         for (let i = 0; i < totalSlots; i++) {
             const slotTimeInMinutes = STATE.gridStartMinutes + (i * slotDuration);
-            
             const hour = Math.floor(slotTimeInMinutes / 60);
             const minutes = slotTimeInMinutes % 60;
             
             const timeLabel = document.createElement('div');
-            timeLabel.className = 'text-center text-xs font-semibold text-gray-500 border-b border-r border-gray-200';
+            // MODIFICATION RTL: border-r devient border-e
+            timeLabel.className = 'text-center text-xs font-semibold text-gray-500 border-b border-e border-gray-200';
             timeLabel.style.height = `${slotHeight}px`;
             
             if(minutes === 0) {
@@ -231,7 +245,8 @@ document.addEventListener('DOMContentLoaded', () => {
             for (let j = 0; j < 7; j++) {
                 const cell = document.createElement('div');
                 let cellClass = 'border-b border-gray-200';
-                if (j < 6) cellClass += ' border-r'; 
+                // MODIFICATION RTL: border-r devient border-e
+                if (j < 6) cellClass += ' border-e'; 
                 
                 cell.className = cellClass;
                 cell.style.height = `${slotHeight}px`;
@@ -243,7 +258,8 @@ document.addEventListener('DOMContentLoaded', () => {
             const dayColumn = document.createElement('div');
             dayColumn.className = 'relative'; 
             if (i < 6) {
-                dayColumn.classList.add('border-r', 'border-gray-200');
+                // MODIFICATION RTL: border-r devient border-e
+                dayColumn.classList.add('border-e', 'border-gray-200');
             }
             scheduleCoursesContainer.appendChild(dayColumn);
             STATE.dayColumnElements.push(dayColumn); 
@@ -268,7 +284,6 @@ document.addEventListener('DOMContentLoaded', () => {
             }
 
             const duration = endMinutes - startMinutes;
-            
             const top = (startMinutes - STATE.gridStartMinutes) * STATE.minuteHeightPx;
             const height = duration * STATE.minuteHeightPx;
 
@@ -279,29 +294,31 @@ document.addEventListener('DOMContentLoaded', () => {
             courseEl.style.height = `${height}px`;
 
             let contentHtml = '';
+            // Le statut est géré par Django (course.status_display est traduit par le backend)
             const statusText = (course.status === 'ACTIVE') ? '' : course.status_display;
 
+            // MODIFICATION : flex gap-1 au lieu de mr-1
             if (height > 45) {
                 contentHtml = `
                     <div class="flex-grow flex flex-col items-center justify-center w-full overflow-hidden text-center">
-                        <strong class="text-xs font-bold truncate">${course.subject_name}</strong>
-                        <p class="text-xs truncate">${course.teacher_name}</p>
-                        <p class="text-xs truncate"><i class="fas fa-door-open fa-fw mr-1 opacity-60"></i>${course.classroom_name}</p>
+                        <strong class="text-xs font-bold truncate w-full px-1">${course.subject_name}</strong>
+                        <p class="text-xs truncate w-full px-1">${course.teacher_name}</p>
+                        <p class="text-xs truncate w-full px-1 flex items-center justify-center gap-1"><i class="fas fa-door-open fa-fw opacity-60"></i><span>${course.classroom_name}</span></p>
                     </div>
                     <p class="text-xs font-medium mt-auto flex-shrink-0">${statusText}</p>
                 `;
             } else if (height > 25) {
                  contentHtml = `
                     <div class="flex-grow flex flex-col items-center justify-center w-full overflow-hidden text-center">
-                        <strong class="text-xs font-bold truncate">${course.subject_name}</strong>
-                        <p class="text-xs truncate">${course.teacher_name}</p>
+                        <strong class="text-xs font-bold truncate w-full px-1">${course.subject_name}</strong>
+                        <p class="text-xs truncate w-full px-1">${course.teacher_name}</p>
                     </div>
                     <p class="text-xs font-medium mt-auto flex-shrink-0">${statusText}</p>
                 `;
             } else {
                  contentHtml = `
                     <div class="flex-grow flex flex-col items-center justify-center w-full overflow-hidden text-center">
-                        <strong class="text-xs font-bold truncate">${course.subject_name}</strong>
+                        <strong class="text-xs font-bold truncate w-full px-1">${course.subject_name}</strong>
                     </div>
                 `;
             }
@@ -326,9 +343,9 @@ document.addEventListener('DOMContentLoaded', () => {
     function updateWeekView() {
         const start = STATE.currentMonday;
 
-        weekDisplay.textContent = `Semaine du ${formatSimpleDate(start)}`;
+        weekDisplay.textContent = msgWeekOf.replace('{date}', formatSimpleDate(start));
         const weekSubEl = document.querySelector('p.text-sm.text-gray-500');
-        if(weekSubEl) weekSubEl.textContent = `Semaine`;
+        if(weekSubEl) weekSubEl.textContent = msgWeek;
 
         for (let i = 0; i < 7; i++) {
             const dayHeaderEl = document.getElementById(`day-header-${i}`);
@@ -354,7 +371,7 @@ document.addEventListener('DOMContentLoaded', () => {
     async function fetchWeekData(dateISO) {
         if(prevWeekBtn) prevWeekBtn.disabled = true;
         if(nextWeekBtn) nextWeekBtn.disabled = true;
-        weekDisplay.textContent = "Chargement...";
+        weekDisplay.textContent = msgLoading;
         
         const result = await apiFetch(CONFIG.urls.getWeek, {
             start_date: dateISO,
@@ -448,8 +465,8 @@ document.addEventListener('DOMContentLoaded', () => {
         
         if (action === 'DELETE') {
             openGenericConfirmModal(
-                "Confirmation de Suppression",
-                "Êtes-vous sûr de vouloir supprimer ce cours ?<br>Cette action est irréversible.",
+                msgConfirmDelTitle,
+                msgConfirmDelBody,
                 executeDelete 
             );
             closeActionModal(); 
@@ -486,7 +503,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if(exceptionsEl) STATE.exceptionTimes = JSON.parse(exceptionsEl.textContent);
     } catch (e) {
         console.error("Erreur de parsing JSON initial:", e);
-        showNotification("Erreur critique: Impossible de lire les données du planning.", 'error');
+        showNotification(msgErrorInit, 'error');
         return;
     }
 
@@ -499,7 +516,6 @@ document.addEventListener('DOMContentLoaded', () => {
     if(prevWeekBtn) prevWeekBtn.addEventListener('click', () => handleNavigation(-7));
     if(nextWeekBtn) nextWeekBtn.addEventListener('click', () => handleNavigation(7));
     
-    // Back button
     if(btnBack) {
         btnBack.addEventListener('click', (e) => {
             e.preventDefault();

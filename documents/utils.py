@@ -3,6 +3,7 @@
 # Import des modèles nécessaires
 from classes.models import ClassTeacherYear, ClassStudentYear
 from grades.models import Evaluation, Grade, Appreciation, Mention
+from django.utils.translation import gettext_lazy as _
 
 # Import des fonctions existantes
 from grades.utils import (
@@ -111,7 +112,7 @@ def get_report_card_context(student, term_year):
     school = year.school
     
     # Le Prof Principal est dans ClassTeacherYear, pas dans Class
-    main_teacher_name = "Non défini"
+    main_teacher_name = _("Non défini")
     main_teacher_rel = ClassTeacherYear.objects.filter(
         student_class=student_class,
         year=year,
@@ -141,7 +142,7 @@ def get_report_card_context(student, term_year):
         'school_color': school.primary_color,
         'principal_signature_url': school.principal_signature.url if school.principal_signature else None,
         
-        'term_name': f"Trimestre {term_year.counter}", 
+        'term_name': _("Trimestre {counter}").format(counter=term_year.counter), 
         'year_name': year.name,
 
         'student_name': f"{student.user.last_name} {student.user.first_name}",

@@ -4,14 +4,15 @@ from django.core.exceptions import ValidationError
 from django.utils import timezone
 
 from users.models import User, Student
+from django.utils.translation import gettext_lazy as _
 
 # --> Le cœur de l'annonce (Contenu unique)
 class Announcement(models.Model):
     TYPE_CHOICES = [
-        ("HOMEWORK", "Devoir"),
-        ("TEST", "Contrôle"),
-        ("COURSE", "Cours"),
-        ("MESSAGE", "Message Global"),
+        ("HOMEWORK", _("Devoir")),
+        ("TEST", _("Contrôle")),
+        ("COURSE", _("Cours")),
+        ("MESSAGE", _("Message Global")),
     ]
 
     title = models.CharField(max_length=255)
@@ -32,7 +33,7 @@ class Announcement(models.Model):
     # Si l'annonce de type devoir demande un rendu de la part des élèves.
     requires_submission = models.BooleanField(
         default=False, 
-        help_text="Coché si ce devoir nécessite un rendu de la part des élèves."
+        help_text=_("Coché si ce devoir nécessite un rendu de la part des élèves.")
     )
 
     created_at = models.DateTimeField(auto_now_add=True)
@@ -40,7 +41,7 @@ class Announcement(models.Model):
 
     # Champ purement informatif pour l'historique (ex: "Envoyé à : 1ère A, 1ère B")
     # La vraie liste technique des destinataires est dans la table AnnouncementRecipient
-    target_display = models.CharField(max_length=255, blank=True, help_text="Résumé des destinataires pour affichage")
+    target_display = models.CharField(max_length=255, blank=True, help_text=_("Résumé des destinataires pour affichage"))
 
     class Meta:
         ordering = ['-created_at']
@@ -64,7 +65,7 @@ class Attachment(models.Model):
     file_type = models.CharField(max_length=10, choices=FILE_TYPE_CHOICES, default="DOCUMENT")
     
     def __str__(self):
-        return f"Fichier ({self.file_type}) pour {self.announcement.title}"
+        return _("Fichier ({file_type}) pour {title}").format(file_type=self.file_type, title=self.announcement.title)
 
 
 # --> Table de liaison : Gestion des destinataires et de la lecture
@@ -98,7 +99,7 @@ class AnnouncementRecipient(models.Model):
             self.save()
 
     def __str__(self):
-        state = "Lu" if self.is_read else "Non lu"
+        state = _("Lu") if self.is_read else _("Non lu")
         return f"{self.user.username} -> {self.announcement.title} ({state})"
 
 class HomeworkSubmission(models.Model):
@@ -128,7 +129,7 @@ class HomeworkSubmission(models.Model):
         unique_together = ("announcement", "student")
 
     def __str__(self):
-        return f"Rendu de {self.student} pour {self.announcement.title}"
+        return _("Rendu de {student} pour {title}").format(student=self.student, title=self.announcement.title)
 
 
 class SubmissionAttachment(models.Model):
@@ -141,7 +142,7 @@ class SubmissionAttachment(models.Model):
     uploaded_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
-        return f"Fichier de rendu pour {self.submission}"
+        return _("Fichier de rendu pour {submission}").format(submission=self.submission)
 
 class Messaging(models.Model):
 
@@ -166,14 +167,14 @@ class Messaging(models.Model):
         constraints = [
             models.UniqueConstraint(
                 fields=["user1", "user2"],
-                name="unique_conversation"
+                name=_("unique_conversation")
             )
         ]
 
     def clean(self):
         if self.user1 == self.user2:
             raise ValidationError(
-                "Un utilisateur ne peut pas discuter avec lui-même."
+                _("Un utilisateur ne peut pas discuter avec lui-même.")
             )
 
     def save(self, *args, **kwargs):
@@ -209,7 +210,7 @@ class Message(models.Model):
         ordering = ['date'] # Chronologique pour l'affichage du chat
 
     def __str__(self):
-        return f"Message de {self.sender.username} le {self.date}"
+        return _("Message de {username} le {date}").format(username=self.sender.username, date=self.date)
     
     def save(self, *args, **kwargs):
         # À chaque nouveau message, on met à jour la date de la conversation pour le tri

@@ -1,4 +1,3 @@
-from django.db.models import Q
 from django.utils import timezone
 from scheduling.models import ScheduledCourse
 from schools.models import ExceptionDay, ExceptionTime
@@ -7,6 +6,7 @@ from classes.models import ClassStudentYear
 
 from datetime import datetime
 from datetime import timedelta
+from django.utils.translation import gettext_lazy as _
 
 def _parse_iso_datetime(dt_string):
     """
@@ -37,7 +37,7 @@ def check_course_conflicts(courses_to_check, year):
         teacher_id = teacher_id_map.get(ts_id)
         
         if not teacher_id:
-            all_errors.append({"course": course, "reason": f"ID Prof/Matière {ts_id} invalide ou introuvable."})
+            all_errors.append({"course": course, "reason": _("ID Prof/Matière {ts_id} invalide ou introuvable.").format(ts_id=ts_id)})
         else:
             # [CORRIGÉ] Modifie le dictionnaire original en ajoutant une clé.
             course["teacher_id"] = teacher_id 
@@ -102,18 +102,18 @@ def _check_time_bounds(courses, year):
             if start_date_naive < year_start_date or end_date_naive > year_end_date:
                 errors.append({
                     "course": course,
-                    "reason": "Le cours est en dehors des dates de l'année scolaire."
+                    "reason": _("Le cours est en dehors des dates de l'année scolaire.")
                 })
             
             if start_time_naive < year_min_time or end_time_naive > year_max_time:
                 errors.append({
                     "course": course,
-                    "reason": f"Le cours ({start_time_naive}) dépasse les limites horaires ({year_min_time}-{year_max_time}) autorisées pour l'année."
+                    "reason": _("Le cours ({start_time_naive}) dépasse les limites horaires ({year_min_time}-{year_max_time}) autorisées pour l'année.").format(start_time_naive=start_time_naive,year_min_time=year_min_time, year_max_time=year_max_time)
                 })
                 
     except Exception as e:
         print(f"Erreur dans _check_time_bounds: {e}")
-        errors.append({ "course": None, "reason": f"Erreur interne de validation d'heure : {e}" })
+        errors.append({ "course": None, "reason": _("Erreur interne de validation d'heure : {e}").format(e=e)})
 
     return errors
 
@@ -133,11 +133,11 @@ def _check_exception_days(courses, exception_days):
                 if ex_day.start_date <= start_date_local <= ex_day.end_date:
                     errors.append({
                         "course": course,
-                        "reason": f"Le cours tombe pendant une période exceptionnelle ({ex_day.type})."
+                        "reason": _("Le cours tombe pendant une période exceptionnelle ({type_date}).").format(type_date=ex_day.type)
                     })
                     break 
         except Exception as e:
-            print(f"Erreur dans _check_exception_days: {e}")
+            print(_("Erreur dans _check_exception_days: {e}").format(e=e))
 
     return errors
 
@@ -161,7 +161,7 @@ def _check_exception_times(courses, exception_times):
                 if (start_t < ex_time.end_time) and (end_t > ex_time.start_time):
                     errors.append({
                         "course": course,
-                        "reason": f"Le cours ({start_t}-{end_t}) chevauche un horaire exceptionnel (ex: pause {ex_time.start_time}-{ex_time.end_time})."
+                        "reason": _("Le cours ({start_t}-{end_t}) chevauche un horaire exceptionnel (ex: pause {ex_time_start}-{ex_time_end}).").format(start_t=start_t, end_t=end_t, ex_time_start=ex_time.start_time, ex_time_end=ex_time.end_time)
                     })
                     break 
         except Exception as e:
@@ -191,7 +191,7 @@ def _check_overlap_with_existing_courses(courses, existing_courses):
                     if existing.teacher_subject.teacher.id == new_course["teacher_id"]:
                         errors.append({
                             "course": new_course,
-                            "reason": f"Le professeur ({existing.teacher_subject.teacher}) a déjà un cours sur ce créneau (Classe: {existing.student_class.name}).",
+                            "reason": _("Le professeur ({existing_teacher}) a déjà un cours sur ce créneau (Classe: {existing_student}).").format(existing_teacher=existing.teacher_subject.teacher, existing_student=existing.student_class.name),
                             "conflicting_course_id": existing.id
                         })
 
@@ -199,7 +199,7 @@ def _check_overlap_with_existing_courses(courses, existing_courses):
                     if existing.classroom.id == new_course["classroom_id"]:
                         errors.append({
                             "course": new_course,
-                            "reason": f"La salle ({existing.classroom.name}) est déjà occupée sur ce créneau.",
+                            "reason": _("La salle ({class_name}) est déjà occupée sur ce créneau.").format(class_name=existing.classroom.name),
                             "conflicting_course_id": existing.id
                         })
 
@@ -207,7 +207,7 @@ def _check_overlap_with_existing_courses(courses, existing_courses):
                     if existing.student_class.id == new_course["student_class_id"]:
                         errors.append({
                             "course": new_course,
-                            "reason": "La classe a déjà un cours sur ce créneau.",
+                            "reason": _("La classe a déjà un cours sur ce créneau."),
                             "conflicting_course_id": existing.id
                         })
         except Exception as e:
@@ -241,7 +241,7 @@ def _check_internal_overlaps(courses):
                     if c1["teacher_id"] == c2["teacher_id"]:
                         errors.append({
                             "course": c1,
-                            "reason": "Conflit interne: Le même professeur est assigné à deux cours en même temps.",
+                            "reason": _("Conflit interne: Le même professeur est assigné à deux cours en même temps."),
                             "conflict_with": c2
                         })
 
@@ -249,7 +249,7 @@ def _check_internal_overlaps(courses):
                     if c1["classroom_id"] == c2["classroom_id"]:
                         errors.append({
                             "course": c1,
-                            "reason": "Conflit interne: La même salle est utilisée pour deux cours en même temps.",
+                            "reason": _("Conflit interne: La même salle est utilisée pour deux cours en même temps."),
                             "conflict_with": c2
                         })
 
@@ -257,7 +257,7 @@ def _check_internal_overlaps(courses):
                     if c1["student_class_id"] == c2["student_class_id"]:
                         errors.append({
                             "course": c1,
-                            "reason": "Conflit interne: La même classe a deux cours en même temps.",
+                            "reason": _("Conflit interne: La même classe a deux cours en même temps."),
                             "conflict_with": c2
                         })
         except Exception as e:

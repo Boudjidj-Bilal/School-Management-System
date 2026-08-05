@@ -8,6 +8,7 @@ from django.views.decorators.csrf import csrf_exempt
 from django.utils import timezone
 from django.core.exceptions import PermissionDenied
 from django.shortcuts import redirect
+from django.utils.translation import gettext_lazy as _
 
 # Modèles
 from .models import Messaging, Message, Announcement, AnnouncementRecipient
@@ -26,7 +27,6 @@ from .utils import (
     get_homework_detail_context,
     handle_student_submission
 )
-
 
 # --- HELPER : Identifier le rôle et le profil de l'utilisateur connecté ---
 def get_user_role_profile(user):
@@ -145,7 +145,7 @@ def api_get_messages(request, conversation_id):
         
         # Vérification sécurité : L'utilisateur doit faire partie de la conversation
         if request.user not in (conversation.user1, conversation.user2):
-            return JsonResponse({"success": False,"message": "Accès refusé"},status=403)
+            return JsonResponse({"success": False, "message": _("Accès refusé")},status=403)
 
         # Marquer comme LU les messages qui ne viennent pas de moi
         conversation.messages.filter(is_read=False).exclude(sender=request.user).update(is_read=True)
@@ -178,7 +178,7 @@ def api_get_messages(request, conversation_id):
         })
 
     except Messaging.DoesNotExist:
-        return JsonResponse({'success': False, 'message': 'Conversation introuvable'}, status=404)
+        return JsonResponse({'success': False, 'message': _('Conversation introuvable')}, status=404)
 
 
 @require_http_methods(["POST"])
@@ -194,7 +194,7 @@ def api_send_message(request):
         content = data.get('content', '').strip()
 
         if not content:
-            return JsonResponse({'success': False, 'message': 'Message vide'}, status=400)
+            return JsonResponse({'success': False, 'message': _('Message vide')}, status=400)
 
         conversation = get_object_or_404(Messaging, id=conversation_id)
 
@@ -204,7 +204,7 @@ def api_send_message(request):
             is_participant = True
         
         if not is_participant:
-            return JsonResponse({'success': False, 'message': 'Accès refusé'}, status=403)
+            return JsonResponse({'success': False, 'message': _('Accès refusé')}, status=403)
 
         # 3. Création
         message = Message.objects.create(
@@ -277,7 +277,7 @@ def api_create_conversation(request):
         if messaging:
             return JsonResponse({'success': True, 'conversation_id': messaging.id})
         else:
-            return JsonResponse({'success': False, 'message': 'Impossible de créer la conversation.'}, status=400)
+            return JsonResponse({'success': False, 'message': _('Impossible de créer la conversation.')}, status=400)
 
     except Exception as e:
         print(f"Erreur create conv: {e}")
@@ -347,7 +347,7 @@ def announcement_dashboard_view(request):
         'can_send': can_send,
         'can_view_all': can_view_all,
         'is_teacher': is_teacher,
-        'available_targets': json.dumps(available_targets), # Pour le JS
+        'available_targets': available_targets, # Pour le JS
         'current_year': current_year,
         'announcement_types': Announcement.TYPE_CHOICES,
     }
@@ -390,17 +390,17 @@ def api_get_announcements(request):
         if school.is_active:
             current_year = get_current_year_for_school(school)
         else:
-            return JsonResponse({'success': False, 'message': 'Ecole désactivé.'}, status=400)
+            return JsonResponse({'success': False, 'message': _('Ecole désactivé.')}, status=400)
     else: 
-        return JsonResponse({'success': False, 'message': 'Ecole introuvable.'}, status=400)
+        return JsonResponse({'success': False, 'message': _('Ecole introuvable.')}, status=400)
 
     if current_year:
         if not current_year.running:
             if not current_year.finished:
                 if not current_year.registration:
-                    return JsonResponse({'success': False, 'message': "L'année n'est pas à l'état d'enregistrement, en cours ou fini."}, status=400)
+                    return JsonResponse({'success': False, 'message': _("L'année n'est pas à l'état d'enregistrement, en cours ou fini.")}, status=400)
     else: 
-        return JsonResponse({'success': False, 'message': "Impossible de trouver l'année."}, status=400)
+        return JsonResponse({'success': False, 'message': _("Impossible de trouver l'année.")}, status=400)
 
     data = {'inbox': [], 'sent': [], 'all': []}
 
@@ -498,15 +498,15 @@ def api_create_announcement(request):
     # Vérif permissions basique (redondant avec utils mais sécure)
     if user_type: 
         if user_type in ['Student', 'Parent']:
-            return JsonResponse({'success': False, 'message': "Non autorisé."}, status=403)
+            return JsonResponse({'success': False, 'message': _("Non autorisé.")}, status=403)
     else:
-        return JsonResponse({'success': False, 'message': "Non autorisé."}, status=403)
+        return JsonResponse({'success': False, 'message': _("Non autorisé.")}, status=403)
 
     try:
         # Récupération des données du formulaire
         targets_json = request.POST.get('targets') 
         if not targets_json:
-             return JsonResponse({'success': False, 'message': "Aucun destinataire sélectionné."}, status=400)
+             return JsonResponse({'success': False, 'message': _("Aucun destinataire sélectionné.")}, status=400)
         
         targets = json.loads(targets_json)
         
@@ -536,22 +536,22 @@ def api_create_announcement(request):
             if school.is_active:
                 current_year = get_current_year_for_school(school)
             else:
-                return JsonResponse({'success': False, 'message': 'Ecole désactivé.'}, status=400)
+                return JsonResponse({'success': False, 'message': _('Ecole désactivé.')}, status=400)
         else: 
-            return JsonResponse({'success': False, 'message': 'Ecole introuvable.'}, status=400)
+            return JsonResponse({'success': False, 'message': _('Ecole introuvable.')}, status=400)
 
         if current_year:
             if not current_year.running:
                 if not current_year.finished:
                     if not current_year.registration:
-                        return JsonResponse({'success': False, 'message': "L'année n'est pas à l'état en cours ou fini."}, status=400)
+                        return JsonResponse({'success': False, 'message': _("L'année n'est pas à l'état en cours ou fini.")}, status=400)
         else: 
-            return JsonResponse({'success': False, 'message': "Impossible de trouver l'année."}, status=400)
+            return JsonResponse({'success': False, 'message': _("Impossible de trouver l'année.")}, status=400)
         
         # Appel de la logique métier (utils.py)
         create_announcement_logic(user, form_data, files, current_year)
 
-        return JsonResponse({'success': True, 'message': "Annonce envoyée avec succès."})
+        return JsonResponse({'success': True, 'message': _("Annonce envoyée avec succès.")})
 
     except Exception as e:
         print(f"Erreur création annonce: {e}")
@@ -570,7 +570,7 @@ def api_mark_as_read(request):
         user_type = get_user_type(user)
         
         if user_type == "Parent":
-            return JsonResponse({'success': False, 'message': "Le parent ne peut pas afficher l'annonce comme lu."}, status=404)
+            return JsonResponse({'success': False, 'message': _("Le parent ne peut pas afficher l'annonce comme lu.")}, status=404)
 
         data = json.loads(request.body)
         announcement_id = data.get('announcement_id')
@@ -589,7 +589,7 @@ def api_mark_as_read(request):
         return JsonResponse({'success': True})
 
     except AnnouncementRecipient.DoesNotExist:
-        return JsonResponse({'success': False, 'message': "Annonce introuvable."}, status=404)
+        return JsonResponse({'success': False, 'message': _("Annonce introuvable.")}, status=404)
     except Exception as e:
         return JsonResponse({'success': False, 'message': str(e)}, status=500)
     
@@ -625,10 +625,10 @@ def homework_detail_view(request, announcement_id):
     # --- TRAITEMENT POST (ÉLÈVE) ---
     if request.method == "POST":
         if not context.get('is_student'):
-            return JsonResponse({"error": "Action non autorisée."}, status=403)
+            return JsonResponse({"error": _("Action non autorisée.")}, status=403)
         
         if not announcement.requires_submission:
-            return JsonResponse({"error": "Ce devoir ne nécessite aucun rendu."}, status=400)
+            return JsonResponse({"error": _("Ce devoir ne nécessite aucun rendu.")}, status=400)
 
         comment = request.POST.get("comment", "").strip()
         files_list = request.FILES.getlist("files")
@@ -644,7 +644,7 @@ def homework_detail_view(request, announcement_id):
 
                 return JsonResponse({
                     "success": True, 
-                    "message": "Rendu enregistré avec succès.",
+                    "message": _("Rendu enregistré avec succès."),
                     "updated_at": formatted_date
                 })
             
@@ -653,7 +653,7 @@ def homework_detail_view(request, announcement_id):
         except Exception as e:
             if request.headers.get('x-requested-with') == 'XMLHttpRequest':
                 return JsonResponse({"success": False, "error": str(e)}, status=400)
-            context['error'] = f"Une erreur est survenue : {str(e)}"
+            context['error'] = _("Une erreur est survenue : {error}").format(error=str(e))
 
     # --- RENDU GET DE LA PAGE ---
     return render(request, "communications/homework_detail.html", context)

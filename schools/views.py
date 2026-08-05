@@ -4,7 +4,6 @@ from django.http import JsonResponse
 import json
 from datetime import date, time, datetime
 
-
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth import get_user_model
 from django.contrib import messages
@@ -23,6 +22,8 @@ from classes.utils import get_levels_by_school
 from classes.models import Level
 
 from .forms import SchoolUpdateForm
+
+from django.utils.translation import gettext_lazy as _
 
 # --- Constantes pour la logique de gestion des trimestres ---
 TERM_TYPE_TRIMESTRE = "TRIMESTRE"
@@ -112,9 +113,9 @@ def create_school_view(request):
 
                 send_email_create_compte(request, principal_email, username_principal, password) # Envoie de l'email au proviseur
 
-                return JsonResponse({'success': True, 'message': "École et proviseur créés avec succès. Voici le nom d'utilisateur du proviseur : "+username_principal})
+                return JsonResponse({'success': True, 'message': _("École et proviseur créés avec succès. Voici le nom d'utilisateur du proviseur : ")+username_principal})
             except json.JSONDecodeError:
-                return JsonResponse({'success': False, 'message': 'Données JSON invalides.'}, status=400)
+                return JsonResponse({'success': False, 'message': _('Données JSON invalides.')}, status=400)
             except Exception as e:
                 return JsonResponse({'success': False, 'message': str(e)}, status=500)
     else:
@@ -190,7 +191,7 @@ def create_or_update_year_api(request):
         
         # 2. Validation des données de base
         if not all([name, start_date_str, end_date_str, min_time_str, max_time_str]):
-            return JsonResponse({"success": False, "message": "Veuillez compléter tous les champs obligatoires (nom, dates, heures)."}, status=400)
+            return JsonResponse({"success": False, "message": _("Veuillez compléter tous les champs obligatoires (nom, dates, heures).")}, status=400)
             
         # Conversion des chaînes en objets Python
         start_date = datetime.strptime(start_date_str, '%Y-%m-%d').date()
@@ -205,7 +206,7 @@ def create_or_update_year_api(request):
                 year = get_object_or_404(Year, pk=year_id, school=school)
 
                 if not year.creation:
-                    return JsonResponse({"success": False, "message": f"Impossible de modifier l'année, vous devez être dans la phase de création."}, status=400)
+                    return JsonResponse({"success": False, "message": _("Impossible de modifier l'année, vous devez être dans la phase de création.")}, status=400)
 
                 year.name = name
                 year.start_date = start_date
@@ -214,7 +215,7 @@ def create_or_update_year_api(request):
                 year.max_time = max_time
                 
                 year.save()
-                message = f"L'année scolaire {year.name} a été modifiée avec succès."
+                message = _("L'année scolaire {year} a été modifiée avec succès.").format(year=year.name)
 
             else:
                 # --- MODE CRÉATION ---
@@ -222,10 +223,10 @@ def create_or_update_year_api(request):
                 current_year = get_current_year_for_school(school)
                 if current_year:
                     if not current_year.finished:
-                        return JsonResponse({"success": False, "message": f"Impossible de créer une nouvelle année, vous devez d'abord terminer la précédente."}, status=400)
+                        return JsonResponse({"success": False, "message": _("Impossible de créer une nouvelle année, vous devez d'abord terminer la précédente.")}, status=400)
    
                 if Year.objects.filter(school=school, name=name).exists():
-                     return JsonResponse({"success": False, "message": f"Une année scolaire nommée '{name}' existe déjà."}, status=400)
+                     return JsonResponse({"success": False, "message": _("Une année scolaire nommée '{name}' existe déjà.").format(name=name)}, status=400)
 
                 # Mise à jour du flag 'current' pour sécurité
                 Year.objects.filter(school=school, current=True).update(current=False)
@@ -268,16 +269,16 @@ def create_or_update_year_api(request):
                     end_year=False
                 )
 
-                message = f"La nouvelle année scolaire {new_year.name} a été créée et est maintenant l'année actuelle."
+                message = _("La nouvelle année scolaire {year} a été créée et est maintenant l'année actuelle.").format(year=new_year.name)
                 
             return JsonResponse({"success": True, "message": message})
 
     except json.JSONDecodeError:
-        return JsonResponse({"success": False, "message": "Requête invalide (JSON non valide)."}, status=400)
+        return JsonResponse({"success": False, "message": _("Requête invalide (JSON non valide).")}, status=400)
     except IntegrityError as e:
-        return JsonResponse({"success": False, "message": f"Erreur d'intégrité de la base de données : {str(e)}"}, status=400)
+        return JsonResponse({"success": False, "message": _("Erreur d'intégrité de la base de données : {error}").format(error=str(e))}, status=400)
     except Exception as e:
-        return JsonResponse({"success": False, "message": f"Une erreur interne est survenue: {str(e)}"}, status=500)
+        return JsonResponse({"success": False, "message": _("Une erreur interne est survenue: {error}").format(error=str(e))}, status=500)
 
 
 # Mappage des clés de statut du JS vers les noms des champs booléens du modèle Year
@@ -308,18 +309,18 @@ def change_year_status_api(request, year_id):
 
         # 2. On vérifie si on est bien dans l'année actuelle :
         if not year or not year.current:
-            return JsonResponse({'success': False, 'message': 'Impossible de modifier le statut d\'une année terminée.'}, status=400)
+            return JsonResponse({'success': False, 'message': _('Impossible de modifier le statut d’une année terminée.')}, status=400)
    
         # 3. Charger les données du corps de la requête
         try:
             data = json.loads(request.body)
             new_status_key = data.get('new_status')
         except json.JSONDecodeError:
-            return JsonResponse({'success': False, 'message': 'Format de données JSON invalide.'}, status=400)
+            return JsonResponse({'success': False, 'message': _('Format de données JSON invalide.')}, status=400)
 
         # 4. Validation de la clé de statut
         if new_status_key not in STATUS_FIELDS:
-            return JsonResponse({'success': False, 'message': f"Statut invalide: '{new_status_key}'."}, status=400)
+            return JsonResponse({'success': False, 'message': _("Statut invalide: '{new_status}'.").format(new_status=new_status_key)}, status=400)
             
         new_field_name = STATUS_FIELDS[new_status_key]
         
@@ -327,7 +328,7 @@ def change_year_status_api(request, year_id):
         if year.finished:
             # Si l'année est 'finished', le seul changement autorisé est de revenir à 'end_year'.
             if new_status_key != 'end_year':
-                return JsonResponse({'success': False, 'message': 'Une année terminée ne peut être modifiée que pour revenir à l\'étape "Fin d\'année".'}, status=403)
+                return JsonResponse({'success': False, 'message': _('Une année terminée ne peut être modifiée que pour revenir à l’étape "Fin d’année".')}, status=403)
 
         # On vérifie que tous les trimestres/semestres soit bien terminés pour passer à la fin de l'année. 
         if new_field_name == 'end_year':
@@ -338,7 +339,7 @@ def change_year_status_api(request, year_id):
                 if terms :
                     for term in terms:
                         if term.finished == False:
-                            return JsonResponse({'success': False, 'message': f"Impossible de passer à l'étape de fin d'année car vous avez encore un trimestre ou un semestre qui n'es pas terminé."}, status=403)
+                            return JsonResponse({'success': False, 'message': _("Impossible de passer à l'étape de fin d'année car vous avez encore un trimestre ou un semestre qui n'es pas terminé.")}, status=403)
 
         # 6. Réinitialiser tous les champs de statut booléens à False pour garantir l'unicité
         # N'inclut pas is_current_year
@@ -348,7 +349,7 @@ def change_year_status_api(request, year_id):
         # 7. Définir le nouveau champ de statut à True
         setattr(year, new_field_name, True)
 
-        message = f"L'année '{year.name}' est passée à l'étape '{new_status_key.capitalize()}'. (Veuillez recharger la page)"
+        message = _("L'année '{year}' est passée à l'étape '{statut}'. (Veuillez recharger la page)").format(year=year.name, statut=new_status_key.capitalize())
 
         if new_field_name == "running":
             # On récupère l'id de l'école :
@@ -363,7 +364,7 @@ def change_year_status_api(request, year_id):
                 for level in levels:
                     create_term_year_level(1, year_id, level.id)
 
-                message = f"L'année '{year.name}' est passée à l'étape '{new_status_key.capitalize()}', les premier trimestres ou semestres ont été créer. (Veuillez recharger la page)"
+                message = _("L'année '{year}' est passée à l'étape '{statut}', les premier trimestres ou semestres ont été créer. (Veuillez recharger la page)").format(year=year.name, statut=new_status_key.capitalize())
         
         # 8. Sauvegarder les modifications
         year.save()
@@ -380,9 +381,9 @@ def change_year_status_api(request, year_id):
         return JsonResponse({'success': True, 'message': message})
 
     except Year.DoesNotExist:
-        return JsonResponse({'success': False, 'message': 'Année scolaire non trouvée ou accès refusé.'}, status=404)
+        return JsonResponse({'success': False, 'message': _('Année scolaire non trouvée ou accès refusé.')}, status=404)
     except Exception:
-        return JsonResponse({'success': False, 'message': 'Une erreur serveur est survenue lors du changement de statut.'}, status=500)
+        return JsonResponse({'success': False, 'message': _('Une erreur serveur est survenue lors du changement de statut.')}, status=500)
 
 
 @require_http_methods(["GET", "POST"])
@@ -422,12 +423,12 @@ def exception_management(request):
     if request.method == 'POST':
         try:
             if not current_year:
-                return JsonResponse({"success": False, "message": "Aucune année scolaire active n'est définie pour cette école."}, status=400)
+                return JsonResponse({"success": False, "message": _("Aucune année scolaire active n'est définie pour cette école.")}, status=400)
 
             stape_creation_year = get_authorisation_stape_creation_year(school_filter)
 
             if not stape_creation_year:
-                return JsonResponse({"success": False, "message": "Opération non autorisée. La gestion des exceptions n'est possible que lorsque l'année scolaire est à l'étape de création"}, status=400)
+                return JsonResponse({"success": False, "message": _("Opération non autorisée. La gestion des exceptions n'est possible que lorsque l'année scolaire est à l'étape de création")}, status=400)
 
             data = json.loads(request.body)
             action = data.get('action') 
@@ -435,7 +436,7 @@ def exception_management(request):
             exception_id = data.get('exception_id')
 
             if exception_type not in ['day', 'time']:
-                 return JsonResponse({'success': False, 'message': 'Type d\'exception invalide.'}, status=400)
+                 return JsonResponse({'success': False, 'message': _('Type d’exception invalide.')}, status=400)
 
             # Helpers de conversion de données pour la création/mise à jour
             def get_date_or_none(date_str):
@@ -453,7 +454,7 @@ def exception_management(request):
 
                 if action == 'create' or action == 'update':
                     if not start_date_str or not end_date_str or not type_name:
-                         return JsonResponse({'success': False, 'message': 'La date de début, la date de fin et le type sont obligatoires.'}, status=400)
+                         return JsonResponse({'success': False, 'message': _('La date de début, la date de fin et le type sont obligatoires.')}, status=400)
                     
                     start_date = get_date_or_none(start_date_str)
                     end_date = get_date_or_none(end_date_str)
@@ -465,11 +466,11 @@ def exception_management(request):
                             type=type_name,
                             year=current_year
                         )
-                        return JsonResponse({'success': True, 'message': f'Exception de jour "{type_name}" créée avec succès.'}, status=201)
+                        return JsonResponse({'success': True, 'message': _('Exception de jour "{type_name}" créée avec succès.').format(type_name=type_name)}, status=201)
                     
                     elif action == 'update':
                         if not exception_id:
-                            return JsonResponse({'success': False, 'message': 'ID de l\'exception manquant pour la mise à jour.'}, status=400)
+                            return JsonResponse({'success': False, 'message': _('ID de l’exception manquant pour la mise à jour.')}, status=400)
                         
                         try:
                             exception_obj = ExceptionDay.objects.get(pk=exception_id, year=current_year)
@@ -477,21 +478,21 @@ def exception_management(request):
                             exception_obj.end_date = end_date
                             exception_obj.type = type_name
                             exception_obj.save()
-                            return JsonResponse({'success': True, 'message': f'Exception de jour "{type_name}" mise à jour avec succès.'}, status=200)
+                            return JsonResponse({'success': True, 'message': _('Exception de jour "{type_name}" mise à jour avec succès.').format(type_name=type_name)}, status=200)                        
                         except ExceptionDay.DoesNotExist:
-                            return JsonResponse({'success': False, 'message': 'Exception de jour non trouvée.'}, status=404)
+                            return JsonResponse({'success': False, 'message': _('Exception de jour non trouvée.')}, status=404)
                 
                 elif action == 'delete':
                     if not exception_id:
-                        return JsonResponse({'success': False, 'message': 'ID de l\'exception manquant pour la suppression.'}, status=400)
+                        return JsonResponse({'success': False, 'message': _('ID de l’exception manquant pour la suppression.')}, status=400)
                     
                     try:
                         exception_obj = ExceptionDay.objects.get(pk=exception_id, year=current_year)
                         exception_name = str(exception_obj)
                         exception_obj.delete()
-                        return JsonResponse({'success': True, 'message': f'Exception de jour "{exception_name}" supprimée.'}, status=200)
+                        return JsonResponse({'success': True, 'message': _('Exception de jour "{exception_name}" supprimée.').format(exception_name=exception_name)}, status=200)
                     except ExceptionDay.DoesNotExist:
-                        return JsonResponse({'success': False, 'message': 'Exception de jour non trouvée.'}, status=404)
+                        return JsonResponse({'success': False, 'message': _('Exception de jour non trouvée.')}, status=404)
 
             # --- CRUD pour ExceptionTime (Horaires d'exception) ---
             elif exception_type == 'time':
@@ -501,7 +502,7 @@ def exception_management(request):
 
                 if action == 'create' or action == 'update':
                     if not start_time_str or not end_time_str:
-                        return JsonResponse({'success': False, 'message': 'L\'heure de début et l\'heure de fin sont obligatoires.'}, status=400)
+                        return JsonResponse({'success': False, 'message': _('L’heure de début et l’heure de fin sont obligatoires.')}, status=400)
                     
                     start_time = get_time_or_none(start_time_str)
                     end_time = get_time_or_none(end_time_str)
@@ -513,44 +514,44 @@ def exception_management(request):
                             end_time=end_time,
                             year=current_year
                         )
-                        return JsonResponse({'success': True, 'message': 'Horaire d\'exception créé avec succès.'}, status=201)
+                        return JsonResponse({'success': True, 'message': _('Horaire d’exception créé avec succès.')}, status=201)
                     
                     elif action == 'update':
                         if not exception_id:
-                            return JsonResponse({'success': False, 'message': 'ID de l\'exception manquant pour la mise à jour.'}, status=400)
+                            return JsonResponse({'success': False, 'message': _('ID de l’exception manquant pour la mise à jour.')}, status=400)
                         
                         try:
                             exception_obj = ExceptionTime.objects.get(pk=exception_id, year=current_year)
                             exception_obj.start_time = start_time
                             exception_obj.end_time = end_time
                             exception_obj.save()
-                            return JsonResponse({'success': True, 'message': 'Horaire d\'exception mis à jour avec succès.'}, status=200)
+                            return JsonResponse({'success': True, 'message': _('Horaire d’exception mis à jour avec succès.')}, status=200)
                         except ExceptionTime.DoesNotExist:
-                            return JsonResponse({'success': False, 'message': 'Horaire d\'exception non trouvé.'}, status=404)
+                            return JsonResponse({'success': False, 'message': _('Horaire d’exception non trouvé.')}, status=404)
 
                 elif action == 'delete':
                     if not exception_id:
-                        return JsonResponse({'success': False, 'message': 'ID de l\'exception manquant pour la suppression.'}, status=400)
+                        return JsonResponse({'success': False, 'message': _('ID de l’exception manquant pour la suppression.')}, status=400)
                     
                     try:
                         exception_obj = ExceptionTime.objects.get(pk=exception_id, year=current_year)
                         exception_name = str(exception_obj)
                         exception_obj.delete()
-                        return JsonResponse({'success': True, 'message': f'Horaire d\'exception "{exception_name}" supprimé.'}, status=200)
+                        return JsonResponse({'success': True, 'message': _('Horaire d’exception "{exception_name}" supprimé.').format(exception_name=exception_name)}, status=200)
                     except ExceptionTime.DoesNotExist:
-                        return JsonResponse({'success': False, 'message': 'Horaire d\'exception non trouvé.'}, status=404)
+                        return JsonResponse({'success': False, 'message': _('Horaire d’exception non trouvé.')}, status=404)
                 
             else:
-                 return JsonResponse({'success': False, 'message': 'Action non reconnue.'}, status=400)
+                 return JsonResponse({'success': False, 'message': _('Action non reconnue.')}, status=400)
 
         except json.JSONDecodeError:
-            return JsonResponse({'success': False, 'message': 'Données JSON invalides.'}, status=400)
+            return JsonResponse({'success': False, 'message': _('Données JSON invalides.')}, status=400)
         except ValidationError as e:
              # Gérer les erreurs de validation de date/heure (ex: format incorrect)
-             return JsonResponse({'success': False, 'message': f'Erreur de format de donnée: {e.message}'}, status=400)
+            return JsonResponse({'success': False, 'message': _('Erreur de format de donnée: {error}').format(error=e.message)}, status=400)
         except Exception as e:
             # Pensez à logger l'erreur 'e' en production
-            return JsonResponse({'success': False, 'message': f'Une erreur interne du serveur est survenue: {str(e)}'}, status=500)
+            return JsonResponse({'success': False, 'message': _('Une erreur interne du serveur est survenue: {error}').format(error=str(e))}, status=500)
 
     # --- 5. Gestion des requêtes GET (Affichage de la page) ---
     
@@ -610,7 +611,7 @@ def manage_term(request):
             if not current_year: 
                 return JsonResponse(
                     {"success": False, 
-                    "message": "Opération non autorisée. La gestion des trimestres/semestres n'est possible que lorsque l'année est créer."}, 
+                    "message": _("Opération non autorisée. La gestion des trimestres/semestres n'est possible que lorsque l'année est créer.")}, 
                     status=400
                 )
             
@@ -618,7 +619,7 @@ def manage_term(request):
             if not current_year.running: 
                 return JsonResponse(
                     {"success": False,
-                    "message": "Opération non autorisée. La gestion des trimestres/semestres n'est possible que lorsque l'année scolaire est à l'étape de Déroulement (Running)."}, 
+                    "message": _("Opération non autorisée. La gestion des trimestres/semestres n'est possible que lorsque l'année scolaire est à l'étape de Déroulement (Running).")}, 
                     status=400
                 )
                 
@@ -627,7 +628,7 @@ def manage_term(request):
             level_id = data.get('level_id')
 
             if not level_id or not action:
-                return JsonResponse({'success': False, 'message': 'L\'ID du niveau et l\'action sont obligatoires.'}, status=400)
+                return JsonResponse({'success': False, 'message': _('L’ID du niveau et l’action sont obligatoires.')}, status=400)
 
             # Utilisation de transaction.atomic() pour garantir que les opérations sont atomiques
             with transaction.atomic():
@@ -642,10 +643,10 @@ def manage_term(request):
                         finished=False
                     )
                 except Level.DoesNotExist:
-                    return JsonResponse({'success': False, 'message': 'Niveau non trouvé pour cette école.'}, status=404)
+                    return JsonResponse({'success': False, 'message': _('Niveau non trouvé pour cette école.')}, status=404)
                 except TermYearLevel.DoesNotExist:
                     # Le terme 1 est soit non créé, soit tous les termes sont finis
-                    return JsonResponse({'success': False, 'message': f'Aucun trimestre/semestre actif trouvé pour le niveau {level_obj.get_level_display()} et l\'année en cours.'}, status=404)
+                    return JsonResponse({'success': False, 'message': _('Aucun trimestre/semestre actif trouvé pour le niveau {level} et l’année en cours.').format(level=level_obj.get_level_display())}, status=404)
                 
                 # Déterminer la limite en fonction du type de niveau
                 # is_trimestre = level_obj.term_type == TERM_TYPE_TRIMESTRE
@@ -670,7 +671,7 @@ def manage_term(request):
                     if next_counter > MAX_COUNTER:
                         return JsonResponse(
                             {'success': False, 
-                             'message': f'Impossible d\'avancer. Le {current_term.counter}e {term_type_name} est le dernier possible ({MAX_COUNTER}) pour ce niveau.'}, 
+                            'message': _('Impossible d’avancer. Le {counter}e {term_type} est le dernier possible ({max_counter}) pour ce niveau.').format(counter=current_term.counter, term_type=term_type_name, max_counter=MAX_COUNTER)},
                             status=400
                         )
                     
@@ -692,7 +693,7 @@ def manage_term(request):
                     
                     return JsonResponse(
                         {'success': True, 
-                         'message': f'Avancement réussi ! Le niveau {level_obj.get_level_display()} est maintenant au {next_counter}e {term_type_name}.'}, 
+                        'message': _('Avancement réussi ! Le niveau {level} est maintenant au {next_counter}e {term_type}.').format(level=level_obj.get_level_display(), next_counter=next_counter, term_type=term_type_name)},
                         status=201
                     )
 
@@ -703,7 +704,7 @@ def manage_term(request):
                     if current_term.counter < MAX_COUNTER:
                         return JsonResponse(
                             {'success': False, 
-                             'message': f'Impossible de terminer le cycle. Le niveau {level_obj.get_level_display()} est seulement au {current_term.counter}e {term_type_name}. Il reste encore des termes à créer.'}, 
+                             'message': _('Impossible de terminer le cycle. Le niveau {level} est seulement au {counter}e {term_type}. Il reste encore des termes à créer.').format(level=level_obj.get_level_display(), counter=current_term.counter, term_type=term_type_name)},
                             status=400
                         )
                     
@@ -713,23 +714,23 @@ def manage_term(request):
                     
                     return JsonResponse(
                         {'success': True, 
-                         'message': f'Cycle terminé ! Le {current_term.counter}e et dernier {term_type_name} du niveau {level_obj.get_level_display()} est maintenant marqué comme terminé pour l\'année {current_year.name}.'}, 
+                         'message': _('Cycle terminé ! Le {counter}e et dernier {term_type} du niveau {level} est maintenant marqué comme terminé pour l’année {year}.').format(counter=current_term.counter, term_type=term_type_name, level=level_obj.get_level_display(), year=current_year.name)},
                         status=200
                     )
                 
                 else:
-                    return JsonResponse({'success': False, 'message': 'Action non reconnue.'}, status=400)
+                    return JsonResponse({'success': False, 'message': _('Action non reconnue.')}, status=400)
 
 
         except json.JSONDecodeError:
-            return JsonResponse({'success': False, 'message': 'Données JSON invalides.'}, status=400)
+            return JsonResponse({'success': False, 'message': _('Données JSON invalides.')}, status=400)
         except IntegrityError as e:
              # Cette erreur est levée si la transaction échoue (ex: doublon inattendu, contrainte violée)
-             error_message = f"Erreur de base de données. Opération annulée: {str(e)}"
+             error_message = _("Erreur de base de données. Opération annulée: {error}").format(error=str(e))
              return JsonResponse({'success': False, 'message': error_message}, status=400)
         except Exception as e:
-            print(f"Erreur lors de la gestion des termes : {e}")
-            return JsonResponse({'success': False, 'message': f'Une erreur interne du serveur est survenue: {str(e)}'}, status=500)
+            # print(f"Erreur lors de la gestion des termes : {e}")
+            return JsonResponse({'success': False, 'message': _('Une erreur interne du serveur est survenue: {error}').format(error=str(e))}, status=500)
 
     # --- 5. Gestion des requêtes GET (Affichage de la page) ---
     
@@ -806,10 +807,10 @@ def edit_school_view(request):
         school = get_user_school(request.user, request.session.get('selected_school_id'))
 
         school_types_fr = [
-            ("HIGHSCHOOL", "Lycée"),
-            ("COLLEGE", "Collège"),
-            ("UNIVERSITY", "Université"), 
-            ("SCHOOL", "Ecole")
+            ("HIGHSCHOOL", _("Lycée")),
+            ("COLLEGE", _("Collège")),
+            ("UNIVERSITY", _("Université")), 
+            ("SCHOOL", _("Ecole"))
         ]
         
         context = {
@@ -848,11 +849,11 @@ def api_update_school(request, school_id):
 
         # Validation basique
         if not name or not address or not school_type or not email:
-             return JsonResponse({'success': False, 'message': 'Veuillez remplir tous les champs obligatoires.'}, status=400)
+             return JsonResponse({'success': False, 'message': _('Veuillez remplir tous les champs obligatoires.')}, status=400)
 
         # Vérification unicité email (en excluant l'école actuelle)
         if School.objects.filter(email=email).exclude(pk=school_id).exists():
-            return JsonResponse({'success': False, 'message': 'Une autre école utilise déjà cet email.'}, status=400)
+            return JsonResponse({'success': False, 'message': _('Une autre école utilise déjà cet email.')}, status=400)
 
         # Mise à jour des champs autorisés
         school.name = name
@@ -870,66 +871,66 @@ def api_update_school(request, school_id):
 
         return JsonResponse({
             'success': True, 
-            'message': f"L'école '{school.name}' a été mise à jour avec succès."
+            'message': _("L'école {school} a été mise à jour avec succès.").format(school=school.name)
         })
 
     except json.JSONDecodeError:
-        return JsonResponse({'success': False, 'message': 'Données JSON invalides.'}, status=400)
+        return JsonResponse({'success': False, 'message': _('Données JSON invalides.')}, status=400)
     except Exception as e:
         return JsonResponse({'success': False, 'message': str(e)}, status=500)
-    
+
 
 @login_required
 def update_school_settings(request):
     """
-    Permet au proviseur de modifier uniquement le logo, la signature et la couleur.
+    Permet au proviseur de modifier le logo, la signature, la couleur et la langue.
     """
-    # 1. Récupération de l'école liée à l'utilisateur
-    # ADAPTATION REQUISE : Vérifie comment ton User est lié à School.
-    # Ici, je suppose que l'utilisateur est un Staff et qu'il a un attribut 'school'
-    # ou que le staff est lié à l'école.
-
     user = request.user
     type = get_user_type(user) 
 
     if type not in ("SuperAdministrator", "Principal"):
-        messages.error(request, "Vous n'avez pas accès à cette fonctionnalité.")
+        messages.error(request, _("Vous n'avez pas accès à cette fonctionnalité."))
         return redirect('dashboard')
     
     try:
         school = get_user_school(request.user, request.session.get('selected_school_id'))
     except AttributeError:
-        # Fallback pour superuser sans lien staff direct (pour le dev)
         if request.user.is_superuser:
             school = School.objects.first()
         else:
-            messages.error(request, "Aucune école associée à votre compte.")
+            messages.error(request, _("Aucune école associée à votre compte."))
             return redirect('dashboard')
 
     if not school:
-        messages.error(request, "École introuvable.")
+        messages.error(request, _("École introuvable."))
         return redirect('dashboard')
     elif not school.is_active:
-        messages.error(request, "École non active.")
+        messages.error(request, _("École non active."))
         return redirect('dashboard')
         
+    # Vérification si on peut changer la langue ---
+    current_year = get_current_year_for_school(school)
+    can_change_language = True
+    if current_year and not current_year.creation:
+        can_change_language = False
 
-    # 2. Gestion du formulaire
     if request.method == 'POST':
-        # IMPORTANT : request.FILES est obligatoire pour uploader des images
         form = SchoolUpdateForm(request.POST, request.FILES, instance=school)
         if form.is_valid():
             form.save()
-            messages.success(request, "Les paramètres de l'école ont été mis à jour.")
-            # On redirige vers la même page pour voir les changements
+            messages.success(request, _("Les paramètres de l'école ont été mis à jour."))
             return redirect('settings')
         else:
-            messages.error(request, "Veuillez corriger les erreurs ci-dessous.")
+            messages.error(request, _("Veuillez corriger les erreurs ci-dessous."))
     else:
         form = SchoolUpdateForm(instance=school)
+        # Bloquer le champ langue si on n'a pas le droit
+        if not can_change_language and 'language' in form.fields:
+            form.fields['language'].disabled = True
 
     context = {
         'form': form,
         'school': school,
+        'can_change_language': can_change_language, # On envoie l'info au HTML
     }
     return render(request, 'schools/settings.html', context)

@@ -1,7 +1,7 @@
 /**
  * manage_attendance.js
  * Logique de gestion des justifications d'absence (CPE/Admin)
- * Mode Production Safe
+ * Mode Production Safe, Multilingue & RTL
  */
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -10,7 +10,6 @@ document.addEventListener('DOMContentLoaded', () => {
     // 1. CONFIGURATION & RÉFÉRENCES (Extraction DOM)
     // ----------------------------------------------------------------------
 
-    // Conteneur principal
     const container = document.getElementById('manage-attendance-container');
     if (!container) {
         console.error("Erreur critique : Le conteneur #manage-attendance-container est introuvable.");
@@ -19,6 +18,18 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Récupération de l'URL API
     const API_JUSTIFY_URL = container.dataset.apiJustifyUrl;
+
+    // Récupération des traductions dynamiques (data-attributes)
+    const msgModalTitleEdit = container.getAttribute('data-msg-modal-title-edit') || "Modifier la justification";
+    const msgModalTitleAdd = container.getAttribute('data-msg-modal-title-add') || "Justifier l'absence";
+    const msgUnjustifyConfirm = container.getAttribute('data-msg-unjustify-confirm') || "Confirmer le retrait ?";
+    const msgUnjustifyDefault = container.getAttribute('data-msg-unjustify-default') || "Retirer la justification";
+    const msgBtnEdit = container.getAttribute('data-msg-btn-edit') || "Modifier";
+    const msgBtnAdd = container.getAttribute('data-msg-btn-add') || "Justifier";
+    const msgStatusJustified = container.getAttribute('data-msg-status-justified') || "Justifié";
+    const msgStatusUnjustified = container.getAttribute('data-msg-status-unjustified') || "Non justifié";
+    const msgErrorReason = container.getAttribute('data-msg-error-reason') || "Veuillez entrer un motif.";
+    const msgErrorConn = container.getAttribute('data-msg-error-conn') || "Erreur de connexion.";
 
     // Récupération du CSRF Token
     const csrfInput = document.querySelector('[name=csrfmiddlewaretoken]');
@@ -43,7 +54,6 @@ document.addEventListener('DOMContentLoaded', () => {
     
     const notificationArea = document.getElementById('notification-area');
 
-    // Variable pour gérer l'état de confirmation du bouton "Retirer"
     let unjustifyConfirmState = false;
 
 
@@ -59,8 +69,9 @@ document.addEventListener('DOMContentLoaded', () => {
         const icon = type === 'success' ? 'fa-check-circle' : 'fa-times-circle';
 
         const div = document.createElement('div');
-        div.className = `p-4 rounded-xl border shadow-md ${colorMap[type]} flex items-center transition-all duration-300 opacity-0 transform translate-y-2`;
-        div.innerHTML = `<i class="fas ${icon} mr-3 text-lg"></i><p class="font-semibold">${message}</p>`;
+        // Séparation icône + texte avec gap-3
+        div.className = `p-4 rounded-xl border shadow-md ${colorMap[type]} flex items-center gap-3 transition-all duration-300 opacity-0 transform translate-y-2`;
+        div.innerHTML = `<i class="fas ${icon} text-lg flex-shrink-0"></i><p class="font-semibold flex-1" dir="auto">${escapeHtml(message)}</p>`;
 
         if (notificationArea) {
             notificationArea.appendChild(div);
@@ -101,7 +112,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         } catch (error) {
             console.error("Erreur API:", error);
-            showNotification("Erreur de connexion.", 'error');
+            showNotification(msgErrorConn, 'error');
             return { success: false };
         }
     }
@@ -112,7 +123,6 @@ document.addEventListener('DOMContentLoaded', () => {
     // ----------------------------------------------------------------------
 
     function openModal(button) {
-        // Récupération des données depuis le bouton
         const id = button.dataset.id;
         const student = button.dataset.student;
         const date = button.dataset.date;
@@ -120,26 +130,24 @@ document.addEventListener('DOMContentLoaded', () => {
         const justified = button.dataset.justified === 'true';
         const reason = button.dataset.reason;
 
-        // Remplissage UI
         attendanceIdInput.value = id;
         modalStudentName.textContent = student;
         modalDate.textContent = date;
         modalType.textContent = type;
         reasonInput.value = reason;
 
-        // Réinitialiser l'état du bouton "Retirer"
         resetUnjustifyButton();
 
-        // Gestion état Bouton Dé-justifier
         if (justified) {
-            modalTitle.textContent = "Modifier la justification";
+            modalTitle.textContent = msgModalTitleEdit;
             btnUnjustify.classList.remove('hidden');
+            btnUnjustify.classList.add('inline-flex');
         } else {
-            modalTitle.textContent = "Justifier l'absence";
+            modalTitle.textContent = msgModalTitleAdd;
             btnUnjustify.classList.add('hidden');
+            btnUnjustify.classList.remove('inline-flex');
         }
 
-        // Affichage (Transition)
         modal.classList.remove('hidden');
         requestAnimationFrame(() => {
             modal.classList.remove('opacity-0');
@@ -170,12 +178,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function resetUnjustifyButton() {
         unjustifyConfirmState = false;
-        btnUnjustify.innerHTML = '<i class="fas fa-trash-alt mr-1"></i> Retirer la justification';
+        btnUnjustify.innerHTML = `<i class="fas fa-trash-alt"></i><span>${msgUnjustifyDefault}</span>`;
         btnUnjustify.classList.remove('bg-red-50', 'border', 'border-red-200', 'rounded', 'px-2', 'py-1', 'text-red-700', 'font-bold');
         btnUnjustify.classList.add('text-red-600');
     }
 
-    // Écouteurs d'ouverture (Délégation sur le tableau)
     const list = document.getElementById('attendance-list');
     if (list) {
         list.addEventListener('click', (e) => {
@@ -186,7 +193,6 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // Écouteurs de fermeture
     if (btnCancel) btnCancel.addEventListener('click', closeModal);
     
     if (modal) {
@@ -200,7 +206,6 @@ document.addEventListener('DOMContentLoaded', () => {
     // 4. ACTIONS API (JUSTIFIER / DÉ-JUSTIFIER)
     // ----------------------------------------------------------------------
 
-    // A. Soumission du formulaire (JUSTIFIER)
     if (form) {
         form.addEventListener('submit', async (e) => {
             e.preventDefault();
@@ -209,7 +214,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const reason = reasonInput.value;
 
             if (!reason.trim()) {
-                showNotification("Veuillez entrer un motif.", "error");
+                showNotification(msgErrorReason, "error");
                 return;
             }
 
@@ -227,22 +232,19 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // B. Clic sur "Retirer la justification"
     if (btnUnjustify) {
         btnUnjustify.addEventListener('click', async () => {
             
             if (!unjustifyConfirmState) {
-                // Étape 1 : Demande de confirmation
                 unjustifyConfirmState = true;
-                btnUnjustify.innerHTML = '<i class="fas fa-exclamation-triangle mr-1"></i> Confirmer le retrait ?';
+                btnUnjustify.innerHTML = `<i class="fas fa-exclamation-triangle"></i><span>${msgUnjustifyConfirm}</span>`;
                 
                 btnUnjustify.classList.remove('text-red-600');
                 btnUnjustify.classList.add('bg-red-50', 'border', 'border-red-200', 'rounded', 'px-2', 'py-1', 'text-red-700', 'font-bold');
                 
-                return; // On arrête ici
+                return;
             }
 
-            // Étape 2 : Confirmation
             const attendanceId = attendanceIdInput.value;
 
             const result = await apiFetch(API_JUSTIFY_URL, {
@@ -268,32 +270,36 @@ document.addEventListener('DOMContentLoaded', () => {
         const row = document.querySelector(`.record-row[data-id="${attendanceId}"]`);
         if (!row) return;
 
-        // 1. Mise à jour de la colonne Statut
         const statusCell = row.querySelector('.status-cell');
         if (isJustified) {
             statusCell.innerHTML = `
-                <div class="text-green-600 font-medium flex items-center">
-                    <i class="fas fa-check-circle mr-2"></i> Justifié
+                <div class="text-green-600 font-medium inline-flex items-center gap-2">
+                    <i class="fas fa-check-circle"></i> 
+                    <span>${msgStatusJustified}</span>
                 </div>
             `;
         } else {
             statusCell.innerHTML = `
-                <div class="text-red-500 font-medium flex items-center">
-                    <i class="fas fa-times-circle mr-2"></i> Non justifié
+                <div class="text-red-500 font-medium inline-flex items-center gap-2">
+                    <i class="fas fa-times-circle"></i> 
+                    <span>${msgStatusUnjustified}</span>
                 </div>
             `;
         }
 
-        // 2. Mise à jour du bouton d'action
         const btn = row.querySelector('.btn-justify');
         if (btn) {
-            // Met à jour les data-attributes pour la prochaine ouverture
             btn.dataset.justified = isJustified;
             btn.dataset.reason = reason;
-            
-            // Change le texte du bouton
-            btn.textContent = isJustified ? "Modifier" : "Justifier";
+            btn.textContent = isJustified ? msgBtnEdit : msgBtnAdd;
         }
+    }
+
+    function escapeHtml(text) {
+        if (!text) return '';
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
     }
 
 });

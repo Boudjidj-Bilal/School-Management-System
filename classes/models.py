@@ -1,41 +1,42 @@
 from django.db import models
+from django.utils.translation import gettext_lazy as _
 
 # --> Représente un niveau scolaire (ex: 6e, 5e, Terminale...)
 class Level(models.Model):
     TERM_TYPE_CHOICES = [
-    ("TRIMESTRE", "Trimestre"),
-    ("SEMESTRE", "Semestre"),
-    ("UNIQUE", "Unique"),
+    ("TRIMESTRE", _("Trimestre")),
+    ("SEMESTRE", _("Semestre")),
+    ("UNIQUE", _("Unique")),
     ]
 
     LEVEL_CHOICES = [
-    ("6E", "6e"),
-    ("5E", "5e"),
-    ("4E", "4e"),
-    ("3E", "3e"),
-    ("2ND", "Seconde"),
-    ("1ER", "Première"),
-    ("T", "Terminale"),
-    ("BTS1", "Bts1"),
-    ("BTS2", "Bts2"),
-    ("L1", "L1"),
-    ("L2", "L2"),
-    ("L3", "L3"),
-    ("M1", "M1"),
-    ("M2", "M2"),
-    ("D1", "D1"),
-    ("D2", "D2"),
-    ("D3", "D3"),
-    ("1A", "1er année"),
-    ("2A", "2e année"),
-    ("3A", "3e année"),
-    ("4A", "4e année"),
-    ("5A", "5e année"),
-    ("6A", "6e année"),
-    ("7A", "7e année"),
-    ("8A", "8e année"),
-    ("9A", "9e année"),
-    ("10A", "10e année"),
+    ("6E", _("6e")),
+    ("5E", _("5e")),
+    ("4E", _("4e")),
+    ("3E", _("3e")),
+    ("2ND", _("Seconde")),
+    ("1ER", _("Première")),
+    ("T", _("Terminale")),
+    ("BTS1", _("Bts1")),
+    ("BTS2", _("Bts2")),
+    ("L1", _("L1")),
+    ("L2", _("L2")),
+    ("L3", _("L3")),
+    ("M1", _("M1")),
+    ("M2", _("M2")),
+    ("D1", _("D1")),
+    ("D2", _("D2")),
+    ("D3", _("D3")),
+    ("1A", _("1er année")),
+    ("2A", _("2e année")),
+    ("3A", _("3e année")),
+    ("4A", _("4e année")),
+    ("5A", _("5e année")),
+    ("6A", _("6e année")),
+    ("7A", _("7e année")),
+    ("8A", _("8e année")),
+    ("9A", _("9e année")),
+    ("10A", _("10e année")),
     ]
 
     level = models.CharField(max_length=255, choices=LEVEL_CHOICES, default="6E")  # niveau numérique (ex: 6, 5, 1, 2...)
@@ -90,7 +91,7 @@ class ClassStudentYear(models.Model):
         unique_together = ("student_class", "student", "year")  # éviter doublons
 
     def __str__(self):
-        return f"{self.student} in {self.student_class} ({self.year})"
+        return _("{self.student} in {self.student_class} ({self.year})").format(student=self.student, student_class=self.student_class, year=self.year)
 
 
 # --> Représente l'affectation d'un professeur à une classe pour une année donnée
@@ -111,4 +112,4 @@ class ClassTeacherYear(models.Model):
         unique_together = ("student_class", "teacher", "year")  # éviter doublons
 
     def __str__(self):
-        return f"{self.teacher} for {self.student_class} ({self.year})"
+        return _("{teacher} for {student_class} ({year})").format(teacher=self.teacher, student_class=self.student_class, year=self.year)

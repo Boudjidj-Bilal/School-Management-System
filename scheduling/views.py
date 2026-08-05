@@ -8,6 +8,7 @@ from django.contrib.auth.decorators import login_required
 from django.views.decorators.http import require_http_methods
 from django.db.models import F # Assurez-vous d'importer F en haut du fichier
 from django.utils import timezone
+from django.utils.translation import gettext_lazy as _
 
 # Import des modèles
 from scheduling.models import WeeklyScheduleTemplate, CourseTemplate, ScheduledCourse
@@ -150,7 +151,7 @@ def manage_weekly_schedule_template_view(request):
         action = data.get("action")
 
         if action not in ["create", "update", "delete"]:
-            return JsonResponse({"success": False, "message": "Action non reconnue."}, status=400)
+            return JsonResponse({"success": False, "message": _("Action non reconnue.")}, status=400)
 
         # --- CREATE ---
         if action == "create":
@@ -160,7 +161,7 @@ def manage_weekly_schedule_template_view(request):
             class_id = data.get("class_id")
 
             if not year_id or not class_id:
-                return JsonResponse({"success": False, "message": "Les champs 'year_id' et 'class_id' sont obligatoires."}, status=400)
+                return JsonResponse({"success": False, "message": _("Les champs 'year_id' et 'class_id' sont obligatoires.")}, status=400)
 
             year = get_object_or_404(Year, pk=year_id)
             student_class = get_object_or_404(Class, pk=class_id)
@@ -175,7 +176,7 @@ def manage_weekly_schedule_template_view(request):
 
             return JsonResponse({
                 "success": True,
-                "message": "Template de semaine créé avec succès." ,
+                "message": _("Template de semaine créé avec succès."),
                 "template_id": template.id
             })
 
@@ -183,7 +184,7 @@ def manage_weekly_schedule_template_view(request):
         elif action == "update":
             template_id = data.get("template_id")
             if not template_id:
-                return JsonResponse({"success": False, "message": "L'ID du template est requis pour une mise à jour."}, status=400)
+                return JsonResponse({"success": False, "message": _("L'ID du template est requis pour une mise à jour.")}, status=400)
 
             template = get_object_or_404(WeeklyScheduleTemplate, pk=template_id)
 
@@ -196,7 +197,7 @@ def manage_weekly_schedule_template_view(request):
 
             return JsonResponse({
                 "success": True,
-                "message": "Template de semaine mis à jour avec succès.",
+                "message": _("Template de semaine mis à jour avec succès."),
                 "template_id": template.id
             })
 
@@ -204,7 +205,7 @@ def manage_weekly_schedule_template_view(request):
         elif action == "delete":
             template_id = data.get("template_id")
             if not template_id:
-                return JsonResponse({"success": False, "message": "L'ID du template est requis pour une suppression."}, status=400)
+                return JsonResponse({"success": False, "message": _("L'ID du template est requis pour une suppression.")}, status=400)
 
             template = get_object_or_404(WeeklyScheduleTemplate, pk=template_id)
 
@@ -213,15 +214,15 @@ def manage_weekly_schedule_template_view(request):
 
             return JsonResponse({
                 "success": True,
-                "message": "Template de semaine supprimé avec succès."
+                "message": _("Template de semaine supprimé avec succès.")
             })
 
     except IntegrityError:
-        return JsonResponse({"success": False, "message": "Erreur d’unicité : un template similaire existe déjà."}, status=409)
+        return JsonResponse({"success": False, "message": _("Erreur d’unicité : un template similaire existe déjà.")}, status=409)
     except WeeklyScheduleTemplate.DoesNotExist:
-        return JsonResponse({"success": False, "message": "Template introuvable."}, status=404)
+        return JsonResponse({"success": False, "message": _("Template introuvable.")}, status=404)
     except Exception as e:
-        return JsonResponse({"success": False, "message": f"Erreur interne : {str(e)}"}, status=500)
+        return JsonResponse({"success": False, "message": _("Erreur interne : {error}").format(error=str(e))}, status=500)
 
 
 @require_http_methods(["POST"])
@@ -261,7 +262,7 @@ def manage_course_template_view(request):
                     )
                     return JsonResponse({
                         "success": True,
-                        "message": "Cours ajouté avec succès.",
+                        "message": _("Cours ajouté avec succès."),
                         "course_id": new_course.id
                     })
 
@@ -274,22 +275,22 @@ def manage_course_template_view(request):
                     course.classroom.id = classroom_id
                     course.teacher_subject.id = teacher_subject_id
                     course.save()
-                    return JsonResponse({"success": True, "message": "Cours mis à jour avec succès."})
+                    return JsonResponse({"success": True, "message": _("Cours mis à jour avec succès.")})
 
         elif action == 'delete':
             course_pk = data.get('course_pk')
             CourseTemplate.objects.filter(pk=course_pk, weekly_template=weekly_template).delete()
-            return JsonResponse({"success": True, "message": "Cours supprimé avec succès."})
+            return JsonResponse({"success": True, "message": _("Cours supprimé avec succès.")})
 
         else:
-            return JsonResponse({"success": False, "message": "Action non reconnue."}, status=400)
+            return JsonResponse({"success": False, "message": _("Action non reconnue.")}, status=400)
 
     except WeeklyScheduleTemplate.DoesNotExist:
-        return JsonResponse({'success': False, 'message': "Template de semaine non trouvé."}, status=404)
+        return JsonResponse({'success': False, 'message': _("Template de semaine non trouvé.")}, status=404)
     except IntegrityError:
-        return JsonResponse({'success': False, 'message': "Conflit ou erreur d’unicité dans le template."}, status=409)
+        return JsonResponse({'success': False, 'message': _("Conflit ou erreur d’unicité dans le template.")}, status=409)
     except Exception as e:
-        return JsonResponse({'success': False, 'message': f"Erreur interne : {str(e)}"}, status=500)
+        return JsonResponse({'success': False, 'message': _("Erreur interne : {error}").format(error=str(e))}, status=500)
 
 
 @require_http_methods(["POST"])
@@ -304,7 +305,7 @@ def create_scheduled_courses_view(request):
     """
     user_type = get_user_type(request.user)
     if user_type not in ["SuperAdministrator", "Principal", "Administrator"]:
-        return JsonResponse({"success": False, "message": "Accès refusé."}, status=403)
+        return JsonResponse({"success": False, "message": _("Accès refusé.")}, status=403)
 
     try:
         # 1. Lecture et validation des données
@@ -315,7 +316,7 @@ def create_scheduled_courses_view(request):
         if not courses_list or not year_id:
             return JsonResponse({
                 "success": False,
-                "message": "Les champs 'courses_list' et 'year_id' sont obligatoires."
+                "message": _("Les champs 'courses_list' et 'year_id' sont obligatoires.")
             }, status=400)
 
         year = get_object_or_404(Year, pk=year_id)
@@ -388,7 +389,7 @@ def create_scheduled_courses_view(request):
                     except Exception as e:
                         creation_errors.append({
                             "course_data": course_data,
-                            "error": f"Erreur interne lors de la sauvegarde : {str(e)}"
+                            "error": _("Erreur interne lors de la sauvegarde : {error}").format(error=str(e))
                         })
 
         # --------------------------------------------------------
@@ -398,9 +399,9 @@ def create_scheduled_courses_view(request):
         final_errors = invalid_courses_errors + creation_errors
         
         if not final_errors:
-            message = f"{len(created_courses_list)} cours ont été créés avec succès."
+            message = _("{nb_courses} cours ont été créés avec succès.").format(nb_courses=len(created_courses_list))
         else:
-            message = f"{len(created_courses_list)} cours créés. {len(final_errors)} cours en erreur (voir détails)."
+            message = _("{nb_courses} cours créés. {nb_errors} cours en erreur (voir détails).").format(nb_courses=len(created_courses_list), nb_errors=len(final_errors))
 
         return JsonResponse({
             "success": True, 
@@ -412,9 +413,9 @@ def create_scheduled_courses_view(request):
         })
 
     except json.JSONDecodeError:
-        return JsonResponse({"success": False, "message": "Requête JSON invalide."}, status=400)
+        return JsonResponse({"success": False, "message": _("Requête JSON invalide.")}, status=400)
     except Exception as e:
-        return JsonResponse({"success": False, "message": f"Erreur interne : {str(e)}"}, status=500)
+        return JsonResponse({"success": False, "message": _("Erreur interne : {error}").format(error=str(e))}, status=500)
 
 
 
@@ -500,7 +501,7 @@ def api_get_week_schedule_views(request):
         class_id = data.get("class_id")
 
         if not start_date_str or not class_id:
-            return JsonResponse({"success": False, "message": "Date de début ou ID de classe manquant."}, status=400)
+            return JsonResponse({"success": False, "message": _("Date de début ou ID de classe manquant.")}, status=400)
 
         classe = get_object_or_404(Class, pk=class_id)
         start_of_week = datetime.date.fromisoformat(start_date_str)
@@ -511,9 +512,9 @@ def api_get_week_schedule_views(request):
         return JsonResponse({"success": True, "courses": courses_data})
 
     except Class.DoesNotExist:
-        return JsonResponse({"success": False, "message": "Classe introuvable."}, status=404)
+        return JsonResponse({"success": False, "message": _("Classe introuvable.")}, status=404)
     except Exception as e:
-        return JsonResponse({"success": False, "message": f"Erreur interne : {str(e)}"}, status=500)
+        return JsonResponse({"success": False, "message": _("Erreur interne : {error}").format(error=str(e))}, status=500)
 
 
 @require_http_methods(["POST"])
@@ -527,7 +528,7 @@ def api_manage_course_status_views(request):
     # --- 1. Sécurité ---
     user_type = get_user_type(request.user)
     if user_type not in ["SuperAdministrator", "Principal", "Administrator"]:
-        return JsonResponse({"success": False, "message": "Accès refusé. Droits insuffisants."}, status=403)
+        return JsonResponse({"success": False, "message": _("Accès refusé. Droits insuffisants.")}, status=403)
 
     try:
         data = json.loads(request.body)
@@ -535,7 +536,7 @@ def api_manage_course_status_views(request):
         action = data.get("action") # ex: "DELETE", "SET_CANCELLED", "SET_ACTIVE", "SET_TEACHER_ABSENT"
 
         if not course_id or not action:
-            return JsonResponse({"success": False, "message": "ID de cours ou action manquante."}, status=400)
+            return JsonResponse({"success": False, "message": _("ID de cours ou action manquante.")}, status=400)
 
         new_status = None
         message = ""
@@ -546,28 +547,28 @@ def api_manage_course_status_views(request):
 
             if action == "DELETE":
                 course.delete()
-                message = "Cours supprimé définitivement."
+                message = _("Cours supprimé définitivement.")
                 
             elif action == "SET_ACTIVE":
                 course.status = 'ACTIVE'
                 course.save()
-                message = "Cours marqué comme 'Actif'."
+                message = _("Cours marqué comme 'Actif'.")
                 new_status = course.get_status_display()
                 
             elif action == "SET_CANCELLED":
                 course.status = 'CANCELLED'
                 course.save()
-                message = "Cours marqué comme 'Annulé'."
+                message = _("Cours marqué comme 'Annulé'.")
                 new_status = course.get_status_display()
 
             elif action == "SET_TEACHER_ABSENT":
                 course.status = 'TEACHER_ABSENT'
                 course.save()
-                message = "Cours marqué comme 'Professeur absent'."
+                message = _("Cours marqué comme 'Professeur absent'.")
                 new_status = course.get_status_display()
                 
             else:
-                return JsonResponse({"success": False, "message": "Action non reconnue."}, status=400)
+                return JsonResponse({"success": False, "message": _("Action non reconnue.")}, status=400)
 
         return JsonResponse({
             "success": True, 
@@ -577,9 +578,9 @@ def api_manage_course_status_views(request):
         })
 
     except ScheduledCourse.DoesNotExist:
-        return JsonResponse({"success": False, "message": "Cours introuvable."}, status=404)
+        return JsonResponse({"success": False, "message": _("Cours introuvable.")}, status=404)
     except Exception as e:
-        return JsonResponse({"success": False, "message": f"Erreur interne : {str(e)}"}, status=500)
+        return JsonResponse({"success": False, "message": _("Erreur interne : {error}").format(error=str(e))}, status=500)
 
 
 @login_required(login_url='login')
@@ -675,7 +676,7 @@ def api_get_teacher_week_schedule_views(request):
         staff_id = data.get("staff_id") # L'ID du prof dont on regarde le planning
 
         if not start_date_str or not staff_id:
-            return JsonResponse({"success": False, "message": "Date de début ou ID de professeur manquant."}, status=400)
+            return JsonResponse({"success": False, "message": _("Date de début ou ID de professeur manquant.")}, status=400)
 
         # --- Re-vérification des permissions ---
         teacher_staff = get_object_or_404(Staff, pk=staff_id)
@@ -685,7 +686,7 @@ def api_get_teacher_week_schedule_views(request):
         is_self = (hasattr(user, 'staff_user') and user.staff_user.id == teacher_staff.id)
 
         if not (is_admin_or_principal or is_self):
-            return JsonResponse({"success": False, "message": "Accès refusé."}, status=403)
+            return JsonResponse({"success": False, "message": _("Accès refusé.")}, status=403)
         # --- Fin des permissions ---
 
         start_of_week = datetime.date.fromisoformat(start_date_str)
@@ -696,9 +697,9 @@ def api_get_teacher_week_schedule_views(request):
         return JsonResponse({"success": True, "courses": courses_data})
 
     except Staff.DoesNotExist:
-        return JsonResponse({"success": False, "message": "Professeur introuvable."}, status=404)
+        return JsonResponse({"success": False, "message": _("Professeur introuvable.")}, status=404)
     except Exception as e:
-        return JsonResponse({"success": False, "message": f"Erreur interne : {str(e)}"}, status=500)
+        return JsonResponse({"success": False, "message": _("Erreur interne : {error}").format(error=str(e))}, status=500)
 
 
 @require_http_methods(["POST"])
@@ -716,7 +717,7 @@ def api_manage_teacher_course_status_views(request):
         action = data.get("action") # ex: "DELETE", "SET_CANCELLED", "SET_ACTIVE", "SET_TEACHER_ABSENT"
 
         if not course_id or not action:
-            return JsonResponse({"success": False, "message": "ID de cours ou action manquante."}, status=400)
+            return JsonResponse({"success": False, "message": _("ID de cours ou action manquante.")}, status=400)
 
         course = get_object_or_404(ScheduledCourse, pk=course_id)
         
@@ -730,16 +731,16 @@ def api_manage_teacher_course_status_views(request):
         # Si l'action est restreinte (Delete/Cancel)
         if action in ["DELETE", "SET_CANCELLED"]:
             if not is_admin_or_principal:
-                return JsonResponse({"success": False, "message": "Accès refusé. Seul un administrateur peut supprimer ou annuler un cours."}, status=403)
+                return JsonResponse({"success": False, "message": _("Accès refusé. Seul un administrateur peut supprimer ou annuler un cours.")}, status=403)
         
         # Si l'action est autorisée (Active/Absent)
         elif action in ["SET_ACTIVE", "SET_TEACHER_ABSENT"]:
             if not (is_admin_or_principal or is_teacher_owner):
-                return JsonResponse({"success": False, "message": "Accès refusé. Vous n'êtes pas l'enseignant de ce cours."}, status=403)
+                return JsonResponse({"success": False, "message": _("Accès refusé. Vous n'êtes pas l'enseignant de ce cours.")}, status=403)
         
         # Si l'action n'est pas reconnue
         elif action not in ["Faire l'appel", "Mettre des notes"]: # Accepte les placeholders
-             return JsonResponse({"success": False, "message": "Action non reconnue."}, status=400)
+             return JsonResponse({"success": False, "message": _("Action non reconnue.")}, status=400)
 
         # --- 2. Exécution de l'Action ---
         new_status = None
@@ -748,30 +749,30 @@ def api_manage_teacher_course_status_views(request):
         with transaction.atomic():
             if action == "DELETE":
                 course.delete()
-                message = "Cours supprimé définitivement."
+                message = _("Cours supprimé définitivement.")
                 
             elif action == "SET_ACTIVE":
                 course.status = 'ACTIVE'
                 course.save()
-                message = "Cours marqué comme 'Actif'."
+                message = _("Cours marqué comme 'Actif'.")
                 new_status = course.get_status_display()
                 
             elif action == "SET_CANCELLED":
                 course.status = 'CANCELLED'
                 course.save()
-                message = "Cours marqué comme 'Annulé'."
+                message = _("Cours marqué comme 'Annulé'.")
                 new_status = course.get_status_display()
 
             elif action == "SET_TEACHER_ABSENT":
                 course.status = 'TEACHER_ABSENT'
                 course.save()
-                message = "Cours marqué comme 'Professeur absent'."
+                message = _("Cours marqué comme 'Professeur absent'.")
                 new_status = course.get_status_display()
             
             # Gère les actions "placeholder"
             elif action in ["Faire l'appel", "Mettre des notes"]:
                 # Ne fait rien au backend, mais renvoie un succès pour que la modale se ferme
-                message = f"Fonctionnalité '{action}' non implémentée."
+                message = _("Fonctionnalité '{action}' non implémentée.").format(action=action)
                 new_status = course.get_status_display() # Garde le statut actuel
 
         return JsonResponse({
@@ -782,9 +783,9 @@ def api_manage_teacher_course_status_views(request):
         })
 
     except ScheduledCourse.DoesNotExist:
-        return JsonResponse({"success": False, "message": "Cours introuvable."}, status=404)
+        return JsonResponse({"success": False, "message": _("Cours introuvable.")}, status=404)
     except Exception as e:
-        return JsonResponse({"success": False, "message": f"Erreur interne : {str(e)}"}, status=500)
+        return JsonResponse({"success": False, "message": _("Erreur interne : {error}").format(error=str(e))}, status=500)
 
 
 

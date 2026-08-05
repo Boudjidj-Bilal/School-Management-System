@@ -9,6 +9,7 @@ from users.models import Student, Staff, Parent
 from classes.models import Class, ClassStudentYear
 
 from users.utils import get_user_type
+from django.utils.translation import gettext_lazy as _
 
 
 from django.shortcuts import get_object_or_404
@@ -16,12 +17,12 @@ from django.core.exceptions import PermissionDenied
 
 
 ROLE_LABELS = {
-    "PRINCIPAL": "Proviseur",
-    "TEACHER": "Professeur",
-    "CPE": "CPE",
-    "ADMINISTRATOR": "Administratif",
-    "PARENT": "Parent",
-    "STUDENT": "Élève",
+    "PRINCIPAL": _("Proviseur"),
+    "TEACHER": _("Professeur"),
+    "CPE": _("CPE"),
+    "ADMINISTRATOR": _("Administratif"),
+    "PARENT": _("Parent"),
+    "STUDENT": _("Élève"),
 }
 
 def get_user_role(user):
@@ -41,7 +42,6 @@ def get_user_role(user):
     """
 
     if hasattr(user, "staff_user"):
-
         return user.staff_user.staff_type
 
     if hasattr(user, "parent_user"):
@@ -291,7 +291,7 @@ def get_user_conversations(user):
             "last_message": (
                 last_msg.content
                 if last_msg
-                else "Aucun message"
+                else _("Aucun message")
             ),
             "last_message_date": (
                 last_msg.date
@@ -503,9 +503,9 @@ def get_available_targets(user, current_year):
         data['can_target_individual_staff'] = True
         
         data['staff_groups'] = [
-            {'code': 'ALL_STAFF', 'name': 'Tout le personnel'},
-            {'code': 'TEACHERS', 'name': 'Tous les professeurs'},
-            {'code': 'ADMINISTRATION', 'name': 'Administration'},
+            {'code': 'ALL_STAFF', 'name': _('Tout le personnel')},
+            {'code': 'TEACHERS', 'name': _('Tous les professeurs')},
+            {'code': 'ADMINISTRATION', 'name': _('Administration')},
         ]
         
         school = None
@@ -628,22 +628,30 @@ def generate_target_summary(targets):
     class_ids = targets.get('classes', [])
     if class_ids:
         count = len(class_ids)
-        summary_parts.append(f"{count} Classe{'s' if count > 1 else ''}")
+        if count > 1:
+            summary_parts.append(str(count)+_(" Classes"))
+        else:
+            summary_parts.append(str(count)+_(" Classe"))
         
     student_ids = targets.get('students', [])
     if student_ids:
         count = len(student_ids)
-        summary_parts.append(f"{count} Élève{'s' if count > 1 else ''}")
+        if count > 1:
+            summary_parts.append(str(count)+_(" Élèves"))
+        else:
+            summary_parts.append(str(count)+_(" Élève"))
         
     staff_groups = targets.get('staff_groups', [])
     if staff_groups:
-        summary_parts.append(f"Groupes: {', '.join(staff_groups)}")
+        summary_parts.append(_("Groupes: {text_groupe}").format(text_groupe=', '.join(staff_groups)))
         
     staff_ids = targets.get('staff_individuals', [])
     if staff_ids:
         count = len(staff_ids)
-        summary_parts.append(f"{count} Membre{'s' if count > 1 else ''} du personnel")
-        
+        if count > 1:
+            summary_parts.append(str(count)+_(" Membres du personnel"))
+        else:
+            summary_parts.append(str(count)+_(" Membre du personnel"))        
     return ", ".join(summary_parts)
 
 
@@ -688,7 +696,7 @@ def get_homework_detail_context(announcement_id, user):
     announcement = get_object_or_404(Announcement, id=announcement_id)
     
     if announcement.announcement_type != "HOMEWORK":
-        raise PermissionDenied("Cette annonce n'est pas un devoir.")
+        raise PermissionDenied(_("Cette annonce n'est pas un devoir."))
 
     context = {
         'announcement': announcement,
@@ -710,7 +718,7 @@ def get_homework_detail_context(announcement_id, user):
         
         is_recipient = announcement.recipients.filter(user=user).exists()
         if not is_recipient and not user.is_superuser:
-            raise PermissionDenied("Vous n'êtes pas destinataire de ce devoir.")
+            raise PermissionDenied(_("Vous n'êtes pas destinataire de ce devoir."))
 
         context['is_student'] = True
         context['requires_submission'] = announcement.requires_submission
@@ -726,7 +734,7 @@ def get_homework_detail_context(announcement_id, user):
         return context
 
     else:
-        raise PermissionDenied("Accès non autorisé à cette page de devoir.")
+        raise PermissionDenied(_("Accès non autorisé à cette page de devoir."))
 
 
 def handle_student_submission(announcement, student_user, comment, files_list):
@@ -735,7 +743,7 @@ def handle_student_submission(announcement, student_user, comment, files_list):
     avec nettoyage physique des anciens fichiers de CET élève pour CE devoir.
     """
     if not announcement.requires_submission:
-        raise PermissionDenied("Ce devoir ne nécessite pas de rendu.")
+        raise PermissionDenied(_("Ce devoir ne nécessite pas de rendu."))
         
     student_profile = student_user.student_user
 

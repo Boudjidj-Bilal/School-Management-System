@@ -1,7 +1,7 @@
 {% extends 'base.html' %}
-{% load static %}
+{% load static i18n %}
 
-{% block title %}Gestion des Évaluations{% endblock %}
+{% block title %}{% trans "Gestion des Évaluations" %}{% endblock %}
 
 {% block content %}
     {% csrf_token %}
@@ -14,73 +14,99 @@
 
     <!-- En-tête de la page -->
     <header class="mb-6 border-b pb-4 border-gray-200">
-        <h1 class="text-3xl font-extrabold text-gray-900 flex items-center">
-            <i class="fas fa-edit text-indigo-600 mr-3"></i>
-            Gestion des Évaluations
+        <!-- MODIFICATION : gap-3 -->
+        <h1 class="text-3xl font-extrabold text-gray-900 flex items-center gap-3">
+            <i class="fas fa-edit text-indigo-600"></i>
+            <span>{% trans "Gestion des Évaluations" %}</span>
         </h1>
-        <p class="text-lg text-gray-600 font-medium">
-            Professeur : {{ teacher_staff.user.first_name }} {{ teacher_staff.user.last_name }}
-            <span class="mx-2">|</span>
-            Année : {{ current_year.name }}
-        </p>
+        <div class="text-lg text-gray-600 font-medium mt-2 flex flex-wrap items-center gap-2">
+            <span>{% trans "Professeur :" %} {{ teacher_staff.user.first_name }} {{ teacher_staff.user.last_name }}</span>
+            <span>|</span>
+            <span>{% trans "Année :" %} {{ current_year.name }}</span>
+        </div>
     </header>
 
     <!-- Conteneur pour les messages de notification -->
     <div id="notification-area" class="mb-6 space-y-3"></div>
 
-    <!-- Contenu de la page avec Configuration Injectée -->
+    <!-- Conteneur de la page avec Configuration Injectée et Traductions pour le JS -->
     <div id="grades-dashboard-container" 
          class="space-y-8"
          data-staff-pk="{{ staff_pk_for_js }}"
          data-can-edit="{{ can_edit_grades|yesno:'true,false' }}"
          data-api-get-term="{{ api_get_term_url }}"
-         data-api-manage-eval="{{ api_manage_eval_url }}">
+         data-api-manage-eval="{{ api_manage_eval_url }}"
+         
+         data-msg-error-no-csrf="{% trans 'Erreur critique : Token CSRF introuvable.' %}"
+         data-msg-access-denied="{% trans 'Accès refusé. Vérifiez vos droits ou rafraîchissez la page.' %}"
+         data-msg-server-error="{% trans 'Erreur serveur.' %}"
+         data-msg-connection-error="{% trans 'Erreur de connexion.' %}"
+         data-msg-data-load-error="{% trans 'Erreur critique au chargement des données.' %}"
+         data-msg-edit-view="{% trans 'Voir / Modifier' %}"
+         data-msg-view-grades="{% trans 'Voir les notes' %}"
+         data-msg-delete-eval="{% trans 'Supprimer l’évaluation' %}"
+         data-msg-no-averages="{% trans 'Aucune moyenne à afficher.' %}"
+         data-msg-main-eval="{% trans 'Principale' %}"
+         data-msg-coeff="{% trans 'Coeff:' %}"
+         data-msg-out-of="{% trans 'Sur:' %}"
+         data-msg-no-evaluations="{% trans 'Aucune évaluation pour ce trimestre.' %}"
+         data-msg-na="N/A"
+         data-msg-add-eval-title="{% trans 'Ajouter une Évaluation' %}"
+         data-msg-edit-eval-title="{% trans 'Modifier l’Évaluation' %}"
+         data-msg-absent="{% trans 'Absent' %}"
+         data-msg-unauthorized="{% trans 'Action non autorisée.' %}"
+         data-msg-invalid-max-grade="{% trans 'Veuillez entrer un ’Noté sur’ valide.' %}"
+         data-msg-grades-exceed-max="{% trans 'Certaines notes dépassent le maximum.' %}"
+         data-msg-delete-eval-title="{% trans 'Supprimer l’évaluation' %}"
+         data-msg-delete-eval-body="{% trans 'Êtes-vous sûr de vouloir supprimer <strong>{name}</strong> ?<br>Toutes les notes associées seront perdues.' %}">
         
         <!-- Section "Professeur Principal" -->
         <section class="bg-white rounded-xl shadow-2xl p-6 border border-indigo-200">
             <h2 class="text-2xl font-bold text-indigo-700 mb-4 flex items-center">
-                Professeur Principal :
+                {% trans "Professeur Principal :" %}
             </h2>
             <div id="main-class-container" class="space-y-6">
                 {% if not dashboard_data.main_class_data %}
-                    <p class="text-gray-500">Vous n'êtes professeur principal d'aucune classe pour cette année.</p>
+                    <p class="text-gray-500">{% trans "Vous n'êtes professeur principal d'aucune classe pour cette année." %}</p>
                 {% endif %}
                 {% for class_id, data in dashboard_data.main_class_data.items %}
                 <div class="p-4 border rounded-lg bg-indigo-50 appreciation-block" data-context-key="{{ class_id }}">
                     <h4 class="text-lg font-bold text-indigo-800">{{ data.class_name }}</h4>
                     
-                    <nav class="flex space-x-4 border-b border-indigo-200 my-3">
+                    <!-- MODIFICATION : gap-4 à la place de space-x-4 -->
+                    <nav class="flex gap-4 border-b border-indigo-200 my-3 overflow-x-auto">
                         {% for term in data.available_terms %}
                         <button data-action="change-term"
                                 data-term-id="{{ term.id }}"
                                 data-context-key="{{ class_id }}"
                                 data-type="main"
-                                class="term-tab-{{ class_id }} py-2 px-3 text-sm font-medium {% if term.id == data.current_term_id %}border-indigo-500 text-indigo-600 border-b-2{% else %}border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300{% endif %}">
-                            Term {{ term.counter }}
+                                class="term-tab-{{ class_id }} py-2 px-3 text-sm font-medium whitespace-nowrap {% if term.id == data.current_term_id %}border-indigo-500 text-indigo-600 border-b-2{% else %}border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300{% endif %}">
+                            {% trans "Term" %} {{ term.counter }}
                         </button>
                         {% endfor %}
                     </nav>
 
                     <div id="main-class-content-{{ class_id }}">
                         <p class="text-sm font-semibold text-gray-600 mb-2">
-                            Moyenne Générale de la Classe : 
-                            <span id="main-avg-container-{{ class_id }}" class="text-lg font-bold text-black">
+                            {% trans "Moyenne Générale de la Classe :" %} 
+                            <span id="main-avg-container-{{ class_id }}" class="text-lg font-bold text-black" dir="ltr">
                                 {{ data.overall_class_average }}
                             </span>
                         </p>
                         <button data-action="toggle-student-avg" data-target="student-main-avg-{{ class_id }}" class="text-sm text-indigo-600 hover:underline">
-                            Afficher/Masquer les moyennes des élèves
+                            {% trans "Afficher/Masquer les moyennes des élèves" %}
                         </button>
-                        <ul id="student-main-avg-{{ class_id }}" class="hidden mt-4 pr-2 max-h-60 overflow-y-auto space-y-1 divide-y divide-indigo-100">
+                        <!-- MODIFICATION RTL : pr-2 devient ps-2 -->
+                        <ul id="student-main-avg-{{ class_id }}" class="hidden mt-4 ps-2 max-h-60 overflow-y-auto space-y-1 divide-y divide-indigo-100">
                             {% for student in data.student_averages %}
                             <li class="flex justify-between items-center text-sm py-1">
-                                <span class="text-gray-700">
-                                    {{ student.student_name }}
+                                <span class="text-gray-700 flex items-center gap-2">
+                                    <span>{{ student.student_name }}</span>
                                     {% if student.username %}
-                                        <span class="text-xs text-gray-400 ml-1">({{ student.username }})</span>
+                                        <span class="text-xs text-gray-400" dir="ltr">({{ student.username }})</span>
                                     {% endif %}
                                 </span>
-                                <span class="font-bold text-gray-900">{{ student.average }}</span>
+                                <span class="font-bold text-gray-900" dir="ltr">{{ student.average }}</span>
                             </li>
                             {% endfor %}
                         </ul>
@@ -92,51 +118,55 @@
 
         <!-- Section "Mes Matières" -->
         <section class="bg-white rounded-xl shadow-2xl p-6 border border-gray-100">
-            <h2 class="text-2xl font-bold text-gray-800 mb-4 flex items-center">
-                <i class="fas fa-book-open text-teal-500 mr-3"></i> 
-                Mes Matières
+            <!-- MODIFICATION : gap-3 -->
+            <h2 class="text-2xl font-bold text-gray-800 mb-4 flex items-center gap-3">
+                <i class="fas fa-book-open text-teal-500"></i> 
+                <span>{% trans "Mes Matières" %}</span>
             </h2>
             <div id="subject-class-container" class="space-y-6">
                 {% if not dashboard_data.taught_classes_list_for_template %}
-                    <p class="text-gray-500">Aucune matière ne vous est assignée pour cette année.</p>
+                    <p class="text-gray-500">{% trans "Aucune matière ne vous est assignée pour cette année." %}</p>
                 {% endif %}
 
                 {% regroup dashboard_data.taught_classes_list_for_template by student_class.name as class_list %}
                 {% for class_group in class_list %}
                     <div class="p-4 border rounded-lg bg-gray-50">
-                        <h3 class="text-xl font-bold text-gray-700 mb-4">Classe : {{ class_group.grouper }}</h3>
+                        <h3 class="text-xl font-bold text-gray-700 mb-4">{% trans "Classe :" %} {{ class_group.grouper }}</h3>
                         <div class="space-y-4">
                             {% for data in class_group.list %}
                             {% with student_class=data.student_class ts=data.teacher_subject key=data.key %}
                                 <div id="subject-container-{{ key }}" class="p-4 bg-white rounded-lg border border-gray-200 appreciation-block" data-context-key="{{ key }}">
                                     <div class="flex justify-between items-center mb-3">
                                         <h4 class="text-lg font-semibold text-teal-600">{{ ts.subject.name }}</h4>
+                                        <!-- MODIFICATION : gap-2 -->
                                         <button data-action="add-eval" 
                                                 data-class-id="{{ student_class.id }}" 
                                                 data-ts-id="{{ ts.id }}"
                                                 data-class-name="{{ student_class.name }}"
                                                 data-subject-name="{{ ts.subject.name }}"
-                                                class="add-eval-btn can-edit-hide px-3 py-1 bg-teal-600 text-white text-sm font-medium rounded-lg shadow-md hover:bg-teal-700 transition disabled:opacity-50">
-                                            <i class="fas fa-plus mr-2"></i> Ajouter Évaluation
+                                                class="add-eval-btn can-edit-hide flex items-center gap-2 px-3 py-1 bg-teal-600 text-white text-sm font-medium rounded-lg shadow-md hover:bg-teal-700 transition disabled:opacity-50">
+                                            <i class="fas fa-plus"></i> 
+                                            <span>{% trans "Ajouter Évaluation" %}</span>
                                         </button>
                                     </div>
 
-                                    <nav class="flex space-x-4 border-b border-gray-200 my-3">
+                                    <!-- MODIFICATION : gap-4 au lieu de space-x-4 -->
+                                    <nav class="flex gap-4 border-b border-gray-200 my-3 overflow-x-auto">
                                         {% for term in data.available_terms %}
                                         <button data-action="change-term"
                                                 data-term-id="{{ term.id }}"
                                                 data-context-key="{{ key }}"
                                                 data-type="subject"
-                                                class="term-tab-{{ key }} py-2 px-3 text-sm font-medium {% if term.id == data.current_term_id %}border-teal-500 text-teal-600 border-b-2{% else %}border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300{% endif %}">
-                                            Term {{ term.counter }}
+                                                class="term-tab-{{ key }} py-2 px-3 text-sm font-medium whitespace-nowrap {% if term.id == data.current_term_id %}border-teal-500 text-teal-600 border-b-2{% else %}border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300{% endif %}">
+                                            {% trans "Term" %} {{ term.counter }}
                                         </button>
                                         {% endfor %}
                                     </nav>
                                     
                                     <div id="subject-content-{{ key }}">
                                         <p class="text-sm font-semibold text-gray-600 mb-2">
-                                            Moyenne de la classe (pour la Matière) : 
-                                            <span id="subject-avg-container-{{ key }}" class="text-lg font-bold text-black">
+                                            {% trans "Moyenne de la classe (pour la Matière) :" %} 
+                                            <span id="subject-avg-container-{{ key }}" class="text-lg font-bold text-black" dir="ltr">
                                                 {{ data.class_average }}
                                             </span>
                                         </p>
@@ -145,45 +175,46 @@
                                             {% for eval in data.evaluations %}
                                             <div class="flex justify-between items-center p-2 rounded-md border transition-colors duration-200 
                                                         {% if eval.is_main_grade %}bg-amber-50 border-amber-200{% else %}bg-white border-gray-200{% endif %}">
-                                                <div class="text-sm">
+                                                <div class="text-sm flex flex-wrap items-center gap-2">
                                                     <strong class="text-gray-800">{{ eval.name }}</strong>
                                                     
                                                     {% if eval.is_main_grade %}
-                                                    <span class="ml-2 inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-amber-100 text-amber-800 border border-amber-200">
-                                                        <i class="fas fa-star mr-1 text-amber-600"></i> Principale
+                                                    <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-medium bg-amber-100 text-amber-800 border border-amber-200">
+                                                        <i class="fas fa-star text-amber-600"></i> <span>{% trans "Principale" %}</span>
                                                     </span>
                                                     {% endif %}
 
-                                                    <span class="text-gray-500 ml-1">(Coeff: {{ eval.coefficient }} / Sur: {{ eval.max_grade }})</span>
+                                                    <span class="text-gray-500" dir="ltr">({% trans "Coeff:" %} {{ eval.coefficient }} / {% trans "Sur:" %} {{ eval.max_grade }})</span>
                                                 </div>
-                                                <div>
-                                                    <button data-action="view-eval" data-eval-id="{{ eval.id }}" class="edit-eval-btn px-3 py-1 text-sm text-indigo-600 hover:text-indigo-800" title="Voir/Modifier les notes">
-                                                        <i class="fas fa-edit mr-1"></i> <span>Voir / Modifier</span>
+                                                <div class="flex items-center gap-2">
+                                                    <!-- MODIFICATION : gap-1 -->
+                                                    <button data-action="view-eval" data-eval-id="{{ eval.id }}" class="edit-eval-btn flex items-center gap-1 px-3 py-1 text-sm text-indigo-600 hover:text-indigo-800" title="{% trans 'Voir/Modifier les notes' %}">
+                                                        <i class="fas fa-edit"></i> <span>{% trans "Voir / Modifier" %}</span>
                                                     </button>
-                                                    <button data-action="delete-eval" data-eval-id="{{ eval.id }}" data-eval-name="{{ eval.name }}" class="delete-eval-btn can-edit-hide px-3 py-1 text-sm text-red-600 hover:text-red-800 transition disabled:opacity-50" title="Supprimer l'évaluation">
+                                                    <button data-action="delete-eval" data-eval-id="{{ eval.id }}" data-eval-name="{{ eval.name }}" class="delete-eval-btn can-edit-hide px-3 py-1 text-sm text-red-600 hover:text-red-800 transition disabled:opacity-50" title="{% trans 'Supprimer l’évaluation' %}">
                                                         <i class="fas fa-trash"></i>
                                                     </button>
                                                 </div>
                                             </div>
                                             {% empty %}
-                                            <p class="text-sm text-gray-500 italic">Aucune évaluation pour ce trimestre.</p>
+                                            <p class="text-sm text-gray-500 italic">{% trans "Aucune évaluation pour ce trimestre." %}</p>
                                             {% endfor %}
                                         </div>
 
                                         <button data-action="toggle-student-avg" data-target="student-subject-avg-{{ key }}" class="text-sm text-indigo-600 hover:underline mt-4">
-                                            Afficher/Masquer les moyennes des élèves
+                                            {% trans "Afficher/Masquer les moyennes des élèves" %}
                                         </button>
-                                        <div id="student-subject-avg-{{ key }}" class="hidden mt-4 pr-2 max-h-60 overflow-y-auto">
+                                        <div id="student-subject-avg-{{ key }}" class="hidden mt-4 ps-2 max-h-60 overflow-y-auto">
                                             <ul class="space-y-1 divide-y divide-gray-100">
                                             {% for student in data.student_averages %}
                                             <li class="flex justify-between items-center text-sm py-1">
-                                                <span class="text-gray-700">
-                                                    {{ student.student_name }}
+                                                <span class="text-gray-700 flex items-center gap-2">
+                                                    <span>{{ student.student_name }}</span>
                                                     {% if student.username %}
-                                                        <span class="text-xs text-gray-400 ml-1">({{ student.username }})</span>
+                                                        <span class="text-xs text-gray-400" dir="ltr">({{ student.username }})</span>
                                                     {% endif %}
                                                 </span>
-                                                <span class="font-bold text-gray-900">{{ student.average }}</span>
+                                                <span class="font-bold text-gray-900" dir="ltr">{{ student.average }}</span>
                                             </li>
                                             {% endfor %}
                                             </ul>
@@ -202,19 +233,23 @@
 
     <!-- Modale de Confirmation (pour Suppression) -->
     <div id="generic-confirm-modal" class="fixed inset-0 bg-gray-900 bg-opacity-75 flex items-center justify-center z-50 transition-opacity duration-300 opacity-0 pointer-events-none">
-        <div class="bg-white rounded-xl shadow-2xl w-full max-w-md p-6 transform translate-y-4 transition-transform duration-300">
-            <h3 id="generic-confirm-title" class="text-xl font-bold text-red-600 mb-3 flex items-center">
-                <i class="fas fa-exclamation-triangle mr-3"></i> Confirmation
+        <!-- MODIFICATION RTL : text-start -->
+        <div class="bg-white rounded-xl shadow-2xl w-full max-w-md p-6 transform translate-y-4 transition-transform duration-300 text-start">
+            <!-- MODIFICATION : gap-3 -->
+            <h3 id="generic-confirm-title" class="text-xl font-bold text-red-600 mb-3 flex items-center gap-3">
+                <i class="fas fa-exclamation-triangle"></i> 
+                <span>{% trans "Confirmation" %}</span>
             </h3>
             <p id="generic-confirm-message" class="text-gray-700 mb-6">
                 <!-- Rempli par JS -->
             </p>
-            <div class="flex justify-end space-x-4">
+            <!-- MODIFICATION : space-x-4 remplacé par gap-4 -->
+            <div class="flex justify-end gap-4">
                 <button id="generic-confirm-cancel-btn" class="px-4 py-2 bg-gray-200 text-gray-800 font-semibold rounded-lg hover:bg-gray-300 transition duration-150">
-                    Annuler
+                    {% trans "Annuler" %}
                 </button>
                 <button id="generic-confirm-confirm-btn" class="px-4 py-2 bg-red-600 text-white font-semibold rounded-lg shadow-md hover:bg-red-700 transition duration-150">
-                    Confirmer
+                    {% trans "Confirmer" %}
                 </button>
             </div>
         </div>
@@ -222,7 +257,8 @@
     
     <!-- Modale d'Ajout/Modification d'Évaluation -->
     <div id="evaluation-modal" class="fixed inset-0 bg-gray-900 bg-opacity-75 flex items-center justify-center z-50 transition-opacity duration-300 opacity-0 pointer-events-none">
-        <div class="bg-white rounded-xl shadow-2xl w-full max-w-3xl p-6 transform translate-y-4 transition-transform duration-300">
+        <!-- MODIFICATION RTL : text-start -->
+        <div class="bg-white rounded-xl shadow-2xl w-full max-w-3xl p-6 transform translate-y-4 transition-transform duration-300 text-start">
             <h3 id="evaluation-modal-title" class="text-2xl font-bold text-gray-800 mb-4">
                 <!-- Rempli par JS -->
             </h3>
@@ -236,40 +272,42 @@
                 <!-- Infos Évaluation -->
                 <div class="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
                     <div class="md:col-span-1">
-                        <label for="eval-name-input" class="block text-sm font-medium text-gray-700">Titre</label>
-                        <input type="text" id="eval-name-input" class="mt-1 block w-full p-2 border border-gray-300 rounded-lg shadow-sm focus:ring-indigo-500 focus:border-indigo-500" required placeholder="Ex: Examen Final">
+                        <label for="eval-name-input" class="block text-sm font-medium text-gray-700">{% trans "Titre" %}</label>
+                        <input type="text" id="eval-name-input" class="mt-1 block w-full p-2 border border-gray-300 rounded-lg shadow-sm focus:ring-indigo-500 focus:border-indigo-500" required placeholder="{% trans 'Ex: Examen Final' %}">
                     </div>
                     <div>
-                        <label for="eval-coeff-input" class="block text-sm font-medium text-gray-700">Coefficient</label>
-                        <input type="number" id="eval-coeff-input" step="0.5" min="0" value="1.0" class="mt-1 block w-full p-2 border border-gray-300 rounded-lg shadow-sm focus:ring-indigo-500 focus:border-indigo-500" required>
+                        <label for="eval-coeff-input" class="block text-sm font-medium text-gray-700">{% trans "Coefficient" %}</label>
+                        <input type="number" id="eval-coeff-input" step="0.5" min="0" value="1.0" class="mt-1 block w-full p-2 border border-gray-300 rounded-lg shadow-sm focus:ring-indigo-500 focus:border-indigo-500" required dir="ltr">
                     </div>
 
                     <div>
-                        <label for="eval-max-grade-input" class="block text-sm font-medium text-gray-700">Noté sur</label>
-                        <input type="number" id="eval-max-grade-input" step="1" min="1" value="20.0" class="mt-1 block w-full p-2 border border-gray-300 rounded-lg shadow-sm focus:ring-indigo-500 focus:border-indigo-500" required>
+                        <label for="eval-max-grade-input" class="block text-sm font-medium text-gray-700">{% trans "Noté sur" %}</label>
+                        <input type="number" id="eval-max-grade-input" step="1" min="1" value="20.0" class="mt-1 block w-full p-2 border border-gray-300 rounded-lg shadow-sm focus:ring-indigo-500 focus:border-indigo-500" required dir="ltr">
                     </div>
 
-                    <div class="pb-3 flex items-center">
+                    <!-- MODIFICATION : flex et gap-2 -->
+                    <div class="pb-3 flex items-center gap-2">
                         <input id="eval-is-main-input" type="checkbox" class="h-5 w-5 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded cursor-pointer">
-                        <label for="eval-is-main-input" class="ml-2 block text-sm font-medium text-gray-700 cursor-pointer select-none">
-                            Note Principale <i class="fas fa-star text-amber-500 ml-1 text-xs"></i>
+                        <label for="eval-is-main-input" class="block text-sm font-medium text-gray-700 cursor-pointer select-none flex items-center gap-1">
+                            <span>{% trans "Note Principale" %}</span> <i class="fas fa-star text-amber-500 text-xs"></i>
                         </label>
                     </div>
                 </div>
 
                 <!-- Liste des Élèves pour Saisie des Notes -->
-                <h4 class="text-lg font-semibold text-gray-700 pt-4 border-t">Notes des élèves</h4>
-                <div id="student-grades-list-container" class="space-y-2 max-h-60 overflow-y-auto pr-2">
+                <h4 class="text-lg font-semibold text-gray-700 pt-4 border-t">{% trans "Notes des élèves" %}</h4>
+                <div id="student-grades-list-container" class="space-y-2 max-h-60 overflow-y-auto ps-2">
                     <!-- Rempli par JS -->
                 </div>
                 
                 <!-- Boutons d'action -->
-                <div id="evaluation-modal-footer" class="flex justify-end space-x-4 pt-4 border-t">
+                <!-- MODIFICATION : space-x-4 remplacé par gap-4 -->
+                <div id="evaluation-modal-footer" class="flex justify-end gap-4 pt-4 border-t">
                     <button type="button" id="evaluation-modal-cancel-btn" class="px-4 py-2 bg-gray-200 text-gray-800 font-semibold rounded-lg hover:bg-gray-300 transition duration-150">
-                        Annuler
+                        {% trans "Annuler" %}
                     </button>
                     <button type="submit" id="evaluation-modal-save-btn" class="can-edit-hide px-4 py-2 bg-indigo-600 text-white font-semibold rounded-lg shadow-md hover:bg-indigo-700 transition duration-150">
-                        Enregistrer
+                        {% trans "Enregistrer" %}
                     </button>
                 </div>
             </form>
@@ -282,6 +320,6 @@
     <!-- Passage des données initiales au JS via json_script (CSP safe) -->
     {{ initial_data_for_script|json_script:"initial-dashboard-data" }}
 
-    <!-- MODIFICATION : Suppression du script inline. La config est passée via data-attributes. -->
+    <!-- Script externe connectant les data-attributes et les traductions -->
     <script src="{% static 'js/grades/grades_dashboard.js' %}"></script>
 {% endblock %}

@@ -1,5 +1,8 @@
 # school/models.py
 from django.db import models
+from django.core.exceptions import ValidationError
+
+from django.utils.translation import gettext_lazy as _
 
 # --> Représente une école, liée à un super administrateur
 class School(models.Model):
@@ -11,10 +14,23 @@ class School(models.Model):
         ("SCHOOL", "school")             # Ecole
     ]
 
+    LANGUAGE_CHOICES = [
+        ("fr", _('Français')),
+        ("en", _('English')),
+        ("ar", _('Arabe')),
+    ]
+
     name = models.CharField(max_length=200)           # nom de l'école
     address = models.TextField()                      # adresse
     created_at = models.DateTimeField(auto_now_add=True)  # date de création
     type = models.CharField(max_length=50, choices=SCHOOL_TYPE_CHOICES)  # type d’école
+
+    language = models.CharField(
+        max_length=10, 
+        choices=LANGUAGE_CHOICES, 
+        default="fr",
+        verbose_name=_("Langue de l'école")
+    )
 
     phone_number = models.CharField(max_length=50, blank=True, null=True)  # numéro de téléphone
     email = models.EmailField(unique=True)            # email unique de l'école
@@ -29,7 +45,7 @@ class School(models.Model):
         upload_to='schools/logos/', 
         null=True, 
         blank=True,
-        verbose_name="Logo de l'école"
+        verbose_name=_("Logo de l'école")
     )
 
     # La couleur principale (pour les titres, les bordures du bulletin)
@@ -38,8 +54,8 @@ class School(models.Model):
     primary_color = models.CharField(
         max_length=7, 
         default="#374151", 
-        verbose_name="Couleur principale (Hex)",
-        help_text="Code couleur hexadécimal pour le bulletin (ex: #2563EB)"
+        verbose_name=_("Couleur principale (Hex)"),
+        help_text=_("Code couleur hexadécimal pour le bulletin (ex: #2563EB)")
     )
 
     # La signature du proviseur
@@ -48,8 +64,26 @@ class School(models.Model):
         upload_to='schools/signatures/', 
         null=True, 
         blank=True,
-        verbose_name="Signature du Proviseur (Image)"
+        verbose_name=_("Signature du Proviseur (Image)")
     )
+
+    def clean(self):
+        super().clean()
+        if self.pk:
+            original = School.objects.get(pk=self.pk)
+            if original.language != self.language:
+                # Ton code utils pour récupérer l'année en cours
+                from schools.utils import get_current_year_for_school
+                current_year = get_current_year_for_school(self)
+                
+                if current_year and not current_year.creation:
+                    raise ValidationError(
+                        _("La langue de l'école ne peut être modifiée que lorsque l'année en cours est à l'étape de création.")
+                    )
+
+    def save(self, *args, **kwargs):
+        # SUPPRIME la ligne self.full_clean()
+        super().save(*args, **kwargs)
 
     def __str__(self):
         return self.name

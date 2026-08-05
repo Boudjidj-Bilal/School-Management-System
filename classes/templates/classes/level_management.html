@@ -1,7 +1,7 @@
 {% extends 'base.html' %}
-{% load static %}
+{% load static i18n %}
 
-{% block title %}Gestion des Niveaux Scolaires{% endblock %}
+{% block title %}{% trans "Gestion des Niveaux Scolaires" %}{% endblock %}
 
 {% block content %}
     <style>
@@ -13,48 +13,67 @@
 
     {% csrf_token %}
 
+    <!-- Conteneur principal avec Configuration Injectée et Traductions JS -->
     <div id="level-container" 
-         class="max-w-4xl mx-auto p-4 sm:p-8 bg-gray-100 min-h-screen"
-         data-api-url="{% url 'classes:level_management' %}">
+         class="max-w-4xl mx-auto p-4 sm:p-8 bg-gray-100 min-h-screen text-start"
+         data-api-url="{% url 'classes:level_management' %}"
+         data-msg-success-title="{% trans 'Succès' %}"
+         data-msg-error-title="{% trans 'Erreur' %}"
+         data-msg-create-title="{% trans 'Ajouter un Nouveau Niveau' %}"
+         data-msg-update-title="{% trans 'Modifier le Niveau: {name}' %}"
+         data-msg-btn-save="{% trans 'Enregistrer' %}"
+         data-msg-btn-update="{% trans 'Mettre à Jour' %}"
+         data-msg-network-error="{% trans 'Erreur réseau.' %}"
+         data-msg-empty-row="{% trans 'Aucun niveau scolaire trouvé pour cette école.' %}"
+         data-msg-edit-title="{% trans 'Modifier' %}"
+         data-msg-delete-title="{% trans 'Supprimer' %}">
 
-        <header class="mb-8 p-4 rounded-lg bg-white shadow-md border-t-4 border-emerald-500">
-            <h1 class="text-3xl font-extrabold text-gray-900 mb-2">Gestion des Niveaux Scolaires</h1>
-            <p class="text-lg text-emerald-600 font-semibold">École: {{ school.name }}</p>
+        <header class="mb-8 p-4 rounded-lg bg-white shadow-md border-s-4 border-emerald-500">
+            <h1 class="text-3xl font-extrabold text-gray-900 mb-2">{% trans "Gestion des Niveaux Scolaires" %}</h1>
+            <p class="text-lg text-emerald-600 font-semibold" dir="auto">{% trans "École :" %} {{ school.name }}</p>
         </header>
 
-        <div class="bg-emerald-50 border-l-4 border-emerald-500 text-emerald-800 p-4 mb-8 rounded-lg shadow-inner" role="alert">
-            <div class="flex items-center">
-                <i class="fas fa-info-circle text-xl mr-3"></i>
-                <h2 class="font-bold text-lg">Comprendre les Niveaux Scolaires et leur Gestion</h2>
+        <!-- MODIFICATION RTL : border-s-4 à la place de border-l-4 -->
+        <div class="bg-emerald-50 border-s-4 border-emerald-500 text-emerald-800 p-4 mb-8 rounded-lg shadow-inner" role="alert">
+            <!-- Séparation icône + texte avec gap-3 -->
+            <div class="flex items-center gap-3">
+                <i class="fas fa-info-circle text-xl text-emerald-600 flex-shrink-0"></i>
+                <h2 class="font-bold text-lg">{% trans "Comprendre les Niveaux Scolaires et leur Gestion" %}</h2>
             </div>
             <div class="mt-2 text-sm space-y-3">
                 <p>
-                    Un <strong>Niveau Scolaire</strong> représente un niveau de classe (ex: 6ème, Terminale) au sein de votre école. Chaque niveau est associé à un type de période (`Trimestre`,`Semestre` ou `Unique`) qui définit son cycle d'évaluation.
+                    {% blocktrans trimmed %}
+                    Un <strong>Niveau Scolaire</strong> représente un niveau de classe (ex: 6ème, Terminale) au sein de votre école. Chaque niveau est associé à un type de période (Trimestre, Semestre ou Unique) qui définit son cycle d'évaluation.
+                    {% endblocktrans %}
                 </p>
-                <ul class="list-disc list-inside ml-4 space-y-1">
+                <ul class="list-disc list-inside ps-4 space-y-1">
                     <li>
+                        {% blocktrans trimmed %}
                         <strong>Création et Modification des Niveaux :</strong> Vous pouvez uniquement créer, supprimer ou modifier les détails des niveaux (niveau, type de période) lorsque l'Année Scolaire est à l'étape : <strong>Création</strong>.
+                        {% endblocktrans %}
                     </li>
                 </ul>
             </div>
         </div>
         
         <div class="mb-6 flex justify-end">
+            <!-- Séparation icône + texte avec gap-2 -->
             <button id="open-create-modal-btn" 
-                    class="bg-emerald-600 hover:bg-emerald-700 text-white font-semibold py-2 px-4 rounded-xl shadow-lg transition duration-150 ease-in-out transform hover:scale-[1.02] focus:outline-none focus:ring-4 focus:ring-emerald-500/50">
-                <i class="fas fa-plus mr-2"></i> Ajouter un Niveau
+                    class="bg-emerald-600 hover:bg-emerald-700 text-white font-semibold py-2 px-4 rounded-xl shadow-lg transition duration-150 ease-in-out transform hover:scale-[1.02] focus:outline-none focus:ring-4 focus:ring-emerald-500/50 flex items-center gap-2">
+                <i class="fas fa-plus"></i> 
+                <span>{% trans "Ajouter un Niveau" %}</span>
             </button>
         </div>
 
         <div class="bg-white rounded-2xl shadow-xl p-6 border border-gray-200">
-            <h2 class="text-2xl font-bold text-gray-800 mb-4">Liste des Niveaux (<span id="level-count-display">{{ school_levels|length }}</span>)</h2>            
+            <h2 class="text-2xl font-bold text-gray-800 mb-4">{% trans "Liste des Niveaux" %} (<span id="level-count-display" dir="ltr">{{ school_levels|length }}</span>)</h2>            
             <div class="scrollable-list">
-                <table class="min-w-full divide-y divide-gray-200">
+                <table class="min-w-full divide-y divide-gray-200 text-start">
                     <thead class="bg-gray-50 sticky top-0 shadow-sm z-10">
                         <tr>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">Niveau Scolaire</th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-600 uppercase tracking-wider hidden sm:table-cell">Type de Période</th>
-                            <th class="px-6 py-3 text-right text-xs font-medium text-gray-600 uppercase tracking-wider">Actions</th>
+                            <th class="px-6 py-3 text-start text-xs font-medium text-gray-600 uppercase tracking-wider">{% trans "Niveau Scolaire" %}</th>
+                            <th class="px-6 py-3 text-start text-xs font-medium text-gray-600 uppercase tracking-wider hidden sm:table-cell">{% trans "Type de Période" %}</th>
+                            <th class="px-6 py-3 text-end text-xs font-medium text-gray-600 uppercase tracking-wider">{% trans "Actions" %}</th>
                         </tr>
                     </thead>
                     <tbody id="levels-table-body" class="bg-white divide-y divide-gray-100">
@@ -72,21 +91,23 @@
                                                     data-term-type="{{ level_obj.term_type }}"
                                                     class="hover:bg-emerald-50/50 transition duration-100">
                                                     
-                                                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{{ level_display }}</td>
-                                                    <td class="px-6 py-4 whitespace-nowrap hidden sm:table-cell text-sm text-gray-500">
+                                                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900" dir="auto">{{ level_display }}</td>
+                                                    <td class="px-6 py-4 whitespace-nowrap hidden sm:table-cell text-sm text-gray-500" dir="auto">
                                                         {{ term_display }}
                                                     </td>
-                                                    <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                                                        <button type="button" 
-                                                                class="js-edit-btn text-emerald-600 hover:text-emerald-800 p-2 rounded-full hover:bg-gray-100 transition duration-150"
-                                                                title="Modifier">
-                                                            <i class="fas fa-edit pointer-events-none"></i>
-                                                        </button>
-                                                        <button type="button" 
-                                                                class="js-delete-btn text-red-600 hover:text-red-800 ml-3 p-2 rounded-full hover:bg-gray-100 transition duration-150"
-                                                                title="Supprimer">
-                                                            <i class="fas fa-trash-alt pointer-events-none"></i>
-                                                        </button>
+                                                    <td class="px-6 py-4 whitespace-nowrap text-end text-sm font-medium">
+                                                        <div class="inline-flex items-center gap-2">
+                                                            <button type="button" 
+                                                                    class="js-edit-btn text-emerald-600 hover:text-emerald-800 p-2 rounded-full hover:bg-gray-100 transition duration-150 inline-flex items-center justify-center"
+                                                                    title="{% trans 'Modifier' %}">
+                                                                <i class="fas fa-edit pointer-events-none"></i>
+                                                            </button>
+                                                            <button type="button" 
+                                                                    class="js-delete-btn text-red-600 hover:text-red-800 p-2 rounded-full hover:bg-gray-100 transition duration-150 inline-flex items-center justify-center"
+                                                                    title="{% trans 'Supprimer' %}">
+                                                                <i class="fas fa-trash-alt pointer-events-none"></i>
+                                                            </button>
+                                                        </div>
                                                     </td>
                                                 </tr>
                                             {% endwith %}
@@ -97,7 +118,7 @@
                         {% endfor %}
                         {% empty %}
                         <tr id="no-level-row">
-                            <td colspan="3" class="px-6 py-4 text-center text-gray-500">Aucun niveau scolaire trouvé pour cette école.</td>
+                            <td colspan="3" class="px-6 py-4 text-center text-gray-500" dir="auto">{% trans "Aucun niveau scolaire trouvé pour cette école." %}</td>
                         </tr>
                         {% endfor %}
                     </tbody>
@@ -106,10 +127,12 @@
         </div>
     </div>
 
+    <!-- MODALE : CRÉATION / EDITION -->
     <div id="level-modal" class="fixed inset-0 bg-gray-600 bg-opacity-75 hidden items-center justify-center p-4 z-40 transition-opacity duration-300">
-        <div class="bg-white rounded-xl shadow-2xl w-full max-w-md p-6 border-t-4 border-emerald-500">
+        <!-- MODIFICATION RTL : border-s-4 -->
+        <div class="bg-white rounded-xl shadow-2xl w-full max-w-md p-6 border-s-4 border-emerald-500 text-start">
             <div class="flex justify-between items-center mb-4">
-                <h3 id="modal-title" class="text-xl font-bold text-gray-900">Ajouter un Nouveau Niveau</h3>
+                <h3 id="modal-title" class="text-xl font-bold text-gray-900">{% trans "Ajouter un Nouveau Niveau" %}</h3>
                 <button type="button" class="js-close-modal text-gray-400 hover:text-gray-600 transition">
                     <i class="fas fa-times text-xl pointer-events-none"></i>
                 </button>
@@ -120,10 +143,10 @@
                 <input type="hidden" id="action-type" name="action" value="create">
 
                 <div class="mb-4">
-                    <label for="level-code" class="block text-sm font-medium text-gray-700 mb-1">Niveau Scolaire</label>
+                    <label for="level-code" class="block text-sm font-medium text-gray-700 mb-1">{% trans "Niveau Scolaire" %}</label>
                     <select id="level-code" name="level_code" required
-                           class="w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-emerald-500 focus:border-emerald-500 transition duration-150">
-                        <option value="">Sélectionnez un niveau</option>
+                           class="w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-emerald-500 focus:border-emerald-500 transition duration-150 bg-white">
+                        <option value="">{% trans "Sélectionnez un niveau" %}</option>
                         {% for code, display_name in level_choices %}
                             <option value="{{ code }}">{{ display_name }}</option>
                         {% endfor %}
@@ -131,54 +154,61 @@
                 </div>
                 
                 <div class="mb-6">
-                    <label for="term-type" class="block text-sm font-medium text-gray-700 mb-1">Type de Période</label>
+                    <label for="term-type" class="block text-sm font-medium text-gray-700 mb-1">{% trans "Type de Période" %}</label>
                     <select id="term-type" name="term_type" required
-                           class="w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-emerald-500 focus:border-emerald-500 transition duration-150">
-                        <option value="" disabled selected>Sélectionnez un type de terme</option> 
+                           class="w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-emerald-500 focus:border-emerald-500 transition duration-150 bg-white">
+                        <option value="" disabled selected>{% trans "Sélectionnez un type de terme" %}</option> 
                         {% for code, display_name in term_choices %}
                             <option value="{{ code }}">{{ display_name }}</option>
                         {% endfor %}
                     </select>
                 </div>
 
+                <!-- Séparation icône + texte avec gap-2 -->
                 <button type="submit" id="submit-button"
-                        class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-semibold py-2 rounded-xl shadow-md transition duration-150 ease-in-out transform hover:scale-[1.01] focus:outline-none focus:ring-4 focus:ring-emerald-500/50">
-                    <i class="fas fa-save mr-2"></i> Enregistrer
+                        class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-semibold py-2 rounded-xl shadow-md transition duration-150 ease-in-out transform hover:scale-[1.01] focus:outline-none focus:ring-4 focus:ring-emerald-500/50 flex items-center justify-center gap-2">
+                    <i class="fas fa-save"></i> 
+                    <span>{% trans "Enregistrer" %}</span>
                 </button>
             </form>
         </div>
     </div>
 
+    <!-- MODALE : CONFIRMATION SUPPRESSION -->
     <div id="confirm-modal" class="fixed inset-0 bg-gray-600 bg-opacity-75 hidden items-center justify-center p-4 z-40 transition-opacity duration-300">
-        <div class="bg-white rounded-xl shadow-2xl w-full max-w-sm p-6">
-            <h3 class="text-xl font-bold text-gray-900 mb-4">Confirmer la Suppression</h3>
-            <p class="text-gray-700 mb-6">Êtes-vous sûr de vouloir supprimer le niveau <strong id="confirm-level-name"></strong> ? Cette action est irréversible.</p>
+        <div class="bg-white rounded-xl shadow-2xl w-full max-w-sm p-6 text-start">
+            <h3 class="text-xl font-bold text-gray-900 mb-4">{% trans "Confirmer la Suppression" %}</h3>
+            <p class="text-gray-700 mb-6" dir="auto">{% trans "Êtes-vous sûr de vouloir supprimer le niveau" %} <strong id="confirm-level-name"></strong> ? {% trans "Cette action est irréversible." %}</p>
             
-            <div class="flex justify-end space-x-4">
-                <button type="button" class="js-close-confirm-modal px-4 py-2 bg-gray-200 text-gray-700 rounded-xl hover:bg-gray-300 transition duration-150">
-                    Annuler
+            <!-- Séparation avec gap-3 -->
+            <div class="flex justify-end gap-3">
+                <button type="button" class="js-close-confirm-modal px-4 py-2 bg-gray-200 text-gray-700 rounded-xl hover:bg-gray-300 transition duration-150 font-medium text-sm">
+                    {% trans "Annuler" %}
                 </button>
-                <button type="button" id="confirm-delete-btn" class="px-4 py-2 bg-red-600 text-white rounded-xl hover:bg-red-700 transition duration-150">
-                    Supprimer
+                <button type="button" id="confirm-delete-btn" class="px-4 py-2 bg-red-600 text-white rounded-xl hover:bg-red-700 transition duration-150 font-medium text-sm">
+                    {% trans "Supprimer" %}
                 </button>
             </div>
         </div>
     </div>
 
-    <div id="message-modal" class="fixed inset-0 bg-gray-900 bg-opacity-70 flex items-center justify-center hidden z-50 transition-opacity duration-300 opacity-0">
-        <div id="modal-content-msg" class="bg-white rounded-xl p-6 shadow-2xl border-t-4 border-emerald-500 max-w-md w-full transform transition-transform duration-300 scale-95">
+    <!-- MODALE : NOTIFICATION MESSAGE -->
+    <div id="message-modal" class="fixed inset-0 bg-gray-900 bg-opacity-70 flex items-center justify-center hidden z-50 transition-opacity duration-300 opacity-0 p-4">
+        <!-- MODIFICATION RTL : border-s-4 -->
+        <div id="modal-content-msg" class="bg-white rounded-xl p-6 shadow-2xl border-s-4 border-emerald-500 max-w-md w-full transform transition-transform duration-300 scale-95 text-start">
             
-            <div class="flex items-start">
-                <div id="modal-icon-container" class="flex-shrink-0 mr-4 mt-1"></div>
-                <div>
-                    <h3 id="modal-title-msg" class="text-lg font-bold text-gray-900 mb-1">Notification</h3>
-                    <p id="modal-message" class="text-sm text-gray-600"></p>
+            <!-- Séparation icône + texte avec gap-4 -->
+            <div class="flex items-start gap-4">
+                <div id="modal-icon-container" class="flex-shrink-0 mt-1"></div>
+                <div class="min-w-0 flex-1">
+                    <h3 id="modal-title-msg" class="text-lg font-bold text-gray-900 mb-1">{% trans "Notification" %}</h3>
+                    <p id="modal-message" class="text-sm text-gray-600" dir="auto"></p>
                 </div>
             </div>
 
             <div class="flex justify-end mt-6">
                 <button id="modal-close-btn" class="js-close-msg-modal px-5 py-2 bg-gray-200 text-gray-700 rounded-lg text-sm font-semibold hover:bg-gray-300 transition duration-300 focus:outline-none focus:ring-2 focus:ring-opacity-50">
-                    Fermer
+                    {% trans "Fermer" %}
                 </button>
             </div>
         </div>

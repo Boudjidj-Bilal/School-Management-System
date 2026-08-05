@@ -4,6 +4,8 @@ from django.http import JsonResponse
 
 import datetime, json
 
+from django.utils.translation import gettext_lazy as _
+
 from .utils import *
 from schools.models import School
 from scheduling.utils import get_dashboard_schedule
@@ -20,7 +22,7 @@ from django.contrib.auth.tokens import PasswordResetTokenGenerator
 # Imports des Services (Utils des autres apps)
 from attendance.utils import get_dashboard_attendance_summary, get_school_attendance_kpis
 from attendance.models import Attendance # Pour les alertes CPE
-from communications.utils_old import get_dashboard_messaging_stats, get_dashboard_last_announcement
+from communications.utils import get_dashboard_messaging_stats, get_dashboard_last_announcement
 
 
 from .models import User, GENDER_CHOICES
@@ -45,12 +47,12 @@ def login(request):
             user = get_user_by_username(username)
 
             if not user:
-                return JsonResponse({'success': False, 'message': 'Nom d\'utilisateur ou mot de passe incorrect.'})
+                return JsonResponse({'success': False, 'message': _("Nom d'utilisateur ou mot de passe incorrect.")})
 
             user_type = get_user_type(user)
 
             if not user_type:
-                return JsonResponse({'success': False, 'message': 'Impossible de vous connecter.'})
+                return JsonResponse({'success': False, 'message': _('Impossible de vous connecter.')})
 
 
             # 1. Déterminer l'école 
@@ -58,11 +60,11 @@ def login(request):
                 school = get_user_school(user)                
                 # Erreur : S'il n'y a pas d'école
                 if not school:
-                    return JsonResponse({"success": False, "message": "Impossible de vous connecter."}, status=400)
+                    return JsonResponse({"success": False, "message": _("Impossible de vous connecter.")}, status=400)
                 
                 # Erreur : Si l'école est inactive
                 if school.is_active == False:
-                    return JsonResponse({"success": False, "message": "Impossible de vous connecter."}, status=400)
+                    return JsonResponse({"success": False, "message": _("Impossible de vous connecter.")}, status=400)
 
                 # On vérifie si ces utilisateurs on le droit de se connecter :
                 if user_type in ["Teacher", "CPE", "Administrator", "Student", "Parent"]:
@@ -75,18 +77,18 @@ def login(request):
 
                     # S'il n'y a pas d'année, impossible de se connecter pour le moment
                     if not year:
-                        return JsonResponse({"success": False, "message": "Impossible de vous connecter pour le moment."}, status=400)
+                        return JsonResponse({"success": False, "message": _("Impossible de vous connecter pour le moment.")}, status=400)
 
                     # Si on est à l'étape de creation ou fini d'une année, impossible de se connecter
                     if year.creation or year.finished:
-                        return JsonResponse({"success": False, "message": "Impossible de vous connecter pour le moment."}, status=400)
+                        return JsonResponse({"success": False, "message": _("Impossible de vous connecter pour le moment.")}, status=400)
                     
                     # On vérifie si ces utilisateurs on le droit de se connecter :
                     elif user_type in ["Teacher", "CPE", "Student", "Parent"]:
 
                         # Si on est à l'étape d'enregistrement d'une année, impossible de se connecter
                         if year.registration:
-                            return JsonResponse({"success": False, "message": "Impossible de vous connecter pour le moment."}, status=400)
+                            return JsonResponse({"success": False, "message": _("Impossible de vous connecter pour le moment.")}, status=400)
 
             user_login = login_user(request, username, password)
 
@@ -104,12 +106,12 @@ def login(request):
                     else:
                         print("DEBUG - Coordonnées absentes ou refusées par l'utilisateur.")
                 
-                return JsonResponse({'success': True, 'message': 'Connexion réussie.'})
+                return JsonResponse({'success': True, 'message': _('Connexion réussie.')})
             else:
-                return JsonResponse({'success': False, 'message': 'Nom d\'utilisateur ou mot de passe incorrect.'})
+                return JsonResponse({'success': False, 'message': _("Nom d'utilisateur ou mot de passe incorrect.")})
                 
         except json.JSONDecodeError:
-            return JsonResponse({'success': False, 'message': 'Données JSON invalides.'}, status=400)
+            return JsonResponse({'success': False, 'message': _('Données JSON invalides.')}, status=400)
         except Exception as e:
             return JsonResponse({'success': False, 'message': str(e)}, status=500)
 
@@ -296,14 +298,14 @@ def password_reset(request):
                 protocol = 'https' if request.is_secure() else 'http'
                 
                 if send_password_reset_link(user, domain, protocol):
-                    return JsonResponse({'success': True, 'message': 'Un lien de réinitialisation a été envoyé à votre adresse e-mail.'})
+                    return JsonResponse({'success': True, 'message': _('Un lien de réinitialisation a été envoyé à votre adresse e-mail.')})
                 else:
-                    return JsonResponse({'success': False, 'message': 'Erreur lors de l\'envoi de l\'e-mail.'})
+                    return JsonResponse({'success': False, 'message': _("Erreur lors de l’envoi de l'e-mail.")})
             except User.DoesNotExist:
-                return JsonResponse({'success': False, 'message': 'Nom d\'utilisateur invalide.'})
+                return JsonResponse({'success': False, 'message': _("Nom d'utilisateur invalide.")})
                 
         except json.JSONDecodeError:
-            return JsonResponse({'success': False, 'message': 'Données JSON invalides.'}, status=400)
+            return JsonResponse({'success': False, 'message': _('Données JSON invalides.')}, status=400)
         except Exception as e:
             return JsonResponse({'success': False, 'message': str(e)}, status=500)
 
@@ -337,7 +339,7 @@ def password_reset_confirm_old(request, uidb64, token):
                 return JsonResponse({'success': False, 'message': str(e)}, status=500)
     else:
         return render(request, 'error_page.html', {
-            'message': 'Le lien de réinitialisation est invalide ou a expiré.'
+            'message': _('Le lien de réinitialisation est invalide ou a expiré.')
         })
 
 
@@ -376,7 +378,7 @@ def password_reset_confirm(request, uidb64, token):
                 return JsonResponse({'success': False, 'message': str(e)}, status=500)
     else:
         return render(request, 'error_page.html', {
-            'message': 'Le lien de réinitialisation est invalide ou a expiré.'
+            'message': _('Le lien de réinitialisation est invalide ou a expiré.')
         })
 
 
@@ -447,10 +449,10 @@ def manage_users_view(request):
             users = []
     
     staff_types_fr = {
-        "PRINCIPAL": "Proviseur",
-        "TEACHER": "Professeur",
-        "CPE": "CPE",
-        "ADMINISTRATOR": "Administrateur"
+        "PRINCIPAL": _("Proviseur"),
+        "TEACHER": _("Professeur"),
+        "CPE": _("CPE"),
+        "ADMINISTRATOR": _("Administrateur")
     }
     
     context = {
@@ -511,7 +513,7 @@ def create_user_view(request):
             # Mode modification
             user_to_update = get_user_by_id(user_id)
             if not user_to_update:
-                return JsonResponse({"success": False, "message": "L'utilisateur est introuvable."}, status=404)
+                return JsonResponse({"success": False, "message": _("L'utilisateur est introuvable.")}, status=404)
             
             if first_name:
                 user_to_update.first_name = first_name
@@ -556,25 +558,25 @@ def create_user_view(request):
                 if year.running == False:
                     specific_user.save()
                 else:
-                    return JsonResponse({"success": False, "message": "Impossible de modifier le statut d'un utilisateur lorsque l'année est en cours de déroulement."}, status=404)
+                    return JsonResponse({"success": False, "message": _("Impossible de modifier le statut d'un utilisateur lorsque l'année est en cours de déroulement.")}, status=404)
             else:
                 specific_user.save()
 
-            return JsonResponse({"success": True, "message": "L'utilisateur a bien été modifié."})
+            return JsonResponse({"success": True, "message": _("L'utilisateur a bien été modifié.")})
 
         else:
             # Mode création
 
             # vérification des champs obligatoire
             if not email or not first_name or not last_name or not gender or not address:
-                return JsonResponse({"success": False, "message": "Veuillez compléter le formulaire."}, status=404)
+                return JsonResponse({"success": False, "message": _("Veuillez compléter le formulaire.")}, status=404)
 
             # Vérifier si l'email existe déjà dans la bdd :
             unique_email = is_email_unique(email)
             if unique_email:
-                return JsonResponse({"success": False, "message": "L'adresse email existe déjà."}, status=404)
+                return JsonResponse({"success": False, "message": _("L'adresse email existe déjà.")}, status=404)
             
-            # On formate le nom est le prénom pour le nom d'utilisateur. # TODO : attention, ici, cela ne convient que pour la langue Francaise et anglaise, attention pour l'arabe dans le prochaine amélioration. 
+            # On formate le nom est le prénom pour le nom d'utilisateur. 
             formater_first_name = formater_name(first_name)
             formater_last_name = formater_name(last_name)
 
@@ -587,7 +589,7 @@ def create_user_view(request):
             try:
                 school = School.objects.get(id=school_id)
             except School.DoesNotExist:
-                return JsonResponse({"success": False, "message": "L'école est introuvale."}, status=404)
+                return JsonResponse({"success": False, "message": _("L'école est introuvale.")}, status=404)
 
             new_user, error = create_user(
                 username=username,
@@ -636,12 +638,12 @@ def create_user_view(request):
             if message_error: 
                 return JsonResponse({"success": False, "message": message_error})
 
-            return JsonResponse({"success": True, "message": "L'utilisateur a bien été crée."})
+            return JsonResponse({"success": True, "message": _("L'utilisateur a bien été crée.")})
 
     except IntegrityError as e:
-        return JsonResponse({"success": False, "message": f"Integrity error: {str(e)}"}, status=400)
+        return JsonResponse({"success": False, "message": _("Integrity error: {error}").format(error=str(e))}, status=400)
     except Exception as e:
-        return JsonResponse({"success": False, "message": f"An error occurred: {str(e)}"}, status=500)
+        return JsonResponse({"success": False, "message": _("An error occurred: {error}").format(error=str(e))}, status=500)
 
 
 @login_required
@@ -652,22 +654,21 @@ def select_school_view(request):
         data = json.loads(request.body)
         school_id = data.get('school_id')
         if not school_id:
-            return JsonResponse({"success": False, "message": "School ID is required."}, status=400)
+            return JsonResponse({"success": False, "message": _("School ID is required.")}, status=400)
 
         # Vérifier que l'école existe et que l'utilisateur est un super administrateur
         if get_user_type(request.user) == "SuperAdministrator":
             try:
                 school = School.objects.get(id=school_id)
                 request.session['selected_school_id'] = school.id
-                return JsonResponse({"success": True, "message": "School selected successfully."})
+                return JsonResponse({"success": True, "message": _("School selected successfully.")})
             except School.DoesNotExist:
-                return JsonResponse({"success": False, "message": "School not found."}, status=404)
+                return JsonResponse({"success": False, "message": _("School not found.")}, status=404)
         else:
-            return JsonResponse({"success": False, "message": "Permission denied."}, status=403)
+            return JsonResponse({"success": False, "message": _("Permission denied.")}, status=403)
 
     except Exception as e:
-        return JsonResponse({"success": False, "message": f"An error occurred: {str(e)}"}, status=500)
-
+        return JsonResponse({"success": False, "message": _("An error occurred: {error}").format(error=str(e))}, status=500)
 
 
 @require_http_methods(["POST"])
@@ -695,30 +696,30 @@ def toggle_user_status_view(request):
             pass # Aucune restriction pour le SuperAdmin
         elif current_user_type == "Principal": # Un Principal ne peut pas modifier un autre Principal
             if user_type_to_toggle == "Principal":
-                return JsonResponse({"success": False, "message": "Vous ne pouvez pas modifier le statut d'un autre proviseur."}, status=403)
+                return JsonResponse({"success": False, "message": _("Vous ne pouvez pas modifier le statut d'un autre proviseur.")}, status=403)
         elif current_user_type == "Administrator": # Un Administrateur ne peut modifier que les étudiants et les parents
             forbidden_types = ["Principal", "Teacher", "CPE", "Administrator"]
             if user_type_to_toggle in forbidden_types:
-                return JsonResponse({"success": False, "message": "Vous ne pouvez pas modifier le statut d'un membre du personnel."}, status=403)
+                return JsonResponse({"success": False, "message": _("Vous ne pouvez pas modifier le statut d'un membre du personnel.")}, status=403)
         # Tous les autres types d'utilisateurs n'ont pas la permission
         else:
-            return JsonResponse({"success": False, "message": "Permission denied."}, status=403)
+            return JsonResponse({"success": False, "message": _("Permission denied.")}, status=403)
 
         # Logique d'activation/désactivation
         if action == 'activate':
             user_to_toggle.is_active = True
-            message = "Utilisateur activé avec succès."
+            message = _("Utilisateur activé avec succès.")
         elif action == 'deactivate':
             user_to_toggle.is_active = False
-            message = "Utilisateur désactivé avec succès."
+            message = _("Utilisateur désactivé avec succès.")
         else:
-            return JsonResponse({"success": False, "message": "Action invalide."}, status=400)
+            return JsonResponse({"success": False, "message": _("Action invalide.")}, status=400)
 
         user_to_toggle.save()
         return JsonResponse({"success": True, "message": message})
 
     except Exception as e:
-        return JsonResponse({"success": False, "message": f"Une erreur est survenue: {str(e)}"}, status=500)
+        return JsonResponse({"success": False, "message": _("Une erreur est survenue: {error}").format(error=str(e))}, status=500)
 
 
 @login_required(login_url='login')
@@ -819,7 +820,7 @@ def toggle_child_assignment_api(request):
         action = data.get('action')
 
         if not all([parent_id, student_id, action]):
-            return JsonResponse({'success': False, 'message': 'Données manquantes (parent_id, student_id, action).'}, status=400)
+            return JsonResponse({'success': False, 'message': _('Données manquantes (parent_id, student_id, action).')}, status=400)
 
         # Récupérer les objets Parent et Student AVEC leurs utilisateurs pour les messages
         # Si un Parent/Student n'existe pas, une exception DoesNotExist sera levée
@@ -836,11 +837,11 @@ def toggle_child_assignment_api(request):
                 # Utiliser transaction.atomic pour s'assurer que l'opération est atomique
                 with transaction.atomic():
                     Child.objects.create(parent=parent, student=student)
-                message = f"Lien créé : {student_name} est maintenant un enfant de {parent_name}."
+                message = _("Lien créé : {student_name} est maintenant un enfant de {parent_name}.").format(student_name=student_name, parent_name=parent_name)
                 return JsonResponse({'success': True, 'message': message})
             except IntegrityError:
                 # Gère le cas où le lien existe déjà (unique_together)
-                message = "Le lien existe déjà."
+                message = _("Le lien existe déjà.")
                 return JsonResponse({'success': True, 'message': message}) 
 
         elif action == 'unlink':
@@ -849,26 +850,26 @@ def toggle_child_assignment_api(request):
                 deleted_count, _ = Child.objects.filter(parent=parent, student=student).delete()
                 
                 if deleted_count > 0:
-                    message = f"Lien supprimé : {student_name} n'est plus un enfant de {parent_name}."
+                    message = _("Lien supprimé : {student_name} n'est plus un enfant de {parent_name}.").format(student_name=student_name, parent_name=parent_name)
                     return JsonResponse({'success': True, 'message': message})
                 else:
-                    message = "Le lien n'existe pas, aucune suppression effectuée."
+                    message = _("Le lien n'existe pas, aucune suppression effectuée.")
                     return JsonResponse({'success': True, 'message': message})
             except Exception as e:
-                return JsonResponse({'success': False, 'message': f"Erreur lors de la suppression: {str(e)}"}, status=500)
+                return JsonResponse({'success': False, 'message': _("Erreur lors de la suppression: {error}").format(error=str(e))}, status=500)
         
         else:
-            return JsonResponse({'success': False, 'message': 'Action non reconnue. Utilisez "link" ou "unlink".'}, status=400)
+            return JsonResponse({'success': False, 'message': _('Action non reconnue. Utilisez "link" ou "unlink".')}, status=400)
 
     except Parent.DoesNotExist:
-        return JsonResponse({'success': False, 'message': 'Parent non trouvé.'}, status=404)
+        return JsonResponse({'success': False, 'message': _('Parent non trouvé.')}, status=404)
     except Student.DoesNotExist:
-        return JsonResponse({'success': False, 'message': 'Étudiant non trouvé.'}, status=404)
+        return JsonResponse({'success': False, 'message': _('Étudiant non trouvé.')}, status=404)
     except json.JSONDecodeError:
-        return JsonResponse({'success': False, 'message': 'Requête invalide (JSON non valide).'}, status=400)
+        return JsonResponse({'success': False, 'message': _('Requête invalide (JSON non valide).')}, status=400)
     except Exception as e:
         # Gère toutes les autres erreurs imprévues
-        return JsonResponse({'success': False, 'message': f'Erreur interne du serveur: {str(e)}'}, status=500)
+        return JsonResponse({'success': False, 'message': _('Erreur interne du serveur: {error}').format(error=str(e))}, status=500)
 
 
 
@@ -891,7 +892,7 @@ def select_child_view(request):
                 request.session['selected_child_id'] = int(child_id)
                 return JsonResponse({'success': True})
             else:
-                return JsonResponse({'success': False, 'message': "Cet enfant n'est pas lié à votre compte."}, status=403)
+                return JsonResponse({'success': False, 'message': _("Cet enfant n'est pas lié à votre compte.")}, status=403)
                 
         except Exception as e:
             return JsonResponse({'success': False, 'message': str(e)}, status=500)
@@ -932,10 +933,10 @@ def api_change_password(request):
 
         # 1. Validation basique
         if not current_password or not new_password or not confirm_password:
-            return JsonResponse({'success': False, 'message': "Tous les champs sont obligatoires."}, status=400)
+            return JsonResponse({'success': False, 'message': _("Tous les champs sont obligatoires.")}, status=400)
 
         if new_password != confirm_password:
-            return JsonResponse({'success': False, 'message': "Les nouveaux mots de passe ne correspondent pas."}, status=400)
+            return JsonResponse({'success': False, 'message': _("Les nouveaux mots de passe ne correspondent pas.")}, status=400)
 
         # Vérification de la robustesse
         is_valid, pwd_message = is_strong_password(new_password)
@@ -946,7 +947,7 @@ def api_change_password(request):
         # 2. Vérification de l'ancien mot de passe
         user = request.user
         if not user.check_password(current_password):
-            return JsonResponse({'success': False, 'message': "Votre mot de passe actuel est incorrect."}, status=400)
+            return JsonResponse({'success': False, 'message': _("Votre mot de passe actuel est incorrect.")}, status=400)
 
         # 3. Changement du mot de passe
         user.set_password(new_password)
@@ -956,13 +957,13 @@ def api_change_password(request):
         # Sans cela, changer le mot de passe déconnecterait l'utilisateur immédiatement
         update_session_auth_hash(request, user)
 
-        return JsonResponse({'success': True, 'message': "Votre mot de passe a été modifié avec succès."})
+        return JsonResponse({'success': True, 'message': _("Votre mot de passe a été modifié avec succès.")})
 
     except json.JSONDecodeError:
-        return JsonResponse({'success': False, 'message': "Données JSON invalides."}, status=400)
+        return JsonResponse({'success': False, 'message': _("Données JSON invalides.")}, status=400)
     except Exception as e:
         print(f"Erreur changement mot de passe: {e}")
-        return JsonResponse({'success': False, 'message': "Une erreur serveur est survenue."}, status=500)
+        return JsonResponse({'success': False, 'message': _("Une erreur serveur est survenue.")}, status=500)
 
 def custom_page_not_found_view(request, exception=None):
     """
@@ -986,13 +987,13 @@ def api_manage_profile_picture(request):
     if request.method == "POST":
         # Vérifie si un fichier a été envoyé
         if 'profile_picture' not in request.FILES:
-            return JsonResponse({'success': False, 'message': 'Aucun fichier reçu.'}, status=400)
+            return JsonResponse({'success': False, 'message': _('Aucun fichier reçu.')}, status=400)
 
         image_file = request.FILES['profile_picture']
 
         # Optionnel : Vérification basique du type de fichier
         if not image_file.content_type.startswith('image'):
-            return JsonResponse({'success': False, 'message': 'Le fichier doit être une image.'}, status=400)
+            return JsonResponse({'success': False, 'message': _('Le fichier doit être une image.')}, status=400)
 
         try:
             # 1. Supprimer l'ancienne image physiquement
@@ -1005,12 +1006,12 @@ def api_manage_profile_picture(request):
             # 3. Retourner l'URL de la nouvelle image pour l'affichage JS immédiat
             return JsonResponse({
                 'success': True,
-                'message': 'Photo mise à jour avec succès.',
+                'message': _('Photo mise à jour avec succès.'),
                 'new_image_url': user.profile_picture.url
             })
 
         except Exception as e:
-            return JsonResponse({'success': False, 'message': f'Erreur serveur : {str(e)}'}, status=500)
+            return JsonResponse({'success': False, 'message': _('Erreur serveur : {error}').format(error=str(e))}, status=500)
 
     # --- CAS 2 : SUPPRESSION DE LA PHOTO ---
     elif request.method == "DELETE":
@@ -1025,11 +1026,11 @@ def api_manage_profile_picture(request):
 
             return JsonResponse({
                 'success': True, 
-                'message': 'Photo supprimée.'
+                'message': _('Photo supprimée.')
             })
             
         except Exception as e:
-            return JsonResponse({'success': False, 'message': f'Erreur lors de la suppression : {str(e)}'}, status=500)
+            return JsonResponse({'success': False, 'message': _('Erreur lors de la suppression : {error}').format(error=str(e))}, status=500)
         
 
 # GEOLOCALISATION ELEVE
@@ -1046,23 +1047,23 @@ def api_save_student_location(request):
         longitude = data.get('longitude')
 
         if latitude is None or longitude is None:
-            return JsonResponse({'success': False, 'message': 'Coordonnées manquantes.'}, status=400)
+            return JsonResponse({'success': False, 'message': _('Coordonnées manquantes.')}, status=400)
 
         # Vérification du profil étudiant
         try:
             student_profile = request.user.student_user
         except ObjectDoesNotExist:
-            return JsonResponse({'success': False, 'message': 'Utilisateur non autorisé.'}, status=403)
+            return JsonResponse({'success': False, 'message': _('Utilisateur non autorisé.')}, status=403)
 
         # Appel du service (Nominatim + Rate Limiting + sauvegarde)
         success = update_student_location(student_profile, latitude, longitude)
 
         if success:
-            return JsonResponse({'success': True, 'message': 'Position enregistrée avec succès.'})
+            return JsonResponse({'success': True, 'message': _('Position enregistrée avec succès.')})
         else:
-            return JsonResponse({'success': False, 'message': 'Erreur lors de la géolocalisation.'}, status=500)
+            return JsonResponse({'success': False, 'message': _('Erreur lors de la géolocalisation.')}, status=500)
 
     except json.JSONDecodeError:
-        return JsonResponse({'success': False, 'message': 'Données JSON invalides.'}, status=400)
+        return JsonResponse({'success': False, 'message': _('Données JSON invalides.')}, status=400)
     except Exception as e:
         return JsonResponse({'success': False, 'message': str(e)}, status=500)

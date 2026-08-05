@@ -7,6 +7,8 @@ from classes.models import Level
 from django.db.models import QuerySet
 from users.models import Student, Parent, Staff
 
+from django.utils.translation import gettext_lazy as _
+
 """
     Ce fichier centralise les fonctions utilitaires de l'application 'schools'.
 
@@ -38,7 +40,7 @@ def create_school(name, address, type, email, super_admin_id, phone_number=None)
         super_admin = get_super_admin(super_admin_id)
         
         if School.objects.filter(email=email).exists():
-            return None, "Une école avec cet email existe déjà."
+            return None, _("Une école avec cet email existe déjà.")
             
         school = School.objects.create(
             name=name,
@@ -50,9 +52,9 @@ def create_school(name, address, type, email, super_admin_id, phone_number=None)
         )
         return school, None
     except ObjectDoesNotExist as e:
-        return None, f"Erreur de données : {str(e)}"
+        return None, _("Erreur de données : {error}").format(error=str(e))
     except Exception as e:
-        return None, f"Erreur lors de la création de l'école : {str(e)}"
+        return None, _("Erreur lors de la création de l'école : {error}").format(error=str(e))
 
 def get_school_by_id(school_id):
     """
@@ -104,9 +106,9 @@ def update_school(school_id, **kwargs):
         school.save()
         return school, None
     except School.DoesNotExist:
-        return None, "École non trouvée."
+        return None, _("École non trouvée.")
     except Exception as e:
-        return None, f"Erreur lors de la mise à jour de l'école : {str(e)}"
+        return None, _("Erreur lors de la mise à jour de l'école : {error}").format(error=str(e))
 
 def deactivate_school(school_id):
     """
@@ -122,9 +124,9 @@ def deactivate_school(school_id):
         school.save()
         return school, True
     except School.DoesNotExist:
-        return "École non trouvée.", False
+        return _("École non trouvée."), False
     except Exception as e:
-        return f"Erreur lors de la désactivation de l'école : {str(e)}", False
+        return _("Erreur lors de la désactivation de l'école : {error}").format(error=str(e)), False
 
 
 def activate_school(school_id):
@@ -141,9 +143,9 @@ def activate_school(school_id):
         school.save()
         return school, True
     except School.DoesNotExist:
-        return "École non trouvée.", False
+        return _("École non trouvée."), False
     except Exception as e:
-        return f"Erreur lors de l'activation de l'école : {str(e)}", False
+        return _("Erreur lors de l'activation de l'école : {error}").format(error=str(e)), False
 
 def delete_school(school_id):
     """
@@ -170,7 +172,7 @@ def get_user_school(user, selected_school_id=None):
                 return School.objects.get(id=selected_school_id)
             except School.DoesNotExist:
                 return get_all_schools().first()
-        return get_all_schools().first()
+        return get_all_schools().last()
     try:
         if user_type == "Principal" or user_type == "CPE" or user_type == "Administrator" or user_type == "Teacher":
             user_staff = get_staff_by_user_id(user.id)
@@ -225,9 +227,9 @@ def create_year(name, start_date, end_date, min_time, max_time, school_id, term_
         )
         return year, None
     except ObjectDoesNotExist as e:
-        return None, f"Erreur de données : {str(e)}"
+        return None, _("Erreur de données : {error}").format(error=str(e))
     except Exception as e:
-        return None, f"Erreur lors de la création de l'année : {str(e)}"
+        return None, _("Erreur lors de la création de l'année : {error}").format(error=str(e))
 
 
 def get_year_by_id(year_id):
@@ -299,9 +301,9 @@ def update_year(year_id, **kwargs):
         year.save()
         return year, None
     except Year.DoesNotExist:
-        return None, "Année non trouvée."
+        return None, _("Année non trouvée.")
     except Exception as e:
-        return None, f"Erreur lors de la mise à jour de l'année : {str(e)}"
+        return None, _("Erreur lors de la mise à jour de l'année : {error}").format(error=str(e))
 
 def delete_year(year_id):
     """
@@ -348,14 +350,14 @@ def advance_year_stage(year_id):
             year.end_year = False
             year.finished = True
         else:
-            return None, "L'année est déjà terminée ou dans un état invalide."
+            return None, _("L'année est déjà terminée ou dans un état invalide.")
             
         year.save()
         return year, None
     except Year.DoesNotExist:
-        return None, "Année non trouvée."
+        return None, _("Année non trouvée.")
     except Exception as e:
-        return None, f"Erreur lors de l'avancement de l'étape de l'année : {str(e)}"
+        return None, _("Erreur lors de l'avancement de l'étape de l'année : {error}").format(error=str(e))
 
 def get_school_by_year_id(year_id):
     """
@@ -453,9 +455,9 @@ def create_exception_day(start_date, end_date, type, year_id):
         )
         return exception_day, None
     except ObjectDoesNotExist as e:
-        return None, f"Erreur de données : {str(e)}"
+        return None, _("Erreur de données : {error}").format(error=str(e))
     except Exception as e:
-        return None, f"Erreur lors de la création de l'exception : {str(e)}"
+        return None, _("Erreur lors de la création de l'exception : {error}").format(error=str(e))
 
 def get_exception_day_by_id(exception_day_id):
     """
@@ -486,9 +488,9 @@ def update_exception_day(exception_day_id, **kwargs):
         exception_day.save()
         return exception_day, None
     except ExceptionDay.DoesNotExist:
-        return None, "Exception non trouvée."
+        return None, _("Exception non trouvée.")
     except Exception as e:
-        return None, f"Erreur lors de la mise à jour de l'exception : {str(e)}"
+        return None, _("Erreur lors de la mise à jour de l'exception : {error}").format(error=str(e))
 
 def delete_exception_day(exception_day_id):
     """
@@ -531,9 +533,9 @@ def create_exception_time(start_time, end_time, year_id):
         )
         return exception_time, None
     except ObjectDoesNotExist as e:
-        return None, f"Erreur de données : {str(e)}"
+        return None, _("Erreur de données : {error}").format(error=str(e))
     except Exception as e:
-        return None, f"Erreur lors de la création de l'exception horaire : {str(e)}"
+        return None, _("Erreur lors de la création de l'exception horaire : {error}").format(error=str(e))
 
 def get_exception_time_by_id(exception_time_id):
     """
@@ -564,9 +566,9 @@ def update_exception_time(exception_time_id, **kwargs):
         exception_time.save()
         return exception_time, None
     except ExceptionTime.DoesNotExist:
-        return None, "Exception horaire non trouvée."
+        return None, _("Exception horaire non trouvée.")
     except Exception as e:
-        return None, f"Erreur lors de la mise à jour de l'exception horaire : {str(e)}"
+        return None, _("Erreur lors de la mise à jour de l'exception horaire : {error}").format(error=str(e))
 
 def delete_exception_time(exception_time_id):
     """
@@ -614,7 +616,7 @@ def create_term_year_level(counter, year_id, level_id, start_date=None, end_date
         ).update(finished=True)
 
         if counter > 3 and counter < 1:
-            return None, f"Erreur lors de la création du trimestre/semestre : le numéro du trimestre/semestr/ est incorecte."
+            return None, _("Erreur lors de la création du trimestre/semestre : le numéro du trimestre/semestr/ est incorecte.")
 
         term_year_level = TermYearLevel.objects.create(
             counter=counter,
@@ -626,9 +628,9 @@ def create_term_year_level(counter, year_id, level_id, start_date=None, end_date
         )
         return term_year_level, None
     except ObjectDoesNotExist as e:
-        return None, f"Erreur de données : {str(e)}"
+        return None, _("Erreur de données : {error}").format(error=str(e))
     except Exception as e:
-        return None, f"Erreur lors de la création du trimestre/semestre : {str(e)}"
+        return None, -("Erreur lors de la création du trimestre/semestre : {error}").format(error=str(e))
 
 
 def get_term_year_level_by_id(term_id):
@@ -661,9 +663,9 @@ def update_term_year_level(term_id, **kwargs):
         term.save()
         return term, None
     except TermYearLevel.DoesNotExist:
-        return None, "Trimestre/semestre non trouvé."
+        return None, _("Trimestre/semestre non trouvé.")
     except Exception as e:
-        return None, f"Erreur lors de la mise à jour : {str(e)}"
+        return None, _("Erreur lors de la mise à jour : {error}").format(error=str(e))
 
 
 def delete_term_year_level(term_id):
@@ -717,7 +719,7 @@ def finish_all_terms_for_level(year_id, level_id):
         
         return updated_count, None
     except Exception as e:
-        return 0, f"Erreur lors de la mise à jour des termes : {str(e)}"
+        return 0, _("Erreur lors de la mise à jour des termes : {error}").format(error=str(e))
 
 
 def advance_term_for_level(year_id, level_id, start_date=None, end_date=None):
@@ -744,7 +746,7 @@ def advance_term_for_level(year_id, level_id, start_date=None, end_date=None):
         if next_counter > max_counter:
             # Mettre à fini le dernier trimestre/semestre
             finish_all_terms_for_level(year_id, level_id)
-            return None, f"Le nombre maximum de {term_type.lower()}s a été atteint pour le niveau : "+level.level
+            return None, _("Le nombre maximum de {terme_type}s a été atteint pour le niveau : ").format(terme_type=term_type.lower())+level.level
             
         new_term, error = create_term_year_level(next_counter, year_id, level_id, start_date, end_date)
         
@@ -755,7 +757,7 @@ def advance_term_for_level(year_id, level_id, start_date=None, end_date=None):
     except Level.DoesNotExist:
         return None, "Niveau non trouvé."
     except Exception as e:
-        return None, f"Erreur lors du passage au trimestre/semestre suivant : {str(e)}"
+        return None, _("Erreur lors du passage au trimestre/semestre suivant : {error}").format(error=str(e))
 
 
 def check_first_terms_for_school_year(school_id, year_id):
@@ -795,8 +797,8 @@ def check_first_terms_for_school_year(school_id, year_id):
         else:
             # Il manque un ou plusieurs trimestres/semestres
             missing_count = total_levels_count - levels_with_term_1_count
-            return False, f"Il manque le premier trimestre/semestre (counter=1) pour {missing_count} niveau(x) de cette école pour l'année spécifiée."
+            return False, _("Il manque le premier trimestre/semestre (counter=1) pour {missing_count} niveau(x) de cette école pour l'année spécifiée.").format(missing_count=missing_count)
 
     except Exception as e:
         # Gérer les erreurs inattendues (ex: ID inexistant si non géré en amont, erreur DB)
-        return False, f"Erreur inattendue lors de la vérification des trimestres : {str(e)}"
+        return False, _("Erreur inattendue lors de la vérification des trimestres : {error}").format(error=str(e))

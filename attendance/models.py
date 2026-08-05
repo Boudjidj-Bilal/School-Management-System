@@ -3,6 +3,8 @@ from schools.models import TermYearLevel
 from users.models import Student, Staff
 from classes.models import Class
 
+from django.utils.translation import gettext_lazy as _
+
 # --> 1. La Feuille d'Appel (Le contenant)
 class AttendanceSession(models.Model):
     teacher = models.ForeignKey(
@@ -28,14 +30,14 @@ class AttendanceSession(models.Model):
         ordering = ['-date', '-start_time']
 
     def __str__(self):
-        return f"Appel {self.student_class} - {self.teacher} ({self.date})"
+        return _("Appel {student_class} - {self.teacher} ({self.date})").format(student_class=self.student_class, teacher=self.teacher, date=self.date)
 
 
 # --> 2. L'Absence ou le Retard (Le contenu)
 class Attendance(models.Model):
     ATTENDANCE_CHOICES = [
-        ("DELAY", "Retard"),
-        ("ABSENCE", "Absence"),
+        ("DELAY", _("Retard")),
+        ("ABSENCE", _("Absence")),
     ]
 
     session = models.ForeignKey(
@@ -50,7 +52,7 @@ class Attendance(models.Model):
     
     # Gestion de la justification (CPE)
     justified = models.BooleanField(default=False) # Par défaut, injustifié
-    justification_reason = models.TextField(blank=True, null=True, help_text="Motif donné par le CPE")
+    justification_reason = models.TextField(blank=True, null=True, help_text=_("Motif donné par le CPE"))
     justification_date = models.DateField(blank=True, null=True) # Date de la justification
 
     class Meta:

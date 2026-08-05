@@ -1,7 +1,7 @@
 {% extends 'base.html' %}
-{% load static %}
+{% load static i18n %}
 
-{% block title %}Gestion des utilisateurs{% endblock %}
+{% block title %}{% trans "Gestion des utilisateurs" %}{% endblock %}
 
 {% block content %}
 <div class="flex flex-col lg:flex-row gap-8">
@@ -9,65 +9,75 @@
     <div class="w-full lg:w-1/3 bg-white p-6 rounded-xl shadow-lg border border-gray-200">
         <div class="flex justify-between items-center mb-4 border-b pb-4 border-gray-200">
             <h2 class="text-xl font-bold text-gray-800">
-                {% if user_type == 'student' %}Étudiants{% elif user_type == 'parent' %}Parents{% elif user_type == 'staff' %}Personnel{% endif %}
+                {% if user_type == 'student' %}
+                    {% trans "Étudiants" %}
+                {% elif user_type == 'parent' %}
+                    {% trans "Parents" %}
+                {% elif user_type == 'staff' %}
+                    {% trans "Personnel" %}
+                {% endif %}
             </h2>
             <button id="create-btn" class="px-4 py-2 bg-blue-600 text-white rounded-lg shadow-md hover:bg-blue-700 transition duration-300">
-                <i class="fas fa-plus mr-2"></i> Créer
+                <!-- MODIFICATION RTL : mr-2 devient me-2 -->
+                <i class="fas fa-plus me-2"></i> {% trans "Créer" %}
             </button>
         </div>
         
-        <div class="space-y-4 max-h-[calc(100vh-250px)] overflow-y-auto pr-2">
+        <!-- MODIFICATION RTL : pr-2 devient pe-2 -->
+        <div class="space-y-4 max-h-[calc(100vh-250px)] overflow-y-auto pe-2">
             <!-- Utilisateurs actifs -->
             <ul id="user-list-active" class="space-y-2">
-                <li class="px-3 py-1 text-sm font-semibold text-gray-500 sticky top-0 bg-white z-10">Actif</li>
+                <li class="px-3 py-1 text-sm font-semibold text-gray-500 sticky top-0 bg-white z-10">{% trans "Actif" %}</li>
                 {% for user_obj in users %}
                     {% if user_obj.user.is_active %}
                         <li>
                             {% if user_obj.staff_type == 'TEACHER' %}
-                                <!-- [LAYOUT PROFESSEUR] : Colonne (Nom au-dessus, Boutons en dessous) -->
+                                <!-- [LAYOUT PROFESSEUR] -->
                                 <div class="flex flex-col p-3 text-sm font-medium text-gray-700 hover:bg-gray-50 rounded-lg border border-transparent hover:border-gray-200 transition-all duration-200 group">
                                     
-                                    <!-- Ligne 1 : Nom (prend toute la largeur) -->
                                     <a href="#" 
-                                       data-user-id="{{ user_obj.user.id }}" 
-                                       data-first-name="{{ user_obj.user.first_name }}" 
-                                       data-last-name="{{ user_obj.user.last_name }}" 
-                                       data-phone-number="{{ user_obj.user.phone_number }}" 
-                                       data-email="{{ user_obj.user.email }}" 
-                                       data-user-type="{{ user_type }}" 
-                                       data-staff-type="{{ user_obj.staff_type|default:'' }}" 
-                                       data-address="{{ user_obj.address|default:'' }}"
-                                       data-birth-date="{{ user_obj.birth_date|date:'Y-m-d'|default:'' }}"
-                                       data-gender="{{ user_obj.gender|default:'' }}"
-                                       data-profile-picture-url="{% if user_obj.user.profile_picture %}{{ user_obj.user.profile_picture.url }}{% endif %}"
-                                       data-national-number="{{ user_obj.national_number|default:'' }}"
-                                       class="user-link flex items-center w-full mb-3"> <!-- mb-3 pour espacer du bas -->
-                                        <div class="w-8 h-8 rounded-full bg-green-100 flex-shrink-0 flex items-center justify-center mr-3 group-hover:bg-green-200 transition-colors">
+                                        data-user-id="{{ user_obj.user.id }}" 
+                                        data-first-name="{{ user_obj.user.first_name }}" 
+                                        data-last-name="{{ user_obj.user.last_name }}" 
+                                        data-phone-number="{{ user_obj.user.phone_number }}" 
+                                        data-email="{{ user_obj.user.email }}" 
+                                        data-user-type="{{ user_type }}" 
+                                        data-staff-type="{{ user_obj.staff_type|default:'' }}" 
+                                        data-address="{{ user_obj.address|default:'' }}"
+                                        data-birth-date="{{ user_obj.birth_date|date:'Y-m-d'|default:'' }}"
+                                        data-gender="{{ user_obj.gender|default:'' }}"
+                                        data-profile-picture-url="{% if user_obj.user.profile_picture %}{{ user_obj.user.profile_picture.url }}{% endif %}"
+                                        data-national-number="{{ user_obj.national_number|default:'' }}"
+                                        class="user-link flex items-center gap-3 w-full mb-3"> 
+                                            
+                                        <!-- L'icône est maintenant propre, sans aucune classe de marge (finis les me-3 ou mr-3) -->
+                                        <div class="w-8 h-8 rounded-full bg-green-100 flex-shrink-0 flex items-center justify-center group-hover:bg-green-200 transition-colors">
                                             <i class="fas fa-user text-green-600"></i>
                                         </div>
-                                        <span class="break-all group-hover:text-gray-900">{{ user_obj.user.username }}</span>
+                                        
+                                        <span class="break-all group-hover:text-gray-900" dir="ltr">{{ user_obj.user.username }}</span>
                                     </a>
 
-                                    <!-- Ligne 2 : Boutons d'action (Alignés à droite) -->
-                                    <div class="flex items-center justify-end space-x-1 w-full border-t pt-2 border-gray-100">
+                                    <!-- MODIFICATION RTL : justify-end fonctionne très bien en RTL -->
+                                    <div class="flex items-center justify-end space-x-1 rtl:space-x-reverse w-full border-t pt-2 border-gray-100">
                                         <!-- 1. Planning -->
                                         <a href="{% url 'scheduling:view_teacher_schedule' pk_staff=user_obj.id %}"
                                            class="w-8 h-8 flex items-center justify-center rounded-full text-blue-600 hover:bg-blue-100 hover:text-blue-700 transition-colors duration-200"
-                                           title="Voir le planning">
+                                           title="{% trans 'Voir le planning' %}">
                                             <i class="fas fa-calendar-alt"></i>
                                         </a>
                                         
-                                        <!-- 2. Notes (Grades) -->
+                                        <!-- 2. Notes -->
                                         <a href="{% url 'grades:view_teacher_grades_as_admin' pk_staff=user_obj.pk %}" 
                                            class="w-8 h-8 flex items-center justify-center rounded-full text-purple-600 hover:bg-purple-100 hover:text-purple-700 transition-colors duration-200"
-                                           title="Gérer les notes">
+                                           title="{% trans 'Gérer les notes' %}">
                                             <i class="fas fa-chart-line"></i>
                                         </a>
 
                                         <!-- 3. Appréciations -->
                                         <a href="{% url 'grades:view_teacher_appreciations_as_admin' pk_staff=user_obj.pk %}" 
                                            class="w-8 h-8 flex items-center justify-center rounded-full text-teal-600 hover:bg-teal-100 hover:text-teal-700 transition-colors duration-200"
-                                           title="Gérer les appréciations">
+                                           title="{% trans 'Gérer les appréciations' %}">
                                             <i class="fas fa-comment-dots"></i>
                                         </a>
 
@@ -78,7 +88,7 @@
                                         <button class="toggle-status-btn w-8 h-8 flex items-center justify-center rounded-full text-red-500 hover:bg-red-100 hover:text-red-700 transition-colors duration-200"
                                                 data-user-id="{{ user_obj.user.id }}" 
                                                 data-action="deactivate"
-                                                title="Désactiver le compte"
+                                                title="{% trans 'Désactiver le compte' %}"
                                                 data-user-name="{{ user_obj.user.first_name }} {{ user_obj.user.last_name }}">
                                             <i class="fas fa-power-off"></i>
                                         </button>
@@ -86,7 +96,7 @@
                                 </div>
 
                             {% else %}
-                                <!-- [LAYOUT STANDARD] : Ligne (Nom à gauche, Bouton à droite) pour les non-profs -->
+                                <!-- [LAYOUT STANDARD] -->
                                 <div class="flex items-center justify-between p-3 text-sm font-medium text-gray-700 hover:bg-gray-50 rounded-lg border border-transparent hover:border-gray-200 transition-all duration-200 group">
                                     <a href="#" 
                                        data-user-id="{{ user_obj.user.id }}" 
@@ -101,28 +111,27 @@
                                        data-gender="{{ user_obj.gender|default:'' }}"
                                        data-profile-picture-url="{% if user_obj.user.profile_picture %}{{ user_obj.user.profile_picture.url }}{% endif %}"
                                        data-national-number="{{ user_obj.national_number|default:'' }}"
-                                       class="user-link flex items-center flex-grow min-w-0 mr-4">
+                                       class="user-link flex items-center gap-3 w-full mb-3">
 
-                                       
-                                        <div class="w-8 h-8 rounded-full bg-green-100 flex-shrink-0 flex items-center justify-center mr-3 group-hover:bg-green-200 transition-colors">
+                                        <!-- MODIFICATION RTL : mr-3 devient me-3 -->
+                                        <div class="w-8 h-8 rounded-full bg-green-100 flex-shrink-0 flex items-center justify-center group-hover:bg-green-200 transition-colors">
                                             <i class="fas fa-user text-green-600"></i>
                                         </div>
-                                        <span class="break-all group-hover:text-gray-900">{{ user_obj.user.username }}</span>
+                                        <span class="break-all group-hover:text-gray-900" dir="ltr">{{ user_obj.user.username }}</span>
                                     </a>
                                     
-                                    
-                                    <div class="flex-shrink-0 flex items-center space-x-2">
+                                    <div class="flex-shrink-0 flex items-center space-x-2 rtl:space-x-reverse">
                                         {% if user_type == 'student' %}
                                             <a href="{% url 'documents:admin_view_student_documents' student_id=user_obj.id %}" 
                                             class="w-8 h-8 flex items-center justify-center rounded-full text-indigo-600 hover:bg-indigo-100 hover:text-indigo-700 transition-colors duration-200"
-                                            title="Voir les documents et bulletins">
+                                            title="{% trans 'Voir les documents et bulletins' %}">
                                                 <i class="fas fa-folder-open"></i>
                                             </a>
                                         {% endif %}
                                         <button class="toggle-status-btn w-8 h-8 flex items-center justify-center rounded-full text-red-500 hover:bg-red-100 hover:text-red-700 transition-colors duration-200"
                                                 data-user-id="{{ user_obj.user.id }}" 
                                                 data-action="deactivate"
-                                                title="Désactiver le compte"
+                                                title="{% trans 'Désactiver le compte' %}"
                                                 data-user-name="{{ user_obj.user.first_name }} {{ user_obj.user.last_name }}">
                                             <i class="fas fa-power-off"></i>
                                         </button>
@@ -136,7 +145,7 @@
         
             <!-- Utilisateurs inactifs -->
             <ul id="user-list-inactive" class="space-y-2 mt-6">
-                <li class="px-3 py-1 text-sm font-semibold text-gray-500 sticky top-0 bg-white z-10">Inactif</li>
+                <li class="px-3 py-1 text-sm font-semibold text-gray-500 sticky top-0 bg-white z-10">{% trans "Inactif" %}</li>
                 {% for user_obj in users %}
                     {% if not user_obj.user.is_active %}
                         <li>
@@ -154,31 +163,27 @@
                                    data-gender="{{ user_obj.gender|default:'' }}"
                                    data-profile-picture-url="{% if user_obj.user.profile_picture %}{{ user_obj.user.profile_picture.url }}{% endif %}"
                                    data-national-number="{{ user_obj.national_number|default:'' }}"
-                                   class="user-link flex items-center flex-grow min-w-0 mr-4">
-                                    <!-- Icone harmonisée (gris) -->
-                                    <div class="w-8 h-8 rounded-full bg-gray-100 flex-shrink-0 flex items-center justify-center mr-3 group-hover:bg-gray-200 transition-colors">
+                                   class="user-link flex items-center gap-3 w-full mb-3">
+                                    <!-- MODIFICATION RTL : mr-3 devient me-3 -->
+                                    <div class="w-8 h-8 rounded-full bg-gray-100 flex-shrink-0 flex items-center justify-center group-hover:bg-gray-200 transition-colors">
                                         <i class="fas fa-user-slash text-gray-400"></i>
                                     </div>
-                                    <!-- Affichage complet du nom -->
-                                    <span class="break-all group-hover:text-gray-600">{{ user_obj.user.username }}</span>
+                                    <span class="break-all group-hover:text-gray-600" dir="ltr">{{ user_obj.user.username }}</span>
                                 </a>
                                 
-                                <div class="flex items-center space-x-1 flex-shrink-0">
-                                    <!-- Suppression des liens Notes/Appréciations pour les inactifs -->
-
+                                <div class="flex items-center space-x-1 rtl:space-x-reverse flex-shrink-0">
                                     {% if user_type == 'student' %}
                                         <a href="{% url 'documents:admin_view_student_documents' student_id=user_obj.id %}" 
                                         class="w-8 h-8 flex items-center justify-center rounded-full text-indigo-400 hover:bg-indigo-50 hover:text-indigo-600 transition-colors duration-200"
-                                        title="Voir les documents (Archives)">
+                                        title="{% trans 'Voir les documents (Archives)' %}">
                                             <i class="fas fa-folder-open"></i>
                                         </a>
                                     {% endif %}
                                     
-                                    <!-- Bouton Activer (Icône) -->
                                     <button class="toggle-status-btn w-8 h-8 flex items-center justify-center rounded-full text-green-600 hover:bg-green-100 hover:text-green-700 transition-colors duration-200"
                                             data-user-id="{{ user_obj.user.id }}" 
                                             data-action="activate"
-                                            title="Activer le compte"
+                                            title="{% trans 'Activer le compte' %}"
                                             data-user-name="{{ user_obj.user.first_name }} {{ user_obj.user.last_name }}">
                                         <i class="fas fa-check"></i>
                                     </button>
@@ -190,17 +195,17 @@
             </ul>
 
             {% if not users %}
-                <p class="text-gray-500 text-center py-4">Aucun utilisateur de ce type trouvé.</p>
+                <p class="text-gray-500 text-center py-4">{% trans "Aucun utilisateur de ce type trouvé." %}</p>
             {% endif %}
         </div>
     </div>
 
     <!-- Formulaire de création/modification -->
     <div class="w-full lg:w-2/3 bg-white p-8 rounded-xl shadow-lg border border-gray-200">
-        <h2 id="form-title" class="text-xl font-bold text-gray-800 mb-6">Créer un nouvel utilisateur</h2>
+        <h2 id="form-title" class="text-xl font-bold text-gray-800 mb-6">{% trans "Créer un nouvel utilisateur" %}</h2>
         <div class="flex justify-center mb-6">
             <div class="relative w-24 h-24 group">
-                <img id="form-user-avatar" src="" alt="Avatar" 
+                <img id="form-user-avatar" src="" alt="{% trans 'Avatar' %}" 
                      class="w-full h-full rounded-full object-cover shadow-md border-2 border-white hidden">
                 
                 <div id="form-user-initials" 
@@ -208,94 +213,105 @@
                     <i class="fas fa-user"></i> </div>
             </div>
         </div>
-        <form id="user-form" class="space-y-4" data-school-id="{{ user_school.id }}">
+        
+        <!-- MODIFICATION : Ajout des attributs data-msg-* pour le JS -->
+        <form id="user-form" class="space-y-4" data-school-id="{{ user_school.id }}"
+              data-msg-create-title="{% trans 'Créer un nouvel utilisateur' %}"
+              data-msg-create-btn="{% trans 'Créer' %}"
+              data-msg-edit-title="{% trans 'Modifier un utilisateur' %}"
+              data-msg-edit-btn="{% trans 'Mettre à jour' %}"
+              data-msg-deactivate-confirm="{% trans 'Êtes-vous sûr de vouloir désactiver l’utilisateur' %}"
+              data-msg-activate-confirm="{% trans 'Êtes-vous sûr de vouloir activer l’utilisateur' %}"
+              data-msg-error-prefix="{% trans 'Erreur :' %}"
+              data-msg-error-general="{% trans 'Une erreur est survenue lors de l’opération.' %}">
+            
             {% csrf_token %}
             <input type="hidden" id="user-id" name="user_id">
             <input type="hidden" id="user-type-input" name="user_type" value="{{ user_type }}">
 
-            <!-- Champs communs à tous les utilisateurs -->
+            <!-- MODIFICATION RTL : pl-3 pr-3 devient ps-3 pe-3 partout dans le formulaire -->
             <div class="mb-4">
-                <label for="first_name" class="block text-sm font-medium text-gray-700">Prénom</label>
+                <label for="first_name" class="block text-sm font-medium text-gray-700">{% trans "Prénom" %}</label>
                 <input type="text" id="first_name" name="first_name" required
-                    class="mt-1 block w-full pl-3 pr-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 transition duration-300">
+                    class="mt-1 block w-full ps-3 pe-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 transition duration-300">
             </div>
             
             <div class="mb-4">
-                <label for="last_name" class="block text-sm font-medium text-gray-700">Nom</label>
+                <label for="last_name" class="block text-sm font-medium text-gray-700">{% trans "Nom" %}</label>
                 <input type="text" id="last_name" name="last_name" required
-                    class="mt-1 block w-full pl-3 pr-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 transition duration-300">
+                    class="mt-1 block w-full ps-3 pe-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 transition duration-300">
             </div>
 
             <div class="mb-4">
-                <label for="email" class="block text-sm font-medium text-gray-700">Email</label>
-                <input type="email" id="email" name="email" required
-                    class="mt-1 block w-full pl-3 pr-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 transition duration-300">
+                <label for="email" class="block text-sm font-medium text-gray-700">{% trans "Email" %}</label>
+                <!-- dir="ltr" pour s'assurer que l'email est formaté de gauche à droite -->
+                <input type="email" id="email" name="email" required dir="ltr"
+                    class="mt-1 block w-full ps-3 pe-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 transition duration-300 text-start">
             </div>
             
             <div class="mb-4">
-                <label for="phone_number" class="block text-sm font-medium text-gray-700">Numéro de téléphone</label>
-                <input type="text" id="phone_number" name="phone_number"
-                    class="mt-1 block w-full pl-3 pr-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 transition duration-300">
+                <label for="phone_number" class="block text-sm font-medium text-gray-700">{% trans "Numéro de téléphone" %}</label>
+                <!-- dir="ltr" pour les numéros de téléphone (+33...) -->
+                <input type="text" id="phone_number" name="phone_number" dir="ltr"
+                    class="mt-1 block w-full ps-3 pe-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 transition duration-300 text-start">
             </div>
 
             <div id="password-field">
-                <label for="password" class="block text-sm font-medium text-gray-700">Mot de passe</label>
+                <label for="password" class="block text-sm font-medium text-gray-700">{% trans "Mot de passe" %}</label>
                 <input type="password" id="password" name="password" minlength="8" 
-                    class="mt-1 block w-full pl-3 pr-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 transition duration-300">            
+                    class="mt-1 block w-full ps-3 pe-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 transition duration-300">            
             </div>
 
             <div id="school-id-field" class="mb-4" style="display: none;">
-                <label for="school_id" class="block text-sm font-medium text-gray-700">École</label>
+                <label for="school_id" class="block text-sm font-medium text-gray-700">{% trans "École" %}</label>
                 <input type="text" id="school_id" name="school_id"
-                    class="mt-1 block w-full pl-3 pr-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 transition duration-300" readonly>
+                    class="mt-1 block w-full ps-3 pe-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 transition duration-300" readonly>
             </div>
             
-            <!-- Champs spécifiques -->
             <div id="staff-type-field" class="mb-4" style="display: none;">
-                <label for="staff_type" class="block text-sm font-medium text-gray-700">Type de personnel</label>
+                <label for="staff_type" class="block text-sm font-medium text-gray-700">{% trans "Type de personnel" %}</label>
                 <select id="staff_type" name="staff_type"
-                    class="mt-1 block w-full pl-3 pr-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 transition duration-300">
-                    <option value="">Sélectionner un type</option>
+                    class="mt-1 block w-full ps-3 pe-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 transition duration-300">
+                    <option value="">{% trans "Sélectionner un type" %}</option>
                     {% for value, label in staff_types.items %}
                         <option value="{{ value }}">{{ label }}</option>
                     {% endfor %}
                 </select>
             </div>
 
-            <!-- Numéro National (Élèves Uniquement) -->
             {% if user_type == 'student' %}
             <div class="mb-4" id="national-number-field">
-                <label for="national_number" class="block text-sm font-medium text-gray-700">Numéro national (ex: INE)</label>
-                <input type="text" id="national_number" name="national_number"
-                    class="mt-1 block w-full pl-3 pr-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 transition duration-300">
+                <label for="national_number" class="block text-sm font-medium text-gray-700">{% trans "Numéro ID matricule (ex: INE)" %}</label>
+                <input type="text" id="national_number" name="national_number" dir="ltr"
+                    class="mt-1 block w-full ps-3 pe-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 transition duration-300 text-start">
             </div>
             {% endif %}
 
             <div class="mb-4">
-                <label for="gender" class="block text-sm font-medium text-gray-700">Civilité</label>
+                <label for="gender" class="block text-sm font-medium text-gray-700">{% trans "Civilité" %}</label>
                 <select id="gender" name="gender" required
-                    class="mt-1 block w-full pl-3 pr-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 transition duration-300">
-                    <option value="">Sélectionner une civilité</option>
-                    <option value="M">Homme</option>
-                    <option value="F">Femme</option>
+                    class="mt-1 block w-full ps-3 pe-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 transition duration-300">
+                    <option value="">{% trans "Sélectionner une civilité" %}</option>
+                    <option value="M">{% trans "Homme" %}</option>
+                    <option value="F">{% trans "Femme" %}</option>
                 </select>
             </div>
             <div class="mb-4">
-                <label for="address" class="block text-sm font-medium text-gray-700">Adresse</label>
+                <label for="address" class="block text-sm font-medium text-gray-700">{% trans "Adresse" %}</label>
                 <textarea id="address" name="address" rows="3" required
-                    class="mt-1 block w-full pl-3 pr-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 transition duration-300"></textarea>
+                    class="mt-1 block w-full ps-3 pe-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 transition duration-300"></textarea>
             </div>
             <div class="mb-4">
-                <label for="birth_date" class="block text-sm font-medium text-gray-700">Date de naissance</label>
+                <label for="birth_date" class="block text-sm font-medium text-gray-700">{% trans "Date de naissance" %}</label>
                 <input type="date" id="birth_date" name="birth_date"
-                    class="mt-1 block w-full pl-3 pr-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 transition duration-300">
+                    class="mt-1 block w-full ps-3 pe-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 transition duration-300 text-start">
             </div>
 
             <button type="submit" id="submit-btn" class="w-full py-2 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition duration-300">
-                <i class="fas fa-plus-circle mr-2"></i> Créer
+                <i class="fas fa-plus-circle me-2"></i> {% trans "Créer" %}
             </button>
             <button type="button" id="cancel-btn" class="w-full py-2 px-4 mt-2 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-gray-500 hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-400 transition duration-300" style="display: none;">
-                <i class="fas fa-times-circle mr-2"></i> Annuler
+                <i class="fas fa-times-circle me-2"></i> {% trans "Annuler" %}
             </button>
         </form>
     </div>
@@ -303,12 +319,13 @@
 
 <!-- Modal de confirmation -->
 <div id="confirmation-modal" class="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center hidden z-50">
+    <!-- MODIFICATION RTL : text-left vers text-start pour le modal si nécessaire (par défaut hérité) -->
     <div class="bg-white rounded-lg p-6 shadow-xl border border-gray-300 max-w-sm w-full">
-        <h3 id="modal-title" class="text-lg font-bold text-gray-900 mb-4">Confirmation</h3>
+        <h3 id="modal-title" class="text-lg font-bold text-gray-900 mb-4">{% trans "Confirmation" %}</h3>
         <p id="modal-message" class="text-sm text-gray-700 mb-6"></p>
-        <div class="flex justify-end gap-3">
-            <button id="modal-cancel-btn" class="px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-100 transition duration-300">Annuler</button>
-            <button id="modal-confirm-btn" class="px-4 py-2 bg-red-600 text-white rounded-lg text-sm font-medium hover:bg-red-700 transition duration-300">Confirmer</button>
+        <div class="flex justify-end gap-3 rtl:space-x-reverse">
+            <button id="modal-cancel-btn" class="px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-100 transition duration-300">{% trans "Annuler" %}</button>
+            <button id="modal-confirm-btn" class="px-4 py-2 bg-red-600 text-white rounded-lg text-sm font-medium hover:bg-red-700 transition duration-300">{% trans "Confirmer" %}</button>
         </div>
     </div>
 </div>

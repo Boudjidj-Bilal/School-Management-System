@@ -1,36 +1,44 @@
 {% extends 'base.html' %}
-{% load static %}
+{% load static i18n %}
 
-{% block title %}Appel - Sélection de la classe{% endblock %}
+{% block title %}{% trans "Appel - Sélection de la classe" %}{% endblock %}
 
 {% block content %}
     
     <!-- En-tête -->
-    <header class="mb-8 border-b pb-6 border-gray-200">
-        <div class="flex flex-col md:flex-row justify-between items-start md:items-center">
+    <!-- MODIFICATION RTL : border-s-4 -->
+    <header class="mb-8 border-b pb-6 border-gray-200 text-start">
+        <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
             <div>
-                <h1 class="text-3xl font-extrabold text-gray-900 flex items-center">
-                    <i class="fas fa-user-clock text-indigo-600 mr-3"></i>
-                    Gestion des Absences et Retards
+                <!-- Séparation icône + texte avec gap-3 -->
+                <h1 class="text-3xl font-extrabold text-gray-900 flex items-center gap-3">
+                    <i class="fas fa-user-clock text-indigo-600"></i>
+                    <span>{% trans "Gestion des Absences et Retards" %}</span>
                 </h1>
-                <p class="mt-2 text-lg text-gray-600">
-                    Année scolaire : <span class="font-semibold text-indigo-600">{{ current_year.name }}</span>
+                <p class="mt-2 text-lg text-gray-600" dir="auto">
+                    {% trans "Année scolaire :" %} <span class="font-semibold text-indigo-600">{{ current_year.name }}</span>
                 </p>
             </div>
             
             <!-- Badge Rôle -->
             <div class="mt-4 md:mt-0">
                 {% if role_mode == 'TEACHER' %}
-                    <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800">
-                        <i class="fas fa-chalkboard-teacher mr-2"></i> Espace Professeur
+                    <!-- Séparation icône + texte avec gap-2 -->
+                    <span class="inline-flex items-center gap-2 px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800">
+                        <i class="fas fa-chalkboard-teacher"></i> 
+                        <span>{% trans "Espace Professeur" %}</span>
                     </span>
                 {% elif role_mode == 'CPE' %}
-                    <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-orange-100 text-orange-800">
-                        <i class="fas fa-user-shield mr-2"></i> Espace Vie Scolaire
+                    <!-- Séparation icône + texte avec gap-2 -->
+                    <span class="inline-flex items-center gap-2 px-3 py-1 rounded-full text-sm font-medium bg-orange-100 text-orange-800">
+                        <i class="fas fa-user-shield"></i> 
+                        <span>{% trans "Espace Vie Scolaire" %}</span>
                     </span>
                 {% else %}
-                    <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-blue-100 text-blue-800">
-                        <i class="fas fa-eye mr-2"></i> Mode Consultation
+                    <!-- Séparation icône + texte avec gap-2 -->
+                    <span class="inline-flex items-center gap-2 px-3 py-1 rounded-full text-sm font-medium bg-blue-100 text-blue-800">
+                        <i class="fas fa-eye"></i> 
+                        <span>{% trans "Mode Consultation" %}</span>
                     </span>
                 {% endif %}
             </div>
@@ -39,63 +47,71 @@
 
     <!-- Gestion des erreurs -->
     {% if error_message %}
-        <div class="bg-red-50 border-l-4 border-red-500 p-4 mb-8 rounded-r-lg shadow-sm">
-            <div class="flex">
-                <div class="flex-shrink-0">
-                    <i class="fas fa-exclamation-circle text-red-500"></i>
+        <!-- MODIFICATION RTL : border-s-4 à la place de border-l-4 -->
+        <div class="bg-red-50 border-s-4 border-red-500 p-4 mb-8 rounded-e-lg shadow-sm text-start" role="alert">
+            <!-- Séparation icône + texte avec gap-3 -->
+            <div class="flex items-start gap-3">
+                <div class="flex-shrink-0 mt-0.5">
+                    <i class="fas fa-exclamation-circle text-red-500 text-lg"></i>
                 </div>
-                <div class="ml-3">
-                    <p class="text-sm text-red-700 font-medium">{{ error_message }}</p>
+                <div>
+                    <p class="text-sm text-red-700 font-medium" dir="auto">{{ error_message }}</p>
                 </div>
             </div>
         </div>
     {% endif %}
 
     <!-- Contenu Principal : Liste des Classes -->
-    <div class="bg-white shadow overflow-hidden sm:rounded-lg border border-gray-200">
+    <div class="bg-white shadow overflow-hidden sm:rounded-lg border border-gray-200 text-start">
         <ul role="list" class="divide-y divide-gray-200">
             {% for student_class in classes_list %}
             <li>
                 <div class="block hover:bg-gray-50 transition duration-150 ease-in-out">
-                    <div class="px-4 py-4 sm:px-6 flex items-center justify-between">
+                    <div class="px-4 py-4 sm:px-6 flex items-center justify-between gap-4 flex-wrap">
                         
                         <!-- Info Classe (Gauche) -->
-                        <div class="flex items-center">
+                        <!-- Séparation avec gap-4 -->
+                        <div class="flex items-center gap-4 min-w-0">
                             <div class="flex-shrink-0 h-10 w-10 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-600">
                                 <i class="fas fa-users text-lg"></i>
                             </div>
-                            <div class="ml-4">
-                                <div class="flex items-center">
-                                    <h3 class="text-lg leading-6 font-medium text-gray-900 mr-3">
+                            <div class="min-w-0">
+                                <!-- Séparation avec gap-3 -->
+                                <div class="flex items-center gap-3 flex-wrap">
+                                    <h3 class="text-lg leading-6 font-medium text-gray-900 truncate" dir="auto">
                                         {{ student_class.name }}
                                     </h3>
                                     <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-indigo-100 text-indigo-800">
                                         {{ student_class.level.level }}
                                     </span>
                                 </div>
-                                <div class="mt-1 flex items-center text-sm text-gray-500">
-                                    <i class="fas fa-school mr-1.5 text-gray-400"></i>
-                                    <span>Classe active</span>
+                                <!-- Séparation icône + texte avec gap-1.5 -->
+                                <div class="mt-1 flex items-center gap-1.5 text-sm text-gray-500">
+                                    <i class="fas fa-school text-gray-400"></i>
+                                    <span>{% trans "Classe active" %}</span>
                                 </div>
                             </div>
                         </div>
 
                         <!-- Action (Droite) -->
-                        <div class="ml-4 flex-shrink-0">
+                        <div class="flex-shrink-0 ms-auto">
                             {% if role_mode == 'TEACHER' %}
-                                <!-- Lien vers Page 2 (Saisie) -->
-                                <a href="{% url 'attendance:create_attendance_session' class_id=student_class.id %}" class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition-colors">
-                                    <i class="fas fa-pen-alt mr-2"></i> Faire l'appel
+                                <!-- Séparation icône + texte avec gap-2 -->
+                                <a href="{% url 'attendance:create_attendance_session' class_id=student_class.id %}" class="inline-flex items-center gap-2 px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition-colors">
+                                    <i class="fas fa-pen-alt"></i> 
+                                    <span>{% trans "Faire l'appel" %}</span>
                                 </a>
                             {% elif role_mode == 'CPE' %}
-                                <!-- Lien vers Page 3 (Gestion) -->
-                                <a href="{% url 'attendance:manage_attendance' class_id=student_class.id %}" class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-orange-500 hover:bg-orange-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500 transition-colors">
-                                    <i class="fas fa-check-double mr-2"></i> Gérer / Justifier
+                                <!-- Séparation icône + texte avec gap-2 -->
+                                <a href="{% url 'attendance:manage_attendance' class_id=student_class.id %}" class="inline-flex items-center gap-2 px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-orange-500 hover:bg-orange-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500 transition-colors">
+                                    <i class="fas fa-check-double"></i> 
+                                    <span>{% trans "Gérer / Justifier" %}</span>
                                 </a>
                             {% else %}
-                                <!-- Lien vers Page 3 (Lecture Seule SuperAdmin/Proviseur) -->
-                                <a href="{% url 'attendance:manage_attendance' class_id=student_class.id %}" class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors">
-                                    <i class="fas fa-eye mr-2"></i> Consulter
+                                <!-- Séparation icône + texte avec gap-2 -->
+                                <a href="{% url 'attendance:manage_attendance' class_id=student_class.id %}" class="inline-flex items-center gap-2 px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors">
+                                    <i class="fas fa-eye"></i> 
+                                    <span>{% trans "Consulter" %}</span>
                                 </a>
                             {% endif %}
                         </div>
@@ -106,11 +122,11 @@
             {% empty %}
             <!-- État vide -->
             <li class="px-4 py-12 sm:px-6 text-center">
-                <div class="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-gray-100 mb-4">
-                    <i class="fas fa-chalkboard text-gray-400 text-xl"></i>
+                <div class="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-gray-100 mb-4 text-gray-400 text-xl">
+                    <i class="fas fa-chalkboard"></i>
                 </div>
-                <h3 class="mt-2 text-sm font-medium text-gray-900">Aucune classe trouvée</h3>
-                <p class="mt-1 text-sm text-gray-500">Vous n'êtes associé à aucune classe pour cette année scolaire.</p>
+                <h3 class="mt-2 text-sm font-medium text-gray-900">{% trans "Aucune classe trouvée" %}</h3>
+                <p class="mt-1 text-sm text-gray-500">{% trans "Vous n'êtes associé à aucune classe pour cette année scolaire." %}</p>
             </li>
             {% endfor %}
         </ul>

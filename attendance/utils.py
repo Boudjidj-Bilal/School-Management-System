@@ -1,6 +1,6 @@
 from django.db.models import Count, Q
 from django.utils import timezone 
-
+from django.utils.translation import gettext_lazy as _
 
 from classes.models import Class, ClassStudentYear
 from schools.models import TermYearLevel
@@ -188,7 +188,7 @@ def get_student_attendance_view_data(student, current_year):
     # On calcule les stats du trimestre par défaut pour les cartes du haut
     current_term_stats = {
         'total_absences': 0, 'unjustified_absences': 0, 'total_delays': 0, 
-        'total_unjustified': 0, 'name': "Aucune période"
+        'total_unjustified': 0, 'name': _("Aucune période")
     }
 
     # 3. Boucle sur les trimestres

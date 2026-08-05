@@ -6,6 +6,12 @@ document.addEventListener('DOMContentLoaded', () => {
     const messageBox = document.getElementById('messageBox');
     const loadingIndicator = document.getElementById('loadingIndicator');
 
+    if (!loginForm) return;
+
+    // --- Récupération des traductions ---
+    const msgErrorDefault = loginForm.dataset.msgErrorDefault || 'Erreur de connexion.';
+    const msgErrorTech = loginForm.dataset.msgErrorTech || 'Une erreur est survenue. Veuillez réessayer.';
+
     loginForm.addEventListener('submit', async function(event) {
         event.preventDefault();
         
@@ -64,6 +70,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const data = await response.json();
 
             if (response.ok && data.success) {
+                // Succès : Affichage du message traduit par le backend Python
                 messageBox.textContent = data.message;
                 messageBox.classList.remove('text-red-600');
                 messageBox.classList.add('text-green-600');
@@ -72,7 +79,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 window.location.href = targetUrl;
 
             } else {
-                messageBox.textContent = data.message || 'Erreur de connexion.';
+                // Erreur métier : Utilisation du message envoyé par Python ou message d'erreur par défaut
+                messageBox.textContent = data.message || msgErrorDefault;
                 messageBox.classList.remove('text-green-600');
                 messageBox.classList.add('text-red-600');
                 loadingIndicator.classList.add('hidden');
@@ -80,7 +88,8 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         } catch (error) {
             console.error('Erreur:', error);
-            messageBox.textContent = 'Une erreur est survenue. Veuillez réessayer.';
+            // Erreur technique : Utilisation du message traduit depuis le HTML
+            messageBox.textContent = msgErrorTech;
             messageBox.classList.remove('text-green-600');
             messageBox.classList.add('text-red-600');
             loadingIndicator.classList.add('hidden');

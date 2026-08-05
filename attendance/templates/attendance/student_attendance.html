@@ -1,149 +1,162 @@
 {% extends 'base.html' %}
-{% load static %}
+{% load static i18n %}
 
-{% block title %}Mon Assiduité{% endblock %}
+{% block title %}{% trans "Mon Assiduité" %}{% endblock %}
 
 {% block content %}
     
-    <header class="mb-8 border-b pb-6 border-gray-200">
-        <h1 class="text-3xl font-extrabold text-gray-900 flex items-center">
-            <i class="fas fa-user-clock text-indigo-600 mr-3"></i>
-            Mon Assiduité
+    <!-- MODIFICATION RTL : border-s-4 -->
+    <header class="mb-8 border-b pb-6 border-gray-200 text-start">
+        <!-- Séparation icône + texte avec gap-3 -->
+        <h1 class="text-3xl font-extrabold text-gray-900 flex items-center gap-3">
+            <i class="fas fa-user-clock text-indigo-600"></i>
+            <span>{% trans "Mon Assiduité" %}</span>
         </h1>
-        <p class="mt-2 text-lg text-gray-600">
+        <p class="mt-2 text-lg text-gray-600" dir="auto">
             {{ student.user.first_name }} {{ student.user.last_name }} 
             <span class="mx-2 text-gray-300">|</span> 
             <span class="font-semibold text-indigo-600">{{ student_class.name }}</span>
             <span class="mx-2 text-gray-300">|</span> 
-            Année {{ current_year.name }}
+            {% trans "Année" %} {{ current_year.name }}
         </p>
     </header>
 
     {% if error_message %}
-        <div class="bg-red-50 border-l-4 border-red-500 p-4 mb-8 rounded-r-lg shadow-sm">
-            <div class="flex">
-                <div class="flex-shrink-0">
-                    <i class="fas fa-exclamation-circle text-red-500"></i>
+        <!-- MODIFICATION RTL : border-s-4 à la place de border-l-4 -->
+        <div class="bg-red-50 border-s-4 border-red-500 p-4 mb-8 rounded-e-lg shadow-sm text-start" role="alert">
+            <!-- Séparation icône + texte avec gap-3 -->
+            <div class="flex items-start gap-3">
+                <div class="flex-shrink-0 mt-0.5">
+                    <i class="fas fa-exclamation-circle text-red-500 text-lg"></i>
                 </div>
-                <div class="ml-3">
-                    <p class="text-sm text-red-700 font-medium">{{ error_message }}</p>
+                <div>
+                    <p class="text-sm text-red-700 font-medium" dir="auto">{{ error_message }}</p>
                 </div>
             </div>
         </div>
     {% else %}
 
-        <section class="mb-10">
-            <h2 class="text-lg font-bold text-gray-700 mb-4 flex items-center">
-                <i class="fas fa-chart-bar mr-2 text-indigo-500"></i> 
-                Situation actuelle ({{ current_term_stats.name }})
+        <section class="mb-10 text-start">
+            <!-- Séparation icône + texte avec gap-2 -->
+            <h2 class="text-lg font-bold text-gray-700 mb-4 flex items-center gap-2">
+                <i class="fas fa-chart-bar text-indigo-500"></i> 
+                <span>{% trans "Situation actuelle" %} ({{ current_term_stats.name }})</span>
             </h2>
             
             <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <div class="bg-white rounded-xl shadow-md border border-gray-100 p-6 flex items-center">
-                    <div class="p-3 rounded-full bg-indigo-100 text-indigo-600 mr-4">
+                <!-- Carte 1 : Absences -->
+                <div class="bg-white rounded-xl shadow-md border border-gray-100 p-6 flex items-center gap-4">
+                    <div class="p-3 rounded-full bg-indigo-100 text-indigo-600 flex-shrink-0">
                         <i class="fas fa-calendar-times text-2xl"></i>
                     </div>
-                    <div>
-                        <p class="text-xs font-bold text-gray-400 uppercase tracking-wider">Absences (Ce trimestre)</p>
-                        <p class="text-3xl font-bold text-gray-900">{{ current_term_stats.total_absences }}</p>
+                    <div class="min-w-0">
+                        <p class="text-xs font-bold text-gray-400 uppercase tracking-wider">{% trans "Absences (Ce trimestre)" %}</p>
+                        <p class="text-3xl font-bold text-gray-900" dir="ltr">{{ current_term_stats.total_absences }}</p>
                     </div>
                 </div>
 
-                <div class="bg-white rounded-xl shadow-md border-l-4 {% if current_term_stats.total_unjustified > 0 %}border-red-500{% else %}border-green-500{% endif %} p-6 flex items-center">
-                    <div class="p-3 rounded-full {% if current_term_stats.total_unjustified > 0 %}bg-red-100 text-red-600{% else %}bg-green-100 text-green-600{% endif %} mr-4">
+                <!-- Carte 2 : À Justifier -->
+                <div class="bg-white rounded-xl shadow-md border-s-4 {% if current_term_stats.total_unjustified > 0 %}border-red-500{% else %}border-green-500{% endif %} p-6 flex items-center gap-4">
+                    <div class="p-3 rounded-full {% if current_term_stats.total_unjustified > 0 %}bg-red-100 text-red-600{% else %}bg-green-100 text-green-600{% endif %} flex-shrink-0">
                         <i class="fas {% if current_term_stats.total_unjustified > 0 %}fa-exclamation-triangle{% else %}fa-check{% endif %} text-2xl"></i>
                     </div>
-                    <div>
-                        <p class="text-xs font-bold text-gray-400 uppercase tracking-wider">À Justifier (Total)</p>
-                        <p class="text-3xl font-bold {% if current_term_stats.total_unjustified > 0 %}text-red-600{% else %}text-green-600{% endif %}">
+                    <div class="min-w-0">
+                        <p class="text-xs font-bold text-gray-400 uppercase tracking-wider">{% trans "À Justifier (Total)" %}</p>
+                        <p class="text-3xl font-bold {% if current_term_stats.total_unjustified > 0 %}text-red-600{% else %}text-green-600{% endif %}" dir="ltr">
                             {{ current_term_stats.total_unjustified }}
                         </p>
                     </div>
                 </div>
 
-                <div class="bg-white rounded-xl shadow-md border border-gray-100 p-6 flex items-center">
-                    <div class="p-3 rounded-full bg-orange-100 text-orange-600 mr-4">
+                <!-- Carte 3 : Retards -->
+                <div class="bg-white rounded-xl shadow-md border border-gray-100 p-6 flex items-center gap-4">
+                    <div class="p-3 rounded-full bg-orange-100 text-orange-600 flex-shrink-0">
                         <i class="fas fa-running text-2xl"></i>
                     </div>
-                    <div>
-                        <p class="text-xs font-bold text-gray-400 uppercase tracking-wider">Retards (Ce trimestre)</p>
-                        <p class="text-3xl font-bold text-gray-900">{{ current_term_stats.total_delays }}</p>
+                    <div class="min-w-0">
+                        <p class="text-xs font-bold text-gray-400 uppercase tracking-wider">{% trans "Retards (Ce trimestre)" %}</p>
+                        <p class="text-3xl font-bold text-gray-900" dir="ltr">{{ current_term_stats.total_delays }}</p>
                     </div>
                 </div>
             </div>
         </section>
 
-
+        <!-- Navigation par onglets -->
         <div class="mb-6 border-b border-gray-200">
-            <nav id="tabs-container" class="-mb-px flex space-x-8 overflow-x-auto" aria-label="Tabs">
+            <nav id="tabs-container" class="-mb-px flex gap-8 overflow-x-auto" aria-label="Tabs">
                 {% for data in terms_data %}
                 <button 
                     type="button"
                     data-action="switch-term" 
                     data-target="#term-{{ data.term.id }}"
-                    class="term-tab-btn whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm transition-colors duration-200 
+                    class="term-tab-btn whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm transition-colors duration-200 inline-flex items-center gap-2
                            {% if data.is_default_tab %}border-indigo-500 text-indigo-600{% else %}border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300{% endif %}">
-                    {{ data.term.level.term_type|title }} {{ data.term.counter }}
+                    <span dir="auto">{{ data.term.level.term_type|title }} {{ data.term.counter }}</span>
                     {% if data.is_default_tab %}
-                        <span class="ml-2 bg-green-100 text-green-800 py-0.5 px-2 rounded-full text-xs">En cours</span>
+                        <span class="ms-2 bg-green-100 text-green-800 py-0.5 px-2 rounded-full text-xs font-semibold">{% trans "En cours" %}</span>
                     {% endif %}
                 </button>
                 {% endfor %}
             </nav>
         </div>
 
-
+        <!-- Contenu des onglets -->
         <div id="terms-content-container">
             {% for data in terms_data %}
             <div id="term-{{ data.term.id }}" class="term-content space-y-6 {% if not data.is_default_tab %}hidden{% endif %}">
                 
-                <div class="bg-white shadow overflow-hidden sm:rounded-lg border border-gray-200">
+                <div class="bg-white shadow overflow-hidden sm:rounded-lg border border-gray-200 text-start">
                     <ul class="divide-y divide-gray-200">
                         {% for record in data.records %}
                         <li class="hover:bg-gray-50 transition-colors">
                             <div class="px-4 py-4 sm:px-6">
-                                <div class="flex items-center justify-between">
+                                <div class="flex items-center justify-between gap-4">
                                     
-                                    <div class="flex items-center">
+                                    <!-- Informations de l'incident -->
+                                    <div class="flex items-center gap-4 min-w-0">
                                         <div class="flex-shrink-0 h-10 w-10 rounded-full flex items-center justify-center 
                                             {% if record.status == 'ABSENCE' %}bg-red-100 text-red-600{% else %}bg-orange-100 text-orange-600{% endif %}">
                                             <i class="fas {% if record.status == 'ABSENCE' %}fa-times{% else %}fa-clock{% endif %}"></i>
                                         </div>
-                                        <div class="ml-4">
-                                            <div class="text-sm font-medium text-indigo-600">
+                                        <div class="min-w-0">
+                                            <div class="text-sm font-medium text-indigo-600" dir="auto">
                                                 {{ record.session.date|date:"l d F Y" }}
                                             </div>
-                                            <div class="text-sm text-gray-500">
+                                            <div class="text-sm text-gray-500" dir="ltr">
                                                 {{ record.session.start_time|time:"H:i" }} - {{ record.session.end_time|time:"H:i" }}
                                                 <span class="mx-1">•</span>
-                                                {{ record.get_status_display }}
+                                                <span dir="auto">{{ record.get_status_display }}</span>
                                             </div>
                                         </div>
                                     </div>
 
-                                    <div class="flex flex-col items-end">
+                                    <!-- Statut de justification -->
+                                    <div class="flex flex-col items-end flex-shrink-0">
                                         {% if record.justified %}
-                                            <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
-                                                <i class="fas fa-check mr-1"></i> Justifié
+                                            <!-- Séparation icône + texte avec gap-1 -->
+                                            <span class="px-2 inline-flex items-center gap-1 text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
+                                                <i class="fas fa-check"></i> 
+                                                <span>{% trans "Justifié" %}</span>
                                             </span>
                                             {% if record.justification_date %}
-                                                <span class="text-xs text-gray-400 mt-1">le {{ record.justification_date|date:"d/m" }}</span>
+                                                <span class="text-xs text-gray-400 mt-1" dir="ltr">{% trans "le" %} {{ record.justification_date|date:"d/m" }}</span>
                                             {% endif %}
                                         {% else %}
                                             <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-red-100 text-red-800">
-                                                Non justifié
+                                                {% trans "Non justifié" %}
                                             </span>
-                                            <span class="text-xs text-red-400 mt-1 italic">À régulariser</span>
+                                            <span class="text-xs text-red-400 mt-1 italic">{% trans "À régulariser" %}</span>
                                         {% endif %}
                                     </div>
 
                                 </div>
                                 
-                                <div class="mt-2 sm:flex sm:justify-between">
-                                    <div class="sm:flex">
-                                        <p class="flex items-center text-xs text-gray-500">
-                                            <i class="fas fa-chalkboard-teacher mr-1.5 text-gray-400"></i>
-                                            Signalé par : {{ record.session.teacher.user.last_name }} {{ record.session.teacher.user.first_name }}
+                                <div class="mt-2 flex justify-between">
+                                    <div>
+                                        <!-- Séparation icône + texte avec gap-2 -->
+                                        <p class="flex items-center gap-2 text-xs text-gray-500" dir="auto">
+                                            <i class="fas fa-chalkboard-teacher text-gray-400"></i>
+                                            <span>{% trans "Signalé par :" %} {{ record.session.teacher.user.last_name }} {{ record.session.teacher.user.first_name }}</span>
                                         </p>
                                     </div>
                                 </div>
@@ -151,11 +164,11 @@
                         </li>
                         {% empty %}
                         <li class="px-4 py-12 text-center">
-                            <div class="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-green-100 mb-4">
-                                <i class="fas fa-smile text-green-600 text-2xl"></i>
+                            <div class="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-green-100 mb-4 text-green-600 text-2xl">
+                                <i class="fas fa-smile"></i>
                             </div>
-                            <h3 class="text-sm font-medium text-gray-900">Aucun incident</h3>
-                            <p class="mt-1 text-sm text-gray-500">Bravo ! Aucune absence ni retard sur cette période.</p>
+                            <h3 class="text-sm font-medium text-gray-900">{% trans "Aucun incident" %}</h3>
+                            <p class="mt-1 text-sm text-gray-500">{% trans "Bravo ! Aucune absence ni retard sur cette période." %}</p>
                         </li>
                         {% endfor %}
                     </ul>

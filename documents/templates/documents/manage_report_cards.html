@@ -1,12 +1,15 @@
 {% extends 'base.html' %}
-{% load static %}
+{% load static i18n %}
 
-{% block title %}Gestion des Bulletins - {{ student_class.name }}{% endblock %}
+{% block title %}{% trans "Gestion des Bulletins" %} - {{ student_class.name }}{% endblock %}
 
 {% block content %}
-<div class="container mx-auto px-4 py-6">
+<div class="container mx-auto px-4 py-6"
+     id="message-processing"
+     data-msg-processing="{% trans 'Traitement...' %}">
     <div class="mb-6 border-b border-gray-200">
-        <nav class="-mb-px flex space-x-8" aria-label="Tabs">
+        <!-- MODIFICATION : gap-8 au lieu de space-x-8 -->
+        <nav class="-mb-px flex gap-8 overflow-x-auto" aria-label="Tabs">
             {% for t in all_terms %}
                 <a href="{% url 'documents:manage_class_report_cards' class_id=student_class.id term_id=t.id %}" 
                    class="whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm transition-colors
@@ -17,52 +20,59 @@
                    {% endif %}">
                     
                     {% if t.level.term_type == "SEMESTRE" %}
-                        Semestre {{ t.counter }}
+                        {% trans "Semestre" %} {{ t.counter }}
                     {% elif t.level.term_type == "TRIMESTRE" %}
-                        Trimestre {{ t.counter }}
+                        {% trans "Trimestre" %} {{ t.counter }}
                     {% else %}
-                        Unique {{ t.counter }}
+                        {% trans "Unique" %} {{ t.counter }}
                     {% endif %}
                 </a>
             {% endfor %}
         </nav>
     </div>
 
-    <div class="bg-blue-50 border-l-4 border-blue-400 p-4 mb-6">
-        <div class="flex">
+    <!-- MODIFICATION RTL : border-s-4, rounded-e-lg -->
+    <div class="bg-blue-50 border-s-4 border-blue-400 p-4 mb-6 rounded-e-lg shadow-sm">
+        <!-- MODIFICATION : gap-3 -->
+        <div class="flex items-center gap-3">
             <div class="flex-shrink-0">
-                <i class="fas fa-info-circle text-blue-400"></i>
+                <i class="fas fa-info-circle text-blue-400 text-lg"></i>
             </div>
-            <div class="ml-3">
+            <div>
                 <p class="text-sm text-blue-700">
+                    {% blocktrans trimmed with term_type=term.level.get_term_type_display|upper term_counter=term.counter year_name=term.year.name %}
                     Vous gérez actuellement les bulletins du 
-                    <strong class="uppercase">{{ term.level.get_term_type_display }} {{ term.counter }}</strong> 
-                    pour l'année {{ term.year.name }}.
+                    <strong class="uppercase">{{ term_type }} {{ term_counter }}</strong> 
+                    pour l'année {{ year_name }}.
+                    {% endblocktrans %}
                 </p>
             </div>
         </div>
     </div>
 
-    <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-8">
+    <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
         <div>
-            <div class="flex items-center text-sm text-gray-500 mb-1">
-                <a href="#" class="hover:text-indigo-600 transition">Classes</a>
-                <span class="mx-2">/</span>
+            <!-- MODIFICATION : gap-2 -->
+            <div class="flex items-center gap-2 text-sm text-gray-500 mb-1">
+                <a href="#" class="hover:text-indigo-600 transition">{% trans "Classes" %}</a>
+                <span>/</span>
                 <span>{{ student_class.name }}</span>
             </div>
-            <h1 class="text-3xl font-extrabold text-gray-900 flex items-center">
-                <i class="fas fa-file-pdf text-indigo-600 mr-3"></i>
-                Bulletins : {{ term.counter }}
+            <!-- MODIFICATION : gap-3 -->
+            <h1 class="text-3xl font-extrabold text-gray-900 flex items-center gap-3">
+                <i class="fas fa-file-pdf text-indigo-600"></i>
+                <span>{% trans "Bulletins :" %} {{ term.counter }}</span>
             </h1>
             <p class="mt-1 text-gray-600">
-                Gestion des bulletins officiels pour la classe de <span class="font-bold">{{ student_class.name }}</span>.
+                {% trans "Gestion des bulletins officiels pour la classe de" %} <span class="font-bold">{{ student_class.name }}</span>.
             </p>
         </div>
         
         <div class="mt-4 md:mt-0">
-            <!-- MODIFICATION : Suppression du JS inline, ajout ID -->
-            <a href="#" id="btn-back" class="text-gray-600 hover:text-gray-900 font-medium">
-                <i class="fas fa-arrow-left mr-2"></i> Retour
+            <!-- MODIFICATION : gap-2 -->
+            <a href="#" id="btn-back" class="inline-flex items-center gap-2 text-gray-600 hover:text-gray-900 font-medium">
+                <i class="fas fa-arrow-left"></i> 
+                <span>{% trans "Retour" %}</span>
             </a>
         </div>
     </div>
@@ -70,17 +80,18 @@
     {% if messages %}
         <div class="mb-6 space-y-2">
             {% for message in messages %}
-            <div class="p-4 rounded-lg border flex items-center shadow-sm 
-                {% if message.tags == 'error' %}bg-red-50 text-red-800 border-red-200{% else %}bg-green-50 text-green-800 border-green-200{% endif %}">
-                <i class="fas {% if message.tags == 'error' %}fa-exclamation-circle{% else %}fa-check-circle{% endif %} mr-3 text-lg"></i>
-                {{ message }}
+            <!-- MODIFICATION RTL : border-s-4, rounded-e-lg -->
+            <div class="p-4 rounded-lg border-s-4 flex items-center gap-3 shadow-sm 
+                {% if message.tags == 'error' %}bg-red-50 text-red-800 border-red-300{% else %}bg-green-50 text-green-800 border-green-300{% endif %}">
+                <i class="fas {% if message.tags == 'error' %}fa-exclamation-circle text-red-500{% else %}fa-check-circle text-green-500{% endif %} text-lg"></i>
+                <span>{{ message }}</span>
             </div>
             {% endfor %}
         </div>
     {% endif %}
 
     <div class="bg-white rounded-xl shadow-md border border-gray-200 p-6 mb-8">
-        <h2 class="text-lg font-bold text-gray-800 mb-4 border-b pb-2">Actions groupées</h2>
+        <h2 class="text-lg font-bold text-gray-800 mb-4 border-b pb-2">{% trans "Actions groupées" %}</h2>
         
         <div class="flex flex-col md:flex-row gap-4 items-center justify-between">
             
@@ -90,38 +101,48 @@
                     <input type="hidden" name="action" value="generate_all">
                     
                     {% if can_generate %}
-                        <!-- MODIFICATION : Suppression onclick, ajout ID -->
-                        <button type="button" id="btn-open-generate-modal" class="flex items-center px-5 py-2.5 bg-indigo-600 text-white font-semibold rounded-lg shadow-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all duration-200">
-                            <i class="fas fa-cogs mr-2"></i> Générer tous les bulletins
+                        <!-- MODIFICATION : gap-2 -->
+                        <button type="button" id="btn-open-generate-modal" class="flex items-center gap-2 px-5 py-2.5 bg-indigo-600 text-white font-semibold rounded-lg shadow-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all duration-200">
+                            <i class="fas fa-cogs"></i> 
+                            <span>{% trans "Générer tous les bulletins" %}</span>
                         </button>
                     {% else %}
                         <div class="group relative">
-                            <button type="button" disabled class="flex items-center px-5 py-2.5 bg-gray-300 text-gray-500 font-semibold rounded-lg cursor-not-allowed">
-                                <i class="fas fa-lock mr-2"></i> Générer tous les bulletins
+                            <!-- MODIFICATION : gap-2 -->
+                            <button type="button" disabled class="flex items-center gap-2 px-5 py-2.5 bg-gray-300 text-gray-500 font-semibold rounded-lg cursor-not-allowed">
+                                <i class="fas fa-lock"></i> 
+                                <span>{% trans "Générer tous les bulletins" %}</span>
                             </button>
                         </div>
                     {% endif %}
                 </form>
                 
-                <span class="text-sm text-gray-500 italic hidden md:inline">
-                    <i class="fas fa-info-circle mr-1"></i> Écrase les bulletins existants.
+                <!-- MODIFICATION : gap-1 -->
+                <span class="text-sm text-gray-500 italic hidden md:inline-flex items-center gap-1">
+                    <i class="fas fa-info-circle"></i> 
+                    <span>{% trans "Écrase les bulletins existants." %}</span>
                 </span>
             </div>
 
-            <div class="flex items-center gap-3 w-full md:w-auto border-t md:border-t-0 md:border-l border-gray-100 pt-4 md:pt-0 md:pl-6">
-                <span class="text-sm font-medium text-gray-700 mr-2">Visibilité Élèves :</span>
+            <!-- MODIFICATION RTL : border-t/s logiques -->
+            <div class="flex items-center gap-3 w-full md:w-auto border-t md:border-t-0 md:border-s border-gray-200 pt-4 md:pt-0 md:ps-6">
+                <span class="text-sm font-medium text-gray-700 me-2">{% trans "Visibilité Élèves :" %}</span>
                 
                 <form method="POST">
                     {% csrf_token %}
-                    <button type="submit" name="action" value="publish_all" class="px-4 py-2 bg-green-100 text-green-700 border border-green-200 rounded-lg hover:bg-green-200 transition font-medium text-sm">
-                        <i class="fas fa-eye mr-2"></i> Tout Publier
+                    <!-- MODIFICATION : gap-2 -->
+                    <button type="submit" name="action" value="publish_all" class="flex items-center gap-2 px-4 py-2 bg-green-100 text-green-700 border border-green-200 rounded-lg hover:bg-green-200 transition font-medium text-sm">
+                        <i class="fas fa-eye"></i> 
+                        <span>{% trans "Tout Publier" %}</span>
                     </button>
                 </form>
 
                 <form method="POST">
                     {% csrf_token %}
-                    <button type="submit" name="action" value="unpublish_all" class="px-4 py-2 bg-red-100 text-red-600 border border-red-200 rounded-lg hover:bg-red-200 transition font-medium text-sm">
-                        <i class="fas fa-eye-slash mr-2"></i> Tout Masquer
+                    <!-- MODIFICATION : gap-2 -->
+                    <button type="submit" name="action" value="unpublish_all" class="flex items-center gap-2 px-4 py-2 bg-red-100 text-red-600 border border-red-200 rounded-lg hover:bg-red-200 transition font-medium text-sm">
+                        <i class="fas fa-eye-slash"></i> 
+                        <span>{% trans "Tout Masquer" %}</span>
                     </button>
                 </form>
             </div>
@@ -133,20 +154,22 @@
             <table class="min-w-full divide-y divide-gray-200">
                 <thead class="bg-gray-50">
                     <tr>
-                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            Élève
+                        <!-- MODIFICATION RTL : text-start -->
+                        <th scope="col" class="px-6 py-3 text-start text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            {% trans "Élève" %}
                         </th>
                         <th scope="col" class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            État du Bulletin
+                            {% trans "État du Bulletin" %}
                         </th>
                         <th scope="col" class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            Visibilité
+                            {% trans "Visibilité" %}
                         </th>
                         <th scope="col" class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            Dernière MAJ
+                            {% trans "Dernière MAJ" %}
                         </th>
-                        <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            Actions
+                        <!-- MODIFICATION RTL : text-end -->
+                        <th scope="col" class="px-6 py-3 text-end text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            {% trans "Actions" %}
                         </th>
                     </tr>
                 </thead>
@@ -154,7 +177,8 @@
                     {% for item in students_data %}
                     <tr class="hover:bg-gray-50 transition duration-150">
                         <td class="px-6 py-4 whitespace-nowrap">
-                            <div class="flex items-center">
+                            <!-- MODIFICATION : gap-3 -->
+                            <div class="flex items-center gap-3">
                                 <div class="flex-shrink-0 h-10 w-10">
                                     {% if item.student.user.profile_picture %}
                                         <img class="h-10 w-10 rounded-full object-cover border" src="{{ item.student.user.profile_picture.url }}" alt="">
@@ -164,23 +188,25 @@
                                         </div>
                                     {% endif %}
                                 </div>
-                                <div class="ml-4">
+                                <div>
                                     <div class="text-sm font-bold text-gray-900">
                                         {{ item.student.user.last_name }} {{ item.student.user.first_name }}
                                     </div>
-                                    <div class="text-xs text-gray-500">{{ item.student.user.email }}</div>
+                                    <div class="text-xs text-gray-500" dir="ltr">{{ item.student.user.email }}</div>
                                 </div>
                             </div>
                         </td>
 
                         <td class="px-6 py-4 whitespace-nowrap text-center">
                             {% if item.report_card %}
-                                <span class="px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800 border border-green-200">
-                                    <i class="fas fa-check mr-1"></i> Généré
+                                <!-- MODIFICATION : gap-1 -->
+                                <span class="px-3 py-1 inline-flex items-center gap-1 text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800 border border-green-200">
+                                    <i class="fas fa-check"></i> 
+                                    <span>{% trans "Généré" %}</span>
                                 </span>
                             {% else %}
                                 <span class="px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-gray-100 text-gray-500 border border-gray-200">
-                                    En attente
+                                    {% trans "En attente" %}
                                 </span>
                             {% endif %}
                         </td>
@@ -188,12 +214,16 @@
                         <td class="px-6 py-4 whitespace-nowrap text-center">
                             {% if item.report_card %}
                                 {% if item.report_card.is_published %}
-                                    <span class="text-green-600 text-sm font-medium flex justify-center items-center">
-                                        <i class="fas fa-eye mr-2"></i> Visible
+                                    <!-- MODIFICATION : gap-2 -->
+                                    <span class="text-green-600 text-sm font-medium inline-flex items-center gap-2 justify-center">
+                                        <i class="fas fa-eye"></i> 
+                                        <span>{% trans "Visible" %}</span>
                                     </span>
                                 {% else %}
-                                    <span class="text-yellow-600 text-sm font-medium flex justify-center items-center" title="Généré mais masqué">
-                                        <i class="fas fa-eye-slash mr-2"></i> Masqué
+                                    <!-- MODIFICATION : gap-2 -->
+                                    <span class="text-yellow-600 text-sm font-medium inline-flex items-center gap-2 justify-center" title="{% trans 'Généré mais masqué' %}">
+                                        <i class="fas fa-eye-slash"></i> 
+                                        <span>{% trans "Masqué" %}</span>
                                     </span>
                                 {% endif %}
                             {% else %}
@@ -201,7 +231,7 @@
                             {% endif %}
                         </td>
 
-                        <td class="px-6 py-4 whitespace-nowrap text-center text-sm text-gray-500">
+                        <td class="px-6 py-4 whitespace-nowrap text-center text-sm text-gray-500" dir="ltr">
                             {% if item.report_card %}
                                 {{ item.report_card.updated_at|date:"d/m/Y H:i" }}
                             {% else %}
@@ -209,35 +239,40 @@
                             {% endif %}
                         </td>
 
-                        <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium space-x-2">
-                            {% if item.report_card %}
-                                
-                                {% if item.report_card.file %}
-                                    <a href="{% url 'documents:download_report_card' report_card_id=item.report_card.id %}" 
-                                        target="_blank" 
-                                        class="text-indigo-600 hover:text-indigo-900 bg-indigo-50 hover:bg-indigo-100 px-3 py-1 rounded transition" 
-                                        title="Télécharger le PDF">
-                                        <i class="fas fa-download"></i>
+                        <!-- MODIFICATION RTL : text-end et gap-2 -->
+                        <td class="px-6 py-4 whitespace-nowrap text-end text-sm font-medium">
+                            <div class="inline-flex items-center gap-2">
+                                {% if item.report_card %}
+                                    
+                                    {% if item.report_card.file %}
+                                        <a href="{% url 'documents:download_report_card' report_card_id=item.report_card.id %}" 
+                                            target="_blank" 
+                                            class="text-indigo-600 hover:text-indigo-900 bg-indigo-50 hover:bg-indigo-100 p-2 rounded transition" 
+                                            title="{% trans 'Télécharger le PDF' %}">
+                                            <i class="fas fa-download"></i>
+                                        </a>
+                                    {% else %}
+                                        <!-- MODIFICATION : gap-1 -->
+                                        <span class="text-red-500 text-xs italic inline-flex items-center gap-1" title="{% trans 'Fichier introuvable' %}">
+                                            <i class="fas fa-exclamation-triangle"></i> 
+                                            <span>{% trans "Erreur" %}</span>
+                                        </span>
+                                    {% endif %}
+                                    
+                                    <a href="{% url 'documents:regenerate_single_report_card' item.report_card.id %}" class="text-orange-600 hover:text-orange-900 bg-orange-50 hover:bg-orange-100 p-2 rounded transition" title="{% trans 'Régénérer (Mettre à jour)' %}">
+                                        <i class="fas fa-sync-alt"></i>
                                     </a>
+                            
                                 {% else %}
-                                    <span class="text-red-500 text-xs italic mr-2" title="Fichier introuvable">
-                                        <i class="fas fa-exclamation-triangle"></i> Erreur
-                                    </span>
+                                    <span class="text-gray-400 italic text-xs">{% trans 'Utiliser "Générer Tout"' %}</span>
                                 {% endif %}
-                                
-                                <a href="{% url 'documents:regenerate_single_report_card' item.report_card.id %}" class="text-orange-600 hover:text-orange-900 bg-orange-50 hover:bg-orange-100 px-3 py-1 rounded transition" title="Régénérer (Mettre à jour)">
-                                    <i class="fas fa-sync-alt"></i>
-                                </a>
-                        
-                            {% else %}
-                                <span class="text-gray-400 italic text-xs">Utiliser "Générer Tout"</span>
-                            {% endif %}
+                            </div>
                         </td>
                     </tr>
                     {% empty %}
                     <tr>
                         <td colspan="5" class="px-6 py-10 text-center text-gray-500 italic">
-                            Aucun élève trouvé dans cette classe pour cette année scolaire.
+                            {% trans "Aucun élève trouvé dans cette classe pour cette année scolaire." %}
                         </td>
                     </tr>
                     {% endfor %}
@@ -250,38 +285,39 @@
 <div id="confirm-modal" class="fixed z-50 inset-0 overflow-y-auto hidden" aria-labelledby="modal-title" role="dialog" aria-modal="true">
     <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
         
-        <!-- MODIFICATION : Suppression onclick, ajout ID -->
         <div id="modal-overlay" class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" aria-hidden="true"></div>
 
         <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
 
-        <div class="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
+        <!-- MODIFICATION RTL : text-start -->
+        <div class="inline-block align-bottom bg-white rounded-lg text-start overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
             <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
-                <div class="sm:flex sm:items-start">
+                <!-- MODIFICATION : gap-4 -->
+                <div class="flex flex-col sm:flex-row items-center sm:items-start gap-4">
                     <div class="mx-auto flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-red-100 sm:mx-0 sm:h-10 sm:w-10">
                         <i class="fas fa-exclamation-triangle text-red-600"></i>
                     </div>
-                    <div class="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left">
+                    <div class="mt-3 text-center sm:mt-0 sm:text-start">
                         <h3 class="text-lg leading-6 font-medium text-gray-900" id="modal-title">
-                            Confirmer la génération
+                            {% trans "Confirmer la génération" %}
                         </h3>
                         <div class="mt-2">
                             <p class="text-sm text-gray-500">
-                                Vous êtes sur le point de générer les bulletins pour toute la classe.
+                                {% trans "Vous êtes sur le point de générer les bulletins pour toute la classe." %}
                                 <br><br>
-                                <span class="font-bold text-red-600">Attention :</span> Cela écrasera les bulletins existants pour ce trimestre. Êtes-vous sûr de vouloir continuer ?
+                                <span class="font-bold text-red-600">{% trans "Attention :" %}</span> {% trans "Cela écrasera les bulletins existants pour ce trimestre. Êtes-vous sûr de vouloir continuer ?" %}
                             </p>
                         </div>
                     </div>
                 </div>
             </div>
-            <div class="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
-                <button type="button" id="confirm-btn" class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-indigo-600 text-base font-medium text-white hover:bg-indigo-700 focus:outline-none sm:ml-3 sm:w-auto sm:text-sm">
-                    Oui, générer
+            <!-- MODIFICATION : gap-3 -->
+            <div class="bg-gray-50 px-4 py-3 sm:px-6 flex flex-col sm:flex-row-reverse gap-3">
+                <button type="button" id="confirm-btn" class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-indigo-600 text-base font-medium text-white hover:bg-indigo-700 focus:outline-none sm:w-auto sm:text-sm">
+                    {% trans "Oui, générer" %}
                 </button>
-                <!-- MODIFICATION : Suppression onclick, ajout ID -->
-                <button type="button" id="btn-cancel-modal" class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm">
-                    Annuler
+                <button type="button" id="btn-cancel-modal" class="w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none sm:w-auto sm:text-sm">
+                    {% trans "Annuler" %}
                 </button>
             </div>
         </div>
@@ -290,6 +326,6 @@
 {% endblock %}
 
 {% block extra_js %}
-<!-- MODIFICATION : Inclusion du script JS externe -->
+<!-- Script JS externe avec intégration des traductions data-attributes -->
 <script src="{% static 'js/documents/manage_report_cards.js' %}"></script>
 {% endblock %}

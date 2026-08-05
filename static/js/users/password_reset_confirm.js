@@ -5,9 +5,15 @@ document.addEventListener('DOMContentLoaded', () => {
     const messageBox = document.getElementById('messageBox');
     const loadingIndicator = document.getElementById('loadingIndicator');
 
-    // On utilise les attributs qu'on a ajoutés dans l'étape précédente.
+    if (!passwordConfirmForm) return;
+
+    // Récupération des URLs
     const apiConfirmUrl = passwordConfirmForm.getAttribute('data-confirm-url');
     const successUrl = passwordConfirmForm.getAttribute('data-success-url');
+
+    // --- MODIFICATION : Récupération des traductions ---
+    const msgErrorDefault = passwordConfirmForm.dataset.msgErrorDefault || 'Erreur lors de la mise à jour du mot de passe.';
+    const msgErrorTech = passwordConfirmForm.dataset.msgErrorTech || 'Une erreur de connexion est survenue. Veuillez réessayer.';
 
     passwordConfirmForm.addEventListener('submit', async function(event) {
         event.preventDefault();
@@ -52,7 +58,8 @@ document.addEventListener('DOMContentLoaded', () => {
                         window.location.href = successUrl; 
                     }, 1500);
                 } else {
-                    messageBox.textContent = data.message || 'Erreur lors de la mise à jour du mot de passe.';
+                    // Utilisation du message traduit par défaut
+                    messageBox.textContent = data.message || msgErrorDefault;
                     messageBox.classList.remove('text-green-600');
                     messageBox.classList.add('text-red-600');
                 }
@@ -65,7 +72,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
         } catch (error) {
             console.error('Erreur technique:', error);
-            messageBox.textContent = 'Une erreur de connexion est survenue. Veuillez réessayer.';
+            // Utilisation du message traduit pour les erreurs techniques
+            messageBox.textContent = msgErrorTech;
             messageBox.classList.remove('text-green-600');
             messageBox.classList.add('text-red-600');
         } finally {

@@ -1,6 +1,6 @@
 /**
  * class_assignment.js
- * Gestion de l'affectation des élèves et professeurs (Mode Production Safe)
+ * Gestion de l'affectation des élèves et professeurs (Mode Production Safe, Multilingue & RTL)
  */
 
 document.addEventListener('DOMContentLoaded', function() {
@@ -8,14 +8,13 @@ document.addEventListener('DOMContentLoaded', function() {
     const backBtn = document.getElementById('btn-back');
     if (backBtn) {
         backBtn.addEventListener('click', (e) => {
-            e.preventDefault(); // Empêche le # dans l'URL
-            history.back();     // Action JavaScript équivalente
+            e.preventDefault();
+            history.back();
         });
     }
     
     // --- 1. Initialisation & Configuration (Extraction depuis le DOM) ---
     
-    // On récupère le conteneur principal qui détient les configurations
     const container = document.getElementById('assignment-container');
     
     if (!container) {
@@ -23,11 +22,20 @@ document.addEventListener('DOMContentLoaded', function() {
         return;
     }
 
-    // Récupération des URLs et IDs depuis les data-attributes
     const API_URL = container.dataset.apiUrl;
     const CLASS_PK = container.dataset.classPk;
 
-    // Récupération du CSRF Token depuis le formulaire caché de Django
+    // Récupération des traductions dynamiques (data-attributes)
+    const msgSelectPrompt = container.getAttribute('data-msg-select') || "-- Sélectionnez --";
+    const msgNoStudents = container.getAttribute('data-msg-no-students') || "Aucun élève affecté.";
+    const msgNoTeachers = container.getAttribute('data-msg-no-teachers') || "Aucun professeur affecté.";
+    const msgDelegateYes = container.getAttribute('data-msg-delegate-yes') || "Délégué";
+    const msgDelegateNo = container.getAttribute('data-msg-delegate-no') || "Non Délégué";
+    const msgPrincipalYes = container.getAttribute('data-msg-principal-yes') || "Principal";
+    const msgPrincipalNo = container.getAttribute('data-msg-principal-no') || "Non Principal";
+    const msgUnlinkConfirmFormat = container.getAttribute('data-msg-unlink-confirm') || "Retirer {name} de cette classe ?";
+    const msgCritiqueError = container.getAttribute('data-msg-critique-error') || "Une erreur est survenue.";
+
     const csrfInput = document.querySelector('[name=csrfmiddlewaretoken]');
     const CSRF_TOKEN = csrfInput ? csrfInput.value : '';
 
@@ -45,7 +53,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 if (!rawJson || rawJson.length < 2 || rawJson === '[]') return []; 
                 
                 let contentToParse = rawJson;
-                // Nettoyage si Django a encodé le JSON dans une chaîne
                 if (contentToParse.startsWith('"') && contentToParse.endsWith('"')) {
                     contentToParse = JSON.parse(contentToParse);
                 }
@@ -58,7 +65,6 @@ document.addEventListener('DOMContentLoaded', function() {
         return [];
     }
 
-    // Variables d'état
     let assignedStudents = getInitialData('assigned-students-data');
     let availableStudents = getInitialData('available-students-data');
     let assignedTeachers = getInitialData('assigned-teachers-data');
@@ -93,11 +99,10 @@ document.addEventListener('DOMContentLoaded', function() {
         
         const notification = document.createElement('div');
         notification.className = `p-4 rounded-xl shadow-md border ${alertClass} transition-opacity duration-500 ease-in-out opacity-0`;
-        notification.innerHTML = `<p class="font-medium">${message}</p>`;
+        notification.innerHTML = `<p class="font-medium" dir="auto">${message}</p>`;
 
         notificationArea.prepend(notification);
         
-        // Animation
         requestAnimationFrame(() => {
             notification.classList.remove('opacity-0');
         });
@@ -172,7 +177,6 @@ document.addEventListener('DOMContentLoaded', function() {
         if (result.success) {
             showNotification(result.message, true);
             
-            // Mise à jour des listes locales
             if (action === 'unlink_student') {
                 const unlinkedIndex = assignedStudents.findIndex(s => s.pk == assignment_pk);
                 if (unlinkedIndex > -1) {
@@ -223,25 +227,26 @@ document.addEventListener('DOMContentLoaded', function() {
         const name = `${student.student__user__last_name} ${student.student__user__first_name}`;
         const username = student.student__user__username;
 
+        // Séparateur logique avec gap-3
         item.innerHTML = `
-            <div class="flex-grow">
-                <p class="font-medium text-gray-800">${name}</p>
-                <p class="text-sm text-gray-500">${username}</p>
+            <div class="flex-grow min-w-0">
+                <p class="font-medium text-gray-800 truncate" dir="auto">${escapeHtml(name)}</p>
+                <p class="text-sm text-gray-500 truncate" dir="ltr">@${escapeHtml(username)}</p>
             </div>
-            <div class="flex items-center space-x-3">
-                <label class="relative inline-flex items-center cursor-pointer">
+            <div class="flex items-center gap-3 flex-shrink-0">
+                <label class="relative inline-flex items-center cursor-pointer select-none">
                     <input type="checkbox" 
                            data-action="set_delegate"
                            data-assignment-pk="${student.pk}"
                            ${student.is_delegate ? 'checked' : ''} 
                            class="sr-only peer delegate-toggle">
                     <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-indigo-300 rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-indigo-600"></div>
-                    <span class="ms-3 text-sm font-medium text-gray-900 delegate-label">${student.is_delegate ? 'Délégué' : 'Non Délégué'}</span>
+                    <span class="ms-3 text-sm font-medium text-gray-900 delegate-label">${student.is_delegate ? msgDelegateYes : msgDelegateNo}</span>
                 </label>
                 <button data-action="unlink_student" 
                         data-assignment-pk="${student.pk}"
-                        data-name="${name} (${username})"
-                        class="unlink-btn text-red-500 hover:text-red-700 transition duration-150 p-2 rounded-full hover:bg-red-50" title="Retirer">
+                        data-name="${escapeHtml(name)} (@${escapeHtml(username)})"
+                        class="unlink-btn text-red-500 hover:text-red-700 transition duration-150 p-2 rounded-full hover:bg-red-50 inline-flex items-center justify-center" title="Retirer">
                     <i class="fas fa-trash-alt"></i>
                 </button>
             </div>
@@ -257,25 +262,26 @@ document.addEventListener('DOMContentLoaded', function() {
         const name = `${teacher.teacher__teacher__user__last_name} ${teacher.teacher__teacher__user__first_name}`;
         const subjectName = teacher.teacher__subject__name;
 
+        // Séparateur logique avec gap-3
         item.innerHTML = `
-            <div class="flex-grow">
-                <p class="font-medium text-gray-800">${name}</p>
-                <p class="text-sm text-teal-600 font-semibold">${subjectName}</p>
+            <div class="flex-grow min-w-0">
+                <p class="font-medium text-gray-800 truncate" dir="auto">${escapeHtml(name)}</p>
+                <p class="text-sm text-teal-600 font-semibold truncate" dir="auto">${escapeHtml(subjectName)}</p>
             </div>
-            <div class="flex items-center space-x-3">
-                <label class="relative inline-flex items-center cursor-pointer">
+            <div class="flex items-center gap-3 flex-shrink-0">
+                <label class="relative inline-flex items-center cursor-pointer select-none">
                     <input type="checkbox" 
                            data-action="set_main_teacher"
                            data-assignment-pk="${teacher.pk}"
                            ${teacher.is_main_teacher ? 'checked' : ''} 
                            class="sr-only peer main-teacher-toggle">
                     <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-teal-300 rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-teal-600"></div>
-                    <span class="ms-3 text-sm font-medium text-gray-900 principal-label">${teacher.is_main_teacher ? 'Principal' : 'Non Principal'}</span>
+                    <span class="ms-3 text-sm font-medium text-gray-900 principal-label">${teacher.is_main_teacher ? msgPrincipalYes : msgPrincipalNo}</span>
                 </label>
                 <button data-action="unlink_teacher" 
                         data-assignment-pk="${teacher.pk}"
-                        data-name="${name} (${subjectName})"
-                        class="unlink-btn text-red-500 hover:text-red-700 transition duration-150 p-2 rounded-full hover:bg-red-50" title="Retirer">
+                        data-name="${escapeHtml(name)} (${escapeHtml(subjectName)})"
+                        class="unlink-btn text-red-500 hover:text-red-700 transition duration-150 p-2 rounded-full hover:bg-red-50 inline-flex items-center justify-center" title="Retirer">
                     <i class="fas fa-trash-alt"></i>
                 </button>
             </div>
@@ -284,7 +290,7 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     function updateAvailableStudentsSelect() {
-        studentSelect.innerHTML = '<option value="" disabled selected>-- Sélectionnez --</option>';
+        studentSelect.innerHTML = `<option value="" disabled selected>${msgSelectPrompt}</option>`;
         availableStudents.forEach(student => {
             const option = document.createElement('option');
             option.value = student.pk;
@@ -296,7 +302,7 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     function updateAvailableTeachersSelect() {
-        teacherSelect.innerHTML = '<option value="" disabled selected>-- Sélectionnez --</option>';
+        teacherSelect.innerHTML = `<option value="" disabled selected>${msgSelectPrompt}</option>`;
         availableTeachers.forEach(teacher => {
             const option = document.createElement('option');
             option.value = teacher.pk;
@@ -308,18 +314,16 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     function renderAllLists() {
-        // Élèves
         assignedStudentsList.innerHTML = '';
         if (assignedStudents.length === 0) {
-             assignedStudentsList.innerHTML = '<p class="text-center p-4 text-gray-500 italic">Aucun élève affecté.</p>';
+             assignedStudentsList.innerHTML = `<p class="text-center p-4 text-gray-500 italic" dir="auto">${msgNoStudents}</p>`;
         } else {
             assignedStudents.forEach(s => assignedStudentsList.appendChild(renderAssignedStudent(s)));
         }
 
-        // Professeurs
         assignedTeachersList.innerHTML = '';
         if (assignedTeachers.length === 0) {
-             assignedTeachersList.innerHTML = '<p class="text-center p-4 text-gray-500 italic">Aucun professeur affecté.</p>';
+             assignedTeachersList.innerHTML = `<p class="text-center p-4 text-gray-500 italic" dir="auto">${msgNoTeachers}</p>`;
         } else {
             assignedTeachers.forEach(t => assignedTeachersList.appendChild(renderAssignedTeacher(t)));
         }
@@ -402,7 +406,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
         if (action.startsWith('unlink_')) {
             const entityName = target.dataset.name;
-            const message = `Retirer ${entityName} de cette classe ?`;
+            const message = msgUnlinkConfirmFormat.replace('{name}', entityName);
             showConfirmationModal({ action, assignment_pk }, message);
 
         } else if (action === 'set_delegate' || action === 'set_main_teacher') {
@@ -423,7 +427,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     const student = assignedStudents.find(s => s.pk == assignment_pk);
                     if (student) student.is_delegate = is_checked;
                     const label = target.closest('label').querySelector('.delegate-label');
-                    if (label) label.textContent = is_checked ? 'Délégué' : 'Non Délégué';
+                    if (label) label.textContent = is_checked ? msgDelegateYes : msgDelegateNo;
 
                 } else if (action === 'set_main_teacher') {
                     assignedTeachers.forEach(t => t.is_main_teacher = (t.pk == assignment_pk && is_checked));
@@ -435,10 +439,16 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 
+    function escapeHtml(text) {
+        if (!text) return '';
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
+    }
+
     // --- 7. Lancement ---
     renderAllLists();
     
-    // Listeners
     if(studentSelect) studentSelect.addEventListener('change', () => addStudentBtn.disabled = !studentSelect.value);
     if(addStudentBtn) addStudentBtn.addEventListener('click', handleAddStudent);
     

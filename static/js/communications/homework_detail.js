@@ -2,13 +2,21 @@ document.addEventListener('DOMContentLoaded', function() {
     const form = document.getElementById('homework-submission-form');
     if (!form) return;
 
+    // --- Récupération des traductions dynamiques (data-attributes) ---
+    const msgSending = form.getAttribute('data-msg-sending') || "Envoi en cours...";
+    const msgSuccess = form.getAttribute('data-msg-success') || "Rendu enregistré avec succès.";
+    const msgNewFile = form.getAttribute('data-msg-new-file') || "Nouveau fichier envoyé";
+    const msgEditSub = form.getAttribute('data-msg-edit-submission') || "Modifier mon rendu";
+    const msgErrSave = form.getAttribute('data-msg-error-save') || "Une erreur est survenue lors de l'enregistrement.";
+    const msgErrNetwork = form.getAttribute('data-msg-error-network') || "Une erreur réseau est survenue.";
+
     const errorAlert = document.getElementById('error-alert');
     const errorMessage = document.getElementById('error-message');
     const successAlert = document.getElementById('success-alert');
     const successMessage = document.getElementById('success-message');
     const btnSubmit = document.getElementById('btn-submit-submission');
     const btnText = document.getElementById('btn-submit-text');
-    
+
     // Éléments de prévisualisation avant envoi
     const filesInput = document.getElementById('files-input');
     const selectedFilesPreview = document.getElementById('selected-files-preview');
@@ -49,7 +57,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
         const originalBtnText = btnText.textContent;
         btnSubmit.disabled = true;
-        btnText.textContent = "Envoi en cours...";
+        btnText.textContent = msgSending;
 
         const formData = new FormData(form);
         const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
@@ -65,12 +73,13 @@ document.addEventListener('DOMContentLoaded', function() {
         .then(response => response.json().then(data => ({ status: response.ok, body: data })))
         .then(result => {
             if (result.status && result.body.success) {
-                successMessage.textContent = result.body.message || "Rendu enregistré avec succès.";
+                successMessage.textContent = result.body.message || msgSuccess;
                 successAlert.classList.remove('hidden');
                 
-                // Mettre à jour la date dynamiquement (heure actuelle exacte du client ou renvoyée par le serveur)
+                // Mettre à jour la date dynamiquement (avec attribut dir="ltr")
                 if (subUpdatedAt && result.body.updated_at) {
                     subUpdatedAt.textContent = result.body.updated_at;
+                    subUpdatedAt.setAttribute('dir', 'ltr');
                 }
 
                 // Mettre à jour dynamiquement la liste des fichiers affichés sans rafraîchir
@@ -78,10 +87,11 @@ document.addEventListener('DOMContentLoaded', function() {
                     subFilesList.innerHTML = '';
                     Array.from(filesInput.files).forEach(file => {
                         const fileDiv = document.createElement('div');
-                        fileDiv.className = "flex items-center text-xs text-emerald-800 bg-white p-2 rounded border border-emerald-100";
+                        fileDiv.className = "flex items-center gap-2 text-xs text-emerald-800 bg-white p-2 rounded border border-emerald-100";
+                        fileDiv.setAttribute('dir', 'ltr');
                         fileDiv.innerHTML = `
-                            <i class="fas fa-file-alt mr-2 text-emerald-600"></i>
-                            <span class="truncate">${file.name} (Nouveau fichier envoyé)</span>
+                            <i class="fas fa-file-alt text-emerald-600 flex-shrink-0"></i>
+                            <span class="truncate">${file.name} (${msgNewFile})</span>
                         `;
                         subFilesList.appendChild(fileDiv);
                     });
@@ -96,22 +106,22 @@ document.addEventListener('DOMContentLoaded', function() {
                 if (filesInput) filesInput.value = '';
                 if (selectedFilesPreview) selectedFilesPreview.classList.add('hidden');
 
-                // Changer le texte du bouton en mode modification
-                btnText.textContent = "Modifier mon rendu";
+                // Changer le texte du bouton en mode modification (traduit)
+                btnText.textContent = msgEditSub;
 
             } else {
-                errorMessage.textContent = result.body.error || "Une erreur est survenue lors de l'enregistrement.";
+                errorMessage.textContent = result.body.error || msgErrSave;
                 errorAlert.classList.remove('hidden');
             }
         })
         .catch(error => {
             console.error('Erreur réseau:', error);
-            errorMessage.textContent = "Une erreur réseau est survenue.";
-            errorAlert.classList.remove('hidden');
+            errorMessage.textContent = msgErrNetwork;
+            errorAlert.classList.add('hidden');
         })
         .finally(() => {
             btnSubmit.disabled = false;
-            btnText.textContent = btnText.textContent === "Envoi en cours..." ? originalBtnText : btnText.textContent;
+            btnText.textContent = btnText.textContent === msgSending ? originalBtnText : btnText.textContent;
         });
     });
 });

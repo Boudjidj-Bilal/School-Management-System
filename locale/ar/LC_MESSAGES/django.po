@@ -1,0 +1,6273 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the PACKAGE package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2026-08-05 22:14+0200\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"Language: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=6; plural=n==0 ? 0 : n==1 ? 1 : n==2 ? 2 : n%100>=3 "
+"&& n%100<=10 ? 3 : n%100>=11 && n%100<=99 ? 4 : 5;\n"
+
+#: attendance/models.py:33
+#, python-brace-format
+msgid "Appel {student_class} - {self.teacher} ({self.date})"
+msgstr "مناداة {student_class} - {self.teacher} ({self.date})"
+
+#: attendance/models.py:39
+#: attendance/templates/attendance/create_session.html:123
+#: attendance/templates/attendance/manage_attendance.html:123
+msgid "Retard"
+msgstr "تأخر"
+
+#: attendance/models.py:40
+#: attendance/templates/attendance/manage_attendance.html:119
+msgid "Absence"
+msgstr "غیاب"
+
+#: attendance/models.py:55
+msgid "Motif donné par le CPE"
+msgstr "السبب المقدم من مستشار التربية (CPE)"
+
+#: attendance/templates/attendance/class_hub.html:4
+msgid "Appel - Sélection de la classe"
+msgstr "المناداة - اختيار القسم"
+
+#: attendance/templates/attendance/class_hub.html:16
+msgid "Gestion des Absences et Retards"
+msgstr "إدارة الغيابات والتأخرات"
+
+#: attendance/templates/attendance/class_hub.html:19
+#: scheduling/templates/scheduling/schedul_management.html:69
+msgid "Année scolaire :"
+msgstr "السنة الدراسية :"
+
+#: attendance/templates/attendance/class_hub.html:29
+msgid "Espace Professeur"
+msgstr "فضاء الأستاذ"
+
+#: attendance/templates/attendance/class_hub.html:35
+msgid "Espace Vie Scolaire"
+msgstr "فضاء الحياة المدرسية"
+
+#: attendance/templates/attendance/class_hub.html:41
+#: grades/templates/grades/appreciations_dashboard.html:26
+msgid "Mode Consultation"
+msgstr "وضع الاطلاع"
+
+#: attendance/templates/attendance/class_hub.html:91
+msgid "Classe active"
+msgstr "القسم النشط"
+
+#: attendance/templates/attendance/class_hub.html:102
+#: attendance/templates/attendance/create_session.html:4
+msgid "Faire l'appel"
+msgstr "إجراء المناداة"
+
+#: attendance/templates/attendance/class_hub.html:108
+msgid "Gérer / Justifier"
+msgstr "إدارة / تبرير"
+
+#: attendance/templates/attendance/class_hub.html:114
+msgid "Consulter"
+msgstr "اطلاع"
+
+#: attendance/templates/attendance/class_hub.html:128
+msgid "Aucune classe trouvée"
+msgstr "لم يتم العثور على أي قسم"
+
+#: attendance/templates/attendance/class_hub.html:129
+msgid "Vous n'êtes associé à aucune classe pour cette année scolaire."
+msgstr "لست مرتبظاً بأي قسم لهذه السنة الدراسية."
+
+#: attendance/templates/attendance/create_session.html:14
+#: grades/templates/grades/appreciations_dashboard.html:27
+msgid "Enregistrement..."
+msgstr "جاري الحفظ..."
+
+#: attendance/templates/attendance/create_session.html:15
+msgid "Appel enregistré avec succès !"
+msgstr "تم حفظ المناداة بنجاح !"
+
+#: attendance/templates/attendance/create_session.html:16
+msgid "Ce trimestre est clos, modification impossible."
+msgstr "هذا الفصل مغلق، التعديل متعذر."
+
+#: attendance/templates/attendance/create_session.html:17
+msgid "Modifier l’appel"
+msgstr "تعديل المناداة"
+
+#: attendance/templates/attendance/create_session.html:18
+msgid "Session chargée pour modification."
+msgstr "تم تحميل الجلسة للتعديل."
+
+#: attendance/templates/attendance/create_session.html:19
+msgid "Mode création activé."
+msgstr "تم تفعيل وضع الإنشاء."
+
+#: attendance/templates/attendance/create_session.html:20
+msgid "Absence justifiée (CPE)"
+msgstr "غیاب مبرر (CPE)"
+
+#: attendance/templates/attendance/create_session.html:21
+#: attendance/templates/attendance/manage_attendance.html:19
+#: grades/templates/grades/grades_dashboard.html:43
+msgid "Erreur de connexion."
+msgstr "خطأ في الاتصال."
+
+#: attendance/templates/attendance/create_session.html:22
+msgid "Enregistrer l’appel"
+msgstr "حفظ المناداة"
+
+#: attendance/templates/attendance/create_session.html:32
+msgid "Feuille d'Appel"
+msgstr "ورقة المناداة"
+
+#: attendance/templates/attendance/create_session.html:35
+#: attendance/templates/attendance/manage_attendance.html:31
+#: documents/templates/documents/report_card_pdf.html:179
+#: documents/templates/documents/student_documents.html:18
+#: documents/templates/documents/upload_document.html:90
+#: grades/templates/grades/grades_dashboard.html:134
+#: grades/templates/grades/student_grades.html:119
+msgid "Classe :"
+msgstr "القسم :"
+
+#: attendance/templates/attendance/create_session.html:37
+#: grades/templates/grades/appreciations_dashboard.html:46
+#: grades/templates/grades/grades_dashboard.html:23
+msgid "Professeur :"
+msgstr "الأستاذ :"
+
+#: attendance/templates/attendance/create_session.html:43
+msgid "Retour au choix"
+msgstr "العودة إلى الاختيار"
+
+#: attendance/templates/attendance/create_session.html:55
+msgid "1. Informations de la séance"
+msgstr "1. معلومات الحصة"
+
+#: attendance/templates/attendance/create_session.html:59
+#: grades/templates/grades/student_grades.html:132
+msgid "Date"
+msgstr "التاريخ"
+
+#: attendance/templates/attendance/create_session.html:64
+#: schools/templates/schools/exception_management.html:139
+msgid "Heure de début"
+msgstr "وقت البداية"
+
+#: attendance/templates/attendance/create_session.html:69
+#: schools/templates/schools/exception_management.html:144
+msgid "Heure de fin"
+msgstr "وقت النهاية"
+
+#: attendance/templates/attendance/create_session.html:78
+msgid "2. Liste des élèves"
+msgstr "2. قائمة التلاميذ"
+
+#: attendance/templates/attendance/create_session.html:82
+msgid "Statut par défaut : \"Présent\""
+msgstr "الحالة الافتراضية : \"حاضر\""
+
+#: attendance/templates/attendance/create_session.html:114
+msgid "Présent"
+msgstr "حاضر"
+
+#: attendance/templates/attendance/create_session.html:132
+#: grades/templates/grades/grades_dashboard.html:56
+msgid "Absent"
+msgstr "غائب"
+
+#: attendance/templates/attendance/create_session.html:139
+msgid "Aucun élève inscrit dans cette classe."
+msgstr "لا يوجد أي تلميذ مسجل في هذا القسم."
+
+#: attendance/templates/attendance/create_session.html:149
+msgid "Enregistrer l'appel"
+msgstr "حفظ المناداة"
+
+#: attendance/templates/attendance/create_session.html:158
+msgid "Historique des Appels"
+msgstr "سجل المناداة"
+
+#: attendance/templates/attendance/create_session.html:159
+#: users/templates/users/dashboard_page.html:300
+msgid "Année en cours"
+msgstr "السنة الحالية"
+
+#: attendance/templates/attendance/create_session.html:166
+msgid "Nouvel appel"
+msgstr "مناداة جديدة"
+
+#: attendance/templates/attendance/create_session.html:178
+msgid "Trimestre clos (Lecture seule)"
+msgstr "فصل مغلق (قراءة فقط)"
+
+#: attendance/templates/attendance/create_session.html:191
+msgid "Aucun historique pour cette classe."
+msgstr "لا يوجد سجل لهذا القسم."
+#: attendance/templates/attendance/manage_attendance.html:4
+msgid "Gestion des Absences"
+msgstr "إدارة الغيابات"
+
+#: attendance/templates/attendance/manage_attendance.html:10
+msgid "Modifier la justification"
+msgstr "تعديل التبرير"
+
+#: attendance/templates/attendance/manage_attendance.html:11
+msgid "Justifier l absence"
+msgstr "تبرير الغياب"
+
+#: attendance/templates/attendance/manage_attendance.html:12
+msgid "Confirmer le retrait ?"
+msgstr "تأكيد الإزالة؟"
+
+#: attendance/templates/attendance/manage_attendance.html:13
+#: attendance/templates/attendance/manage_attendance.html:204
+msgid "Retirer la justification"
+msgstr "إزالة التبرير"
+
+#: attendance/templates/attendance/manage_attendance.html:14
+#: attendance/templates/attendance/manage_attendance.html:157
+#: classes/templates/classes/classroom_management.html:28
+#: classes/templates/classes/classroom_management.html:78
+#: classes/templates/classes/level_management.html:28
+#: classes/templates/classes/level_management.html:102
+#: schools/templates/schools/exception_management.html:15
+#: subjects/templates/subjects/manage_subjects.html:15
+msgid "Modifier"
+msgstr "تعديل"
+
+#: attendance/templates/attendance/manage_attendance.html:15
+#: attendance/templates/attendance/manage_attendance.html:157
+msgid "Justifier"
+msgstr "تبرير"
+
+#: attendance/templates/attendance/manage_attendance.html:16
+#: attendance/templates/attendance/manage_attendance.html:66
+#: attendance/templates/attendance/manage_attendance.html:137
+#: attendance/templates/attendance/student_attendance.html:139
+#: attendance/views.py:365
+msgid "Justifié"
+msgstr "مبرر"
+
+#: attendance/templates/attendance/manage_attendance.html:17
+#: attendance/templates/attendance/manage_attendance.html:65
+#: attendance/templates/attendance/manage_attendance.html:143
+#: attendance/templates/attendance/student_attendance.html:146
+#: attendance/views.py:365
+msgid "Non justifié"
+msgstr "غير مبرر"
+
+#: attendance/templates/attendance/manage_attendance.html:18
+msgid "Veuillez entrer un motif."
+msgstr "الرجاء إدخال السبب."
+
+#: attendance/templates/attendance/manage_attendance.html:28
+msgid "Gestion des Absences & Retards"
+msgstr "إدارة الغيابات والتأخرات"
+
+#: attendance/templates/attendance/manage_attendance.html:34
+msgid "Période active :"
+msgstr "الفترة النشطة :"
+
+#: attendance/templates/attendance/manage_attendance.html:44
+msgid "Retour liste"
+msgstr "العودة إلى القائمة"
+
+#: attendance/templates/attendance/manage_attendance.html:50
+msgid "Lecture Seule"
+msgstr "قراءة فقط"
+
+#: attendance/templates/attendance/manage_attendance.html:62
+msgid "Historique des incidents"
+msgstr "سجل الحوادث"
+
+#: attendance/templates/attendance/manage_attendance.html:74
+msgid "Date / Période"
+msgstr "التاريخ / الفترة"
+
+#: attendance/templates/attendance/manage_attendance.html:75
+#: communications/templates/communications/homework_detail.html:102
+#: communications/utils.py:25
+#: documents/templates/documents/manage_report_cards.html:159
+#: documents/templates/documents/report_card_pdf.html:224
+#: users/templates/users/profil.html:66
+msgid "Élève"
+msgstr "تلميذ"
+
+#: attendance/templates/attendance/manage_attendance.html:76
+#: communications/templates/communications/dashboard_announcements.html:222
+msgid "Type"
+msgstr "النوع"
+
+#: attendance/templates/attendance/manage_attendance.html:77
+#: communications/utils.py:21
+#: subjects/templates/subjects/assign_subjects.html:35
+#: users/templates/users/dashboard_page.html:130
+#: users/templates/users/profil.html:65 users/views.py:453
+msgid "Professeur"
+msgstr "أستاذ"
+
+#: attendance/templates/attendance/manage_attendance.html:78
+msgid "Statut / Motif"
+msgstr "الحالة / السبب"
+
+#: attendance/templates/attendance/manage_attendance.html:79
+msgid "Action"
+msgstr "إجراء"
+
+#: attendance/templates/attendance/manage_attendance.html:98
+msgid "Période close"
+msgstr "فترة مغلقة"
+
+#: attendance/templates/attendance/manage_attendance.html:160
+msgid "Modification interdite"
+msgstr "التعديل ممنوع"
+
+#: attendance/templates/attendance/manage_attendance.html:169
+msgid "Aucune absence ou retard enregistré pour cette classe cette année."
+msgstr "لم يتم تسجيل أي غياب أو تأخر لهذا القسم هذه السنة."
+
+#: attendance/templates/attendance/manage_attendance.html:184
+msgid "Justifier l'absence"
+msgstr "تبرير الغياب"
+
+#: attendance/templates/attendance/manage_attendance.html:188
+msgid "Élève :"
+msgstr "التلميذ :"
+
+#: attendance/templates/attendance/manage_attendance.html:189
+msgid "Date :"
+msgstr "التاريخ :"
+
+#: attendance/templates/attendance/manage_attendance.html:196
+msgid "Motif de la justification"
+msgstr "سبب التبرير"
+
+#: attendance/templates/attendance/manage_attendance.html:197
+msgid "Ex: Certificat médical, Rendez-vous..."
+msgstr "مثال: شهادة طبية، موعد..."
+
+#: attendance/templates/attendance/manage_attendance.html:210
+#: classes/templates/classes/class_assignment.html:134
+#: classes/templates/classes/class_management.html:96
+#: classes/templates/classes/class_management.html:203
+#: classes/templates/classes/level_management.html:186
+#: communications/templates/communications/dashboard_announcements.html:277
+#: documents/templates/documents/manage_report_cards.html:320
+#: grades/templates/grades/grades_dashboard.html:249
+#: grades/templates/grades/grades_dashboard.html:307
+#: scheduling/templates/scheduling/schedul_management.html:263
+#: scheduling/templates/scheduling/schedul_management.html:286
+#: scheduling/templates/scheduling/view_schedule.html:164
+#: scheduling/templates/scheduling/view_schedule.html:183
+#: scheduling/templates/scheduling/view_teacher_schedule.html:185
+#: scheduling/templates/scheduling/view_teacher_schedule.html:204
+#: schools/templates/schools/exception_management.html:154
+#: schools/templates/schools/exception_management.html:207
+#: schools/templates/schools/manage_term.html:164
+#: schools/templates/schools/manage_years.html:244
+#: schools/templates/schools/settings.html:143
+#: subjects/templates/subjects/manage_subjects.html:139
+#: subjects/templates/subjects/manage_subjects.html:152
+#: users/templates/users/manage_users.html:314
+#: users/templates/users/manage_users.html:327
+#: users/templates/users/profil.html:256
+msgid "Annuler"
+msgstr "إلغاء"
+
+#: attendance/templates/attendance/manage_attendance.html:213
+#: classes/templates/classes/classroom_management.html:24
+#: classes/templates/classes/classroom_management.html:135
+#: classes/templates/classes/level_management.html:24
+#: classes/templates/classes/level_management.html:171
+#: grades/templates/grades/appreciations_dashboard.html:146
+#: grades/templates/grades/appreciations_dashboard.html:244
+#: grades/templates/grades/grades_dashboard.html:310
+#: schools/templates/schools/settings.html:150
+msgid "Enregistrer"
+msgstr "حفظ"
+
+#: attendance/templates/attendance/student_attendance.html:4
+#: attendance/templates/attendance/student_attendance.html:13
+msgid "Mon Assiduité"
+msgstr "مواظبتي"
+
+#: attendance/templates/attendance/student_attendance.html:20
+#: documents/templates/documents/report_card_pdf.html:167
+#: grades/templates/grades/student_grades.html:19
+msgid "Année"
+msgstr "السنة"
+
+#: attendance/templates/attendance/student_attendance.html:43
+msgid "Situation actuelle"
+msgstr "الوضع الحالي"
+
+#: attendance/templates/attendance/student_attendance.html:53
+msgid "Absences (Ce trimestre)"
+msgstr "الغيابات (هذا الفصل)"
+
+#: attendance/templates/attendance/student_attendance.html:64
+msgid "À Justifier (Total)"
+msgstr "قيد التبرير (المجموع)"
+
+#: attendance/templates/attendance/student_attendance.html:77
+msgid "Retards (Ce trimestre)"
+msgstr "التأخرات (هذا الفصل)"
+
+#: attendance/templates/attendance/student_attendance.html:96
+#: grades/templates/grades/student_grades.html:51
+#: schools/templates/schools/manage_years.html:99
+msgid "En cours"
+msgstr "جارٍ"
+
+#: attendance/templates/attendance/student_attendance.html:142
+msgid "le"
+msgstr "في"
+
+#: attendance/templates/attendance/student_attendance.html:148
+msgid "À régulariser"
+msgstr "تتطلب تسوية"
+
+#: attendance/templates/attendance/student_attendance.html:159
+msgid "Signalé par :"
+msgstr "أبلغ عنها :"
+
+#: attendance/templates/attendance/student_attendance.html:170
+msgid "Aucun incident"
+msgstr "لا توجد أي حوادث"
+#: attendance/templates/attendance/student_attendance.html:171
+msgid "Bravo ! Aucune absence ni retard sur cette période."
+msgstr "أحسنت! لا توجد أي غيابات أو تأخرات في هذه الفترة."
+
+#: attendance/utils.py:191 grades/utils.py:599
+msgid "Aucune période"
+msgstr "لا توجد فترة"
+
+#: attendance/views.py:52 attendance/views.py:175 attendance/views.py:177
+msgid "L'année scolaire n'est pas active ou non définie."
+msgstr "السنة الدراسية غير نشطة أو غير محددة."
+
+#: attendance/views.py:132 grades/views.py:191 grades/views.py:226
+#: scheduling/views.py:308 scheduling/views.py:689
+msgid "Accès refusé."
+msgstr "تم رفض الوصول."
+
+#: attendance/views.py:150
+msgid "Format de date invalide."
+msgstr "تنسيق التاريخ غير صالح."
+
+#: attendance/views.py:161
+msgid "L'école sélectionnée est désactivée. Impossible de procéder."
+msgstr "المدرسة المحددة معطلة. يتعذر المتابعة."
+
+#: attendance/views.py:170
+msgid "Aucun trimestre correspondant à cette date n'a été trouvé."
+msgstr "لم يتم العثور على أي فصل مطبق لهذا التاريخ."
+
+#: attendance/views.py:173
+msgid "Ce trimestre est clos. Impossible de modifier ou créer un appel."
+msgstr "هذا الفصل مغلق. يتعذر تعديل أو إنشاء مناداة."
+
+#: attendance/views.py:230
+msgid "Appel enregistré avec succès."
+msgstr "تم حفظ المناداة بنجاح."
+
+#: attendance/views.py:343
+msgid "Seul le CPE peut justifier les absences."
+msgstr "مستشار التربية (CPE) وحده يمكنه تبرير الغيابات."
+
+#: attendance/views.py:356
+msgid "Impossible de modifier : le trimestre de cette absence est clos."
+msgstr "تعذر التعديل: فصل هذا الغياب مغلق."
+
+#: attendance/views.py:368
+#, python-brace-format
+msgid "Statut mis à jour : {status_text}."
+msgstr "تم تحديث الحالة: {status_text}."
+
+#: attendance/views.py:406
+msgid "Aucune année scolaire active."
+msgstr "لا توجد سنة دراسية نشطة."
+
+#: attendance/views.py:413
+msgid "Vous n'êtes inscrit dans aucune classe pour cette année."
+msgstr "لست مسجلاً في أي قسم لهذه السنة."
+
+#: classes/models.py:7
+#: documents/templates/documents/manage_report_cards.html:25
+#: grades/templates/grades/appreciations_dashboard.html:86
+#: grades/templates/grades/appreciations_dashboard.html:200
+msgid "Trimestre"
+msgstr "فصل"
+
+#: classes/models.py:8
+#: documents/templates/documents/manage_report_cards.html:23
+msgid "Semestre"
+msgstr "سداسي"
+
+#: classes/models.py:9
+#: documents/templates/documents/manage_report_cards.html:27
+msgid "Unique"
+msgstr "مفرد"
+
+#: classes/models.py:13
+msgid "6e"
+msgstr "السادس ابتدائي (6e)"
+
+#: classes/models.py:14
+msgid "5e"
+msgstr "الأول متوسط (5e)"
+
+#: classes/models.py:15
+msgid "4e"
+msgstr "الثاني متوسط (4e)"
+
+#: classes/models.py:16
+msgid "3e"
+msgstr "الثالث متوسط (3e)"
+
+#: classes/models.py:17
+msgid "Seconde"
+msgstr "الجذع المشترك (Seconde)"
+
+#: classes/models.py:18
+msgid "Première"
+msgstr "الأولى باكالوريا (Première)"
+
+#: classes/models.py:19
+msgid "Terminale"
+msgstr "السنة النهائية (Terminale)"
+
+#: classes/models.py:20
+msgid "Bts1"
+msgstr "السنة الأولى BTS"
+
+#: classes/models.py:21
+msgid "Bts2"
+msgstr "السنة الثانية BTS"
+
+#: classes/models.py:22
+msgid "L1"
+msgstr "السنة الأولى جامعي (L1)"
+
+#: classes/models.py:23
+msgid "L2"
+msgstr "السنة الثانية جامعي (L2)"
+
+#: classes/models.py:24
+msgid "L3"
+msgstr "السنة الثالثة جامعي (L3)"
+
+#: classes/models.py:25
+msgid "M1"
+msgstr "الماستر 1 (M1)"
+
+#: classes/models.py:26
+msgid "M2"
+msgstr "الماستر 2 (M2)"
+
+#: classes/models.py:27
+msgid "D1"
+msgstr "دكتوراه 1 (D1)"
+
+#: classes/models.py:28
+msgid "D2"
+msgstr "دكتوراه 2 (D2)"
+
+#: classes/models.py:29
+msgid "D3"
+msgstr "دكتوراه 3 (D3)"
+
+#: classes/models.py:30
+msgid "1er année"
+msgstr "السنة الأولى"
+
+#: classes/models.py:31
+msgid "2e année"
+msgstr "السنة الثانية"
+
+#: classes/models.py:32
+msgid "3e année"
+msgstr "السنة الثالثة"
+
+#: classes/models.py:33
+msgid "4e année"
+msgstr "السنة الرابعة"
+
+#: classes/models.py:34
+msgid "5e année"
+msgstr "السنة الخامسة"
+
+#: classes/models.py:35
+msgid "6e année"
+msgstr "السنة السادسة"
+
+#: classes/models.py:36
+msgid "7e année"
+msgstr "السنة السابعة"
+
+#: classes/models.py:37
+msgid "8e année"
+msgstr "السنة الثامنة"
+
+#: classes/models.py:38
+msgid "9e année"
+msgstr "السنة التاسعة"
+
+#: classes/models.py:39
+msgid "10e année"
+msgstr "السنة العاشرة"
+
+#: classes/models.py:94
+#, python-brace-format
+msgid "{self.student} in {self.student_class} ({self.year})"
+msgstr "{self.student} في {self.student_class} ({self.year})"
+
+#: classes/models.py:115
+#, python-brace-format
+msgid "{teacher} for {student_class} ({year})"
+msgstr "{teacher} لـ {student_class} ({year})"
+
+#: classes/templates/classes/class_assignment.html:4
+msgid "Affectation de la Classe"
+msgstr "تعيين القسم"
+
+#: classes/templates/classes/class_assignment.html:16
+#: classes/templates/classes/class_assignment.html:63
+#: classes/templates/classes/class_assignment.html:97
+msgid "-- Sélectionnez --"
+msgstr "-- اختر --"
+
+#: classes/templates/classes/class_assignment.html:17
+msgid "Aucun élève affecté."
+msgstr "لا يوجد أي تلميذ معين."
+
+#: classes/templates/classes/class_assignment.html:18
+msgid "Aucun professeur affecté."
+msgstr "لا يوجد أي أستاذ معين."
+
+#: classes/templates/classes/class_assignment.html:19 classes/views.py:740
+#: documents/templates/documents/report_card_pdf.html:181
+msgid "Délégué"
+msgstr "ممثل القسم"
+
+#: classes/templates/classes/class_assignment.html:20 classes/views.py:740
+msgid "Non Délégué"
+msgstr "ليس ممثلاً للقسم"
+
+#: classes/templates/classes/class_assignment.html:21 classes/views.py:833
+msgid "Principal"
+msgstr "رئيسي"
+
+#: classes/templates/classes/class_assignment.html:22 classes/views.py:833
+msgid "Non Principal"
+msgstr "غير رئيسي"
+
+#: classes/templates/classes/class_assignment.html:23
+#, python-brace-format
+msgid "Retirer {name} de cette classe ?"
+msgstr "إزالة {name} من هذا القسم؟"
+
+#: classes/templates/classes/class_assignment.html:24
+#: communications/templates/communications/dashboard_communication.html:29
+msgid "Une erreur est survenue."
+msgstr "حدث خطأ ما."
+
+#: classes/templates/classes/class_assignment.html:31
+#: documents/templates/documents/manage_report_cards.html:75
+#: scheduling/templates/scheduling/schedul_management.html:90
+#: scheduling/templates/scheduling/view_schedule.html:43
+#: scheduling/templates/scheduling/view_teacher_schedule.html:44
+msgid "Retour"
+msgstr "رجوع"
+
+#: classes/templates/classes/class_assignment.html:34
+msgid "Gestion de l'Affectation :"
+msgstr "إدارة التعيينات :"
+#: classes/templates/classes/class_assignment.html:36
+#: documents/templates/documents/student_documents.html:37
+#: scheduling/templates/scheduling/schedul_management.html:97
+#: scheduling/templates/scheduling/view_schedule.html:51
+#: scheduling/templates/scheduling/view_teacher_schedule.html:52
+msgid "Année Scolaire :"
+msgstr "السنة الدراسية :"
+
+#: classes/templates/classes/class_assignment.html:55
+msgid "Affectation des Élèves"
+msgstr "تعيين التلاميذ"
+
+#: classes/templates/classes/class_assignment.html:59
+msgid "Ajouter un élève (non affecté à une classe)"
+msgstr "إضافة تلميذ (غير معين في قسم)"
+
+#: classes/templates/classes/class_assignment.html:79
+msgid "Liste des élèves dans la classe"
+msgstr "قائمة التلاميذ في القسم"
+
+#: classes/templates/classes/class_assignment.html:88
+msgid "Affectation des Professeurs"
+msgstr "تعيين الأساتذة"
+
+#: classes/templates/classes/class_assignment.html:92
+msgid "Ajouter un professeur (Matière)"
+msgstr "إضافة أستاذ (المادة)"
+
+#: classes/templates/classes/class_assignment.html:113
+msgid "Liste des professeurs affectés"
+msgstr "قائمة الأساتذة المعينين"
+
+#: classes/templates/classes/class_assignment.html:126
+#: scheduling/templates/scheduling/view_schedule.html:35
+#: scheduling/templates/scheduling/view_teacher_schedule.html:36
+msgid "Confirmation de Suppression"
+msgstr "تأكيد الحذف"
+
+#: classes/templates/classes/class_assignment.html:129
+msgid ""
+"Êtes-vous sûr de vouloir retirer cette affectation ? Cette action "
+"désactivera le lien pour l'année scolaire en cours."
+msgstr ""
+"هل أنت متأكد من رغبتك في إزالة هذا التعيين؟ سيؤدي هذا الإجراء إلى تعطيل "
+"الرابط للسنة الدراسية الحالية."
+
+#: classes/templates/classes/class_assignment.html:137
+#: classes/templates/classes/class_management.html:196
+#: classes/templates/classes/level_management.html:180
+msgid "Confirmer la Suppression"
+msgstr "تأكيد الحذف"
+
+#: classes/templates/classes/class_management.html:5
+#: classes/templates/classes/class_management.html:41
+msgid "Gestion des Classes"
+msgstr "إدارة الأقسام"
+
+#: classes/templates/classes/class_management.html:32
+#: classes/templates/classes/class_management.html:59
+msgid "Créer une Nouvelle Classe"
+msgstr "إنشاء قسم جديد"
+
+#: classes/templates/classes/class_management.html:33
+#, python-brace-format
+msgid "Modifier la Classe: {name}"
+msgstr "تعديل القسم: {name}"
+
+#: classes/templates/classes/class_management.html:34
+#: classes/templates/classes/class_management.html:92
+msgid "Créer la Classe"
+msgstr "إنشاء القسم"
+
+#: classes/templates/classes/class_management.html:35
+msgid "Sauvegarder les Modifications"
+msgstr "حفظ التعديلات"
+
+#: classes/templates/classes/class_management.html:36
+msgid "Veuillez sélectionner un niveau et donner un nom à la classe."
+msgstr "الرجاء اختيار المستوى وتسمية القسم."
+
+#: classes/templates/classes/class_management.html:37
+msgid "Erreur réseau:"
+msgstr "خطأ في الشبكة:"
+
+#: classes/templates/classes/class_management.html:42
+#: classes/templates/classes/classroom_management.html:35
+#: classes/templates/classes/level_management.html:33
+#: communications/templates/communications/homework_detail.html:30
+msgid "École :"
+msgstr "المدرسة :"
+
+#: classes/templates/classes/class_management.html:42
+#: grades/templates/grades/appreciations_dashboard.html:48
+#: grades/templates/grades/grades_dashboard.html:25
+msgid "Année :"
+msgstr "السنة :"
+
+#: classes/templates/classes/class_management.html:54
+msgid "Opérations bloquées."
+msgstr "العمليات محظورة."
+
+#: classes/templates/classes/class_management.html:66
+#: classes/templates/classes/level_management.html:74
+#: classes/templates/classes/level_management.html:146
+msgid "Niveau Scolaire"
+msgstr "المستوى الدراسي"
+
+#: classes/templates/classes/class_management.html:70
+msgid "Sélectionnez le niveau"
+msgstr "اختر المستوى"
+
+#: classes/templates/classes/class_management.html:78
+msgid "Nom de la Classe"
+msgstr "اسم القسم"
+
+#: classes/templates/classes/class_management.html:81
+msgid "Ex: 6eA ou Terminale S1"
+msgstr "مثال: 6eA أو Terminale S1"
+
+#: classes/templates/classes/class_management.html:104
+msgid "Classes Existantes"
+msgstr "الأقسام الموجودة"
+
+#: classes/templates/classes/class_management.html:110
+#: documents/templates/documents/report_card_pdf.html:226
+#: users/templates/users/dashboard_page.html:128
+msgid "Classe"
+msgstr "القسم"
+
+#: classes/templates/classes/class_management.html:111
+#: schools/templates/schools/manage_term.html:85
+#: users/templates/users/dashboard_page.html:339
+msgid "Niveau"
+msgstr "المستوى"
+
+#: classes/templates/classes/class_management.html:112
+#: classes/templates/classes/classroom_management.html:55
+#: classes/templates/classes/level_management.html:76
+#: documents/templates/documents/manage_report_cards.html:172
+#: schools/templates/schools/manage_term.html:89
+msgid "Actions"
+msgstr "الإجراءات"
+
+#: classes/templates/classes/class_management.html:128
+msgid "Gérer les bulletins (Trimestre actuel)"
+msgstr "إدارة كشوف النقاط (الفصل الحالي)"
+
+#: classes/templates/classes/class_management.html:132
+msgid "Aucun trimestre configuré pour ce niveau"
+msgstr "لا يوجد أي فصل مهيأ لهذا المستوى"
+
+#: classes/templates/classes/class_management.html:138
+#: users/templates/users/manage_users.html:66
+msgid "Voir le planning"
+msgstr "عرض جدول التوقيت"
+#: classes/templates/classes/class_management.html:144
+msgid "Gérer le planning"
+msgstr "إدارة جدول التوقيت"
+
+#: classes/templates/classes/class_management.html:150
+msgid "Affecter Élèves et Professeurs"
+msgstr "تعيين التلاميذ والأساتذة"
+
+#: classes/templates/classes/class_management.html:160
+msgid "Modifier la classe"
+msgstr "تعديل القسم"
+
+#: classes/templates/classes/class_management.html:170
+msgid "Supprimer la classe"
+msgstr "حذف القسم"
+
+#: classes/templates/classes/class_management.html:180
+msgid "Aucune classe n'a encore été créée."
+msgstr "لم يتم إنشاء أي قسم بعد."
+
+#: classes/templates/classes/class_management.html:197
+msgid "Êtes-vous sûr de vouloir supprimer la classe"
+msgstr "هل أنت متأكد من رغبتك في حذف القسم"
+
+#: classes/templates/classes/class_management.html:198
+msgid "ATTENTION: Cette action est irréversible."
+msgstr "تنبيه: هذا الإجراء لا رجعة فيه."
+
+#: classes/templates/classes/class_management.html:206
+msgid "Supprimer Définitivement"
+msgstr "حذف نهائي"
+
+#: classes/templates/classes/classroom_management.html:4
+#: classes/templates/classes/classroom_management.html:34
+msgid "Gestion des salles de classe"
+msgstr "إدارة قاعات التدريس"
+
+#: classes/templates/classes/classroom_management.html:20
+msgid "Opération Réussie"
+msgstr "تمت العملية بنجاح"
+
+#: classes/templates/classes/classroom_management.html:21
+#: classes/templates/classes/level_management.html:21
+#: documents/templates/documents/manage_report_cards.html:258
+#: grades/templates/grades/appreciations_dashboard.html:36
+#: schools/templates/schools/exception_management.html:30
+#: schools/templates/schools/manage_term.html:28
+#: schools/templates/schools/manage_years.html:15 templates/error_page.html:8
+msgid "Erreur"
+msgstr "خطأ"
+
+#: classes/templates/classes/classroom_management.html:22
+#: classes/templates/classes/classroom_management.html:106
+msgid "Ajouter une Nouvelle Salle"
+msgstr "إضافة قاعة جديدة"
+
+#: classes/templates/classes/classroom_management.html:23
+#, python-brace-format
+msgid "Modifier la Salle: {name}"
+msgstr "تعديل القاعة: {name}"
+
+#: classes/templates/classes/classroom_management.html:25
+#: users/templates/users/manage_users.html:222
+#: users/templates/users/password_reset_confirm.html:58
+msgid "Mettre à jour"
+msgstr "تحديث"
+
+#: classes/templates/classes/classroom_management.html:26
+#: classes/templates/classes/classroom_management.html:71
+msgid "Active"
+msgstr "نشطة"
+
+#: classes/templates/classes/classroom_management.html:27
+#: classes/templates/classes/classroom_management.html:71
+msgid "Inactive"
+msgstr "معطلة"
+
+#: classes/templates/classes/classroom_management.html:29
+#: classes/templates/classes/classroom_management.html:85
+msgid "Changer le statut"
+msgstr "تغيير الحالة"
+
+#: classes/templates/classes/classroom_management.html:30 classes/views.py:64
+#: classes/views.py:90
+msgid "Le nom de la salle est obligatoire."
+msgstr "اسم القاعة إلزامي."
+
+#: classes/templates/classes/classroom_management.html:31
+msgid "Impossible de communiquer avec le serveur."
+msgstr "تعذر الاتصال بالخادم."
+
+#: classes/templates/classes/classroom_management.html:43
+msgid "Ajouter une Salle"
+msgstr "إضافة قاعة"
+
+#: classes/templates/classes/classroom_management.html:48
+msgid "Liste des Salles"
+msgstr "قائمة القاعات"
+
+#: classes/templates/classes/classroom_management.html:53
+#: classes/templates/classes/classroom_management.html:117
+msgid "Nom de la Salle"
+msgstr "اسم القاعة"
+
+#: classes/templates/classes/classroom_management.html:54
+#: schools/templates/schools/manage_term.html:88
+msgid "Statut"
+msgstr "الحالة"
+
+#: classes/templates/classes/classroom_management.html:93
+msgid "Aucune salle de classe trouvée pour cette école."
+msgstr "لم يتم العثور على أي قاعة تدريس لهذه المدرسة."
+
+#: classes/templates/classes/classroom_management.html:120
+msgid "Ex: Salle A101"
+msgstr "مثال: قاعة A101"
+
+#: classes/templates/classes/classroom_management.html:127
+msgid "Salle Active"
+msgstr "قاعة نشطة"
+
+#: classes/templates/classes/classroom_management.html:148
+#: classes/templates/classes/level_management.html:204
+#: schools/templates/schools/exception_management.html:174
+#: schools/templates/schools/manage_years.html:202
+msgid "Notification"
+msgstr "إشعار"
+
+#: classes/templates/classes/classroom_management.html:154
+#: classes/templates/classes/level_management.html:211
+#: schools/templates/schools/exception_management.html:181
+#: schools/templates/schools/manage_years.html:205
+msgid "Fermer"
+msgstr "إغلاق"
+
+#: classes/templates/classes/level_management.html:4
+#: classes/templates/classes/level_management.html:32
+msgid "Gestion des Niveaux Scolaires"
+msgstr "إدارة المستويات الدراسية"
+
+#: classes/templates/classes/level_management.html:20
+#: schools/templates/schools/exception_management.html:29
+#: schools/templates/schools/manage_term.html:27
+#: schools/templates/schools/manage_years.html:14
+msgid "Succès"
+msgstr "نجاح"
+
+#: classes/templates/classes/level_management.html:22
+#: classes/templates/classes/level_management.html:135
+msgid "Ajouter un Nouveau Niveau"
+msgstr "إضافة مستوى جديد"
+
+#: classes/templates/classes/level_management.html:23
+#, python-brace-format
+msgid "Modifier le Niveau: {name}"
+msgstr "تعديل المستوى: {name}"
+
+#: classes/templates/classes/level_management.html:25
+msgid "Mettre à Jour"
+msgstr "تحديث"
+
+#: classes/templates/classes/level_management.html:26
+#: communications/templates/communications/dashboard_communication.html:35
+msgid "Erreur réseau."
+msgstr "خطأ في الشبكة."
+
+#: classes/templates/classes/level_management.html:27
+#: classes/templates/classes/level_management.html:121
+msgid "Aucun niveau scolaire trouvé pour cette école."
+msgstr "لم يتم العثور على أي مستوى دراسي لهذه المدرسة."
+
+#: classes/templates/classes/level_management.html:29
+#: classes/templates/classes/level_management.html:107
+#: classes/templates/classes/level_management.html:189
+#: schools/templates/schools/exception_management.html:16
+#: schools/templates/schools/exception_management.html:211
+#: users/templates/users/profil.html:253
+msgid "Supprimer"
+msgstr "حذف"
+
+#: classes/templates/classes/level_management.html:41
+msgid "Comprendre les Niveaux Scolaires et leur Gestion"
+msgstr "فهم المستويات الدراسية وكيفية إدارتها"
+
+#: classes/templates/classes/level_management.html:45
+msgid ""
+"Un <strong>Niveau Scolaire</strong> représente un niveau de classe (ex: "
+"6ème, Terminale) au sein de votre école. Chaque niveau est associé à un type "
+"de période (Trimestre, Semestre ou Unique) qui définit son cycle "
+"d'évaluation."
+msgstr ""
+"يمثل <strong>المستوى الدراسي</strong> مستوى صفياً (مثل: السادس ابتدائي، "
+"السنة النهائية) داخل مدرستك. يرتبط كل مستوى بنوع فترة (فصل، سداسي، أو مفرد) "
+"يحدد دورة تقييمه."
+
+#: classes/templates/classes/level_management.html:51
+msgid ""
+"<strong>Création et Modification des Niveaux :</strong> Vous pouvez "
+"uniquement créer, supprimer ou modifier les détails des niveaux (niveau, "
+"type de période) lorsque l'Année Scolaire est à l'étape : <strong>Création</"
+"strong>."
+msgstr ""
+"<strong>إنشاء وتعديل المستويات:</strong> يمكنك فقط إنشاء أو حذف أو تعديل "
+"تفاصيل المستويات (المستوى، نوع الفترة) عندما تكون السنة الدراسية في مرحلة: "
+"<strong>الإنشاء</strong>."
+
+#: classes/templates/classes/level_management.html:64
+msgid "Ajouter un Niveau"
+msgstr "إضافة مستوى"
+#: classes/templates/classes/level_management.html:69
+msgid "Liste des Niveaux"
+msgstr "قائمة المستويات"
+
+#: classes/templates/classes/level_management.html:75
+#: classes/templates/classes/level_management.html:157
+msgid "Type de Période"
+msgstr "نوع الفترة"
+
+#: classes/templates/classes/level_management.html:149
+msgid "Sélectionnez un niveau"
+msgstr "اختر مستوى"
+
+#: classes/templates/classes/level_management.html:160
+msgid "Sélectionnez un type de terme"
+msgstr "اختر نوع الفصل"
+
+#: classes/templates/classes/level_management.html:181
+msgid "Êtes-vous sûr de vouloir supprimer le niveau"
+msgstr "هل أنت متأكد من رغبتك في حذف المستوى"
+
+#: classes/templates/classes/level_management.html:181
+msgid "Cette action est irréversible."
+msgstr "هذا الإجراء لا رجعة فيه."
+
+#: classes/utils.py:46 classes/utils.py:153 subjects/utils.py:47
+msgid "Erreur: L'école spécifiée n'existe pas."
+msgstr "خطأ: المدرسة المحددة غير موجودة."
+
+#: classes/utils.py:48
+#, python-brace-format
+msgid "Erreur lors de la création du niveau : {error}"
+msgstr "خطأ أثناء إنشاء المستوى: {error}"
+
+#: classes/utils.py:99
+msgid "Erreur: Le niveau spécifié n'existe pas."
+msgstr "خطأ: المستوى المحدد غير موجود."
+
+#: classes/utils.py:101
+#, python-brace-format
+msgid "Erreur lors de la mise à jour du niveau : {error}"
+msgstr "خطأ أثناء تحديث المستوى: {error}"
+
+#: classes/utils.py:155
+#, python-brace-format
+msgid "Erreur lors de la création de la salle de classe : {error}"
+msgstr "خطأ أثناء إنشاء قاعة التدريس: {error}"
+
+#: classes/utils.py:206
+msgid "Erreur: La salle de classe spécifiée n'existe pas."
+msgstr "خطأ: قاعة التدريس المحددة غير موجودة."
+
+#: classes/utils.py:208
+#, python-brace-format
+msgid "Erreur lors de la mise à jour de la salle de classe : {error}"
+msgstr "خطأ أثناء تحديث قاعة التدريس: {error}"
+
+#: classes/utils.py:262 classes/utils.py:360 classes/utils.py:417
+#: classes/utils.py:532 subjects/utils.py:155
+#, python-brace-format
+msgid "Erreur: L'objet spécifié n'existe pas. Détails: {error}"
+msgstr "خطأ: الكائن المحدد غير موجود. التفاصيل: {error}"
+
+#: classes/utils.py:264
+#, python-brace-format
+msgid "Erreur lors de la création de la classe : {error}"
+msgstr "خطأ أثناء إنشاء القسم: {error}"
+
+#: classes/utils.py:358
+msgid "Erreur: La classe spécifiée n'existe pas."
+msgstr "خطأ: القسم المحدد غير موجود."
+
+#: classes/utils.py:362
+#, python-brace-format
+msgid "Erreur lors de la mise à jour de la classe : {error}"
+msgstr "خطأ أثناء تحديث القسم: {error}"
+
+#: classes/utils.py:419
+#, python-brace-format
+msgid "Erreur lors de la création de l'inscription : {error}"
+msgstr "خطأ أثناء إنشاء التسجيل: {error}"
+
+#: classes/utils.py:474
+msgid "Erreur: L'inscription spécifiée n'existe pas."
+msgstr "خطأ: التسجيل المحدد غير موجود."
+
+#: classes/utils.py:476
+#, python-brace-format
+msgid "Erreur lors de la mise à jour de l'inscription : {error}"
+msgstr "خطأ أثناء تحديث التسجيل: {error}"
+
+#: classes/utils.py:534 subjects/utils.py:157
+#, python-brace-format
+msgid "Erreur lors de la création de l'affectation : {error}"
+msgstr "خطأ أثناء إنشاء التعيين: {error}"
+
+#: classes/utils.py:589 subjects/utils.py:228
+msgid "Erreur: L'affectation spécifiée n'existe pas."
+msgstr "خطأ: التعيين المحدد غير موجود."
+
+#: classes/utils.py:591 subjects/utils.py:230
+#, python-brace-format
+msgid "Erreur lors de la mise à jour de l'affectation : {error}"
+msgstr "خطأ أثناء تحديث التعيين: {error}"
+
+#: classes/views.py:68
+#, python-brace-format
+msgid "La salle \"{name}\" existe déjà dans cette école."
+msgstr "القاعة \"{name}\" موجودة مسبقاً في هذه المدرسة."
+
+#: classes/views.py:73
+#, python-brace-format
+msgid "La salle \"{class_name}\" a été créée avec succès."
+msgstr "تم إنشاء القاعة \"{class_name}\" بنجاح."
+
+#: classes/views.py:80
+msgid "ID de la salle manquant."
+msgstr "معرف القاعة مفقود."
+
+#: classes/views.py:86
+msgid "Salle de classe non trouvée ou non rattachée à cette école."
+msgstr "قاعة التدريس غير موجودة أو غير مرتبطة بهذه المدرسة."
+
+#: classes/views.py:94
+#, python-brace-format
+msgid "Le nom \"{name}\" est déjà utilisé."
+msgstr "الاسم \"{name}\" مستخدم مسبقاً."
+
+#: classes/views.py:102
+#, python-brace-format
+msgid "La salle \"{name}\" a été mise à jour."
+msgstr "تم تحديث القاعة \"{name}\"."
+
+#: classes/views.py:122
+msgid ""
+"Vous ne pouvez pas désactiver une salle de classe lorsque l'école est dans "
+"sa phase de déroulement."
+msgstr "لا يمكنك تعطيل قاعة تدريس عندما تكون المدرسة في مرحلة السير العادي."
+
+#: classes/views.py:126 subjects/views.py:211
+msgid "activée"
+msgstr "مفعلة"
+
+#: classes/views.py:126 subjects/views.py:211
+msgid "désactivée"
+msgstr "معطلة"
+
+#: classes/views.py:130
+#, python-brace-format
+msgid "La salle \"{name}\" a été {status_verb} avec succès."
+msgstr "تمت {status_verb} القاعة \"{name}\" بنجاح."
+
+#: classes/views.py:135 classes/views.py:285 classes/views.py:470
+#: classes/views.py:839 scheduling/views.py:154 scheduling/views.py:286
+#: scheduling/views.py:571 scheduling/views.py:743 schools/views.py:545
+#: schools/views.py:722
+msgid "Action non reconnue."
+msgstr "إجراء غير معروف."
+
+#: classes/views.py:138 classes/views.py:288 classes/views.py:474
+#: schools/views.py:118 schools/views.py:548 schools/views.py:726
+#: schools/views.py:878 users/views.py:114 users/views.py:308
+#: users/views.py:963 users/views.py:1067
+msgid "Données JSON invalides."
+msgstr "بيانات JSON غير صالحة."
+
+#: classes/views.py:141 classes/views.py:293 classes/views.py:478
+#: schools/views.py:554 schools/views.py:733
+#, python-brace-format
+msgid "Une erreur interne du serveur est survenue: {error}"
+msgstr "حدث خطأ داخلي في الخادم: {error}"
+
+#: classes/views.py:199
+msgid ""
+"Opération non autorisée. La gestion des niveaux n'est possible que lorsque "
+"l'année scolaire est à l'étape de Création."
+msgstr ""
+"عملية غير مصرح بها. إدارة المستويات ممكنة فقط عندما تكون السنة الدراسية في "
+"مرحلة الإنشاء."
+
+#: classes/views.py:214
+msgid "Le code de niveau et le type de niveau sont obligatoires."
+msgstr "رمز المستوى ونوع المستوى إلزاميان."
+
+#: classes/views.py:222
+#, python-brace-format
+msgid "Code de niveau invalide: {level_code}."
+msgstr "رمز مستوى غير صالح: {level_code}."
+
+#: classes/views.py:225
+#, python-brace-format
+msgid "Type de niveau invalide: {term_type}."
+msgstr "نوع مستوى غير صالح: {term_type}."
+
+#: classes/views.py:230
+#, python-brace-format
+msgid "Le niveau {level} est déjà défini pour cette école."
+msgstr "المستوى {level} معرف مسبقاً لهذه المدرسة."
+
+#: classes/views.py:243
+#, python-brace-format
+msgid "Niveau \"{name}\" créé avec succès."
+msgstr "تم إنشاء المستوى \"{name}\" بنجاح."
+
+#: classes/views.py:249
+msgid "ID du niveau manquant pour la mise à jour."
+msgstr "معرف المستوى مفقود للتحديث."
+
+#: classes/views.py:257
+#, python-brace-format
+msgid "Le niveau {level} existe déjà pour cette école."
+msgstr "المستوى {level} موجود مسبقاً لهذه المدرسة."
+
+#: classes/views.py:262
+msgid "Niveau mis à jour avec succès."
+msgstr "تم تحديث المستوى بنجاح."
+
+#: classes/views.py:265 classes/views.py:282 schools/views.py:646
+msgid "Niveau non trouvé pour cette école."
+msgstr "المستوى غير موجود لهذه المدرسة."
+
+#: classes/views.py:271
+msgid ""
+"L'année actuelle doit être à l'étape de la création. Impossible de supprimer "
+"un niveau."
+msgstr ""
+"يجب أن تكون السنة الحالية في مرحلة الإنشاء. يتعذر حذف أي مستوى."
+
+#: classes/views.py:274
+msgid "ID du niveau manquant pour la suppression."
+msgstr "معرف المستوى مفقود للحذف."
+
+#: classes/views.py:280
+#, python-brace-format
+msgid "Niveau \"{level_name}\" supprimé."
+msgstr "تم حذف المستوى \"{level_name}\"."
+
+#: classes/views.py:290
+msgid "Erreur d'intégrité de la base de données. Vérifiez les contraintes."
+msgstr "خطأ في سلامة قاعدة البيانات. تحقق من القيود."
+
+#: classes/views.py:362
+msgid ""
+"Opération non autorisée. La gestion des classes (Création/Modification/"
+"Suppression) n'est possible que lorsque l'année scolaire est à l'étape de "
+"Création."
+msgstr ""
+"عملية غير مصرح بها. إدارة الأقسام (إنشاء/تعديل/حذف) ممكنة فقط عندما تكون "
+"السنة الدراسية في مرحلة الإنشاء."
+
+#: classes/views.py:392
+msgid "Le nom de la classe et le niveau sont obligatoires."
+msgstr "اسم القسم والمستوى إلزاميان."
+#: classes/views.py:398
+msgid "Niveau scolaire non trouvé ou non valide pour cette école."
+msgstr "المستوى الدراسي غير موجود أو غير صالح لهذه المدرسة."
+
+#: classes/views.py:404
+#, python-brace-format
+msgid "Une classe nommée \"{class_name}\" existe déjà pour le niveau {level}."
+msgstr "يوجد قسم يحمل الاسم \"{class_name}\" مسبقاً للمستوى {level}."
+
+#: classes/views.py:416
+#, python-brace-format
+msgid "La classe \"{name}\" a été créée avec succès."
+msgstr "تم إنشاء القسم \"{name}\" بنجاح."
+
+#: classes/views.py:428
+msgid ""
+"L'ID de la classe, le nom et le niveau sont obligatoires pour la mise à jour."
+msgstr "معرف القسم، الاسم، والمستوى إلزامية للتحديث."
+
+#: classes/views.py:435
+msgid "Classe ou Niveau non trouvé/valide pour cette école."
+msgstr "القسم أو المستوى غير موجود/غير صالح لهذه المدرسة."
+
+#: classes/views.py:441
+#, python-brace-format
+msgid "Le nom de classe \"{class_name}\" existe déjà dans le niveau {level}."
+msgstr "اسم القسم \"{class_name}\" موجود مسبقاً في المستوى {level}."
+
+#: classes/views.py:450
+#, python-brace-format
+msgid "La classe \"{class_name}\" a été mise à jour avec succès."
+msgstr "تم تحديث القسم \"{class_name}\" بنجاح."
+
+#: classes/views.py:457
+msgid "ID de la classe manquant pour la suppression."
+msgstr "معرف القسم مفقود للحذف."
+
+#: classes/views.py:465
+#, python-brace-format
+msgid "La classe \"{class_name}\" a été supprimée."
+msgstr "تم حذف القسم \"{class_name}\"."
+
+#: classes/views.py:467
+msgid "Classe non trouvée pour cette école."
+msgstr "القسم غير موجود لهذه المدرسة."
+
+#: classes/views.py:476
+msgid "Erreur d'intégrité de la base de données. Opération annulée."
+msgstr "خطأ في سلامة قاعدة البيانات. تم إلغاء العملية."
+
+#: classes/views.py:642
+msgid "Permission refusée. Rôle non autorisé."
+msgstr "تم رفض الإذن. دور غير مسموح به."
+
+#: classes/views.py:647 schools/views.py:905
+msgid "École introuvable."
+msgstr "المدرسة غير موجودة."
+
+#: classes/views.py:652 scheduling/views.py:515
+msgid "Classe introuvable."
+msgstr "القسم غير موجود."
+
+#: classes/views.py:657
+msgid "Accès classe refusé. La classe n'appartient pas à votre école."
+msgstr "تم رفض الوصول إلى القسم. القسم لا ينتمي إلى مدرستك."
+
+#: classes/views.py:672
+msgid "Élève introuvable."
+msgstr "التلميذ غير موجود."
+
+#: classes/views.py:701
+#, python-brace-format
+msgid ""
+"L'élève {entity_name} a été affecté à {current_class}. Anciennes classes "
+"désaffectées."
+msgstr ""
+"تم تعيين التلميذ {entity_name} في {current_class}. وتم إلغاء تعيين الأقسام "
+"القديمة."
+
+#: classes/views.py:722
+#, python-brace-format
+msgid "L'élève a été retiré de {current_class}."
+msgstr "تمت إزالة التلميذ من {current_class}."
+
+#: classes/views.py:724
+msgid "Affectation élève active non trouvée pour désactivation."
+msgstr "تعيين التلميذ النشط غير موجود لغرض التعطيل."
+
+#: classes/views.py:735
+msgid "Affectation élève introuvable."
+msgstr "تعيين التلميذ غير موجود."
+
+#: classes/views.py:741
+#, python-brace-format
+msgid "Statut élève mis à jour: {status_text}."
+msgstr "تم تحديث حالة التلميذ: {status_text}."
+
+#: classes/views.py:755
+msgid "Affectation Professeur/Matière introuvable."
+msgstr "تعيين الأستاذ/المادة غير موجود."
+
+#: classes/views.py:788
+msgid "Erreur d'intégrité : Affectation Professeur/Matière déjà enregistrée."
+msgstr "خطأ في السلامة: تعيين الأستاذ/المادة مسجل مسبقاً."
+
+#: classes/views.py:804
+msgid "L'affectation professeur/matière a été retirée."
+msgstr "تمت إزالة تعيين الأستاذ/المادة."
+
+#: classes/views.py:806
+msgid "Affectation professeur/classe active non trouvée pour désactivation."
+msgstr "تعيين الأستاذ/القسم النشط غير موجود لغرض التعطيل."
+
+#: classes/views.py:818
+msgid "Affectation professeur introuvable."
+msgstr "تعيين الأستاذ غير موجود."
+
+#: classes/views.py:834
+#, python-brace-format
+msgid "Statut professeur mis à jour: {status_text}."
+msgstr "تم تحديث حالة الأستاذ: {status_text}."
+
+#: classes/views.py:842 schools/views.py:277 subjects/views.py:398
+#: users/views.py:869
+msgid "Requête invalide (JSON non valide)."
+msgstr "طلب غير صالح (JSON غير صالح)."
+
+#: classes/views.py:844 subjects/views.py:400 users/views.py:872
+#, python-brace-format
+msgid "Erreur interne du serveur: {error}"
+msgstr "خطأ داخلي في الخادم: {error}"
+
+#: communications/models.py:12 grades/templates/grades/student_grades.html:131
+msgid "Devoir"
+msgstr "واجب منزلي"
+
+#: communications/models.py:13
+msgid "Contrôle"
+msgstr "اختبار"
+
+#: communications/models.py:14
+msgid "Cours"
+msgstr "درس"
+
+#: communications/models.py:15
+msgid "Message Global"
+msgstr "رسالة عامة"
+
+#: communications/models.py:36
+msgid "Coché si ce devoir nécessite un rendu de la part des élèves."
+msgstr "محدد إذا كان هذا الواجب يتطلب تسليماً من طرف التلاميذ."
+
+#: communications/models.py:44
+msgid "Résumé des destinataires pour affichage"
+msgstr "ملخص المستلمين للعرض"
+
+#: communications/models.py:68
+#, python-brace-format
+msgid "Fichier ({file_type}) pour {title}"
+msgstr "ملف ({file_type}) لـ {title}"
+
+#: communications/models.py:102
+msgid "Lu"
+msgstr "مقروء"
+
+#: communications/models.py:102
+msgid "Non lu"
+msgstr "غير مقروء"
+
+#: communications/models.py:132
+#, python-brace-format
+msgid "Rendu de {student} pour {title}"
+msgstr "تسليم {student} لـ {title}"
+
+#: communications/models.py:145
+#, python-brace-format
+msgid "Fichier de rendu pour {submission}"
+msgstr "ملف التسليم لـ {submission}"
+
+#: communications/models.py:170
+msgid "unique_conversation"
+msgstr "محادثة_فريدة"
+
+#: communications/models.py:177
+msgid "Un utilisateur ne peut pas discuter avec lui-même."
+msgstr "لا يمكن للمستخدم الدردشة مع نفسه."
+
+#: communications/models.py:213
+#, python-brace-format
+msgid "Message de {username} le {date}"
+msgstr "رسالة من {username} بتاريخ {date}"
+
+#: communications/templates/communications/dashboard_announcements.html:4
+msgid "Annonces & Informations"
+msgstr "الإعلانات والمعلومات"
+
+#: communications/templates/communications/dashboard_announcements.html:23
+msgid "Erreur de chargement."
+msgstr "خطأ في التحميل."
+
+#: communications/templates/communications/dashboard_announcements.html:24
+msgid "Impossible de charger les annonces."
+msgstr "تعذر تحميل الإعلانات."
+#: communications/templates/communications/dashboard_announcements.html:25
+#: users/templates/users/dashboard_page.html:283
+msgid "Aucune annonce."
+msgstr "لا توجد أي إعلانات."
+
+#: communications/templates/communications/dashboard_announcements.html:26
+msgid "Destinataires multiples"
+msgstr "مستلمون متعددون"
+
+#: communications/templates/communications/dashboard_announcements.html:27
+msgid "Avec rendu"
+msgstr "مع تسليم"
+
+#: communications/templates/communications/dashboard_announcements.html:28
+msgid "Sans rendu"
+msgstr "بدون تسليم"
+
+#: communications/templates/communications/dashboard_announcements.html:29
+#: users/templates/users/dashboard_page.html:428
+msgid "De :"
+msgstr "من :"
+
+#: communications/templates/communications/dashboard_announcements.html:30
+msgid "Pour :"
+msgstr "إلى :"
+
+#: communications/templates/communications/dashboard_announcements.html:31
+msgid "Moi"
+msgstr "أنا"
+
+#: communications/templates/communications/dashboard_announcements.html:32
+msgid "Consulter les rendus des élèves"
+msgstr "اطلاع على تسليمات التلاميذ"
+
+#: communications/templates/communications/dashboard_announcements.html:33
+#: communications/templates/communications/dashboard_announcements.html:169
+msgid "Gérer / Déposer mon rendu"
+msgstr "إدارة / إرسال عملي المطلوب"
+
+#: communications/templates/communications/dashboard_announcements.html:34
+msgid "Télécharger"
+msgstr "تحميل"
+
+#: communications/templates/communications/dashboard_announcements.html:35
+msgid "à l\\"
+msgstr "في l\\"
+
+#: communications/templates/communications/dashboard_announcements.html:36
+msgid "Annonce marquée comme lue."
+msgstr "تم تحديد الإعلان كمقروء."
+
+#: communications/templates/communications/dashboard_announcements.html:37
+msgid "Erreur lors de la validation."
+msgstr "خطأ أثناء التحقق."
+
+#: communications/templates/communications/dashboard_announcements.html:38
+msgid "Veuillez sélectionner au moins un destinataire."
+msgstr "الرجاء اختيار مستلم واحد على الأقل."
+
+#: communications/templates/communications/dashboard_announcements.html:39
+msgid "Envoi..."
+msgstr "جاري الإرسال..."
+
+#: communications/templates/communications/dashboard_announcements.html:40
+msgid "Annonce envoyée avec succès !"
+msgstr "تم إرسال الإعلان بنجاح !"
+
+#: communications/templates/communications/dashboard_announcements.html:41
+msgid "Erreur technique lors de l\\"
+msgstr "خطأ تقني أثناء l\\"
+
+#: communications/templates/communications/dashboard_announcements.html:42
+#: documents/templates/documents/manage_report_cards.html:57
+msgid "Classes"
+msgstr "الأقسام"
+
+#: communications/templates/communications/dashboard_announcements.html:43
+#: users/templates/users/manage_users.html:17
+msgid "Personnel"
+msgstr "الموظفون"
+
+#: communications/templates/communications/dashboard_announcements.html:44
+msgid "Aucun destinataire disponible."
+msgstr "لا يوجد أي مستلم متاح."
+
+#: communications/templates/communications/dashboard_announcements.html:45
+#, python-brace-format
+msgid "{count} destinataire(s) sélectionné(s)"
+msgstr "تم تحديد {count} مستلم(ين)"
+
+#: communications/templates/communications/dashboard_announcements.html:53
+#: communications/templates/communications/dashboard_announcements.html:90
+#: templates/sidemenu.html:171 templates/sidemenu.html:213
+#: templates/sidemenu.html:262 templates/sidemenu.html:302
+msgid "Annonces"
+msgstr "الإعلانات"
+
+#: communications/templates/communications/dashboard_announcements.html:55
+msgid "Informations, devoirs et actualités de l'établissement."
+msgstr "المعلومات، الواجبات وأخبار المؤسسة."
+
+#: communications/templates/communications/dashboard_announcements.html:62
+msgid "Nouvelle Annonce"
+msgstr "إعلان جديد"
+
+#: communications/templates/communications/dashboard_announcements.html:73
+msgid "Reçus"
+msgstr "المستلمة"
+
+#: communications/templates/communications/dashboard_announcements.html:81
+msgid "Envoyés"
+msgstr "المرسلة"
+
+#: communications/templates/communications/dashboard_announcements.html:119
+msgid "Aucune annonce"
+msgstr "لا توجد أي إعلانات"
+
+#: communications/templates/communications/dashboard_announcements.html:120
+msgid "Vous n'avez rien pour le moment."
+msgstr "ليس لديك أي شيء في الوقت الحالي."
+
+#: communications/templates/communications/dashboard_announcements.html:133
+msgid "Info"
+msgstr "معلومات"
+
+#: communications/templates/communications/dashboard_announcements.html:135
+msgid "Par"
+msgstr "بواسطة"
+
+#: communications/templates/communications/dashboard_announcements.html:149
+#: communications/templates/communications/dashboard_announcements.html:263
+msgid "Pièces jointes"
+msgstr "المرفقات"
+
+#: communications/templates/communications/dashboard_announcements.html:155
+msgid "Suivi de lecture"
+msgstr "متابعة القراءة"
+
+#: communications/templates/communications/dashboard_announcements.html:157
+msgid "lecteurs"
+msgstr "قراء"
+
+#: communications/templates/communications/dashboard_announcements.html:180
+msgid "J'ai bien lu cette information"
+msgstr "لقد قرأت هذه المعلومة"
+
+#: communications/templates/communications/dashboard_announcements.html:185
+msgid "Lu le"
+msgstr "قُرئ في"
+
+#: communications/templates/communications/dashboard_announcements.html:191
+msgid "Mode consultation (Vous n'êtes pas destinataire)"
+msgstr "وضع الاطلاع (لست ضمن المستلمين)"
+
+#: communications/templates/communications/dashboard_announcements.html:206
+msgid "Rédiger une annonce"
+msgstr "تحرير إعلان"
+
+#: communications/templates/communications/dashboard_announcements.html:218
+#: grades/templates/grades/grades_dashboard.html:275
+msgid "Titre"
+msgstr "العنوان"
+
+#: communications/templates/communications/dashboard_announcements.html:219
+msgid "Ex: Devoir de Mathématiques"
+msgstr "مثال: واجب الرياضيات"
+
+#: communications/templates/communications/dashboard_announcements.html:237
+msgid "Permettre un rendu de devoir aux élèves"
+msgstr "السماح للتلاميذ بتسليم الواجب"
+
+#: communications/templates/communications/dashboard_announcements.html:238
+msgid ""
+"Les élèves destinataires pourront téléverser des documents et un commentaire."
+msgstr "سيتمكن التلاميذ المستلمون من رفع المستندات وكتابة تعليق."
+
+#: communications/templates/communications/dashboard_announcements.html:246
+msgid "Destinataires"
+msgstr "المستلمون"
+
+#: communications/templates/communications/dashboard_announcements.html:248
+msgid "Chargement des listes..."
+msgstr "جاري تحميل القوائم..."
+
+#: communications/templates/communications/dashboard_announcements.html:251
+msgid "0 destinataire(s) sélectionné(s)"
+msgstr "تم تحديد 0 مستلم(ين)"
+
+#: communications/templates/communications/dashboard_announcements.html:257
+msgid "Message"
+msgstr "الرسالة"
+
+#: communications/templates/communications/dashboard_announcements.html:258
+msgid "Votre message..."
+msgstr "رسالتك..."
+
+#: communications/templates/communications/dashboard_announcements.html:268
+msgid "Cliquez ou glissez des fichiers ici"
+msgstr "انقر أو اسحب الملفات هنا"
+
+#: communications/templates/communications/dashboard_announcements.html:280
+msgid "Envoyer"
+msgstr "إرسال"
+
+#: communications/templates/communications/dashboard_communication.html:4
+#: templates/sidemenu.html:161 templates/sidemenu.html:207
+#: templates/sidemenu.html:256 templates/sidemenu.html:278
+#: users/templates/users/dashboard_page.html:158
+msgid "Messagerie"
+msgstr "الرسائل"
+
+#: communications/templates/communications/dashboard_communication.html:30
+msgid "Aucune discussion."
+msgstr "لا توجد أي محادثات."
+
+#: communications/templates/communications/dashboard_communication.html:31
+msgid "Commencer une nouvelle"
+msgstr "بدء محادثة جديدة"
+
+#: communications/templates/communications/dashboard_communication.html:32
+#: communications/templates/communications/dashboard_communication.html:55
+#: scheduling/templates/scheduling/schedul_management.html:29
+#: scheduling/templates/scheduling/view_schedule.html:29
+#: scheduling/templates/scheduling/view_schedule.html:66
+#: scheduling/templates/scheduling/view_teacher_schedule.html:30
+#: scheduling/templates/scheduling/view_teacher_schedule.html:66
+#: users/templates/users/password_reset.html:69
+#: users/templates/users/password_reset_confirm.html:53
+msgid "Chargement..."
+msgstr "جاري التحميل..."
+#: communications/templates/communications/dashboard_communication.html:33
+msgid "Début de la conversation."
+msgstr "بداية المحادثة."
+
+#: communications/templates/communications/dashboard_communication.html:34
+msgid "Erreur: Impossible de charger les contacts."
+msgstr "خطأ: تعذر تحميل جهات الاتصال."
+
+#: communications/templates/communications/dashboard_communication.html:36
+msgid "Aucun contact disponible."
+msgstr "لا توجد أي جهات اتصال متاحة."
+
+#: communications/templates/communications/dashboard_communication.html:37
+msgid "Aucun utilisateur trouvé."
+msgstr "لم يتم العثور على أي مستخدم."
+
+#: communications/templates/communications/dashboard_communication.html:44
+msgid "Discussions"
+msgstr "المحادثات"
+
+#: communications/templates/communications/dashboard_communication.html:45
+msgid "Nouvelle discussion"
+msgstr "محادثة جديدة"
+
+#: communications/templates/communications/dashboard_communication.html:66
+msgid "Retour à la liste"
+msgstr "العودة إلى القائمة"
+
+#: communications/templates/communications/dashboard_communication.html:75
+msgid "Nom Contact"
+msgstr "اسم جهة الاتصال"
+
+#: communications/templates/communications/dashboard_communication.html:80
+msgid "Rôle"
+msgstr "الدور"
+
+#: communications/templates/communications/dashboard_communication.html:95
+msgid "Écrivez votre message..."
+msgstr "اكتب رسالتك..."
+
+#: communications/templates/communications/dashboard_communication.html:114
+msgid "Nouveau message"
+msgstr "رسالة جديدة"
+
+#: communications/templates/communications/dashboard_communication.html:122
+msgid "Rechercher un contact..."
+msgstr "البحث عن جهة اتصال..."
+
+#: communications/templates/communications/dashboard_communication.html:129
+msgid "Chargement de l'annuaire..."
+msgstr "جاري تحميل الدليل..."
+
+#: communications/templates/communications/homework_detail.html:4
+msgid "Détail du Devoir"
+msgstr "تفاصيل الواجب"
+
+#: communications/templates/communications/homework_detail.html:22
+msgid "Rendu requis"
+msgstr "التسليم مطلوب"
+
+#: communications/templates/communications/homework_detail.html:28
+msgid "Publié par"
+msgstr "نُشر بواسطة"
+
+#: communications/templates/communications/homework_detail.html:54
+msgid "Consignes du devoir"
+msgstr "تعليمات الواجب"
+
+#: communications/templates/communications/homework_detail.html:64
+msgid "Documents joints par le professeur"
+msgstr "المستندات المرفقة من طرف الأستاذ"
+
+#: communications/templates/communications/homework_detail.html:89
+msgid "Rendus des élèves"
+msgstr "تسليمات التلاميذ"
+
+#: communications/templates/communications/homework_detail.html:92
+#, python-format
+msgid "%(count_len)s rendu"
+msgid_plural "%(count_len)s rendus"
+msgstr[0] "تسليم %(count_len)s"
+msgstr[1] "تسليم %(count_len)s"
+msgstr[2] "تسليمان %(count_len)s"
+msgstr[3] "%(count_len)s تسليمات"
+msgstr[4] "%(count_len)s تسليماً"
+msgstr[5] "%(count_len)s تسليم"
+
+#: communications/templates/communications/homework_detail.html:103
+msgid "Commentaire"
+msgstr "تعليق"
+
+#: communications/templates/communications/homework_detail.html:104
+msgid "Dernière modification"
+msgstr "آخر تعديل"
+
+#: communications/templates/communications/homework_detail.html:105
+msgid "Fichiers rendus"
+msgstr "الملفات المسلمة"
+
+#: communications/templates/communications/homework_detail.html:118
+msgid "Aucun commentaire"
+msgstr "لا توجد تعليقات"
+
+#: communications/templates/communications/homework_detail.html:134
+msgid "Aucun fichier"
+msgstr "لا توجد ملفات"
+
+#: communications/templates/communications/homework_detail.html:147
+msgid "Aucun rendu"
+msgstr "لا يوجد تسليم"
+
+#: communications/templates/communications/homework_detail.html:148
+msgid "Aucun élève n'a encore soumis de travail pour ce devoir."
+msgstr "لم يقدم أي تلميذ عملاً لهذا الواجب بعد."
+
+#: communications/templates/communications/homework_detail.html:161
+msgid "Mon rendu de devoir"
+msgstr "عملي المسلم للواجب"
+
+#: communications/templates/communications/homework_detail.html:163
+msgid "Soumettez votre travail ou mettez-le à jour si nécessaire."
+msgstr "قم بتقديم عملك أو تحديثه إذا لزم الأمر."
+
+#: communications/templates/communications/homework_detail.html:170
+msgid "Ce devoir ne nécessite aucun dépôt de rendu en ligne."
+msgstr "هذا الواجب لا يتطلب إيداع أي تسليم عبر الإنترنت."
+
+#: communications/templates/communications/homework_detail.html:176
+msgid "Envoi en cours..."
+msgstr "جاري الإرسال..."
+
+#: communications/templates/communications/homework_detail.html:177
+#: communications/views.py:647
+msgid "Rendu enregistré avec succès."
+msgstr "تم حفظ التسليم بنجاح."
+
+#: communications/templates/communications/homework_detail.html:178
+msgid "Nouveau fichier envoyé"
+msgstr "تم إرسال ملف جديد"
+
+#: communications/templates/communications/homework_detail.html:179
+#: communications/templates/communications/homework_detail.html:241
+msgid "Modifier mon rendu"
+msgstr "تعديل عملي المسلم"
+
+#: communications/templates/communications/homework_detail.html:180
+msgid "Une erreur est survenue lors de l’enregistrement."
+msgstr "حدث خطأ أثناء الحفظ."
+
+#: communications/templates/communications/homework_detail.html:181
+msgid "Une erreur réseau est survenue."
+msgstr "حدث خطأ في الشبكة."
+
+#: communications/templates/communications/homework_detail.html:186
+msgid "Commentaire (optionnel)"
+msgstr "تعليق (اختياري)"
+
+#: communications/templates/communications/homework_detail.html:187
+msgid "Ajouter un commentaire pour votre professeur..."
+msgstr "أضف تعليقاً لأستاذك..."
+
+#: communications/templates/communications/homework_detail.html:192
+msgid "Documents à rendre"
+msgstr "المستندات المطلوب تسليمها"
+
+#: communications/templates/communications/homework_detail.html:197
+msgid "Cliquez ou glissez vos fichiers ici"
+msgstr "انقر أو اسحب ملفاتك هنا"
+
+#: communications/templates/communications/homework_detail.html:198
+msgid "Images, PDF, Word, Excel (Plusieurs fichiers autorisés)"
+msgstr "صور، PDF، Word، Excel (يُسمح بعدة ملفات)"
+
+#: communications/templates/communications/homework_detail.html:205
+msgid "fichier(s) prêt(s) à être envoyé(s) :"
+msgstr "ملف (ملفات) جاهز للإرسال :"
+
+#: communications/templates/communications/homework_detail.html:212
+msgid "Attention : Un nouveau dépôt remplacera l'ancien lot de fichiers."
+msgstr "تنبيه: سيؤدي الإيداع الجديد إلى استبدال مجموعة الملفات القديمة."
+
+#: communications/templates/communications/homework_detail.html:220
+msgid "Travail déjà soumis"
+msgstr "تم تقديم العمل مسبقاً"
+
+#: communications/templates/communications/homework_detail.html:222
+msgid "Modifié le :"
+msgstr "تاريخ التعديل :"
+
+#: communications/templates/communications/homework_detail.html:241
+msgid "Envoyer mon rendu"
+msgstr "إرسال عملي المسلم"
+
+#: communications/utils.py:20 users/templates/users/profil.html:68
+#: users/views.py:452
+msgid "Proviseur"
+msgstr "المدير"
+
+#: communications/utils.py:22 templates/sidemenu.html:68 users/views.py:454
+msgid "CPE"
+msgstr "مستشار التربية (CPE)"
+
+#: communications/utils.py:23 documents/models.py:60
+#: documents/templates/documents/upload_document.html:115
+msgid "Administratif"
+msgstr "إداري"
+
+#: communications/utils.py:24 users/templates/users/profil.html:67
+msgid "Parent"
+msgstr "ولي أمر"
+
+#: communications/utils.py:294
+msgid "Aucun message"
+msgstr "لا توجد رسائل"
+
+#: communications/utils.py:506
+msgid "Tout le personnel"
+msgstr "جميع الموظفين"
+
+#: communications/utils.py:507
+msgid "Tous les professeurs"
+msgstr "جميع الأساتذة"
+
+#: communications/utils.py:508
+msgid "Administration"
+msgstr "الإدارة"
+
+#: communications/utils.py:632
+msgid " Classes"
+msgstr " أقسام"
+
+#: communications/utils.py:634
+msgid " Classe"
+msgstr " قسم"
+
+#: communications/utils.py:640
+msgid " Élèves"
+msgstr " تلاميذ"
+
+#: communications/utils.py:642
+msgid " Élève"
+msgstr " تلميذ"
+
+#: communications/utils.py:646
+#, python-brace-format
+msgid "Groupes: {text_groupe}"
+msgstr "المجموعات: {text_groupe}"
+
+#: communications/utils.py:652
+msgid " Membres du personnel"
+msgstr " أعضاء الطاقم"
+#: communications/utils.py:654
+msgid " Membre du personnel"
+msgstr " عضو في الطاقم"
+
+#: communications/utils.py:699
+msgid "Cette annonce n'est pas un devoir."
+msgstr "هذا الإعلان ليس واجباً منزلياً."
+
+#: communications/utils.py:721
+msgid "Vous n'êtes pas destinataire de ce devoir."
+msgstr "لست من مستلمي هذا الواجب."
+
+#: communications/utils.py:737
+msgid "Accès non autorisé à cette page de devoir."
+msgstr "وصول غير مصرح به إلى صفحة الواجب هذه."
+
+#: communications/utils.py:746
+msgid "Ce devoir ne nécessite pas de rendu."
+msgstr "هذا الواجب لا يتطلب تسليماً."
+
+#: communications/views.py:148 communications/views.py:207
+msgid "Accès refusé"
+msgstr "تم رفض الوصول"
+
+#: communications/views.py:181
+msgid "Conversation introuvable"
+msgstr "المحادثة غير موجودة"
+
+#: communications/views.py:197
+msgid "Message vide"
+msgstr "رسالة فارغة"
+
+#: communications/views.py:280
+msgid "Impossible de créer la conversation."
+msgstr "تعذر إنشاء المحادثة."
+
+#: communications/views.py:393 communications/views.py:539
+msgid "Ecole désactivé."
+msgstr "المدرسة معطلة."
+
+#: communications/views.py:395 communications/views.py:541
+msgid "Ecole introuvable."
+msgstr "المدرسة غير موجودة."
+
+#: communications/views.py:401
+msgid "L'année n'est pas à l'état d'enregistrement, en cours ou fini."
+msgstr "السنة ليست في حالة التسجيل، أو السير العادي، أو المنتهية."
+
+#: communications/views.py:403 communications/views.py:543
+msgid "Impossible de trouver l'année."
+msgstr "تعذر العثور على السنة."
+
+#: communications/views.py:501 communications/views.py:503 grades/views.py:324
+#: grades/views.py:369
+msgid "Non autorisé."
+msgstr "غير مصرح به."
+
+#: communications/views.py:509
+msgid "Aucun destinataire sélectionné."
+msgstr "لم يتم تحديد أي مستلم."
+
+#: communications/views.py:547
+msgid "L'année n'est pas à l'état en cours ou fini."
+msgstr "السنة ليست في حالة السير العادي أو المنتهية."
+
+#: communications/views.py:554
+msgid "Annonce envoyée avec succès."
+msgstr "تم إرسال الإعلان بنجاح."
+
+#: communications/views.py:573
+msgid "Le parent ne peut pas afficher l'annonce comme lu."
+msgstr "لا يمكن لولي الأمر عرض الإعلان كأنه مقروء."
+
+#: communications/views.py:592
+msgid "Annonce introuvable."
+msgstr "الإعلان غير موجود."
+
+#: communications/views.py:628 grades/templates/grades/grades_dashboard.html:57
+msgid "Action non autorisée."
+msgstr "إجراء غير مصرح به."
+
+#: communications/views.py:631
+msgid "Ce devoir ne nécessite aucun rendu."
+msgstr "هذا الواجب لا يتطلب أي تسليم."
+
+#: communications/views.py:656
+#, python-brace-format
+msgid "Une erreur est survenue : {error}"
+msgstr "حدث خطأ ما : {error}"
+
+#: documents/models.py:39
+msgid "Publié"
+msgstr "منشور"
+
+#: documents/models.py:52
+#, python-brace-format
+msgid "Bulletin - {student} - {term}"
+msgstr "كشف النقاط - {student} - {term}"
+
+#: documents/models.py:61
+#: documents/templates/documents/upload_document.html:116
+msgid "Certificat de scolarité"
+msgstr "شهادة مدرسية"
+
+#: documents/models.py:62
+#: documents/templates/documents/upload_document.html:117
+msgid "Sanction / Discipline"
+msgstr "عقوبة / انضباط"
+
+#: documents/models.py:63
+#: documents/templates/documents/upload_document.html:118
+msgid "Médical"
+msgstr "طبي"
+
+#: documents/models.py:64
+#: documents/templates/documents/upload_document.html:119
+msgid "Autre"
+msgstr "آخر"
+
+#: documents/models.py:81
+#: documents/templates/documents/upload_document.html:105
+msgid "Titre du document"
+msgstr "عنوان المستند"
+
+#: documents/templates/documents/manage_report_cards.html:4
+msgid "Gestion des Bulletins"
+msgstr "إدارة كشوف النقاط"
+
+#: documents/templates/documents/manage_report_cards.html:9
+#: schools/templates/schools/exception_management.html:28
+#: users/templates/users/profil.html:130
+msgid "Traitement..."
+msgstr "جاري المعالجة..."
+
+#: documents/templates/documents/manage_report_cards.html:43
+#, python-format
+msgid ""
+"Vous gérez actuellement les bulletins du <strong "
+"class=\"uppercase\">%(term_type)s %(term_counter)s</strong> pour l'année "
+"%(year_name)s."
+msgstr ""
+"أنت تدير حالياً كشوف النقاط الخاصة بـ <strong "
+"class=\"uppercase\">%(term_type)s %(term_counter)s</strong> لسنة "
+"%(year_name)s."
+
+#: documents/templates/documents/manage_report_cards.html:64
+msgid "Bulletins :"
+msgstr "كشوف النقاط :"
+
+#: documents/templates/documents/manage_report_cards.html:67
+msgid "Gestion des bulletins officiels pour la classe de"
+msgstr "إدارة كشوف النقاط الرسمية لقسم"
+
+#: documents/templates/documents/manage_report_cards.html:94
+msgid "Actions groupées"
+msgstr "الإجراءات الجماعية"
+
+#: documents/templates/documents/manage_report_cards.html:107
+#: documents/templates/documents/manage_report_cards.html:114
+msgid "Générer tous les bulletins"
+msgstr "توليد جميع كشوف النقاط"
+
+#: documents/templates/documents/manage_report_cards.html:123
+msgid "Écrase les bulletins existants."
+msgstr "سيهيمن على كشوف النقاط الموجودة ويستبدلها."
+
+#: documents/templates/documents/manage_report_cards.html:129
+msgid "Visibilité Élèves :"
+msgstr "رؤية التلاميذ :"
+
+#: documents/templates/documents/manage_report_cards.html:136
+msgid "Tout Publier"
+msgstr "نشر الكل"
+
+#: documents/templates/documents/manage_report_cards.html:145
+msgid "Tout Masquer"
+msgstr "إخفاء الكل"
+
+#: documents/templates/documents/manage_report_cards.html:162
+msgid "État du Bulletin"
+msgstr "حالة كشف النقاط"
+
+#: documents/templates/documents/manage_report_cards.html:165
+msgid "Visibilité"
+msgstr "قابلية الرؤية"
+
+#: documents/templates/documents/manage_report_cards.html:168
+msgid "Dernière MAJ"
+msgstr "آخر تحديث"
+
+#: documents/templates/documents/manage_report_cards.html:205
+msgid "Généré"
+msgstr "مُولّد"
+
+#: documents/templates/documents/manage_report_cards.html:209
+msgid "En attente"
+msgstr "قيد الانتظار"
+
+#: documents/templates/documents/manage_report_cards.html:220
+msgid "Visible"
+msgstr "مرئي"
+
+#: documents/templates/documents/manage_report_cards.html:224
+msgid "Généré mais masqué"
+msgstr "مُولّد ولكن مخفي"
+
+#: documents/templates/documents/manage_report_cards.html:226
+msgid "Masqué"
+msgstr "مخفي"
+
+#: documents/templates/documents/manage_report_cards.html:251
+msgid "Télécharger le PDF"
+msgstr "تحميل ملف PDF"
+
+#: documents/templates/documents/manage_report_cards.html:256
+msgid "Fichier introuvable"
+msgstr "الملف غير موجود"
+
+#: documents/templates/documents/manage_report_cards.html:262
+msgid "Régénérer (Mettre à jour)"
+msgstr "إعادة التوليد (تحديث)"
+
+#: documents/templates/documents/manage_report_cards.html:267
+msgid "Utiliser \"Générer Tout\""
+msgstr "استخدم \"توليد الكل\""
+
+#: documents/templates/documents/manage_report_cards.html:275
+msgid "Aucun élève trouvé dans cette classe pour cette année scolaire."
+msgstr "لم يتم العثور على أي تلميذ في هذا القسم لهذه السنة الدراسية."
+
+#: documents/templates/documents/manage_report_cards.html:302
+msgid "Confirmer la génération"
+msgstr "تأكيد التوليد"
+
+#: documents/templates/documents/manage_report_cards.html:306
+msgid "Vous êtes sur le point de générer les bulletins pour toute la classe."
+msgstr "أنت على وشك توليد كشوف النقاط لجميع أفراد القسم."
+
+#: documents/templates/documents/manage_report_cards.html:308
+msgid "Attention :"
+msgstr "تنبيه :"
+
+#: documents/templates/documents/manage_report_cards.html:308
+msgid ""
+"Cela écrasera les bulletins existants pour ce trimestre. Êtes-vous sûr de "
+"vouloir continuer ?"
+msgstr ""
+"سيؤدي ذلك إلى استبدال كشوف النقاط الموجودة لهذا الفصل. هل أنت متأكد من "
+"المتابعة؟"
+
+#: documents/templates/documents/manage_report_cards.html:317
+msgid "Oui, générer"
+msgstr "نعم، توليد"
+
+#: documents/templates/documents/report_card_pdf.html:6
+msgid "Bulletin"
+msgstr "كشف النقاط"
+
+#: documents/templates/documents/report_card_pdf.html:165
+msgid "Bulletin Scolaire"
+msgstr "كشف النقاط المدرسي"
+#: documents/templates/documents/report_card_pdf.html:185
+msgid "Prof. Principal :"
+msgstr "الأستاذ الرئيسي :"
+
+#: documents/templates/documents/report_card_pdf.html:189
+msgid "Sexe :"
+msgstr "الجنس :"
+
+#: documents/templates/documents/report_card_pdf.html:192
+msgid "Né(e) le :"
+msgstr "تاريخ الولادة :"
+
+#: documents/templates/documents/report_card_pdf.html:198
+msgid "Matricule :"
+msgstr "رقم التسجيل :"
+
+#: documents/templates/documents/report_card_pdf.html:204
+msgid "Adresse :"
+msgstr "العنوان :"
+
+#: documents/templates/documents/report_card_pdf.html:222
+msgid "Matière"
+msgstr "المادة"
+
+#: documents/templates/documents/report_card_pdf.html:223
+msgid "Enseignant"
+msgstr "الأستاذ"
+
+#: documents/templates/documents/report_card_pdf.html:224
+#: documents/templates/documents/report_card_pdf.html:225
+#: documents/templates/documents/report_card_pdf.html:226
+msgid "Moy."
+msgstr "المعدل"
+
+#: documents/templates/documents/report_card_pdf.html:225
+msgid "Princ."
+msgstr "رئيسي"
+
+#: documents/templates/documents/report_card_pdf.html:227
+msgid "Min / Max"
+msgstr "الأدنى / الأقصى"
+
+#: documents/templates/documents/report_card_pdf.html:228
+msgid "Appréciation"
+msgstr "التقدير"
+
+#: documents/templates/documents/report_card_pdf.html:251
+msgid "RÉSULTATS GLOBAUX"
+msgstr "النتائج العامة"
+
+#: documents/templates/documents/report_card_pdf.html:254
+msgid "Moyenne Générale :"
+msgstr "المعدل العام :"
+
+#: documents/templates/documents/report_card_pdf.html:259
+msgid "Moyenne Classe :"
+msgstr "معدل القسم :"
+
+#: documents/templates/documents/report_card_pdf.html:265
+msgid "MENTION :"
+msgstr "التقدير :"
+
+#: documents/templates/documents/report_card_pdf.html:273
+msgid "VIE SCOLAIRE"
+msgstr "الحياة المدرسية"
+
+#: documents/templates/documents/report_card_pdf.html:276
+msgid "Absences totales :"
+msgstr "إجمالي الغيابات :"
+
+#: documents/templates/documents/report_card_pdf.html:280
+msgid "dont non justifiées :"
+msgstr "منها غير المبررة :"
+
+#: documents/templates/documents/report_card_pdf.html:285
+msgid "Retards totaux :"
+msgstr "إجمالي التأخرات :"
+
+#: documents/templates/documents/report_card_pdf.html:289
+msgid "dont non justifiés :"
+msgstr "منها غير المبررة :"
+
+#: documents/templates/documents/report_card_pdf.html:298
+msgid "AVIS DU CONSEIL DE CLASSE / APPRÉCIATION GÉNÉRALE :"
+msgstr "رأي مجلس القسم / التقدير العام :"
+
+#: documents/templates/documents/report_card_pdf.html:305
+msgid "Le Professeur Principal"
+msgstr "الأستاذ الرئيسي"
+
+#: documents/templates/documents/report_card_pdf.html:309
+msgid "Le Chef d'Établissement"
+msgstr "مدير المؤسسة"
+
+#: documents/templates/documents/student_documents.html:4
+msgid "Mes Documents"
+msgstr "مستنداتي"
+
+#: documents/templates/documents/student_documents.html:12
+msgid "Espace Documents"
+msgstr "فضاء المستندات"
+
+#: documents/templates/documents/student_documents.html:15
+msgid "Dossier numérique de"
+msgstr "الملف الرقمي لـ"
+
+#: documents/templates/documents/student_documents.html:18
+msgid "Aucune classe"
+msgstr "لا يوجد قسم"
+
+#: documents/templates/documents/student_documents.html:28
+msgid "Bulletins Officiels"
+msgstr "كشوف النقاط الرسمية"
+
+#: documents/templates/documents/student_documents.html:53
+msgid "Publié le"
+msgstr "نُشر في"
+
+#: documents/templates/documents/student_documents.html:59
+msgid "Voir le bulletin"
+msgstr "عرض كشف النقاط"
+
+#: documents/templates/documents/student_documents.html:70
+msgid "Aucun bulletin disponible."
+msgstr "لا توجد أي كشوف نقاط متاحة."
+
+#: documents/templates/documents/student_documents.html:80
+msgid "Documents Administratifs & Divers"
+msgstr "المستندات الإدارية والمتنوعة"
+
+#: documents/templates/documents/student_documents.html:110
+msgid "Par :"
+msgstr "بواسطة :"
+
+#: documents/templates/documents/student_documents.html:112
+msgid "Par : Administration"
+msgstr "بواسطة : الإدارة"
+
+#: documents/templates/documents/student_documents.html:122
+msgid "Ouvrir"
+msgstr "فتح"
+
+#: documents/templates/documents/student_documents.html:133
+msgid "Aucun document administratif disponible."
+msgstr "لا توجد مستندات إدارية متاحة."
+
+#: documents/templates/documents/teacher_main_classes.html:4
+#: documents/templates/documents/teacher_main_classes.html:11
+msgid "Mes Classes Principales"
+msgstr "أقسامي الرئيسية"
+
+#: documents/templates/documents/teacher_main_classes.html:12
+msgid "Année scolaire en cours"
+msgstr "السنة الدراسية الحالية"
+
+#: documents/templates/documents/teacher_main_classes.html:25
+msgid "Élèves inscrits"
+msgstr "التلاميذ المسجلون"
+
+#: documents/templates/documents/teacher_main_classes.html:32
+msgid "en cours"
+msgstr "جارٍ"
+
+#: documents/templates/documents/teacher_main_classes.html:36
+msgid "Clôturé"
+msgstr "مغلق"
+
+#: documents/templates/documents/teacher_main_classes.html:49
+#: users/templates/users/manage_users.html:240
+msgid "Nom"
+msgstr "النسب"
+
+#: documents/templates/documents/teacher_main_classes.html:52
+#: users/templates/users/manage_users.html:234
+msgid "Prénom"
+msgstr "الاسم الشخصي"
+
+#: documents/templates/documents/teacher_main_classes.html:69
+#: grades/templates/grades/appreciations_dashboard.html:134
+msgid "Aucun élève dans cette classe."
+msgstr "لا يوجد أي تلميذ في هذا القسم."
+
+#: documents/templates/documents/teacher_main_classes.html:84
+msgid "Gérer les bulletins"
+msgstr "إدارة كشوف النقاط"
+
+#: documents/templates/documents/teacher_main_classes.html:88
+msgid "Aucun trimestre actif"
+msgstr "لا توجد أية فصول نشطة"
+
+#: documents/templates/documents/teacher_main_classes.html:99
+msgid "Vous n'avez pas de classe principale assignée pour le moment."
+msgstr "ليس لديك أي قسم رئيسي معین في الوقت الحالي."
+
+#: documents/templates/documents/upload_document.html:4
+msgid "Déposer un Document"
+msgstr "إيداع مستند"
+
+#: documents/templates/documents/upload_document.html:13
+msgid "Déposer un document"
+msgstr "إيداع مستند"
+
+#: documents/templates/documents/upload_document.html:16
+msgid "Ajout au dossier numérique de l'élève."
+msgstr "إضافة إلى الملف الرقمي للتلميذ."
+
+#: documents/templates/documents/upload_document.html:35
+#: documents/templates/documents/upload_document.html:52
+msgid "-- Rechercher un élève --"
+msgstr "-- البحث عن تلميذ --"
+
+#: documents/templates/documents/upload_document.html:36
+#: documents/templates/documents/upload_document.html:98
+#: grades/templates/grades/appreciations_dashboard.html:28
+#: grades/templates/grades/appreciations_dashboard.html:234
+msgid "Aucun élève trouvé."
+msgstr "لم يتم العثور على أي تلميذ."
+
+#: documents/templates/documents/upload_document.html:44
+msgid "Élève concerné"
+msgstr "التلميذ المعني"
+
+#: documents/templates/documents/upload_document.html:65
+msgid "Nom, Prénom ou Classe..."
+msgstr "الاسم، اللقب أو القسم..."
+
+#: documents/templates/documents/upload_document.html:107
+msgid "Ex: Certificat de scolarité 2024"
+msgstr "مثال: شهادة مدرسية 2024"
+
+#: documents/templates/documents/upload_document.html:112
+msgid "Catégorie"
+msgstr "الفئة"
+
+#: documents/templates/documents/upload_document.html:124
+msgid "Fichier PDF"
+msgstr "ملف PDF"
+
+#: documents/templates/documents/upload_document.html:130
+msgid "Cliquez pour sélectionner"
+msgstr "انقر للاختيار"
+
+#: documents/templates/documents/upload_document.html:132
+msgid "PDF uniquement (Max 10MB)"
+msgstr "ملفات PDF فقط (الحد الأقصى 10 ميغابايت)"
+#: documents/templates/documents/upload_document.html:142
+msgid "Déposer le document"
+msgstr "إيداع المستند"
+
+#: documents/utils.py:115
+msgid "Non défini"
+msgstr "غير محدد"
+
+#: documents/utils.py:145 grades/utils.py:306
+#, python-brace-format
+msgid "Trimestre {counter}"
+msgstr "الفصل {counter}"
+
+#: documents/views.py:41
+msgid "WeasyPrint n'est pas installé."
+msgstr "مكتبة WeasyPrint غير مثبتة."
+
+#: documents/views.py:46
+msgid "Impossible de récupérer les données (élève non inscrit ?)"
+msgstr "تعذر استرداد البيانات (هل التلميذ غير مسجل؟)"
+
+#: documents/views.py:58
+#, python-brace-format
+msgid "Erreur WeasyPrint : {e}"
+msgstr "خطأ في WeasyPrint : {e}"
+
+#: documents/views.py:125
+#, python-brace-format
+msgid ""
+"Redirection : Vous tentiez d'accéder à une archive ({year}). Vous avez été "
+"redirigé vers l'année en cours."
+msgstr ""
+"إعادة توجيه: كنت تحاول الوصول إلى أرشيف ({year}). تم توجيهك إلى السنة الحالية."
+
+#: documents/views.py:160
+msgid "Le trimestre n'est pas terminé. Impossible de générer les bulletins."
+msgstr "الفصل لم ينتهِ بعد. يتعذر توليد كشوف النقاط."
+
+#: documents/views.py:167
+#, python-brace-format
+msgid "{count} bulletins générés avec succès."
+msgstr "تم توليد {count} كشف نقاط بنجاح."
+
+#: documents/views.py:180
+msgid "publiés"
+msgstr "منشورة"
+
+#: documents/views.py:180
+msgid "masqués"
+msgstr "مخفية"
+
+#: documents/views.py:181
+#, python-brace-format
+msgid "Les bulletins ont été {status_msg} pour les élèves."
+msgstr "لقد أصبحت كشوف النقاط {status_msg} بالنسبة للتلاميذ."
+
+#: documents/views.py:223
+msgid "Impossible de régénérer : Le trimestre n'est pas clôturé."
+msgstr "تعذر إعادة التوليد: الفصل غير مغلق."
+
+#: documents/views.py:228
+#, python-brace-format
+msgid "Bulletin de {student} mis à jour."
+msgstr "تم تحديث كشف نقاط {student}."
+
+#: documents/views.py:230
+#, python-brace-format
+msgid "Erreur : {msg}"
+msgstr "خطأ : {msg}"
+
+#: documents/views.py:268
+msgid "Erreur : Votre profil staff est incomplet."
+msgstr "خطأ : ملفك الشخصي كموظف غير مكتمل."
+
+#: documents/views.py:281
+#, python-brace-format
+msgid "Document ajouté avec succès pour {student}."
+msgstr "تمت إضافة المستند بنجاح لـ {student}."
+
+#: documents/views.py:284
+msgid "Élève introuvable ou ne faisant pas partie de votre établissement."
+msgstr "التلميذ غير موجود أو لا ينتمي إلى مؤسستك."
+
+#: documents/views.py:286
+msgid "Veuillez remplir tous les champs."
+msgstr "الرجاء ملء جميع الحقول."
+
+#: documents/views.py:360
+msgid "Le fichier physique est introuvable."
+msgstr "الملف الفعلي غير موجود."
+
+#: documents/views.py:369
+msgid "Erreur de lecture du fichier."
+msgstr "خطأ في قراءة الملف."
+
+#: documents/views.py:485
+msgid "Le fichier n'existe pas."
+msgstr "الملف غير موجود."
+
+#: documents/views.py:524 schools/views.py:901
+msgid "Aucune école associée à votre compte."
+msgstr "لا توجد أي مدرسة مرتبطة بحسابك."
+
+#: documents/views.py:546
+msgid "Profil enseignant introuvable."
+msgstr "الملف الشخصي للأستاذ غير موجود."
+
+#: grades/models.py:19
+msgid "Est une note principale"
+msgstr "هي علامة رئيسية"
+
+#: grades/models.py:37
+msgid "[PRINCIPAL]"
+msgstr "[رئيسي]"
+
+#: grades/models.py:91
+#, python-brace-format
+msgid "Appréciation Globale pour {student} ({term_year})"
+msgstr "التقدير العام لـ {student} ({term_year})"
+
+#: grades/models.py:98
+msgid "Assez Bien"
+msgstr "قريب من الجيد"
+
+#: grades/models.py:99
+msgid "Bien"
+msgstr "جيد"
+
+#: grades/models.py:100
+msgid "Très Bien"
+msgstr "جيد جداً"
+
+#: grades/models.py:101
+msgid "Excellent"
+msgstr "ممتاز"
+
+#: grades/models.py:102
+msgid "Félicitations"
+msgstr "تهانينا"
+
+#: grades/models.py:103
+msgid "Encouragements"
+msgstr "تشجيعات"
+
+#: grades/models.py:104
+msgid "Avertissement Travail"
+msgstr "إنذار في العمل"
+
+#: grades/models.py:105
+msgid "Avertissement Conduite"
+msgstr "إنذار في السلوك"
+
+#: grades/templates/grades/appreciations_dashboard.html:4
+#: grades/templates/grades/appreciations_dashboard.html:43
+msgid "Saisie des Appréciations"
+msgstr "إدخال التقديرات"
+
+#: grades/templates/grades/appreciations_dashboard.html:23
+#, python-brace-format
+msgid "Erreur serveur ({status})"
+msgstr "خطأ في الخادم ({status})"
+
+#: grades/templates/grades/appreciations_dashboard.html:24
+#: scheduling/templates/scheduling/schedul_management.html:33
+#: scheduling/templates/scheduling/view_schedule.html:33
+#: scheduling/templates/scheduling/view_teacher_schedule.html:34
+msgid "Erreur de connexion réseau."
+msgstr "خطأ في اتصال الشبكة."
+
+#: grades/templates/grades/appreciations_dashboard.html:25
+msgid "Trimestre clos"
+msgstr "الفصل مغلق"
+
+#: grades/templates/grades/appreciations_dashboard.html:29
+#: grades/templates/grades/appreciations_dashboard.html:107
+msgid "Mention"
+msgstr "الميزة"
+
+#: grades/templates/grades/appreciations_dashboard.html:30
+#: grades/templates/grades/appreciations_dashboard.html:111
+msgid "-- Aucune --"
+msgstr "-- لا توجد --"
+
+#: grades/templates/grades/appreciations_dashboard.html:31
+#: grades/templates/grades/appreciations_dashboard.html:120
+msgid "Appréciation Globale"
+msgstr "التقدير العام"
+
+#: grades/templates/grades/appreciations_dashboard.html:32
+msgid "Appréciation..."
+msgstr "التقدير..."
+
+#: grades/templates/grades/appreciations_dashboard.html:33
+msgid "Action non autorisée (Mode Lecture Seule)."
+msgstr "إجراء غير مسموح به (وضع القراءة فقط)."
+
+#: grades/templates/grades/appreciations_dashboard.html:34
+msgid "Enregistré avec succès !"
+msgstr "تم الحفظ بنجاح !"
+
+#: grades/templates/grades/appreciations_dashboard.html:35
+msgid "Enregistré"
+msgstr "تم الحفظ"
+
+#: grades/templates/grades/appreciations_dashboard.html:43
+msgid "Consultation des Appréciations"
+msgstr "اطلاع على التقديرات"
+
+#: grades/templates/grades/appreciations_dashboard.html:61
+msgid "Appréciations Globales"
+msgstr "التقديرات العامة"
+
+#: grades/templates/grades/appreciations_dashboard.html:73
+msgid "Synthèse du Bulletin"
+msgstr "ملخص كشف النقاط"
+
+#: grades/templates/grades/appreciations_dashboard.html:87
+#: grades/templates/grades/appreciations_dashboard.html:201
+msgid "Clos"
+msgstr "مغلق"
+
+#: grades/templates/grades/appreciations_dashboard.html:125
+msgid "Synthèse générale sur le travail et le comportement..."
+msgstr "ملخص عام حول العمل والسلوك..."
+
+#: grades/templates/grades/appreciations_dashboard.html:164
+msgid "Appréciations par Matière"
+msgstr "التقديرات حسب المادة"
+
+#: grades/templates/grades/appreciations_dashboard.html:169
+msgid "Aucune matière assignée pour cette année."
+msgstr "لا توجد أي مادة معينة لهذه السنة."
+
+#: grades/templates/grades/appreciations_dashboard.html:225
+msgid "Appréciation pour"
+msgstr "التقدير الخاص بـ"
+
+#: grades/templates/grades/grades_dashboard.html:4
+#: grades/templates/grades/grades_dashboard.html:20
+msgid "Gestion des Évaluations"
+msgstr "إدارة التقييمات"
+#: grades/templates/grades/grades_dashboard.html:40
+msgid "Erreur critique : Token CSRF introuvable."
+msgstr "خطأ حرج: رمز الحماية ضد تزوير الطلبات (CSRF) غير موجود."
+
+#: grades/templates/grades/grades_dashboard.html:41
+msgid "Accès refusé. Vérifiez vos droits ou rafraîchissez la page."
+msgstr "تم رفض الوصول. تحقق من صلاحياتك أو قم بتحديث الصفحة."
+
+#: grades/templates/grades/grades_dashboard.html:42
+msgid "Erreur serveur."
+msgstr "خطأ في الخادم."
+
+#: grades/templates/grades/grades_dashboard.html:44
+#: scheduling/templates/scheduling/schedul_management.html:24
+msgid "Erreur critique au chargement des données."
+msgstr "خطأ حرج أثناء تحميل البيانات."
+
+#: grades/templates/grades/grades_dashboard.html:45
+#: grades/templates/grades/grades_dashboard.html:192
+msgid "Voir / Modifier"
+msgstr "عرض / تعديل"
+
+#: grades/templates/grades/grades_dashboard.html:46
+msgid "Voir les notes"
+msgstr "عرض العلامات"
+
+#: grades/templates/grades/grades_dashboard.html:47
+#: grades/templates/grades/grades_dashboard.html:60
+#: grades/templates/grades/grades_dashboard.html:194
+msgid "Supprimer l\\"
+msgstr "حذف l\\"
+
+#: grades/templates/grades/grades_dashboard.html:48
+msgid "Aucune moyenne à afficher."
+msgstr "لا توجد أي معدلات للعرض."
+
+#: grades/templates/grades/grades_dashboard.html:49
+#: grades/templates/grades/grades_dashboard.html:183
+msgid "Principale"
+msgstr "رئيسية"
+
+#: grades/templates/grades/grades_dashboard.html:50
+#: grades/templates/grades/grades_dashboard.html:187
+msgid "Coeff:"
+msgstr "المعامل:"
+
+#: grades/templates/grades/grades_dashboard.html:51
+#: grades/templates/grades/grades_dashboard.html:187
+msgid "Sur:"
+msgstr "على:"
+
+#: grades/templates/grades/grades_dashboard.html:52
+#: grades/templates/grades/grades_dashboard.html:200
+msgid "Aucune évaluation pour ce trimestre."
+msgstr "لا توجد أي تقييمات لهذا الفصل."
+
+#: grades/templates/grades/grades_dashboard.html:54
+msgid "Ajouter une Évaluation"
+msgstr "إضافة تقييم"
+
+#: grades/templates/grades/grades_dashboard.html:55
+#: schools/templates/schools/exception_management.html:20
+#: schools/templates/schools/exception_management.html:22
+#: schools/templates/schools/manage_years.html:18
+msgid "Modifier l\\"
+msgstr "تعديل l\\"
+
+#: grades/templates/grades/grades_dashboard.html:58
+msgid "Veuillez entrer un \\"
+msgstr "الرجاء إدخال \\"
+
+#: grades/templates/grades/grades_dashboard.html:59
+msgid "Certaines notes dépassent le maximum."
+msgstr "بعض العلامات تتجاوز الحد الأقصى."
+
+#: grades/templates/grades/grades_dashboard.html:61
+#, python-brace-format
+msgid ""
+"Êtes-vous sûr de vouloir supprimer <strong>{name}</strong> ?<br>Toutes les "
+"notes associées seront perdues."
+msgstr ""
+"هل أنت متأكد من رغبتك في حذف <strong>{name}</strong> ؟<br>ستضيع جميع "
+"العلامات المرتبطة به."
+
+#: grades/templates/grades/grades_dashboard.html:66
+msgid "Professeur Principal :"
+msgstr "الأستاذ الرئيسي :"
+
+#: grades/templates/grades/grades_dashboard.html:70
+msgid "Vous n'êtes professeur principal d'aucune classe pour cette année."
+msgstr "لست أستاذًا رئيسيًا لأي قسم لهذه السنة."
+
+#: grades/templates/grades/grades_dashboard.html:84
+#: grades/templates/grades/grades_dashboard.html:161
+msgid "Term"
+msgstr "الفصل"
+
+#: grades/templates/grades/grades_dashboard.html:91
+msgid "Moyenne Générale de la Classe :"
+msgstr "المعدل العام للقسم :"
+
+#: grades/templates/grades/grades_dashboard.html:97
+#: grades/templates/grades/grades_dashboard.html:205
+msgid "Afficher/Masquer les moyennes des élèves"
+msgstr "إظهار/إخفاء معدلات التلاميذ"
+
+#: grades/templates/grades/grades_dashboard.html:124
+msgid "Mes Matières"
+msgstr "موادي"
+
+#: grades/templates/grades/grades_dashboard.html:128
+msgid "Aucune matière ne vous est assignée pour cette année."
+msgstr "لم يتم تعيين أي مادة لك هذه السنة."
+
+#: grades/templates/grades/grades_dashboard.html:149
+msgid "Ajouter Évaluation"
+msgstr "إضافة تقييم"
+
+#: grades/templates/grades/grades_dashboard.html:168
+msgid "Moyenne de la classe (pour la Matière) :"
+msgstr "معدل القسم (للمادة) :"
+
+#: grades/templates/grades/grades_dashboard.html:191
+msgid "Voir/Modifier les notes"
+msgstr "عرض/تعديل العلامات"
+
+#: grades/templates/grades/grades_dashboard.html:241
+#: scheduling/templates/scheduling/schedul_management.html:254
+#: scheduling/templates/scheduling/view_schedule.html:176
+#: scheduling/templates/scheduling/view_teacher_schedule.html:197
+#: users/templates/users/manage_users.html:324
+msgid "Confirmation"
+msgstr "تأكيد"
+
+#: grades/templates/grades/grades_dashboard.html:252
+#: scheduling/templates/scheduling/schedul_management.html:267
+#: scheduling/templates/scheduling/schedul_management.html:290
+#: scheduling/templates/scheduling/view_schedule.html:187
+#: scheduling/templates/scheduling/view_teacher_schedule.html:208
+#: schools/templates/schools/manage_term.html:169
+#: subjects/templates/subjects/manage_subjects.html:153
+#: users/templates/users/manage_users.html:328
+msgid "Confirmer"
+msgstr "تأكيد"
+
+#: grades/templates/grades/grades_dashboard.html:276
+msgid "Ex: Examen Final"
+msgstr "مثال: الامتحان النهائي"
+
+#: grades/templates/grades/grades_dashboard.html:279
+msgid "Coefficient"
+msgstr "المعامل"
+
+#: grades/templates/grades/grades_dashboard.html:284
+msgid "Noté sur"
+msgstr "منقوط على"
+
+#: grades/templates/grades/grades_dashboard.html:292
+msgid "Note Principale"
+msgstr "علامة رئيسية"
+
+#: grades/templates/grades/grades_dashboard.html:298
+msgid "Notes des élèves"
+msgstr "علامات التلاميذ"
+
+#: grades/templates/grades/student_grades.html:4
+msgid "Mes Notes"
+msgstr "علاماتي"
+
+#: grades/templates/grades/student_grades.html:12
+msgid "Relevé de Notes"
+msgstr "كشف النقاط"
+
+#: grades/templates/grades/student_grades.html:67
+msgid "Synthèse du"
+msgstr "ملخص"
+
+#: grades/templates/grades/student_grades.html:77
+#: users/templates/users/dashboard_page.html:203
+msgid "Moyenne Générale"
+msgstr "المعدل العام"
+
+#: grades/templates/grades/student_grades.html:89
+msgid "Moyenne de la Classe"
+msgstr "معدل القسم"
+
+#: grades/templates/grades/student_grades.html:115
+#: users/templates/users/dashboard_page.html:341
+msgid "Moyenne"
+msgstr "المعدل"
+
+#: grades/templates/grades/student_grades.html:133
+msgid "Coeff."
+msgstr "المعامل"
+
+#: grades/templates/grades/student_grades.html:135
+msgid "Note"
+msgstr "العلامة"
+
+#: grades/templates/grades/student_grades.html:146
+msgid "Note Principale (Examen/Projet)"
+msgstr "علامة رئيسية (امتحان/مشروع)"
+
+#: grades/templates/grades/student_grades.html:160
+msgid "ABS"
+msgstr "غائب (ABS)"
+
+#: grades/templates/grades/student_grades.html:176
+msgid "Aucune note pour le moment."
+msgstr "لا توجد علامات في الوقت الحالي."
+
+#: grades/utils.py:308
+#, python-brace-format
+msgid "Semestre {counter}"
+msgstr "السداسي {counter}"
+
+#: grades/utils.py:310
+#, python-brace-format
+msgid "Unique {counter}"
+msgstr "فترة مفردة {counter}"
+
+#: grades/views.py:203
+msgid "Aucune donnée trouvée pour ce contexte."
+msgstr "لم يتم العثور على أي بيانات لهذا السياق."
+
+#: grades/views.py:209 scheduling/views.py:225 scheduling/views.py:293
+#: scheduling/views.py:418 scheduling/views.py:517 scheduling/views.py:583
+#: scheduling/views.py:702 scheduling/views.py:788
+#, python-brace-format
+msgid "Erreur interne : {error}"
+msgstr "خطأ داخلي : {error}"
+
+#: grades/views.py:231
+msgid "Profil enseignant non trouvé."
+msgstr "الملف الشخصي للأستاذ غير موجود."
+
+#: grades/views.py:259
+msgid "Action impossible : ce trimestre est clôturé."
+msgstr "الإجراء متعذر: هذا الفصل مغلق."
+
+#: grades/views.py:262
+msgid "Le trimestre ne correspond pas au niveau de la classe."
+msgstr "الفصل لا يتطابق مع مستوى القسم."
+
+#: grades/views.py:265
+msgid "Matière non autorisée."
+msgstr "مادة غير مصرح بها."
+
+#: grades/views.py:276
+#, python-brace-format
+msgid "La note {grade_float} dépasse le maximum ({max_grade})."
+msgstr "العلامة {grade_float} تتجاوز الحد الأقصى ({max_grade})."
+#: grades/views.py:278
+#, python-brace-format
+msgid "Note invalide : {grade_val}"
+msgstr "علامة غير صالحة : {grade_val}"
+
+#: grades/views.py:305
+msgid "Évaluation créée."
+msgstr "تم إنشاء التقييم."
+
+#: grades/views.py:321 grades/views.py:366
+msgid "Trimestre clos."
+msgstr "الفصل مغلق."
+
+#: grades/views.py:333
+msgid "Note hors limite."
+msgstr "العلامة خارج الحد الأقصى."
+
+#: grades/views.py:335
+msgid "Note invalide."
+msgstr "علامة غير صالحة."
+
+#: grades/views.py:358
+msgid "Évaluation mise à jour."
+msgstr "تم تحديث التقييم."
+
+#: grades/views.py:372
+msgid "Évaluation supprimée."
+msgstr "تم حذف التقييم."
+
+#: grades/views.py:394
+msgid "Action inconnue."
+msgstr "إجراء غير معروف."
+
+#: grades/views.py:398
+#, python-brace-format
+msgid "Erreur interne: {error}"
+msgstr "خطأ داخلي: {error}"
+
+#: grades/views.py:429
+msgid "Aucune année scolaire active configurée pour votre école."
+msgstr "لا توجد سنة دراسية نشطة مهيأة لمدرستك."
+
+#: grades/views.py:437
+msgid "Vous n'êtes inscrit dans aucune classe pour cette année scolaire."
+msgstr "لست مسجلاً في أي قسم لهذه السنة الدراسية."
+
+#: grades/views.py:588
+msgid "Seuls les professeurs peuvent saisir des appréciations."
+msgstr "الأساتذة وحدهم يمكنهم إدخال التقديرات."
+
+#: grades/views.py:601
+msgid "Ce trimestre est clos. Modification impossible."
+msgstr "هذا الفصل مغلق. التعديل متعذر."
+
+#: grades/views.py:607
+msgid "Vous ne pouvez pas modifier les appréciations d'un autre professeur."
+msgstr "لا يمكنك تعديل تقديرات أستاذ آخر."
+
+#: grades/views.py:639
+#, python-brace-format
+msgid "{count_updated} appréciations enregistrées."
+msgstr "تم حفظ {count_updated} تقدير(ات)."
+
+#: scheduling/models.py:9
+msgid "Semaine Type"
+msgstr "الأسبوع النموذجي"
+
+#: scheduling/models.py:22
+#, python-brace-format
+msgid "Template {name} - {student_class} ({year})"
+msgstr "النموذج {name} - {student_class} ({year})"
+
+#: scheduling/models.py:28
+#: scheduling/templates/scheduling/schedul_management.html:38
+#: scheduling/templates/scheduling/schedul_management.html:176
+#: scheduling/templates/scheduling/view_schedule.html:90
+#: scheduling/templates/scheduling/view_teacher_schedule.html:89
+msgid "Lundi"
+msgstr "الإثنين"
+
+#: scheduling/models.py:28
+#: scheduling/templates/scheduling/schedul_management.html:39
+#: scheduling/templates/scheduling/schedul_management.html:177
+#: scheduling/templates/scheduling/view_schedule.html:91
+#: scheduling/templates/scheduling/view_teacher_schedule.html:90
+msgid "Mardi"
+msgstr "الثلاثاء"
+
+#: scheduling/models.py:28
+#: scheduling/templates/scheduling/schedul_management.html:40
+#: scheduling/templates/scheduling/schedul_management.html:178
+#: scheduling/templates/scheduling/view_schedule.html:92
+#: scheduling/templates/scheduling/view_teacher_schedule.html:91
+msgid "Mercredi"
+msgstr "الأربعاء"
+
+#: scheduling/models.py:28
+#: scheduling/templates/scheduling/schedul_management.html:41
+#: scheduling/templates/scheduling/schedul_management.html:179
+#: scheduling/templates/scheduling/view_schedule.html:93
+#: scheduling/templates/scheduling/view_teacher_schedule.html:92
+msgid "Jeudi"
+msgstr "الخميس"
+
+#: scheduling/models.py:28
+#: scheduling/templates/scheduling/schedul_management.html:42
+#: scheduling/templates/scheduling/schedul_management.html:180
+#: scheduling/templates/scheduling/view_schedule.html:94
+#: scheduling/templates/scheduling/view_teacher_schedule.html:93
+msgid "Vendredi"
+msgstr "الجمعة"
+
+#: scheduling/models.py:28
+#: scheduling/templates/scheduling/schedul_management.html:43
+#: scheduling/templates/scheduling/schedul_management.html:181
+#: scheduling/templates/scheduling/view_schedule.html:95
+#: scheduling/templates/scheduling/view_teacher_schedule.html:94
+msgid "Samedi"
+msgstr "السبت"
+
+#: scheduling/models.py:28
+#: scheduling/templates/scheduling/schedul_management.html:44
+#: scheduling/templates/scheduling/schedul_management.html:182
+#: scheduling/templates/scheduling/view_schedule.html:96
+#: scheduling/templates/scheduling/view_teacher_schedule.html:95
+msgid "Dimanche"
+msgstr "الأحد"
+
+#: scheduling/models.py:72
+#: scheduling/templates/scheduling/view_schedule.html:135
+#: scheduling/templates/scheduling/view_teacher_schedule.html:155
+#: subjects/templates/subjects/manage_subjects.html:41
+#: users/templates/users/manage_users.html:30
+msgid "Actif"
+msgstr "نشط"
+
+#: scheduling/models.py:73
+msgid "Cours annulé"
+msgstr "درس ملغى"
+
+#: scheduling/models.py:74
+msgid "Professeur absent"
+msgstr "أستاذ غائب"
+
+#: scheduling/models.py:116
+#, python-brace-format
+msgid "{teacher_subject} - {student_class} ({date}) [{self.status}]"
+msgstr "{teacher_subject} - {student_class} ({date}) [{self.status}]"
+
+#: scheduling/templates/scheduling/schedul_management.html:4
+#: scheduling/templates/scheduling/schedul_management.html:95
+msgid "Gestion du Planning :"
+msgstr "إدارة جدول التوقيت :"
+
+#: scheduling/templates/scheduling/schedul_management.html:25
+msgid "Horaires de l\\"
+msgstr "أوقات l\\"
+
+#: scheduling/templates/scheduling/schedul_management.html:26
+msgid "Exceptions horaires (pauses):"
+msgstr "الاستثناءات الزمنية (الاستراحات):"
+
+#: scheduling/templates/scheduling/schedul_management.html:27
+msgid "-- Sélectionnez Matière/Prof --"
+msgstr "-- اختر المادة/الأستاذ --"
+
+#: scheduling/templates/scheduling/schedul_management.html:28
+msgid "-- Sélectionnez une Salle --"
+msgstr "-- اختر قاعة --"
+
+#: scheduling/templates/scheduling/schedul_management.html:30
+#: scheduling/templates/scheduling/view_schedule.html:32
+#: scheduling/templates/scheduling/view_teacher_schedule.html:33
+#, python-brace-format
+msgid "Erreur serveur (Status {status})."
+msgstr "خطأ في الخادم (الحالة {status})."
+
+#: scheduling/templates/scheduling/schedul_management.html:31
+msgid "Opération échouée."
+msgstr "فشلت العملية."
+
+#: scheduling/templates/scheduling/schedul_management.html:32
+#: scheduling/templates/scheduling/view_schedule.html:34
+#: scheduling/templates/scheduling/view_teacher_schedule.html:35
+#, python-brace-format
+msgid "Erreur de connexion au serveur : {error}"
+msgstr "خطأ في الاتصال بالخادم : {error}"
+
+#: scheduling/templates/scheduling/schedul_management.html:34
+msgid "Total Hebdomadaire:"
+msgstr "المجموع الأسبوعي:"
+
+#: scheduling/templates/scheduling/schedul_management.html:35
+msgid "Veuillez d\\"
+msgstr "الرجاء d\\"
+
+#: scheduling/templates/scheduling/schedul_management.html:36
+msgid "Jour non travaillé"
+msgstr "يوم عطلة / لا عمل فيه"
+
+#: scheduling/templates/scheduling/schedul_management.html:46
+msgid "Jour inconnu"
+msgstr "يوم غير معروف"
+
+#: scheduling/templates/scheduling/schedul_management.html:47
+msgid "Matière ?"
+msgstr "المادة ؟"
+
+#: scheduling/templates/scheduling/schedul_management.html:48
+msgid "Prof ?"
+msgstr "الأستاذ ؟"
+
+#: scheduling/templates/scheduling/schedul_management.html:49
+msgid "Salle ?"
+msgstr "القاعة ؟"
+
+#: scheduling/templates/scheduling/schedul_management.html:50
+msgid "Prof/Matière Inactif"
+msgstr "الأستاذ/المادة غير نشط"
+
+#: scheduling/templates/scheduling/schedul_management.html:51
+msgid "Cette affectation professeur/matière n\\"
+msgstr "تعيين الأستاذ/المادة هذا n\\"
+
+#: scheduling/templates/scheduling/schedul_management.html:52
+msgid "Salle Inactive"
+msgstr "قاعة معطلة"
+
+#: scheduling/templates/scheduling/schedul_management.html:53
+msgid "Cette salle n\\"
+msgstr "هذه القاعة n\\"
+
+#: scheduling/templates/scheduling/schedul_management.html:54
+msgid "Supprimer ce cours"
+msgstr "حذف هذا الدرس"
+
+#: scheduling/templates/scheduling/schedul_management.html:56
+msgid "Confirmation Suppression"
+msgstr "تأكيد الحذف"
+
+#: scheduling/templates/scheduling/schedul_management.html:57
+msgid "Voulez-vous retirer ce cours du modèle de planning ?"
+msgstr "هل تريد إزالة هذا الدرس من نموذج جدول التوقيت؟"
+
+#: scheduling/templates/scheduling/schedul_management.html:58
+msgid "Veuillez remplir tous les champs (jour, début, fin, prof, salle)."
+msgstr "الرجاء ملء جميع الحقول (اليوم، البداية، النهاية، الأستاذ، القاعة)."
+
+#: scheduling/templates/scheduling/schedul_management.html:59
+msgid "L\\"
+msgstr "L\\"
+#: scheduling/templates/scheduling/schedul_management.html:60
+msgid "Ce créneau chevauche les bornes horaires de l\\"
+msgstr "هذا الفترة الزمنية تتداخل مع حدود التوقيت الخاصة بـ l\\"
+
+#: scheduling/templates/scheduling/schedul_management.html:61
+msgid ""
+"Conflit de classe: Ce créneau chevauche un autre cours déjà défini dans le "
+"modèle pour ce jour."
+msgstr ""
+"تعارض في القسم: تتداخل هذه الفترة الزمنية مع درس آخر محدد مسبقاً في النموذج "
+"لهذا اليوم."
+
+#: scheduling/templates/scheduling/schedul_management.html:63
+msgid "Nouveau Modèle"
+msgstr "نموذج جديد"
+
+#: scheduling/templates/scheduling/schedul_management.html:64
+msgid "Nom du modèle :"
+msgstr "اسم النموذج :"
+
+#: scheduling/templates/scheduling/schedul_management.html:65
+msgid "Enregistrer le Modèle"
+msgstr "حفظ النموذج"
+
+#: scheduling/templates/scheduling/schedul_management.html:66
+msgid "Le nom ne peut pas être vide."
+msgstr "لا يمكن ترك الاسم فارغاً."
+
+#: scheduling/templates/scheduling/schedul_management.html:68
+msgid "Le modèle de semaine est vide ou non sauvegardé."
+msgstr "نموذج الأسبوع فارغ أو غير محفوظ."
+
+#: scheduling/templates/scheduling/schedul_management.html:70
+msgid "Date de début (Lundi)"
+msgstr "تاريخ البدء (الإثنين)"
+
+#: scheduling/templates/scheduling/schedul_management.html:71
+msgid "Doit être un Lundi, dans l\\"
+msgstr "يجب أن يكون يوم الإثنين، في l\\"
+
+#: scheduling/templates/scheduling/schedul_management.html:72
+msgid "Date de fin (Dimanche)"
+msgstr "تاريخ النهاية (الأحد)"
+
+#: scheduling/templates/scheduling/schedul_management.html:73
+msgid "Doit être un Dimanche, dans l\\"
+msgstr "يجب أن يكون يوم الأحد، في l\\"
+
+#: scheduling/templates/scheduling/schedul_management.html:74
+#: scheduling/templates/scheduling/schedul_management.html:151
+msgid "Générer les Cours Réels"
+msgstr "توليد الدروس الفعلية"
+
+#: scheduling/templates/scheduling/schedul_management.html:75
+msgid "Les deux dates (début et fin) sont obligatoires."
+msgstr "كلا التاريخين (البداية والنهاية) إلزاميان."
+
+#: scheduling/templates/scheduling/schedul_management.html:76
+msgid "Les dates doivent être à l\\"
+msgstr "يجب أن تكون التواريخ في l\\"
+
+#: scheduling/templates/scheduling/schedul_management.html:77
+msgid "La date de début doit être un LUNDI."
+msgstr "يجب أن يكون تاريخ البدء يوم إثنين."
+
+#: scheduling/templates/scheduling/schedul_management.html:78
+msgid "La date de fin doit être un DIMANCHE."
+msgstr "يجب أن يكون تاريخ النهاية يوم أحد."
+
+#: scheduling/templates/scheduling/schedul_management.html:79
+#, python-brace-format
+msgid "La date de début tombe pendant : {type}."
+msgstr "يصادف تاريخ البدء خلال: {type}."
+
+#: scheduling/templates/scheduling/schedul_management.html:80
+msgid "Aucun cours à générer (tous tombent sur des jours d\\"
+msgstr "لا توجد دروس لتوليدها (جميعها تصادف أيام d\\"
+
+#: scheduling/templates/scheduling/schedul_management.html:82
+msgid "Génération en Masse"
+msgstr "التوليد الجماعي"
+
+#: scheduling/templates/scheduling/schedul_management.html:83
+#, python-brace-format
+msgid "Confirmez-vous la création de {count} cours réels du {start} au {end} ?"
+msgstr "هل تؤكد إنشاء {count} درساً فعلياً من {start} إلى {end}؟"
+
+#: scheduling/templates/scheduling/schedul_management.html:84
+#, python-brace-format
+msgid " ({count} cours ignorés car tombant sur des jours d\\"
+msgstr " ({count} درس تم تجاهله لأنه يصادف أيام d\\"
+
+#: scheduling/templates/scheduling/schedul_management.html:114
+msgid "1. Modèle de Semaine"
+msgstr "1. نموذج الأسبوع"
+
+#: scheduling/templates/scheduling/schedul_management.html:118
+msgid "Charger / Nouveau Modèle"
+msgstr "تحميل / نموذج جديد"
+
+#: scheduling/templates/scheduling/schedul_management.html:122
+msgid "-- Nouveau Modèle --"
+msgstr "-- نموذج جديد --"
+
+#: scheduling/templates/scheduling/schedul_management.html:132
+msgid "Enregistrer / Mettre à jour"
+msgstr "حفظ / تحديث"
+
+#: scheduling/templates/scheduling/schedul_management.html:141
+msgid "3. Génération"
+msgstr "3. التوليد"
+
+#: scheduling/templates/scheduling/schedul_management.html:144
+msgid ""
+"Utilisez le modèle de planning actuel pour <b>générer les cours réels</b> "
+"pour une ou plusieurs semaines."
+msgstr ""
+"استخدم نموذج جدول التوقيت الحالي لـ <b>توليد الدروس الفعلية</b> لأسبوع واحد أو "
+"أكثر."
+
+#: scheduling/templates/scheduling/schedul_management.html:161
+msgid "2. Ajouter un Cours au Modèle"
+msgstr "2. إضافة درس إلى النموذج"
+
+#: scheduling/templates/scheduling/schedul_management.html:167
+msgid "Chargement des informations horaires..."
+msgstr "جاري تحميل معلومات التوقيت..."
+
+#: scheduling/templates/scheduling/schedul_management.html:174
+msgid "Jour de la semaine"
+msgstr "يوم الأسبوع"
+
+#: scheduling/templates/scheduling/schedul_management.html:188
+msgid "Début (HH:MM)"
+msgstr "البداية (HH:MM)"
+
+#: scheduling/templates/scheduling/schedul_management.html:192
+msgid "Fin (HH:MM)"
+msgstr "النهاية (HH:MM)"
+
+#: scheduling/templates/scheduling/schedul_management.html:201
+msgid "Matière & Professeur"
+msgstr "المادة والأستاذ"
+
+#: scheduling/templates/scheduling/schedul_management.html:207
+msgid "Salle de Classe"
+msgstr "قاعة التدريس"
+
+#: scheduling/templates/scheduling/schedul_management.html:219
+msgid "Ajouter ce cours au modèle"
+msgstr "إضافة هذا الدرس إلى النموذج"
+
+#: scheduling/templates/scheduling/schedul_management.html:232
+msgid "Cours dans le Modèle Actuel"
+msgstr "الدروس في النموذج الحالي"
+
+#: scheduling/templates/scheduling/schedul_management.html:236
+msgid "Total:"
+msgstr "المجموع:"
+
+#: scheduling/templates/scheduling/schedul_management.html:242
+msgid ""
+"Ce modèle est vide. Ajoutez des cours en utilisant le formulaire ci-dessus."
+msgstr "هذا النموذج فارغ. أضف دروساً باستخدام النموذج أعلاه."
+
+#: scheduling/templates/scheduling/schedul_management.html:257
+msgid "Êtes-vous sûr ?"
+msgstr "هل أنت متأكد؟"
+
+#: scheduling/templates/scheduling/view_schedule.html:4
+msgid "Planning :"
+msgstr "جدول التوقيت :"
+
+#: scheduling/templates/scheduling/view_schedule.html:28
+#: scheduling/templates/scheduling/view_teacher_schedule.html:29
+msgid "Erreur critique: Impossible de lire les données du planning."
+msgstr "خطأ حرج: تعذر قراءة بيانات جدول التوقيت."
+
+#: scheduling/templates/scheduling/view_schedule.html:30
+#: scheduling/templates/scheduling/view_teacher_schedule.html:31
+#, python-brace-format
+msgid "Semaine du {date}"
+msgstr "أسبوع {date}"
+
+#: scheduling/templates/scheduling/view_schedule.html:31
+#: scheduling/templates/scheduling/view_schedule.html:68
+#: scheduling/templates/scheduling/view_teacher_schedule.html:32
+#: scheduling/templates/scheduling/view_teacher_schedule.html:68
+msgid "Semaine"
+msgstr "الأسبوع"
+
+#: scheduling/templates/scheduling/view_schedule.html:36
+#: scheduling/templates/scheduling/view_teacher_schedule.html:37
+msgid ""
+"Êtes-vous sûr de vouloir supprimer ce cours ?<br>Cette action est "
+"irréversible."
+msgstr "هل أنت متأكد من رغبتك في حذف هذا الدرس؟<br>هذا الإجراء لا رجعة فيه."
+
+#: scheduling/templates/scheduling/view_schedule.html:49
+msgid "Planning de la classe :"
+msgstr "جدول توقيت القسم :"
+
+#: scheduling/templates/scheduling/view_schedule.html:88
+#: scheduling/templates/scheduling/view_teacher_schedule.html:87
+msgid "Heure"
+msgstr "الوقت"
+
+#: scheduling/templates/scheduling/view_schedule.html:129
+msgid "Changer le statut du cours :"
+msgstr "تغيير حالة الدرس :"
+
+#: scheduling/templates/scheduling/view_schedule.html:140
+#: scheduling/templates/scheduling/view_teacher_schedule.html:160
+msgid "Prof. Absent"
+msgstr "الأستاذ غائب"
+
+#: scheduling/templates/scheduling/view_schedule.html:145
+#: scheduling/templates/scheduling/view_teacher_schedule.html:165
+msgid "Annulé"
+msgstr "ملغى"
+
+#: scheduling/templates/scheduling/view_schedule.html:155
+#: scheduling/templates/scheduling/view_teacher_schedule.html:176
+msgid "Supprimer ce cours définitivement"
+msgstr "حذف هذا الدرس نهائياً"
+
+#: scheduling/templates/scheduling/view_schedule.html:158
+#: scheduling/templates/scheduling/view_teacher_schedule.html:179
+msgid ""
+"Cette action est irréversible et supprimera le cours de la base de données."
+msgstr "هذا الإجراء لا رجعة فيه وسيؤدي إلى حذف الدرس من قاعدة البيانات."
+
+#: scheduling/templates/scheduling/view_teacher_schedule.html:4
+msgid "Mon Planning :"
+msgstr "جدول توقيتي :"
+
+#: scheduling/templates/scheduling/view_teacher_schedule.html:50
+msgid "Planning de :"
+msgstr "جدول توقيت :"
+
+#: scheduling/templates/scheduling/view_teacher_schedule.html:130
+msgid "Gérer ma présence :"
+msgstr "إدارة حضوري :"
+
+#: scheduling/templates/scheduling/view_teacher_schedule.html:136
+msgid "Présent (Actif)"
+msgstr "حاضر (نشط)"
+
+#: scheduling/templates/scheduling/view_teacher_schedule.html:141
+msgid "Déclarer Absent"
+msgstr "إعلان الغياب"
+
+#: scheduling/templates/scheduling/view_teacher_schedule.html:149
+msgid "Changer le statut du cours (Admin) :"
+msgstr "تغيير حالة الدرس (المشرف) :"
+
+#: scheduling/utils.py:40
+#, python-brace-format
+msgid "ID Prof/Matière {ts_id} invalide ou introuvable."
+msgstr "معرف الأستاذ/المادة {ts_id} غير صالح أو غير موجود."
+
+#: scheduling/utils.py:105
+msgid "Le cours est en dehors des dates de l'année scolaire."
+msgstr "الدرس خارج تواريخ السنة الدراسية."
+
+#: scheduling/utils.py:111
+#, python-brace-format
+msgid ""
+"Le cours ({start_time_naive}) dépasse les limites horaires ({year_min_time}-"
+"{year_max_time}) autorisées pour l'année."
+msgstr ""
+"الدرس ({start_time_naive}) يتجاوز الحدود الزمنية ({year_min_time}-"
+"{year_max_time}) المسموح بها لهذه السنة."
+
+#: scheduling/utils.py:116
+#, python-brace-format
+msgid "Erreur interne de validation d'heure : {e}"
+msgstr "خطأ داخلي في التحقق من صحة الوقت: {e}"
+
+#: scheduling/utils.py:136
+#, python-brace-format
+msgid "Le cours tombe pendant une période exceptionnelle ({type_date})."
+msgstr "يصادف الدرس فترة استثنائية ({type_date})."
+
+#: scheduling/utils.py:140
+#, python-brace-format
+msgid "Erreur dans _check_exception_days: {e}"
+msgstr "خطأ في _check_exception_days: {e}"
+
+#: scheduling/utils.py:164
+#, python-brace-format
+msgid ""
+"Le cours ({start_t}-{end_t}) chevauche un horaire exceptionnel (ex: pause "
+"{ex_time_start}-{ex_time_end})."
+msgstr ""
+"يتداخل الدرس ({start_t}-{end_t}) مع وقت استثنائي (مثل: استراحة "
+"{ex_time_start}-{ex_time_end})."
+
+#: scheduling/utils.py:194
+#, python-brace-format
+msgid ""
+"Le professeur ({existing_teacher}) a déjà un cours sur ce créneau (Classe: "
+"{existing_student})."
+msgstr ""
+"الأستاذ ({existing_teacher}) لديه درس بالفعل في هذه الفترة (القسم: "
+"{existing_student})."
+
+#: scheduling/utils.py:202
+#, python-brace-format
+msgid "La salle ({class_name}) est déjà occupée sur ce créneau."
+msgstr "القاعة ({class_name}) مشغولة بالفعل في هذه الفترة."
+
+#: scheduling/utils.py:210
+msgid "La classe a déjà un cours sur ce créneau."
+msgstr "القسم لديه درس بالفعل في هذه الفترة."
+
+#: scheduling/utils.py:244
+msgid ""
+"Conflit interne: Le même professeur est assigné à deux cours en même temps."
+msgstr "تعارض داخلي: تم تعيين نفس الأستاذ لدرسين في نفس الوقت."
+
+#: scheduling/utils.py:252
+msgid ""
+"Conflit interne: La même salle est utilisée pour deux cours en même temps."
+msgstr "تعارض داخلي: تستخدم نفس القاعة لدرسين في نفس الوقت."
+
+#: scheduling/utils.py:260
+msgid "Conflit interne: La même classe a deux cours en même temps."
+msgstr "تعارض داخلي: نفس القسم لديه درسين في نفس الوقت."
+
+#: scheduling/views.py:164
+msgid "Les champs 'year_id' et 'class_id' sont obligatoires."
+msgstr "حقلَا 'year_id' و 'class_id' إلزابيان."
+
+#: scheduling/views.py:179
+msgid "Template de semaine créé avec succès."
+msgstr "تم إنشاء نموذج الأسبوع بنجاح."
+
+#: scheduling/views.py:187
+msgid "L'ID du template est requis pour une mise à jour."
+msgstr "معرف النموذج مطلوب لإجراء التحديث."
+
+#: scheduling/views.py:200
+msgid "Template de semaine mis à jour avec succès."
+msgstr "تم تحديث نموذج الأسبوع بنجاح."
+
+#: scheduling/views.py:208
+msgid "L'ID du template est requis pour une suppression."
+msgstr "معرف النموذج مطلوب للحذف."
+
+#: scheduling/views.py:217
+msgid "Template de semaine supprimé avec succès."
+msgstr "تم حذف نموذج الأسبوع بنجاح."
+
+#: scheduling/views.py:221
+msgid "Erreur d’unicité : un template similaire existe déjà."
+msgstr "خطأ في التفرد: يوجد نموذج مماثل بالفعل."
+
+#: scheduling/views.py:223
+msgid "Template introuvable."
+msgstr "النموذج غير موجود."
+
+#: scheduling/views.py:265
+msgid "Cours ajouté avec succès."
+msgstr "تم إضافة الدرس بنجاح."
+
+#: scheduling/views.py:278
+msgid "Cours mis à jour avec succès."
+msgstr "تم تحديث الدرس بنجاح."
+
+#: scheduling/views.py:283
+msgid "Cours supprimé avec succès."
+msgstr "تم حذف الدرس بنجاح."
+
+#: scheduling/views.py:289
+msgid "Template de semaine non trouvé."
+msgstr "نموذج الأسبوع غير موجود."
+
+#: scheduling/views.py:291
+msgid "Conflit ou erreur d’unicité dans le template."
+msgstr "تعارض أو خطأ في التفرد داخل النموذج."
+
+#: scheduling/views.py:319
+msgid "Les champs 'courses_list' et 'year_id' sont obligatoires."
+msgstr "حقلَا 'courses_list' و 'year_id' إلزابيان."
+
+#: scheduling/views.py:392
+#, python-brace-format
+msgid "Erreur interne lors de la sauvegarde : {error}"
+msgstr "خطأ داخلي أثناء الحفظ: {error}"
+
+#: scheduling/views.py:402
+#, python-brace-format
+msgid "{nb_courses} cours ont été créés avec succès."
+msgstr "تم إنشاء {nb_courses} درساً بنجاح."
+
+#: scheduling/views.py:404
+#, python-brace-format
+msgid "{nb_courses} cours créés. {nb_errors} cours en erreur (voir détails)."
+msgstr "تم إنشاء {nb_courses} درساً. ووجد {nb_errors} درس في حالة خطأ (انظر التفاصيل)."
+
+#: scheduling/views.py:416 subjects/views.py:158 subjects/views.py:221
+msgid "Requête JSON invalide."
+msgstr "طلب JSON غير صالح."
+
+#: scheduling/views.py:504
+msgid "Date de début ou ID de classe manquant."
+msgstr "تاريخ البدء أو معرف القسم مفقود."
+
+#: scheduling/views.py:531
+msgid "Accès refusé. Droits insuffisants."
+msgstr "تم رفض الوصول. صلاحيات غير كافية."
+
+#: scheduling/views.py:539 scheduling/views.py:720
+msgid "ID de cours ou action manquante."
+msgstr "معرف الدرس أو الإجراء مفقود."
+
+#: scheduling/views.py:550 scheduling/views.py:752
+msgid "Cours supprimé définitivement."
+msgstr "تم حذف الدرس نهائياً."
+
+#: scheduling/views.py:555 scheduling/views.py:757
+msgid "Cours marqué comme 'Actif'."
+msgstr "تم تعليم الدرس كـ 'نشط'."
+
+#: scheduling/views.py:561 scheduling/views.py:763
+msgid "Cours marqué comme 'Annulé'."
+msgstr "تم تعليم الدرس كـ 'ملغى'."
+
+#: scheduling/views.py:567 scheduling/views.py:769
+msgid "Cours marqué comme 'Professeur absent'."
+msgstr "تم تعليم الدرس كـ 'أستاذ غائب'."
+
+#: scheduling/views.py:581 scheduling/views.py:786
+msgid "Cours introuvable."
+msgstr "الدرس غير موجود."
+
+#: scheduling/views.py:679
+msgid "Date de début ou ID de professeur manquant."
+msgstr "تاريخ البدء أو معرف الأستاذ مفقود."
+
+#: scheduling/views.py:700
+msgid "Professeur introuvable."
+msgstr "الأستاذ غير موجود."
+
+#: scheduling/views.py:734
+msgid ""
+"Accès refusé. Seul un administrateur peut supprimer ou annuler un cours."
+msgstr "تم رفض الوصول. يمكن للمشرف وحده حذف أو إلغاء درس."
+
+#: scheduling/views.py:739
+msgid "Accès refusé. Vous n'êtes pas l'enseignant de ce cours."
+msgstr "تم رفض الوصول. لست المعلم لهذا الدرس."
+
+#: scheduling/views.py:775
+#, python-brace-format
+msgid "Fonctionnalité '{action}' non implémentée."
+msgstr "الميزة '{action}' غير مطبقة."
+
+#: schools/forms.py:33
+msgid "Langue de l'établissement"
+msgstr "لغة المؤسسة"
+
+#: schools/forms.py:36 schools/templates/schools/settings.html:91
+msgid "Logo de l'établissement"
+msgstr "شعار المؤسسة"
+
+#: schools/forms.py:37
+msgid "Signature du Chef d'établissement (Image)"
+msgstr "توقيع مدير المؤسسة (صورة)"
+
+#: schools/forms.py:38
+msgid "Couleur principale (Utilisée sur les bulletins)"
+msgstr "اللون الرئيسي (المستخدم في كشوف النقاط)"
+
+#: schools/models.py:18
+msgid "Français"
+msgstr "الفرنسية"
+
+#: schools/models.py:19
+msgid "English"
+msgstr "الإنجليزية"
+
+#: schools/models.py:20
+msgid "Arabe"
+msgstr "العربية"
+
+#: schools/models.py:32
+msgid "Langue de l'école"
+msgstr "لغة المدرسة"
+
+#: schools/models.py:48
+msgid "Logo de l'école"
+msgstr "شعار المدرسة"
+
+#: schools/models.py:57
+msgid "Couleur principale (Hex)"
+msgstr "اللون الرئيسي (ستيني عشري)"
+
+#: schools/models.py:58
+msgid "Code couleur hexadécimal pour le bulletin (ex: #2563EB)"
+msgstr "رمز اللون الستيني العشري لكشف النقاط (مثال: #2563EB)"
+
+#: schools/models.py:67
+msgid "Signature du Proviseur (Image)"
+msgstr "توقيع المدير (صورة)"
+#: schools/models.py:81
+msgid ""
+"La langue de l'école ne peut être modifiée que lorsque l'année en cours est "
+"à l'étape de création."
+msgstr ""
+"لا يمكن تغيير لغة المدرسة إلا عندما تكون السنة الحالية في مرحلة الإنشاء."
+
+#: schools/templates/schools/exception_management.html:4
+msgid "Gestion des exceptions du calendrier"
+msgstr "إدارة استثناءات التقويم"
+
+#: schools/templates/schools/exception_management.html:17
+msgid "Pause de l\\"
+msgstr "استراحة l\\"
+
+#: schools/templates/schools/exception_management.html:18
+#, python-brace-format
+msgid "Du {start} au {end}"
+msgstr "من {start} إلى {end}"
+
+#: schools/templates/schools/exception_management.html:19
+#, python-brace-format
+msgid "De {start} à {end}"
+msgstr "من {start} إلى {end}"
+
+#: schools/templates/schools/exception_management.html:21
+msgid "Ajouter une Exception Journalière"
+msgstr "إضافة استثناء يومي"
+
+#: schools/templates/schools/exception_management.html:23
+msgid "Ajouter une Exception Horaire"
+msgstr "إضافة استثناء زمني"
+
+#: schools/templates/schools/exception_management.html:24
+#: schools/templates/schools/manage_years.html:19
+msgid "Sauvegarder les modifications"
+msgstr "حفظ التعديلات"
+
+#: schools/templates/schools/exception_management.html:25
+#: schools/templates/schools/exception_management.html:158
+#: subjects/templates/subjects/manage_subjects.html:34
+#: users/templates/users/manage_users.html:22
+#: users/templates/users/manage_users.html:220
+#: users/templates/users/manage_users.html:311
+msgid "Créer"
+msgstr "إنشاء"
+
+#: schools/templates/schools/exception_management.html:26
+msgid "Êtes-vous sûr de vouloir supprimer ce jour d\\"
+msgstr "هل أنت متأكد من رغبتك في حذف يوم d\\"
+
+#: schools/templates/schools/exception_management.html:27
+msgid "Êtes-vous sûr de vouloir supprimer cet horaire d\\"
+msgstr "هل أنت متأكد من رغبتك في حذف هذا الوقت d\\"
+
+#: schools/templates/schools/exception_management.html:31
+#: users/templates/users/assign_children.html:18
+msgid "Erreur de connexion au serveur."
+msgstr "خطأ في الاتصال بالخادم."
+
+#: schools/templates/schools/exception_management.html:35
+msgid "Gestion des exceptions scolaires"
+msgstr "إدارة الاستثناءات المدرسية"
+
+#: schools/templates/schools/exception_management.html:36
+#: schools/templates/schools/manage_term.html:39
+msgid "École:"
+msgstr "المدرسة:"
+
+#: schools/templates/schools/exception_management.html:36
+#: schools/templates/schools/manage_term.html:39
+msgid "Année:"
+msgstr "السنة:"
+
+#: schools/templates/schools/exception_management.html:45
+msgid "Comprendre les exceptions du calendrier"
+msgstr "فهم استثناءات التقويم"
+
+#: schools/templates/schools/exception_management.html:49
+msgid ""
+"Ces exceptions vous permettent d'affiner la planification de l'année "
+"scolaire. Elles sont <strong>fortement recommandées</strong> pour garantir "
+"un planning précis, mais ne sont pas obligatoires."
+msgstr ""
+"تتيح لك هذه الاستثناءات تحسين تخطيط السنة الدراسية. وهي <strong>موصى بها "
+"بشدة</strong> لضمان جدول دقيق، ولكنها ليست إلزامية."
+
+#: schools/templates/schools/exception_management.html:50
+msgid ""
+"Attention : La gestion des exceptions n'est possible que lorsque l'année "
+"scolaire est à l'étape de la <strong>création</strong>."
+msgstr ""
+"تنبيه: إدارة الاستثناءات ممكنة فقط عندما تكون السنة الدراسية في مرحلة "
+"<strong>الإنشاء</strong>."
+
+#: schools/templates/schools/exception_management.html:55
+msgid ""
+"<strong>Jours d'exception :</strong> Ils définissent des périodes (jours, "
+"semaines) où il n'y a <strong>pas de cours</strong>."
+msgstr ""
+"<strong>أيام الاستثناء:</strong> تحدد فترات (أيام، أسابيع) لا توجد فيها "
+"<strong>أي دروس</strong>."
+
+#: schools/templates/schools/exception_management.html:56
+msgid "Exemple :"
+msgstr "مثال :"
+
+#: schools/templates/schools/exception_management.html:56
+msgid ""
+"Vacances scolaires, jours fériés, journées pédagogiques. Si la <strong>Date "
+"de début est la même que la Date de fin</strong>, il s'agit d'un "
+"<strong>jour unique</strong> sans cours."
+msgstr ""
+"العطل المدرسية، الأيام العطل الرسمية، الأيام التربوية. إذا كان <strong>تاريخ "
+"البداية مطابقاً لتاريخ النهاية</strong>، فهذا يعتبر <strong>يوماً واحداً</strong> "
+"بدون دراسة."
+
+#: schools/templates/schools/exception_management.html:59
+msgid ""
+"<strong>Horaires d'exception :</strong> Ils permettent de définir les "
+"<strong>pauses</strong> annuelle (heure de début et de fin). Ces horaires "
+"sont appliqués de manière récurrente durant toute l'année scolaire. Si les "
+"horaires des pauses de votre établissement changent en fonction des jours, "
+"n'utilisez pas cette fonctionnalité."
+msgstr ""
+"<strong>الأوقات الاستثنائية:</strong> تتيح تحديد <strong>الاستراحات</strong> "
+"السنوية (وقت البداية والنهاية). تُطبق هذه الأوقات بشكل متكرر طوال السنة "
+"الداسية. إذا كانت أوقات الاستراحات في مؤسستك تتغير حسب الأيام، فلا تستخدم هذه "
+"الميزة."
+
+#: schools/templates/schools/exception_management.html:71
+msgid "Jours d'exception"
+msgstr "أيام الاستثناء"
+
+#: schools/templates/schools/exception_management.html:76
+msgid "Ajouter un Jour"
+msgstr "إضافة يوم"
+
+#: schools/templates/schools/exception_management.html:81
+msgid "Aucun jour d'exception défini."
+msgstr "لم يتم تحديد أي يوم استثناء."
+
+#: schools/templates/schools/exception_management.html:87
+msgid "Horaires d'exception"
+msgstr "الأوقات الاستثنائية"
+
+#: schools/templates/schools/exception_management.html:92
+msgid "Ajouter un Horaire"
+msgstr "إضافة وقت"
+
+#: schools/templates/schools/exception_management.html:97
+msgid "Aucun horaire d'exception défini."
+msgstr "لم يتم تحديد أي وقت استثنائي."
+
+#: schools/templates/schools/exception_management.html:106
+msgid "Ajouter/Modifier une exception"
+msgstr "إضافة/تعديل استثناء"
+
+#: schools/templates/schools/exception_management.html:115
+msgid "Type d'exception"
+msgstr "نوع الاستثناء"
+
+#: schools/templates/schools/exception_management.html:117
+msgid "Ex: Vacances d\\"
+msgstr "مثال: عطلة d\\"
+
+#: schools/templates/schools/exception_management.html:122
+msgid "Date de début"
+msgstr "تاريخ البداية"
+
+#: schools/templates/schools/exception_management.html:127
+msgid "Date de fin"
+msgstr "تاريخ النهاية"
+
+#: schools/templates/schools/exception_management.html:136
+msgid "Définit la pause déjeuner annuelle (heure de début et de fin)."
+msgstr "يحدد استراحة الغداء السنوية (وقت البداية والنهاية)."
+
+#: schools/templates/schools/exception_management.html:195
+msgid "Confirmer la suppression"
+msgstr "تأكيد الحذف"
+
+#: schools/templates/schools/exception_management.html:199
+msgid ""
+"Êtes-vous sûr de vouloir supprimer cette exception ? Cette action est "
+"irréversible."
+msgstr "هل أنت متأكد من رغبتك في حذف هذا الاستثناء؟ هذا الإجراء لا رجعة فيه."
+
+#: schools/templates/schools/manage_term.html:4
+msgid "Avancement des Périodes Scolaires"
+msgstr "تقدم الفترات الدراسية"
+
+#: schools/templates/schools/manage_term.html:29
+msgid "Passer au Terme"
+msgstr "الانتقال إلى الفصل"
+
+#: schools/templates/schools/manage_term.html:30
+#, python-brace-format
+msgid ""
+"Êtes-vous sûr de vouloir AVANCER le niveau {level} au {counter}e terme ? "
+"Cette action est IRRÉVERSIBLE."
+msgstr ""
+"هل أنت متأكد من رغبتك في التقدم بالمستوى {level} إلى الفصل {counter}؟ "
+"هذا الإجراء لا رجعة فيه."
+
+#: schools/templates/schools/manage_term.html:31
+msgid "Terminer le Cycle"
+msgstr "إنهاء الدورة"
+
+#: schools/templates/schools/manage_term.html:32
+#, python-brace-format
+msgid ""
+"Êtes-vous sûr de vouloir TERMINER le cycle pour le niveau {level} au terme "
+"{counter} ? Le niveau sera marqué comme COMPLÉTÉ pour l\\"
+msgstr ""
+"هل أنت متأكد من رغبتك في إنهاء الدورة للمستوى {level} في الفصل {counter}؟ "
+"سيتم تعليم المستوى كمكتمل لـ l\\"
+
+#: schools/templates/schools/manage_term.html:33
+#, python-brace-format
+msgid "Erreur inconnue (Statut: {status})."
+msgstr "خطأ غير معروف (الحالة: {status})."
+
+#: schools/templates/schools/manage_term.html:34
+msgid "Erreur de connexion au serveur. Vérifiez votre réseau."
+msgstr "خطأ في الاتصال بالخادم. تحقق من شبكتك."
+
+#: schools/templates/schools/manage_term.html:38
+msgid "Gestion de l'Avancement des Périodes"
+msgstr "إدارة تقدم الفترات"
+
+#: schools/templates/schools/manage_term.html:41
+msgid "Attention : l'avancement est définitif et irréversible."
+msgstr "تنبيه: التقدم نهائي ولا رجعة فيه."
+
+#: schools/templates/schools/manage_term.html:51
+msgid "Comprendre l'Avancement des Périodes (Trimestre/Semestre/Unique)"
+msgstr "فهم تقدم الفترات (فصل/سداسي/مفرد)"
+
+#: schools/templates/schools/manage_term.html:55
+msgid ""
+"Cette fonction est essentielle pour la continuité de l'année scolaire. Elle "
+"permet de faire passer manuellement les niveaux scolaires d'une période "
+"(trimestre, semestre, unique) à la suivante."
+msgstr ""
+"هذه الوظيفة أساسية لاستمرار السنة الدراسية. وهي تتيح نقل المستويات الدراسية "
+"يدوياً من فترة (فصل، سداسي، مفرد) إلى التي تليها."
+
+#: schools/templates/schools/manage_term.html:60
+msgid ""
+"Le bouton <strong>Avancer</strong> fait passer le niveau à la "
+"<strong>période suivante</strong> (par exemple, de Période 1 à Période 2). "
+"Il est disponible tant que la `Période Actuelle` n'a pas atteint le maximum "
+"défini (`Max`)."
+msgstr ""
+"يقوم زر <strong>تقدم</strong> بنقل المستوى إلى <strong>الفترة التالية</strong> "
+"(على سبيل المثال، من الفترة 1 إلى الفترة 2). وهو متاح طالما أن `الفترة "
+"الحالية` لم تصل إلى الحد الأقصى المحدد (`Max`)."
+
+#: schools/templates/schools/manage_term.html:63
+msgid ""
+"Le bouton <strong>Terminer</strong> permet de <strong>clôturer le cycle</"
+"strong> pour l'année en cours, marquant le niveau comme `Terminé` et "
+"empêchant toute autre action d'avancement."
+msgstr ""
+"يسمح زر <strong>إنهاء</strong> بـ <strong>إغلاق الدورة</strong> للسنة "
+"الحالية، مع وسم المستوى كـ `منتهي` ومنع أي إجراء تقدم آخر."
+#: schools/templates/schools/manage_term.html:66
+msgid ""
+"<strong>Important :</strong> Les deux actions sont <strong>IRRÉVERSIBLES</"
+"strong>. L'action doit toujours être confirmée dans la fenêtre de dialogue."
+msgstr ""
+"<strong>هام:</strong> كلا الإجراءين <strong>لا رجعة فيهما</strong>. يجب دائماً "
+"تأكيد الإجراء في نافذة الحوار."
+
+#: schools/templates/schools/manage_term.html:75
+msgid "Traitement en cours... Veuillez patienter."
+msgstr "جاري المعالجة... يرجى الانتظار."
+
+#: schools/templates/schools/manage_term.html:86
+msgid "Type Période"
+msgstr "نوع الفترة"
+
+#: schools/templates/schools/manage_term.html:87
+msgid "Période Actuelle"
+msgstr "الفترة الحالية"
+
+#: schools/templates/schools/manage_term.html:97
+msgid "Max:"
+msgstr "الحد الأقصى:"
+
+#: schools/templates/schools/manage_term.html:104
+msgid "Terminé"
+msgstr "منتهي"
+
+#: schools/templates/schools/manage_term.html:106
+msgid "En Cours"
+msgstr "جارٍ"
+
+#: schools/templates/schools/manage_term.html:108
+msgid "Terme 1 Manquant"
+msgstr "الفصل 1 مفقود"
+
+#: schools/templates/schools/manage_term.html:110
+msgid "Inactif/Erreur"
+msgstr "غير نشط / خطأ"
+
+#: schools/templates/schools/manage_term.html:123
+msgid "Passe au"
+msgstr "الانتقال إلى"
+
+#: schools/templates/schools/manage_term.html:124
+msgid "Avancer"
+msgstr "تقدم"
+
+#: schools/templates/schools/manage_term.html:135
+msgid "Termine le cycle pour ce niveau."
+msgstr "إنهاء الدورة لهذا المستوى."
+
+#: schools/templates/schools/manage_term.html:136
+msgid "Terminer"
+msgstr "إنهاء"
+
+#: schools/templates/schools/manage_term.html:143
+msgid "Aucun niveau scolaire n'est défini pour cette école."
+msgstr "لم يتم تحديد أي مستوى دراسي لهذه المدرسة."
+
+#: schools/templates/schools/manage_term.html:157
+msgid "Confirmation d'Action"
+msgstr "تأكيد الإجراء"
+
+#: schools/templates/schools/manage_years.html:4
+msgid "Gestion des Années Scolaires"
+msgstr "إدارة السنوات الدراسية"
+
+#: schools/templates/schools/manage_years.html:9
+#: schools/templates/schools/manage_years.html:101
+msgid "Création"
+msgstr "الإنشاء"
+
+#: schools/templates/schools/manage_years.html:10
+msgid "Enregistrement"
+msgstr "التسجيل"
+
+#: schools/templates/schools/manage_years.html:11
+msgid "Déroulement en cours"
+msgstr "السير العادي جاري"
+
+#: schools/templates/schools/manage_years.html:12
+msgid "Fin d\\"
+msgstr "نهاية d\\"
+
+#: schools/templates/schools/manage_years.html:13
+#: schools/templates/schools/manage_years.html:98
+msgid "Terminée"
+msgstr "منتهية"
+
+#: schools/templates/schools/manage_years.html:16
+#: schools/templates/schools/manage_years.html:117
+msgid "Créer une nouvelle année scolaire"
+msgstr "إنشاء سنة دراسية جديدة"
+
+#: schools/templates/schools/manage_years.html:17
+msgid "Créer l\\"
+msgstr "إنشاء l\\"
+
+#: schools/templates/schools/manage_years.html:20
+msgid "Veuillez sélectionner une année scolaire actuelle."
+msgstr "الرجاء تحديد سنة دراسية حالية."
+
+#: schools/templates/schools/manage_years.html:21
+msgid "Erreur de connexion ou du serveur. Veuillez réessayer."
+msgstr "خطأ في الاتصال أو الخادم. يرجى المحاولة مرة أخرى."
+
+#: schools/templates/schools/manage_years.html:23
+msgid "Passer à l\\"
+msgstr "الانتقال إلى l\\"
+
+#: schools/templates/schools/manage_years.html:24
+msgid "Vous êtes sur le point d\\"
+msgstr "أنت على وشك d\\"
+
+#: schools/templates/schools/manage_years.html:25
+msgid "Confirmer et Avancer"
+msgstr "تأكيد والتقدم"
+
+#: schools/templates/schools/manage_years.html:27
+msgid "Revenir à l\\"
+msgstr "العودة إلى l\\"
+
+#: schools/templates/schools/manage_years.html:28
+msgid "<strong class=\\"
+msgstr "<strong class=\\"
+
+#: schools/templates/schools/manage_years.html:29
+msgid "Confirmer le retour"
+msgstr "تأكيد العودة"
+
+#: schools/templates/schools/manage_years.html:34
+msgid "Années Scolaires"
+msgstr "السنوات الدراسية"
+
+#: schools/templates/schools/manage_years.html:38
+msgid "Nouvelle Année"
+msgstr "سنة جديدة"
+
+#: schools/templates/schools/manage_years.html:48
+msgid "Année Actuelle"
+msgstr "السنة الحالية"
+
+#: schools/templates/schools/manage_years.html:70
+msgid "Aucune année scolaire actuelle définie."
+msgstr "لم يتم تحديد أي سنة دراسية حالية."
+
+#: schools/templates/schools/manage_years.html:76
+msgid "Autres années"
+msgstr "سنوات أخرى"
+
+#: schools/templates/schools/manage_years.html:100
+msgid "Enr."
+msgstr "تسجيل"
+
+#: schools/templates/schools/manage_years.html:109
+msgid "Aucune année scolaire n'a été créée."
+msgstr "لم يتم إنشاء أي سنة دراسية."
+
+#: schools/templates/schools/manage_years.html:125
+msgid "Statut actuel :"
+msgstr "الحالة الحالية :"
+
+#: schools/templates/schools/manage_years.html:126
+msgid "Cette année est l'année scolaire actuelle."
+msgstr "هذه السنة هي السنة الدراسية الحالية."
+
+#: schools/templates/schools/manage_years.html:131
+msgid "Nom de l'année (Ex: 2024-2025)"
+msgstr "اسم السنة (مثال: 2024-2025)"
+
+#: schools/templates/schools/manage_years.html:138
+msgid "Date de Début"
+msgstr "تاريخ البداية"
+
+#: schools/templates/schools/manage_years.html:144
+msgid "Date de Fin"
+msgstr "تاريخ النهاية"
+
+#: schools/templates/schools/manage_years.html:152
+msgid "Heure Minimum (Ex: 08:00)"
+msgstr "أقل وقت (مثال: 08:00)"
+
+#: schools/templates/schools/manage_years.html:158
+msgid "Heure Maximum (Ex: 17:00)"
+msgstr "أقصى وقت (مثال: 17:00)"
+
+#: schools/templates/schools/manage_years.html:166
+msgid "Gestion des étapes de l'année"
+msgstr "إدارة مراحل السنة"
+
+#: schools/templates/schools/manage_years.html:174
+msgid "Étape Précédente"
+msgstr "المرحلة السابقة"
+
+#: schools/templates/schools/manage_years.html:180
+msgid "Étape Suivante"
+msgstr "المرحلة التالية"
+
+#: schools/templates/schools/manage_years.html:189
+msgid "Créer l'année"
+msgstr "إنشاء السنة"
+
+#: schools/templates/schools/manage_years.html:193
+msgid "Annuler la modification"
+msgstr "إلغاء التعديل"
+
+#: schools/templates/schools/manage_years.html:227
+msgid "Confirmation requise"
+msgstr "التأكيد مطلوب"
+
+#: schools/templates/schools/manage_years.html:240
+msgid "Confirmer l'action"
+msgstr "تأكيد الإجراء"
+
+#: schools/templates/schools/settings.html:11
+msgid "Paramètres de l'établissement"
+msgstr "إعدادات المؤسسة"
+
+#: schools/templates/schools/settings.html:14
+msgid ""
+"Ces éléments sont utilisés pour générer les bulletins scolaires et les "
+"documents officiels. Toute modification est immédiate."
+msgstr ""
+"تُستخدم هذه العناصر لتوليد كشوف النقاط المدرسية والمستندات الرسمية. أي تعديل "
+"يتم تنفيذه فوراً."
+
+#: schools/templates/schools/settings.html:34
+msgid "1. Paramètres Généraux"
+msgstr "1. الإعدادات العامة"
+
+#: schools/templates/schools/settings.html:41
+msgid "Langue de l'interface"
+msgstr "لغة الواجهة"
+#: schools/templates/schools/settings.html:45
+msgid "Choisissez la langue principale de l'école."
+msgstr "اختر اللغة الرئيسية للمدرسة."
+
+#: schools/templates/schools/settings.html:47
+msgid ""
+"La langue ne peut être modifiée que lorsque l'année en cours est à l'étape "
+"de création."
+msgstr "لا يمكن تغيير اللغة إلا عندما تكون السنة الحالية في مرحلة الإنشاء."
+
+#: schools/templates/schools/settings.html:62
+msgid "Couleur Principale"
+msgstr "اللون الرئيسي"
+
+#: schools/templates/schools/settings.html:65
+msgid ""
+"Cette couleur sera utilisée pour les titres, les bordures et les accents sur "
+"les bulletins PDF."
+msgstr "سيُستخدم هذا اللون للعناوين، الحدود، والتبريزات في كشوف النقاط بصيغة PDF."
+
+#: schools/templates/schools/settings.html:84
+msgid "2. Images Officielles"
+msgstr "2. الصور الرسمية"
+
+#: schools/templates/schools/settings.html:96
+msgid "Logo actuel"
+msgstr "الشعار الحالي"
+
+#: schools/templates/schools/settings.html:98
+msgid "Aucun logo"
+msgstr "لا يوجد شعار"
+
+#: schools/templates/schools/settings.html:106
+msgid "Format recommandé : PNG (fond transparent)."
+msgstr "التنسيق الموصى به: PNG (خلفية شفافة)."
+
+#: schools/templates/schools/settings.html:106
+msgid "Idéalement carré ou rectangulaire."
+msgstr "من الأفضل أن يكون مربعاً أو مستطيلاً."
+
+#: schools/templates/schools/settings.html:115
+msgid "Signature du Chef d'établissement"
+msgstr "توقيع مدير المؤسسة"
+
+#: schools/templates/schools/settings.html:120
+msgid "Signature actuelle"
+msgstr "التوقيع الحالي"
+
+#: schools/templates/schools/settings.html:122
+msgid "Aucune signature"
+msgstr "لا توجد أية توقيعات"
+
+#: schools/templates/schools/settings.html:130
+msgid "Cette image apparaîtra au bas des bulletins."
+msgstr "ستظهر هذه الصورة في أسفل كشوف النقاط."
+
+#: schools/templates/schools/settings.html:130
+msgid "Format recommandé : PNG ou JPG (fond blanc/transparent)."
+msgstr "التنسيق الموصى به: PNG أو JPG (خلفية بيضاء/شفافة)."
+
+#: schools/utils.py:43
+msgid "Une école avec cet email existe déjà."
+msgstr "توجد مدرسة بهذا البريد الإلكتروني مسبقاً."
+
+#: schools/utils.py:55 schools/utils.py:230 schools/utils.py:458
+#: schools/utils.py:536 schools/utils.py:631
+#, python-brace-format
+msgid "Erreur de données : {error}"
+msgstr "خطأ في البيانات : {error}"
+
+#: schools/utils.py:57
+#, python-brace-format
+msgid "Erreur lors de la création de l'école : {error}"
+msgstr "خطأ أثناء إنشاء المدرسة : {error}"
+
+#: schools/utils.py:109 schools/utils.py:127 schools/utils.py:146
+#: users/utils.py:812 users/utils.py:983
+msgid "École non trouvée."
+msgstr "المدرسة غير موجودة."
+
+#: schools/utils.py:111
+#, python-brace-format
+msgid "Erreur lors de la mise à jour de l'école : {error}"
+msgstr "خطأ أثناء تحديث المدرسة : {error}"
+
+#: schools/utils.py:129
+#, python-brace-format
+msgid "Erreur lors de la désactivation de l'école : {error}"
+msgstr "خطأ أثناء تعطيل المدرسة : {error}"
+
+#: schools/utils.py:148
+#, python-brace-format
+msgid "Erreur lors de l'activation de l'école : {error}"
+msgstr "خطأ أثناء تفعيل المدرسة : {error}"
+
+#: schools/utils.py:232
+#, python-brace-format
+msgid "Erreur lors de la création de l'année : {error}"
+msgstr "خطأ أثناء إنشاء السنة : {error}"
+
+#: schools/utils.py:304 schools/utils.py:358
+msgid "Année non trouvée."
+msgstr "السنة غير موجودة."
+
+#: schools/utils.py:306
+#, python-brace-format
+msgid "Erreur lors de la mise à jour de l'année : {error}"
+msgstr "خطأ أثناء تحديث السنة : {error}"
+
+#: schools/utils.py:353
+msgid "L'année est déjà terminée ou dans un état invalide."
+msgstr "السنة منتهية بالفعل أو في حالة غير صالحة."
+
+#: schools/utils.py:360
+#, python-brace-format
+msgid "Erreur lors de l'avancement de l'étape de l'année : {error}"
+msgstr "خطأ أثناء التقدم بمرحلة السنة : {error}"
+
+#: schools/utils.py:460
+#, python-brace-format
+msgid "Erreur lors de la création de l'exception : {error}"
+msgstr "خطأ أثناء إنشاء الاستثناء : {error}"
+
+#: schools/utils.py:491
+msgid "Exception non trouvée."
+msgstr "الاستثناء غير موجود."
+
+#: schools/utils.py:493
+#, python-brace-format
+msgid "Erreur lors de la mise à jour de l'exception : {error}"
+msgstr "خطأ أثناء تحديث الاستثناء : {error}"
+
+#: schools/utils.py:538
+#, python-brace-format
+msgid "Erreur lors de la création de l'exception horaire : {error}"
+msgstr "خطأ أثناء إنشاء الاستثناء الزمني : {error}"
+
+#: schools/utils.py:569
+msgid "Exception horaire non trouvée."
+msgstr "الاستثناء الزمني غير موجود."
+
+#: schools/utils.py:571
+#, python-brace-format
+msgid "Erreur lors de la mise à jour de l'exception horaire : {error}"
+msgstr "خطأ أثناء تحديث الاستثناء الزمني : {error}"
+
+#: schools/utils.py:619
+msgid ""
+"Erreur lors de la création du trimestre/semestre : le numéro du trimestre/"
+"semestr/ est incorecte."
+msgstr ""
+"خطأ أثناء إنشاء الفصل/السداسي: رقم الفصل/السداسي غير صحيح."
+
+#: schools/utils.py:666
+msgid "Trimestre/semestre non trouvé."
+msgstr "الفصل/السداسي غير موجود."
+
+#: schools/utils.py:668
+#, python-brace-format
+msgid "Erreur lors de la mise à jour : {error}"
+msgstr "خطأ أثناء التحديث : {error}"
+
+#: schools/utils.py:722
+#, python-brace-format
+msgid "Erreur lors de la mise à jour des termes : {error}"
+msgstr "خطأ أثناء تحديث الفصول : {error}"
+
+#: schools/utils.py:749
+#, python-brace-format
+msgid "Le nombre maximum de {terme_type}s a été atteint pour le niveau : "
+msgstr "تم بلوغ الحد الأقصى من {terme_type} للمستوى : "
+
+#: schools/utils.py:760
+#, python-brace-format
+msgid "Erreur lors du passage au trimestre/semestre suivant : {error}"
+msgstr "خطأ أثناء الانتقال إلى الفصل/السداسي الموالي : {error}"
+
+#: schools/utils.py:800
+#, python-brace-format
+msgid ""
+"Il manque le premier trimestre/semestre (counter=1) pour {missing_count} "
+"niveau(x) de cette école pour l'année spécifiée."
+msgstr ""
+"ينقص الفصل/السداسي الأول (counter=1) لـ {missing_count} مستوى (مستويات) من هذه المدرسة للسنة المحددة."
+
+#: schools/utils.py:804
+#, python-brace-format
+msgid "Erreur inattendue lors de la vérification des trimestres : {error}"
+msgstr "خطأ غير متوقع أثناء التحقق من الفصول : {error}"
+
+#: schools/views.py:116
+msgid ""
+"École et proviseur créés avec succès. Voici le nom d'utilisateur du "
+"proviseur : "
+msgstr "تم إنشاء المدرسة والمدير بنجاح. إليك اسم مستخدم المدير : "
+
+#: schools/views.py:194
+msgid "Veuillez compléter tous les champs obligatoires (nom, dates, heures)."
+msgstr "الرجاء ملء جميع الحقول الإلزامية (الاسم، التواريخ، الأوقات)."
+
+#: schools/views.py:209
+msgid ""
+"Impossible de modifier l'année, vous devez être dans la phase de création."
+msgstr "تعذر تعديل السنة، يجب أن تكون في مرحلة الإنشاء."
+
+#: schools/views.py:218
+#, python-brace-format
+msgid "L'année scolaire {year} a été modifiée avec succès."
+msgstr "تم تعديل السنة الدراسية {year} بنجاح."
+
+#: schools/views.py:226
+msgid ""
+"Impossible de créer une nouvelle année, vous devez d'abord terminer la "
+"précédente."
+msgstr "تعذر إنشاء سنة جديدة، يجب عليك أولاً إنهاء السنة السابقة."
+
+#: schools/views.py:229
+#, python-brace-format
+msgid "Une année scolaire nommée '{name}' existe déjà."
+msgstr "توجد سنة دراسية تحمل الاسم '{name}' مسبقاً."
+
+#: schools/views.py:272
+#, python-brace-format
+msgid ""
+"La nouvelle année scolaire {year} a été créée et est maintenant l'année "
+"actuelle."
+msgstr "تم إنشاء السنة الدراسية الجديدة {year} وهي الآن السنة الحالية."
+
+#: schools/views.py:279
+#, python-brace-format
+msgid "Erreur d'intégrité de la base de données : {error}"
+msgstr "خطأ في سلامة قاعدة البيانات : {error}"
+
+#: schools/views.py:281
+#, python-brace-format
+msgid "Une erreur interne est survenue: {error}"
+msgstr "حدث خطأ داخلي: {error}"
+
+#: schools/views.py:312
+msgid "Impossible de modifier le statut d'une année terminée."
+msgstr "تعذر تعديل حالة سنة منتهية."
+
+#: schools/views.py:319
+msgid "Format de données JSON invalide."
+msgstr "تنسيق بيانات JSON غير صالح."
+
+#: schools/views.py:323
+#, python-brace-format
+msgid "Statut invalide: '{new_status}'."
+msgstr "حالة غير صالحة: '{new_status}'."
+#: schools/views.py:331
+msgid ""
+"Une année terminée ne peut être modifiée que pour revenir à l'étape \"Fin "
+"d'année\"."
+msgstr ""
+"لا يمكن تعديل سنة منتهية إلا للعودة إلى مرحلة \"نهاية السنة\"."
+
+#: schools/views.py:342
+msgid ""
+"Impossible de passer à l'étape de fin d'année car vous avez encore un "
+"trimestre ou un semestre qui n'es pas terminé."
+msgstr ""
+"تعذر الانتقال إلى مرحلة نهاية السنة لعدم انتهاء فصل أو سداسي بعد."
+
+#: schools/views.py:352
+#, python-brace-format
+msgid ""
+"L'année '{year}' est passée à l'étape '{statut}'. (Veuillez recharger la "
+"page)"
+msgstr ""
+"انتقلت السنة '{year}' إلى المرحلة '{statut}'. (يرجى إعادة تحميل الصفحة)"
+
+#: schools/views.py:367
+#, python-brace-format
+msgid ""
+"L'année '{year}' est passée à l'étape '{statut}', les premier trimestres ou "
+"semestres ont été créer. (Veuillez recharger la page)"
+msgstr ""
+"انتقلت السنة '{year}' إلى المرحلة '{statut}'، وتم إنشاء الفصول أو السداسيات الأولى. (يرجى إعادة تحميل الصفحة)"
+
+#: schools/views.py:384
+msgid "Année scolaire non trouvée ou accès refusé."
+msgstr "السنة الدراسية غير موجودة أو تم رفض الوصول."
+
+#: schools/views.py:386
+msgid "Une erreur serveur est survenue lors du changement de statut."
+msgstr "حدث خطأ في الخادم أثناء تغيير الحالة."
+
+#: schools/views.py:426
+msgid "Aucune année scolaire active n'est définie pour cette école."
+msgstr "لا توجد سنة دراسية نشطة محددة لهذه المدرسة."
+
+#: schools/views.py:431
+msgid ""
+"Opération non autorisée. La gestion des exceptions n'est possible que "
+"lorsque l'année scolaire est à l'étape de création"
+msgstr ""
+"عملية غير مصرح بها. إدارة الاستثناءات ممكنة فقط عندما تكون السنة الدراسية في مرحلة الإنشاء"
+
+#: schools/views.py:439
+msgid "Type d'exception invalide."
+msgstr "نوع الاستثناء غير صالح."
+
+#: schools/views.py:457
+msgid "La date de début, la date de fin et le type sont obligatoires."
+msgstr "تاريخ البدء، تاريخ النهاية، والنوع إلزامية."
+
+#: schools/views.py:469
+#, python-brace-format
+msgid "Exception de jour \"{type_name}\" créée avec succès."
+msgstr "تم إنشاء استثناء اليوم \"{type_name}\" بنجاح."
+
+#: schools/views.py:473 schools/views.py:521
+msgid "ID de l'exception manquant pour la mise à jour."
+msgstr "معرف الاستثناء مفقود للتحديث."
+
+#: schools/views.py:481
+#, python-brace-format
+msgid "Exception de jour \"{type_name}\" mise à jour avec succès."
+msgstr "تم تحديث استثناء اليوم \"{type_name}\" بنجاح."
+
+#: schools/views.py:483 schools/views.py:495
+msgid "Exception de jour non trouvée."
+msgstr "استثناء اليوم غير موجود."
+
+#: schools/views.py:487 schools/views.py:534
+msgid "ID de l'exception manquant pour la suppression."
+msgstr "معرف الاستثناء مفقود للحذف."
+
+#: schools/views.py:493
+#, python-brace-format
+msgid "Exception de jour \"{exception_name}\" supprimée."
+msgstr "تم حذف استثناء اليوم \"{exception_name}\"."
+
+#: schools/views.py:505
+msgid "L'heure de début et l'heure de fin sont obligatoires."
+msgstr "وقت البداية ووقت النهاية إلزابيان."
+
+#: schools/views.py:517
+msgid "Horaire d'exception créé avec succès."
+msgstr "تم إنشاء الاستثناء الزمني بنجاح."
+
+#: schools/views.py:528
+msgid "Horaire d'exception mis à jour avec succès."
+msgstr "تم تحديث الاستثناء الزمني بنجاح."
+
+#: schools/views.py:530 schools/views.py:542
+msgid "Horaire d'exception non trouvé."
+msgstr "الاستثناء الزمني غير موجود."
+
+#: schools/views.py:540
+#, python-brace-format
+msgid "Horaire d'exception \"{exception_name}\" supprimé."
+msgstr "تم حذف الاستثناء الزمني \"{exception_name}\"."
+
+#: schools/views.py:551
+#, python-brace-format
+msgid "Erreur de format de donnée: {error}"
+msgstr "خطأ في تنسيق البيانات: {error}"
+
+#: schools/views.py:614
+msgid ""
+"Opération non autorisée. La gestion des trimestres/semestres n'est possible "
+"que lorsque l'année est créer."
+msgstr ""
+"عملية غير مصرح بها. إدارة الفصول/السداسيات ممكنة فقط عندما يتم إنشاء السنة."
+
+#: schools/views.py:622
+msgid ""
+"Opération non autorisée. La gestion des trimestres/semestres n'est possible "
+"que lorsque l'année scolaire est à l'étape de Déroulement (Running)."
+msgstr ""
+"عملية غير مصرح بها. إدارة الفصول/السداسيات ممكنة فقط عندما تكون السنة الدراسية في مرحلة السير العادي."
+
+#: schools/views.py:631
+msgid "L'ID du niveau et l'action sont obligatoires."
+msgstr "معرف المستوى والإجراء إلزابيان."
+
+#: schools/views.py:649
+#, python-brace-format
+msgid ""
+"Aucun trimestre/semestre actif trouvé pour le niveau {level} et l'année en "
+"cours."
+msgstr ""
+"لم يتم العثور على أي فصل/سداسي نشط للمستوى {level} والسنة الحالية."
+
+#: schools/views.py:674
+#, python-brace-format
+msgid ""
+"Impossible d'avancer. Le {counter}e {term_type} est le dernier possible "
+"({max_counter}) pour ce niveau."
+msgstr ""
+"تعذر التقدم. الفصل/السداسي الـ {counter} هو الأخير الممكن ({max_counter}) لهذا المستوى."
+
+#: schools/views.py:696
+#, python-brace-format
+msgid ""
+"Avancement réussi ! Le niveau {level} est maintenant au {next_counter}e "
+"{term_type}."
+msgstr ""
+"تم التقدم بنجاح! المستوى {level} أصبح الآن في الفصل/السداسي الـ {next_counter}."
+
+#: schools/views.py:707
+#, python-brace-format
+msgid ""
+"Impossible de terminer le cycle. Le niveau {level} est seulement au {counter}"
+"e {term_type}. Il reste encore des termes à créer."
+msgstr ""
+"تعذر إنهاء الدورة. المستوى {level} في الفصل/السداسي الـ {counter} فقط. لا تزال هناك فصول يجب إنشاؤها."
+
+#: schools/views.py:717
+#, python-brace-format
+msgid ""
+"Cycle terminé ! Le {counter}e et dernier {term_type} du niveau {level} est "
+"maintenant marqué comme terminé pour l'année {year}."
+msgstr ""
+"انتهت الدورة! تم الآن وسم الفصل/السداسي الأخير الـ {counter} للمستوى {level} كمكتمل للسنة {year}."
+
+#: schools/views.py:729
+#, python-brace-format
+msgid "Erreur de base de données. Opération annulée: {error}"
+msgstr "خطأ في قاعدة البيانات. تم إلغاء العملية: {error}"
+
+#: schools/views.py:810
+msgid "Lycée"
+msgstr "ثانوية"
+
+#: schools/views.py:811
+msgid "Collège"
+msgstr "إعدادية / متوسطة"
+
+#: schools/views.py:812
+msgid "Université"
+msgstr "جامعة"
+
+#: schools/views.py:813
+msgid "Ecole"
+msgstr "مدرسة"
+
+#: schools/views.py:852
+msgid "Veuillez remplir tous les champs obligatoires."
+msgstr "الرجاء ملء جميع الحقول الإلزامية."
+
+#: schools/views.py:856
+msgid "Une autre école utilise déjà cet email."
+msgstr "توجد مدرسة أخرى تستخدم هذا البريد الإلكتروني مسبقاً."
+
+#: schools/views.py:874
+#, python-brace-format
+msgid "L'école {school} a été mise à jour avec succès."
+msgstr "تم تحديث المدرسة {school} بنجاح."
+
+#: schools/views.py:892
+msgid "Vous n'avez pas accès à cette fonctionnalité."
+msgstr "لا تمتلك حق الوصول إلى هذه الميزة."
+
+#: schools/views.py:908
+msgid "École non active."
+msgstr "المدرسة غير نشطة."
+
+#: schools/views.py:921
+msgid "Les paramètres de l'école ont été mis à jour."
+msgstr "تم تحديث إعدادات المدرسة."
+
+#: schools/views.py:924
+msgid "Veuillez corriger les erreurs ci-dessous."
+msgstr "الرجاء تصحيح الأخطاء أدناه."
+
+#: subjects/models.py:45
+#, python-brace-format
+msgid "{teacher} teaches {subject}"
+msgstr "{teacher} يدرس {subject}"
+
+#: subjects/templates/subjects/assign_subjects.html:4
+msgid "Attribution des Matières"
+msgstr "تخصيص المواد"
+
+#: subjects/templates/subjects/assign_subjects.html:12
+msgid "Gestion des Attributions Professeurs-Matières"
+msgstr "إدارة تعيينات الأساتذة للمواد"
+
+#: subjects/templates/subjects/assign_subjects.html:15
+msgid "Attribuez les matières enseignées à chaque professeur de l'école"
+msgstr "قم بتخصيص المواد المدرسة لكل أستاذ في المدرسة"
+
+#: subjects/templates/subjects/assign_subjects.html:16
+msgid "Cliquez sur une matière pour l'attribuer ou la retirer."
+msgstr "انقر على المادة لتخصيصها أو إزالتها."
+
+#: subjects/templates/subjects/assign_subjects.html:22
+msgid "Matières disponibles"
+msgstr "المواد المتاحة"
+
+#: subjects/templates/subjects/assign_subjects.html:38
+msgid "Attributions de matières"
+msgstr "تعيينات المواد"
+
+#: subjects/templates/subjects/assign_subjects.html:60
+msgid "Aucun professeur trouvé pour cette école."
+msgstr "لم يتم العثور على أي أستاذ لهذه المدرسة."
+
+#: subjects/templates/subjects/assign_subjects.html:74
+msgid "Erreur de chargement des données initiales. Vérifiez la console."
+msgstr "خطأ في تحميل البيانات الأولية. تحقق من وحدة التحكم."
+#: subjects/templates/subjects/assign_subjects.html:75
+msgid "Attribution..."
+msgstr "جاري التخصيص..."
+
+#: subjects/templates/subjects/assign_subjects.html:76
+msgid "Retrait..."
+msgstr "جاري الإزالة..."
+
+#: subjects/templates/subjects/assign_subjects.html:77
+msgid "Erreur serveur lors de la mise à jour."
+msgstr "خطأ في الخادم أثناء التحديث."
+
+#: subjects/templates/subjects/assign_subjects.html:78
+msgid "Erreur réseau ou serveur. Veuillez réessayer."
+msgstr "خطأ في الشبكة أو الخادم. يرجى المحاولة مرة أخرى."
+
+#: subjects/templates/subjects/manage_subjects.html:4
+msgid "Gestion des Matières"
+msgstr "إدارة المواد"
+
+#: subjects/templates/subjects/manage_subjects.html:11
+#: subjects/templates/subjects/manage_subjects.html:101
+msgid "Créer une nouvelle matière"
+msgstr "إنشاء مادة جديدة"
+
+#: subjects/templates/subjects/manage_subjects.html:12
+msgid "Modifier la matière :"
+msgstr "تعديل المادة :"
+
+#: subjects/templates/subjects/manage_subjects.html:13
+msgid "Sauvegarde..."
+msgstr "جاري الحفظ..."
+
+#: subjects/templates/subjects/manage_subjects.html:14
+#: subjects/templates/subjects/manage_subjects.html:134
+msgid "Sauvegarder"
+msgstr "حفظ"
+
+#: subjects/templates/subjects/manage_subjects.html:16
+msgid "Couleur sélectionnée :"
+msgstr "اللون المحدد :"
+
+#: subjects/templates/subjects/manage_subjects.html:17
+msgid "Erreur de connexion : Impossible de contacter le serveur."
+msgstr "خطأ في الاتصال: تعذر الاتصال بالخادم."
+
+#: subjects/templates/subjects/manage_subjects.html:18
+msgid "Confirmer l\\"
+msgstr "تأكيد l\\"
+
+#: subjects/templates/subjects/manage_subjects.html:19
+msgid "Confirmer la désactivation"
+msgstr "تأكيد التعطيل"
+
+#: subjects/templates/subjects/manage_subjects.html:20
+msgid "Voulez-vous vraiment activer la matière"
+msgstr "هل تريد حقاً تفعيل المادة"
+
+#: subjects/templates/subjects/manage_subjects.html:21
+msgid "Voulez-vous vraiment désactiver la matière"
+msgstr "هل تريد حقاً تعطيل المادة"
+
+#: subjects/templates/subjects/manage_subjects.html:22
+#: subjects/templates/subjects/manage_subjects.html:86
+msgid "Activer"
+msgstr "تفعيل"
+
+#: subjects/templates/subjects/manage_subjects.html:23
+#: subjects/templates/subjects/manage_subjects.html:60
+msgid "Désactiver"
+msgstr "تعطيل"
+
+#: subjects/templates/subjects/manage_subjects.html:24
+msgid "Erreur de connexion : Impossible d\\"
+msgstr "خطأ في الاتصال: تعذر d\\"
+
+#: subjects/templates/subjects/manage_subjects.html:29
+#: templates/sidemenu.html:104
+msgid "Matières"
+msgstr "المواد"
+
+#: subjects/templates/subjects/manage_subjects.html:67
+#: users/templates/users/manage_users.html:148
+msgid "Inactif"
+msgstr "غير نشط"
+
+#: subjects/templates/subjects/manage_subjects.html:95
+msgid "Aucune matière trouvée pour cette école."
+msgstr "لم يتم العثور على أي مادة لهذه المدرسة."
+
+#: subjects/templates/subjects/manage_subjects.html:107
+msgid "Nom de la matière"
+msgstr "اسم المادة"
+
+#: subjects/templates/subjects/manage_subjects.html:111
+msgid "Ex: Mathématiques, Histoire..."
+msgstr "مثال: الرياضيات، التاريخ..."
+
+#: subjects/templates/subjects/manage_subjects.html:115
+msgid "Couleur associée"
+msgstr "اللون المرتبط"
+
+#: subjects/templates/subjects/manage_subjects.html:119
+msgid "Choisir une couleur"
+msgstr "اختر لوناً"
+
+#: subjects/templates/subjects/manage_subjects.html:149
+msgid "Confirmer l'Action"
+msgstr "تأكيد الإجراء"
+
+#: subjects/utils.py:49
+#, python-brace-format
+msgid "Erreur lors de la création de la matière : {error}"
+msgstr "خطأ أثناء إنشاء المادة : {error}"
+
+#: subjects/utils.py:100
+msgid "Erreur: La matière spécifiée n'existe pas."
+msgstr "خطأ: المادة المحددة غير موجودة."
+
+#: subjects/utils.py:102
+#, python-brace-format
+msgid "Erreur lors de la mise à jour de la matière : {error}"
+msgstr "خطأ أثناء تحديث المادة : {error}"
+
+#: subjects/views.py:22
+msgid "Rouge"
+msgstr "أحمر"
+
+#: subjects/views.py:23
+msgid "Bleu"
+msgstr "أزرق"
+
+#: subjects/views.py:24
+msgid "Vert"
+msgstr "أخضر"
+
+#: subjects/views.py:25
+msgid "Jaune"
+msgstr "أصفر"
+
+#: subjects/views.py:26
+msgid "Orange"
+msgstr "برتقالي"
+
+#: subjects/views.py:27
+msgid "Violet"
+msgstr "بنفسجي"
+
+#: subjects/views.py:28
+msgid "Gris"
+msgstr "رمادي"
+
+#: subjects/views.py:49
+msgid "Veuillez sélectionner une école pour gérer les matières."
+msgstr "الرجاء تحديد مدرسة لإدارة المواد."
+
+#: subjects/views.py:53
+msgid "École sélectionnée introuvable."
+msgstr "المدرسة المحددة غير موجودة."
+
+#: subjects/views.py:59
+msgid "Impossible de déterminer l'école associée à votre compte."
+msgstr "تعذر تحديد المدرسة المرتبطة بحسابك."
+
+#: subjects/views.py:106
+msgid "Le nom de la matière et la couleur sont obligatoires."
+msgstr "اسم المادة واللون إلزاميان."
+
+#: subjects/views.py:114
+msgid "Veuillez sélectionner une école."
+msgstr "الرجاء تحديد مدرسة."
+
+#: subjects/views.py:120 subjects/views.py:189
+msgid "École utilisateur introuvable."
+msgstr "مدرسة المستخدم غير موجودة."
+
+#: subjects/views.py:133
+#, python-brace-format
+msgid "La matière **\"{name}\"** a été mise à jour avec succès."
+msgstr "تم تحديث المادة **\"{name}\"** بنجاح."
+
+#: subjects/views.py:139
+#, python-brace-format
+msgid "Une matière nommée \"{name}\" existe déjà dans cette école."
+msgstr "توجد مادة تحمل الاسم \"{name}\" مسبقاً في هذه المدرسة."
+
+#: subjects/views.py:147
+#, python-brace-format
+msgid "La matière **\"{name}\"** a été créée avec succès."
+msgstr "تم إنشاء المادة **\"{name}\"** بنجاح."
+
+#: subjects/views.py:160
+msgid "Matière introuvable pour cette école."
+msgstr "المادة غير موجودة لهذه المدرسة."
+
+#: subjects/views.py:162 subjects/views.py:225
+#, python-brace-format
+msgid "Erreur inattendue : {error}"
+msgstr "خطأ غير متوقع : {error}"
+
+#: subjects/views.py:206 subjects/views.py:380
+msgid ""
+"Vous ne pouvez pas désactiver une matière lorsque l'école est dans sa phase "
+"de déroulement."
+msgstr "لا يمكنك تعطيل مادة عندما تكون المدرسة في مرحلة السير العادي."
+
+#: subjects/views.py:212
+#, python-brace-format
+msgid "La matière **\"{subject}\"** a été {action} avec succès."
+msgstr "تمت {action} المادة **\"{subject}\"** بنجاح."
+
+#: subjects/views.py:223
+msgid "Matière introuvable ou non associée à l'école cible."
+msgstr "المادة غير موجودة أو غير مرتبطة بالمدرسة المستهدفة."
+
+#: subjects/views.py:329
+msgid "Données manquantes."
+msgstr "بيانات مفقودة."
+
+#: subjects/views.py:335
+msgid "Professeur non trouvé ou type de personnel incorrect."
+msgstr "الأستاذ غير موجود أو نوع الطاقم غير صحيح."
+
+#: subjects/views.py:340
+msgid "Matière non trouvée."
+msgstr "المادة غير موجودة."
+
+#: subjects/views.py:345
+msgid ""
+"Cohésion échouée: Le professeur et la matière n'appartiennent pas à la même "
+"école."
+msgstr "فشل الاتساق: الأستاذ والمادة لا ينتميان إلى نفس المدرسة."
+
+#: subjects/views.py:356
+#, python-brace-format
+msgid "Lien créé : {name} enseignera {subject}."
+msgstr "تم إنشاء الرابط: {name} سيدرس {subject}."
+#: subjects/views.py:360 users/views.py:844
+msgid "Le lien existe déjà."
+msgstr "الرابط موجود مسبقاً."
+
+#: subjects/views.py:386
+#, python-brace-format
+msgid "Lien supprimé : {teacher_full_name} n'enseignera plus {subject}."
+msgstr "تم حذف الرابط: لن يقوم {teacher_full_name} بتدريس {subject} بعد الآن."
+
+#: subjects/views.py:389
+msgid "Le lien n'existe pas."
+msgstr "الرابط غير موجود."
+
+#: subjects/views.py:392 users/views.py:859
+#, python-brace-format
+msgid "Erreur lors de la suppression: {error}"
+msgstr "خطأ أثناء الحذف: {error}"
+
+#: subjects/views.py:395 users/views.py:862
+msgid "Action non reconnue. Utilisez \"link\" ou \"unlink\"."
+msgstr "إجراء غير معروف. استخدم \"link\" أو \"unlink\"."
+
+#: templates/404.html:8
+msgid "Page introuvable"
+msgstr "الصفحة غير موجودة"
+
+#: templates/404.html:30
+msgid "Oups ! Page introuvable."
+msgstr "عفواً! الصفحة غير موجودة."
+
+#: templates/404.html:32
+msgid ""
+"Il semble que le lien que vous avez suivi soit cassé ou que la page ait été "
+"déplacée."
+msgstr "يبدو أن الرابط الذي تبعته معطل أو أن الصفحة قد تم نقلها."
+
+#: templates/404.html:38
+msgid "Retour à l'accueil"
+msgstr "العودة إلى الصفحة الرئيسية"
+
+#: templates/base.html:7 templates/sidemenu.html:16
+#: users/templates/users/dashboard_page.html:4
+msgid "Tableau de bord"
+msgstr "لوحة التحكم"
+
+#: templates/base.html:36 templates/menu.html:5
+msgid "Logo"
+msgstr "الشعار"
+
+#: templates/base.html:45 templates/menu.html:17
+msgid "Déconnexion"
+msgstr "تسجيل الخروج"
+
+#: templates/base.html:77
+msgid "Menu"
+msgstr "القائمة"
+
+#: templates/error_page.html:26
+msgid "Une erreur est survenue"
+msgstr "حدث خطأ ما"
+
+#: templates/error_page.html:31 users/templates/users/password_reset.html:80
+#: users/templates/users/password_reset_confirm.html:63
+msgid "Retour à la connexion"
+msgstr "العودة إلى تسجيل الدخول"
+
+#: templates/footer.html:6
+msgid "La solution de gestion scolaire simplifiée. Tous droits réservés."
+msgstr "حل إدارة المدارس المبسط. جميع الحقوق محفوظة."
+
+#: templates/footer.html:12
+msgid "Conçu et développé par"
+msgstr "تصميم وتطوير"
+
+#: templates/footer.html:23
+msgid "Administration du site :"
+msgstr "إدارة الموقع :"
+
+#: templates/menu.html:14
+#, python-format
+msgid "Bienvenue, %(user.username)s"
+msgstr "أهلاً بك، %(user.username)s"
+
+#: templates/sidemenu.html:22
+msgid "Profil"
+msgstr "الملف الشخصي"
+
+#: templates/sidemenu.html:31
+msgid "Créer une école"
+msgstr "إنشاء مدرسة"
+
+#: templates/sidemenu.html:37
+msgid "Modifier l'école"
+msgstr "تعديل المدرسة"
+
+#: templates/sidemenu.html:46
+msgid "Établissement"
+msgstr "المؤسسة"
+
+#: templates/sidemenu.html:52 users/templates/users/manage_users.html:4
+msgid "Gestion des utilisateurs"
+msgstr "إدارة المستخدمين"
+
+#: templates/sidemenu.html:57
+msgid "Proviseurs"
+msgstr "المديرون"
+
+#: templates/sidemenu.html:64
+msgid "Professeurs"
+msgstr "الأساتذة"
+
+#: templates/sidemenu.html:72
+msgid "Administrateurs"
+msgstr "المشرفون"
+
+#: templates/sidemenu.html:79 users/templates/users/assign_children.html:23
+#: users/templates/users/manage_users.html:15
+msgid "Parents"
+msgstr "أولياء الأمور"
+
+#: templates/sidemenu.html:83 users/templates/users/manage_users.html:13
+msgid "Étudiants"
+msgstr "الطلاب"
+
+#: templates/sidemenu.html:87
+msgid "Enfants"
+msgstr "الأطفال"
+
+#: templates/sidemenu.html:89
+msgid "Gestion de l'école"
+msgstr "إدارة المدرسة"
+
+#: templates/sidemenu.html:98
+msgid "Années"
+msgstr "السنوات"
+
+#: templates/sidemenu.html:110
+msgid "Attribution Profs"
+msgstr "تعيين الأساتذة"
+
+#: templates/sidemenu.html:116
+msgid "Salles de Classe"
+msgstr "قاعات التدريس"
+
+#: templates/sidemenu.html:122
+msgid "Exceptions Calendrier"
+msgstr "استثناءات التقويم"
+
+#: templates/sidemenu.html:128
+msgid "Niveaux Scolaires"
+msgstr "المستويات الدراسية"
+
+#: templates/sidemenu.html:134
+msgid "Découpage de l'année"
+msgstr "تقسيم السنة"
+
+#: templates/sidemenu.html:143
+msgid "Gestion des classes"
+msgstr "إدارة الأقسام"
+
+#: templates/sidemenu.html:152 templates/sidemenu.html:201
+#: templates/sidemenu.html:250 templates/sidemenu.html:296
+msgid "Absences & Retards"
+msgstr "الغيابات والتأخرات"
+
+#: templates/sidemenu.html:181 templates/sidemenu.html:244
+#: templates/sidemenu.html:290
+msgid "Notes"
+msgstr "العلامات"
+
+#: templates/sidemenu.html:188 templates/sidemenu.html:237
+#: templates/sidemenu.html:284
+msgid "Planning"
+msgstr "جدول التوقيت"
+
+#: templates/sidemenu.html:195
+msgid "Appréciations"
+msgstr "التقديرات"
+
+#: templates/sidemenu.html:218
+msgid "Bulletins"
+msgstr "كشوف النقاط"
+
+#: templates/sidemenu.html:226
+msgid "Dépôt Documents"
+msgstr "إيداع المستندات"
+
+#: templates/sidemenu.html:268 templates/sidemenu.html:308
+msgid "Documents"
+msgstr "المستندات"
+
+#: users/managers.py:27
+msgid "Le nom d'utilisateur doit être définie."
+msgstr "يجب تحديد اسم المستخدم."
+
+#: users/managers.py:63
+msgid "Le super-utilisateur doit avoir is_staff=True."
+msgstr "يجب أن يكون للمستخدم الخارق is_staff=True."
+
+#: users/managers.py:65
+msgid "Le super-utilisateur doit avoir is_superuser=True."
+msgstr "يجب أن يكون للمستخدم الخارق is_superuser=True."
+
+#: users/models.py:37 users/templates/users/profil.html:27
+msgid "Photo de profil"
+msgstr "صورة الملف الشخصي"
+
+#: users/models.py:127
+#, python-brace-format
+msgid "Élève: {username} - {school_name}"
+msgstr "تلميذ: {username} - {school_name}"
+
+#: users/models.py:160
+#, python-brace-format
+msgid "{student_username} child of {parent_username} {school_name}"
+msgstr "{student_username} ابن لـ {parent_username} {school_name}"
+
+#: users/models.py:175
+msgid "Adresse complète"
+msgstr "العنوان الكامل"
+
+#: users/models.py:176
+msgid "Ville"
+msgstr "المدينة"
+
+#: users/models.py:177
+msgid "Pays"
+msgstr "الدولة"
+
+#: users/models.py:180
+msgid "Dernière mise à jour"
+msgstr "آخر تحديث"
+
+#: users/models.py:183
+#, python-brace-format
+msgid "Position de {username} - {date}"
+msgstr "موقع {username} - {date}"
+
+#: users/templates/users/assign_children.html:4
+msgid "Attribuer les enfants"
+msgstr "تعيين الأطفال"
+
+#: users/templates/users/assign_children.html:11
+msgid "Délier"
+msgstr "إلغاء الربط"
+
+#: users/templates/users/assign_children.html:12
+msgid "Lier"
+msgstr "ربط"
+
+#: users/templates/users/assign_children.html:13
+msgid "Aucun enfant n\\"
+msgstr "لا يوجد طفل n\\"
+#: users/templates/users/assign_children.html:14
+msgid "Tous les étudiants ont été attribués à ce parent ou sont déjà liés."
+msgstr "تم تعيين جميع الطلاب لهذا الولي أو أنهم مرتبطون به مسبقاً."
+
+#: users/templates/users/assign_children.html:15
+msgid "Erreur de configuration : URL API manquante."
+msgstr "خطأ في الإعدادات: رابط API مفقود."
+
+#: users/templates/users/assign_children.html:16
+msgid "Action en cours..."
+msgstr "الإجراء جاري..."
+
+#: users/templates/users/assign_children.html:17
+msgid "Erreur lors de l\\"
+msgstr "خطأ أثناء l\\"
+
+#: users/templates/users/assign_children.html:38
+msgid "Aucun parent trouvé."
+msgstr "لم يتم العثور على أي ولي أمر."
+
+#: users/templates/users/assign_children.html:48
+msgid ""
+"Sélectionnez un parent dans la liste pour commencer à attribuer des enfants."
+msgstr "اختر ولي أمر من القائمة للبدء في تعيين الأطفال."
+
+#: users/templates/users/assign_children.html:60
+msgid "Enfants attribués (Cliquer pour délier)"
+msgstr "الأطفال المعينون (انقر لإلغاء الربط)"
+
+#: users/templates/users/assign_children.html:63
+msgid "Aucun enfant n'est attribué à ce parent."
+msgstr "لا يوجد أي طفل معين لهذا الولي."
+
+#: users/templates/users/assign_children.html:71
+msgid "Enfants disponibles (Cliquer pour lier)"
+msgstr "الأطفال المتاحون (انقر للربط)"
+
+#: users/templates/users/assign_children.html:74
+msgid "Tous les étudiants ont été attribués."
+msgstr "تم تعيين جميع الطلاب."
+
+#: users/templates/users/dashboard_page.html:12
+#, python-format
+msgid "Bonjour, %(username)s"
+msgstr "أهلاً بك، %(username)s"
+
+#: users/templates/users/dashboard_page.html:14
+msgid "Année scolaire"
+msgstr "السنة الدراسية"
+
+#: users/templates/users/dashboard_page.html:21
+#: users/templates/users/manage_users.html:266
+msgid "École"
+msgstr "المدرسة"
+
+#: users/templates/users/dashboard_page.html:24
+msgid "Erreur lors du changement d\\"
+msgstr "خطأ أثناء تغيير d\\"
+
+#: users/templates/users/dashboard_page.html:25
+#: users/templates/users/dashboard_page.html:48
+msgid "Erreur de communication avec le serveur."
+msgstr "خطأ في الاتصال بالخادم."
+
+#: users/templates/users/dashboard_page.html:44
+msgid "Enfant suivi"
+msgstr "الطفل المتابع"
+
+#: users/templates/users/dashboard_page.html:47
+#: users/templates/users/manage_users.html:225
+#: users/templates/users/profil.html:52
+msgid "Erreur :"
+msgstr "خطأ :"
+
+#: users/templates/users/dashboard_page.html:65
+msgid "Dernière position"
+msgstr "آخر موقع"
+
+#: users/templates/users/dashboard_page.html:70
+msgid "Non disponible"
+msgstr "غير متوفر"
+
+#: users/templates/users/dashboard_page.html:74
+msgid "Màj :"
+msgstr "التحديث :"
+
+#: users/templates/users/dashboard_page.html:94
+msgid "Planning du jour"
+msgstr "جدول اليوم"
+
+#: users/templates/users/dashboard_page.html:96
+msgid "Aujourd'hui"
+msgstr "اليوم"
+
+#: users/templates/users/dashboard_page.html:120
+msgid "ANNULÉ"
+msgstr "ملغى"
+
+#: users/templates/users/dashboard_page.html:122
+msgid "PROF. ABSENT"
+msgstr "الأستاذ غائب"
+
+#: users/templates/users/dashboard_page.html:126
+msgid "Salle de classe"
+msgstr "قاعة التدريس"
+
+#: users/templates/users/dashboard_page.html:140
+msgid "Aucun cours prévu ce jour."
+msgstr "لا توجد دروس مبرمجة في هذا اليوم."
+
+#: users/templates/users/dashboard_page.html:160
+msgid "non lus"
+msgstr "غير مقروءة"
+
+#: users/templates/users/dashboard_page.html:161
+msgid "Voir les messages"
+msgstr "عرض الرسائل"
+
+#: users/templates/users/dashboard_page.html:163
+msgid "nouveau"
+msgstr "جديد"
+
+#: users/templates/users/dashboard_page.html:164
+msgid "À jour"
+msgstr "محدث"
+
+#: users/templates/users/dashboard_page.html:178
+#: users/templates/users/dashboard_page.html:270
+#: users/templates/users/dashboard_page.html:422
+msgid "Actualité"
+msgstr "المستجدات"
+
+#: users/templates/users/dashboard_page.html:179
+#: users/templates/users/dashboard_page.html:272
+msgid "Nouveau"
+msgstr "جديد"
+
+#: users/templates/users/dashboard_page.html:187
+msgid "Cliquez pour lire le contenu complet de cette annonce..."
+msgstr "انقر لقراءة المحتوى الكامل لهذا الإعلان..."
+
+#: users/templates/users/dashboard_page.html:189
+#: users/templates/users/dashboard_page.html:431
+msgid "Aucune annonce récente."
+msgstr "لا توجد أي إعلانات حديثة."
+
+#: users/templates/users/dashboard_page.html:221
+msgid "À Justifier"
+msgstr "قيد التبرير"
+
+#: users/templates/users/dashboard_page.html:222
+msgid "Action requise"
+msgstr "الإجراء مطلوب"
+
+#: users/templates/users/dashboard_page.html:222
+msgid "Tout est en ordre"
+msgstr "كل شيء على ما يرام"
+
+#: users/templates/users/dashboard_page.html:236
+msgid "Derniers incidents"
+msgstr "آخر الحوادث"
+
+#: users/templates/users/dashboard_page.html:238
+msgid "Tout voir"
+msgstr "عرض الكل"
+
+#: users/templates/users/dashboard_page.html:258
+msgid "Rien à signaler."
+msgstr "لا توجد أي ملاحظات."
+
+#: users/templates/users/dashboard_page.html:299
+msgid "Indicateurs Assiduité"
+msgstr "مؤشرات المواظبة"
+
+#: users/templates/users/dashboard_page.html:306
+msgid "Absences Totales"
+msgstr "إجمالي الغيابات"
+
+#: users/templates/users/dashboard_page.html:312
+msgid "Retards Totaux"
+msgstr "إجمالي التأخرات"
+
+#: users/templates/users/dashboard_page.html:317
+msgid "Voir les détails"
+msgstr "عرض التفاصيل"
+
+#: users/templates/users/dashboard_page.html:326
+msgid "Performance Pédagogique"
+msgstr "الأداء البيداغوجي"
+
+#: users/templates/users/dashboard_page.html:329
+msgid "Globale :"
+msgstr "العام :"
+
+#: users/templates/users/dashboard_page.html:340
+msgid "Période"
+msgstr "الفترة"
+
+#: users/templates/users/dashboard_page.html:361
+msgid "Pas de données pour la période actuelle."
+msgstr "لا توجد بيانات للفترة الحالية."
+
+#: users/templates/users/dashboard_page.html:373
+msgid "Centre de Rapports"
+msgstr "مركز التقارير"
+
+#: users/templates/users/dashboard_page.html:385
+msgid "Statistiques Établissement"
+msgstr "إحصائيات المؤسسة"
+
+#: users/templates/users/dashboard_page.html:386
+msgid "Format Excel (.xlsx)"
+msgstr "تنسيق Excel (.xlsx)"
+
+#: users/templates/users/dashboard_page.html:400
+msgid "Export Global (Toutes Écoles)"
+msgstr "تصدير شامل (جميع المدارس)"
+
+#: users/templates/users/dashboard_page.html:401
+msgid "Données complètes système"
+msgstr "بيانات النظام الكاملة"
+
+#: users/templates/users/manage_users.html:73
+msgid "Gérer les notes"
+msgstr "إدارة العلامات"
+
+#: users/templates/users/manage_users.html:80
+msgid "Gérer les appréciations"
+msgstr "إدارة التقديرات"
+
+#: users/templates/users/manage_users.html:91
+#: users/templates/users/manage_users.html:134
+msgid "Désactiver le compte"
+msgstr "تعطل الحساب"
+
+#: users/templates/users/manage_users.html:127
+msgid "Voir les documents et bulletins"
+msgstr "عرض المستندات وكشوف النقاط"
+
+#: users/templates/users/manage_users.html:178
+msgid "Voir les documents (Archives)"
+msgstr "عرض المستندات (الأرشيف)"
+
+#: users/templates/users/manage_users.html:186
+msgid "Activer le compte"
+msgstr "تفعيل الحساب"
+
+#: users/templates/users/manage_users.html:198
+msgid "Aucun utilisateur de ce type trouvé."
+msgstr "لم يتم العثور على أي مستخدم من هذا النوع."
+#: users/templates/users/manage_users.html:205
+#: users/templates/users/manage_users.html:219
+msgid "Créer un nouvel utilisateur"
+msgstr "إنشاء مستخدم جديد"
+
+#: users/templates/users/manage_users.html:208
+msgid "Avatar"
+msgstr "الصورة الرمزية"
+
+#: users/templates/users/manage_users.html:221
+msgid "Modifier un utilisateur"
+msgstr "تعديل مستخدم"
+
+#: users/templates/users/manage_users.html:223
+msgid "Êtes-vous sûr de vouloir désactiver l\\"
+msgstr "هل أنت متأكد من رغبتك في تعطيل l\\"
+
+#: users/templates/users/manage_users.html:224
+msgid "Êtes-vous sûr de vouloir activer l\\"
+msgstr "هل أنت متأكد من رغبتك في تفعيل l\\"
+
+#: users/templates/users/manage_users.html:226
+msgid "Une erreur est survenue lors de l\\"
+msgstr "حدث خطأ أثناء l\\"
+
+#: users/templates/users/manage_users.html:246
+msgid "Email"
+msgstr "البريد الإلكتروني"
+
+#: users/templates/users/manage_users.html:253
+msgid "Numéro de téléphone"
+msgstr "رقم الهاتف"
+
+#: users/templates/users/manage_users.html:260
+msgid "Mot de passe"
+msgstr "كلمة المرور"
+
+#: users/templates/users/manage_users.html:272
+msgid "Type de personnel"
+msgstr "نوع الطاقم"
+
+#: users/templates/users/manage_users.html:275
+msgid "Sélectionner un type"
+msgstr "اختر النوع"
+
+#: users/templates/users/manage_users.html:284
+msgid "Numéro ID matricule (ex: INE)"
+msgstr "رقم التعريف الوطني / رقم التسجيل (مثال: INE)"
+
+#: users/templates/users/manage_users.html:291
+msgid "Civilité"
+msgstr "الجنس / اللقب الاجتماعي"
+
+#: users/templates/users/manage_users.html:294
+msgid "Sélectionner une civilité"
+msgstr "اختر اللقب"
+
+#: users/templates/users/manage_users.html:295
+msgid "Homme"
+msgstr "ذكر"
+
+#: users/templates/users/manage_users.html:296
+msgid "Femme"
+msgstr "أنثى"
+
+#: users/templates/users/manage_users.html:300
+msgid "Adresse"
+msgstr "العنوان"
+
+#: users/templates/users/manage_users.html:305
+msgid "Date de naissance"
+msgstr "تاريخ الازدياد"
+
+#: users/templates/users/password_reset.html:8
+msgid "Réinitialisation du mot de passe"
+msgstr "إعادة تعيين كلمة المرور"
+
+#: users/templates/users/password_reset.html:21
+msgid "Mot de passe oublié ?"
+msgstr "نسيت كلمة المرور؟"
+
+#: users/templates/users/password_reset.html:22
+msgid ""
+"Entrez votre nom d'utilisateur pour recevoir un lien de réinitialisation par "
+"e-mail."
+msgstr "أدخل اسم المستخدم الخاص بك لتلقي رابط إعادة التين عبر البريد الإلكتروني."
+
+#: users/templates/users/password_reset.html:27
+msgid "Erreur lors sur lien."
+msgstr "خطأ في الرابط."
+
+#: users/templates/users/password_reset.html:28
+msgid "Une erreur est survenue. Veuillez réessayer."
+msgstr "حدث خطأ ما. يرجى المحاولة مرة أخرى."
+
+#: users/templates/users/password_reset.html:49
+msgid "Nom d'utilisateur"
+msgstr "اسم المستخدم"
+
+#: users/templates/users/password_reset.html:63
+msgid "Entrez votre nom d\\"
+msgstr "أدخل اسم d\\"
+
+#: users/templates/users/password_reset.html:76
+msgid "Envoyer le lien"
+msgstr "إرسال الرابط"
+
+#: users/templates/users/password_reset_confirm.html:8
+#: users/templates/users/password_reset_confirm.html:21
+#: users/templates/users/password_reset_confirm.html:34
+#: users/templates/users/profil.html:160
+msgid "Nouveau mot de passe"
+msgstr "كلمة المرور الجديدة"
+
+#: users/templates/users/password_reset_confirm.html:22
+msgid "Entrez votre nouveau mot de passe pour le mettre à jour."
+msgstr "أدخل كلمة المرور الجديدة لتحديثها."
+
+#: users/templates/users/password_reset_confirm.html:28
+msgid "Erreur lors de la mise à jour du mot de passe."
+msgstr "خطأ أثناء تحديث كلمة المرور."
+
+#: users/templates/users/password_reset_confirm.html:29
+msgid "Une erreur de connexion est survenue. Veuillez réessayer."
+msgstr "حدث خطأ في الاتصال. يرجى المحاولة مرة أخرى."
+
+#: users/templates/users/password_reset_confirm.html:47
+msgid "Entrez votre nouveau mot de passe"
+msgstr "أدخل كلمة المرور الجديدة"
+
+#: users/templates/users/profil.html:4 users/templates/users/profil.html:10
+msgid "Mon Profil"
+msgstr "ملفي الشخصي"
+
+#: users/templates/users/profil.html:11
+msgid "Gérez vos informations personnelles et votre sécurité."
+msgstr "قم بإدارة معلوماتك الشخصية وأمنك."
+
+#: users/templates/users/profil.html:43
+msgid "Supprimer la photo"
+msgstr "حذف الصورة"
+
+#: users/templates/users/profil.html:51
+msgid "Impossible de mettre à jour la photo."
+msgstr "تعذر تحديث الصورة."
+
+#: users/templates/users/profil.html:69
+msgid "Super Admin"
+msgstr "مشرف رئيسي"
+
+#: users/templates/users/profil.html:70 users/views.py:455
+msgid "Administrateur"
+msgstr "مشرف"
+
+#: users/templates/users/profil.html:84
+msgid "Numéro immatriculation"
+msgstr "رقم التسجيل"
+
+#: users/templates/users/profil.html:118
+msgid "Sécurité"
+msgstr "الأمان"
+
+#: users/templates/users/profil.html:120
+msgid "Mettre à jour votre mot de passe."
+msgstr "تحديث كلمة المرور الخاصة بك."
+
+#: users/templates/users/profil.html:127 users/views.py:939
+msgid "Les nouveaux mots de passe ne correspondent pas."
+msgstr "كلمات المرور الجديدة غير متطابقة."
+
+#: users/templates/users/profil.html:128
+msgid "Le mot de passe doit faire au moins 4 caractères."
+msgstr "يجب ألا تقل كلمة المرور عن 4 أحرف."
+
+#: users/templates/users/profil.html:129
+msgid "Une erreur technique est survenue."
+msgstr "حدث خطأ تقني."
+
+#: users/templates/users/profil.html:135
+msgid "Mot de passe actuel"
+msgstr "كلمة المرور الحالية"
+
+#: users/templates/users/profil.html:167
+msgid "8 caractères min."
+msgstr "8 أحرف كحد أدنى."
+
+#: users/templates/users/profil.html:177
+msgid "Confirmer le mot de passe"
+msgstr "تأكيد كلمة المرور"
+
+#: users/templates/users/profil.html:184
+msgid "Répétez le mot de passe"
+msgstr "أعد كتابة كلمة المرور"
+
+#: users/templates/users/profil.html:195
+msgid "Le mot de passe doit contenir :"
+msgstr "يجب أن تحتوي كلمة المرور على :"
+
+#: users/templates/users/profil.html:197
+msgid "Au moins 8 caractères"
+msgstr "8 أحرف على الأقل"
+
+#: users/templates/users/profil.html:198
+msgid "Au moins une majuscule"
+msgstr "حرف كبير واحد على الأقل"
+
+#: users/templates/users/profil.html:199
+msgid "Au moins une minuscule"
+msgstr "حرف صغير واحد على الأقل"
+
+#: users/templates/users/profil.html:200
+msgid "Au moins un chiffre"
+msgstr "رقم واحد على الأقل"
+
+#: users/templates/users/profil.html:201
+msgid "Au moins un caractère spécial"
+msgstr "رمز خاص واحد على الأقل"
+
+#: users/templates/users/profil.html:202
+msgid "Ne doit pas être trop similaire à vos informations personnelles"
+msgstr "يجب ألا تكون مشابهة جداً لمعلوماتك الشخصية"
+
+#: users/templates/users/profil.html:208
+msgid "Enregistrer le nouveau mot de passe"
+msgstr "حفظ كلمة المرور الجديدة"
+
+#: users/templates/users/profil.html:238
+msgid "Supprimer la photo de profil"
+msgstr "حذف صورة الملف الشخصي"
+
+#: users/templates/users/profil.html:242
+msgid "Êtes-vous sûr de vouloir supprimer votre photo actuelle ?"
+msgstr "هل أنت متأكد من رغبتك في حذف صورتك الحالية؟"
+
+#: users/templates/users/profil.html:251
+msgid "Impossible de supprimer la photo."
+msgstr "تعذر حذف الصورة."
+
+#: users/utils.py:54
+msgid "Le nom d'utilisateur est requis."
+msgstr "اسم المستخدم مطلوب."
+
+#: users/utils.py:60
+msgid "Un utilisateur avec cet email existe déjà."
+msgstr "يوجد مستخدم بهذا البريد الإلكتروني مسبقاً."
+
+#: users/utils.py:122 users/utils.py:138 users/utils.py:155 users/utils.py:245
+#: users/utils.py:810 users/utils.py:981
+msgid "Utilisateur non trouvé."
+msgstr "المستخدم غير موجود."
+#: users/utils.py:174
+#, python-brace-format
+msgid "Une erreur s'est produite lors de la vérification de l'email : {e}"
+msgstr "حدث خطأ أثناء التحقق من البريد الإلكتروني : {e}"
+
+#: users/utils.py:228
+msgid "Le mot de passe doit contenir au moins 4 caractères."
+msgstr "يجب أن تحتوي كلمة المرور على 4 أحرف على الأقل."
+
+#: users/utils.py:241
+msgid "Mot de passe mis à jour avec succès."
+msgstr "تم تحديث كلمة المرور بنجاح."
+
+#: users/utils.py:273
+#, python-brace-format
+msgid "Erreur d'envoi d'email: {e}"
+msgstr "خطأ في إرسال البريد الإلكتروني: {e}"
+
+#: users/utils.py:287
+msgid "Votre compte a été créé"
+msgstr "تم إنشاء حسابك"
+
+#: users/utils.py:295
+#, python-brace-format
+msgid ""
+"\n"
+"    Bonjour,\n"
+"\n"
+"    Votre compte utilisateur sur la plateforme de gestion scolaire a été "
+"créé.\n"
+"\n"
+"    Voici vos identifiants temporaires :\n"
+"    - Nom d'utilisateur : {username}\n"
+"    - Mot de passe : {password}\n"
+"\n"
+"    Pour des raisons de sécurité, nous vous demandons de changer votre mot "
+"de passe immédiatement après votre première connexion pour un mot de passe "
+"plus robuste et sécurisé.\n"
+"\n"
+"    Vous pouvez vous connecter en utilisant ce lien :\n"
+"    {reset_link}\n"
+"\n"
+"    Si vous rencontrez des difficultés, veuillez contacter le support "
+"technique.\n"
+"\n"
+"    Cordialement,\n"
+"\n"
+"    L'équipe de l'administration\n"
+"    "
+msgstr ""
+"\n"
+"    مرحباً،\n"
+"\n"
+"    تم إنشاء حساب المستخدم الخاص بك على منصة إدارة المدارس.\n"
+"\n"
+"    إليك بيانات الاعتماد المؤقتة الخاصة بك :\n"
+"    - اسم المستخدم : {username}\n"
+"    - كلمة المرور : {password}\n"
+"\n"
+"    لأسباب أمنية، نطلب منك تغيير كلمة المرور الخاصة بك فور تسجيل الدخول "
+"لأول مرة لتكون كلمة مرور أكثر قوة وأماناً.\n"
+"\n"
+"    يمكنك تسجيل الدخول باستخدام هذا الرابط :\n"
+"    {reset_link}\n"
+"\n"
+"    إذا واجهتك أي صعوبات، يرجى الاتصال بالدعم الفني.\n"
+"\n"
+"    مع خالص التحيات،\n"
+"\n"
+"    فريق الإدارة\n"
+"    "
+
+#: users/utils.py:320
+#, python-brace-format
+msgid "Email envoyé avec succès à {email}"
+msgstr "تم إرسال البريد الإلكتروني بنجاح إلى {email}"
+
+#: users/utils.py:322
+#, python-brace-format
+msgid "Erreur lors de l'envoi de l'email à {email} : {e}"
+msgstr "خطأ أثناء إرسال البريد الإلكتروني إلى {email} : {e}"
+
+#: users/utils.py:360
+msgid "Réinitialisation de votre mot de passe"
+msgstr "إعادة تعيين كلمة المرور الخاصة بك"
+
+#: users/utils.py:361
+#, python-brace-format
+msgid ""
+"\n"
+"    Bonjour,\n"
+"\n"
+"    Vous avez demandé la réinitialisation de votre mot de passe.\n"
+"    Veuillez utiliser le lien suivant pour créer un nouveau mot de passe :\n"
+"\n"
+"    {reset_link}\n"
+"\n"
+"    Ce lien est valide pendant 3 jours. Pour des raisons de sécurité, ne le "
+"partagez avec personne.\n"
+"\n"
+"    Si vous n'êtes pas à l'origine de cette demande, veuillez ignorer cet "
+"email.\n"
+"    "
+msgstr ""
+"\n"
+"    مرحباً،\n"
+"\n"
+"    لقد طلبت إعادة تعيين كلمة المرور الخاصة بك.\n"
+"    يرجى استخدام الرابط التالي لإنشاء كلمة مرور جديدة :\n"
+"\n"
+"    {reset_link}\n"
+"\n"
+"    هذا الرابط صالح لمدة 3 أيام. لأسباب أمنية، لا تشاركه مع أي شخص.\n"
+"\n"
+"    إذا لم تكن أنت من قام بهذا الطلب، يرجى تجاهل هذا البريد الإلكتروني.\n"
+"    "
+
+#: users/utils.py:500
+#, python-brace-format
+msgid "Année Scolaire. L'étape d'enregistrement commence : {school}"
+msgstr "السنة الدراسية. تبدأ مرحلة التسجيل : {school}"
+
+#: users/utils.py:501
+#, python-brace-format
+msgid ""
+"\n"
+"Cher Administrateur,\n"
+"\n"
+"L'étape d'enregistrement de la nouvelle année scolaire a officiellement "
+"commencé pour l'école {school}.\n"
+"\n"
+"Vous pouvez maintenant vous connecter à la plateforme pour :\n"
+"1. Valider les inscriptions des nouveaux élèves.\n"
+"2. Finaliser la configuration des classes et des cours. \n"
+"3. Mettre à jour les plannings.\n"
+"\n"
+"Veuillez procéder aux vérifications nécessaires pour assurer une transition "
+"fluide.\n"
+"\n"
+"Cordialement,\n"
+"L'Équipe de Gestion.\n"
+"        "
+msgstr ""
+"\n"
+"عزيزي المشرف،\n"
+"\n"
+"بدأت مرحلة تسجيل السنة الدراسية الجديدة رسمياً للمدرسة {school}.\n"
+"\n"
+"يمكنك الآن تسجيل الدخول إلى المنصة من أجل :\n"
+"1. تأكيد تسجيلا التلاميذ الجدد.\n"
+"2. إنهاء إعداد الأقسام والدروس.\n"
+"3. تحديث جداول التوقيت.\n"
+"\n"
+"يرجى إجراء التحققات اللازمة لضمان انتقال سلس.\n"
+"\n"
+"مع خالص التحيات،\n"
+"فريق الإدارة.\n"
+"        "
+
+#: users/utils.py:535
+#, python-brace-format
+msgid "Année Scolaire. Le déroulement normal commence : {school}"
+msgstr "السنة الدراسية. يبدأ السير العادي : {school}"
+
+#: users/utils.py:536
+#, python-brace-format
+msgid ""
+"\n"
+"Cher Membre du Personnel (Professeur / CPE / Administrateur),\n"
+"\n"
+"L'étape de déroulement normal de l'année scolaire est maintenant activée "
+"pour l'école {school}.\n"
+"\n"
+"La plateforme est pleinement opérationnelle pour :\n"
+"1. L'entrée des notes et des appréciations.\n"
+"2. La gestion des absences et des retards.\n"
+"3. L'accès aux outils de communication avec les parents et élèves.\n"
+"\n"
+"Nous vous souhaitons une excellente année !\n"
+"\n"
+"Cordialement,\n"
+"L'Administration {school}.\n"
+"        "
+msgstr ""
+"\n"
+"عزيزي عضو الطاقم (أستاذ / مستشار التربية / مشرف)،\n"
+"\n"
+"تم الآن تفعيل مرحلة السير العادي للسنة الدراسية للمدرسة {school}.\n"
+"\n"
+"المنصة جاهزة تماماً للعمل من أجل :\n"
+"1. إدخال العلامات والتقديرات.\n"
+"2. إدارة الغيابات والتأخرات.\n"
+"3. الوصول إلى أدوات التواصل مع أولياء الأمور والتلاميذ.\n"
+"\n"
+"نتمنى لك سنة متميزة !\n"
+"\n"
+"مع خالص التحيات،\n"
+"إدارة {school}.\n"
+"        "
+
+#: users/utils.py:571
+msgid "email_a_remplir@gmail.com"
+msgstr "email_a_remplir@gmail.com"
+
+#: users/utils.py:574
+#, python-brace-format
+msgid ""
+"Aucun destinataire trouvé pour l'étape '{year_stape}' à l'école {school}."
+msgstr "لم يتم العثور على أي مستلم للمرحلة '{year_stape}' في المدرسة {school}."
+
+#: users/utils.py:578
+msgid ""
+"Tentative d'envoi à {len(unique_recipients)} destinataire(s) pour l'étape "
+"'{year_stape}'..."
+msgstr ""
+"محاولة الإرسال إلى {len(unique_recipients)} مستلم (مستلمين) للمرحلة "
+"'{year_stape}'..."
+
+#: users/utils.py:602
+msgid "Cet utilisateur est déjà un super administrateur."
+msgstr "هذا المستخدم هو مشرف خارق بالفعل."
+
+#: users/utils.py:652
+msgid "Cet utilisateur est déjà lié à un membre du personnel."
+msgstr "هذا المستخدم مرتبط بالفعل بأحد أعضاء الطاقم."
+
+#: users/utils.py:724
+msgid "Membre du personnel non trouvé."
+msgstr "عضو الطاقم غير موجود."
+
+#: users/utils.py:799
+msgid "Cet utilisateur est déjà lié à un élève."
+msgstr "هذا المستخدم مرتبط بالفعل بتلميذ."
+
+#: users/utils.py:863 users/utils.py:923 users/utils.py:941 users/utils.py:1146
+msgid "Élève non trouvé."
+msgstr "التلميذ غير موجود."
+
+#: users/utils.py:925
+#, python-brace-format
+msgid "Erreur lors de la désactivation de l'élève : {error}"
+msgstr "خطأ أثناء تعطيل التلميذ : {error}"
+
+#: users/utils.py:943
+#, python-brace-format
+msgid "Erreur lors de l'activation de l'élève : {error}"
+msgstr "خطأ أثناء تفعيل التلميذ : {error}"
+
+#: users/utils.py:971
+msgid "Cet utilisateur est déjà lié à un parent."
+msgstr "هذا المستخدم مرتبط بالفعل بولي أمر."
+
+#: users/utils.py:1016 users/utils.py:1067 users/utils.py:1086
+#: users/utils.py:1148 users/views.py:865
+msgid "Parent non trouvé."
+msgstr "ولي الأمر غير موجود."
+
+#: users/utils.py:1069
+#, python-brace-format
+msgid "Erreur lors de la désactivation du parent : {error}"
+msgstr "خطأ أثناء تعطيل ولي الأمر : {error}"
+
+#: users/utils.py:1088
+#, python-brace-format
+msgid "Erreur lors de l'activation du parent : {error}"
+msgstr "خطأ أثناء تفعيل ولي الأمر : {error}"
+
+#: users/utils.py:1109
+msgid "Profil non trouvé pour cet utilisateur."
+msgstr "الملف الشخصي غير موجود لهذا المستخدم."
+
+#: users/utils.py:1111
+#, python-brace-format
+msgid "Erreur lors de la mise à jour du profil de l'élève : {error}"
+msgstr "خطأ أثناء تحديث الملف الشخصي للتلميذ : {error}"
+
+#: users/utils.py:1113
+#, python-brace-format
+msgid "Erreur lors de la mise à jour du profil du parent : {error}"
+msgstr "خطأ أثناء تحديث الملف الشخصي لولي الأمر : {error}"
+
+#: users/utils.py:1142
+msgid "Le lien entre cet élève et ce parent existe déjà."
+msgstr "الرابط بين هذا التلميذ وولي الأمر هذا موجود مسبقاً."
+
+#: users/utils.py:1186
+msgid "Lien enfant/parent non trouvé."
+msgstr "رابط الطفل/ولي الأمر غير موجود."
+
+#: users/utils.py:1188
+msgid "Nouvel élève non trouvé."
+msgstr "التلميذ الجديد غير موجود."
+
+#: users/utils.py:1190
+msgid "Nouveau parent non trouvé."
+msgstr "ولي الأمر الجديد غير موجود."
+
+#: users/utils.py:1369
+msgid "Le mot de passe doit contenir au moins 8 caractères."
+msgstr "يجب أن تحتوي كلمة المرور على 8 أحرف على الأقل."
+
+#: users/utils.py:1372
+msgid "Le mot de passe doit contenir au moins une lettre majuscule."
+msgstr "يجب أن تحتوي كلمة المرور على حرف كبير واحد على الأقل."
+
+#: users/utils.py:1375
+msgid "Le mot de passe doit contenir au moins une lettre minuscule."
+msgstr "يجب أن تحتوي كلمة المرور على حرف صغير واحد على الأقل."
+
+#: users/utils.py:1378
+msgid "Le mot de passe doit contenir au moins un chiffre."
+msgstr "يجب أن تحتوي كلمة المرور على رقم واحد على الأقل."
+#: users/utils.py:1382
+msgid ""
+"Le mot de passe doit contenir au moins un caractère spécial (ex: @, #, !, ?, "
+"etc.)."
+msgstr "يجب أن تحتوي كلمة المرور على رمز خاص واحد على الأقل (مثل: @, #, !, ?, إلخ)."
+
+#: users/utils.py:1384
+msgid "Le mot de passe est valide."
+msgstr "كلمة المرور صالحة."
+
+#: users/utils.py:1441
+msgid "Adresse inconnue"
+msgstr "عنوان مجهول"
+
+#: users/views.py:50 users/views.py:111
+msgid "Nom d'utilisateur ou mot de passe incorrect."
+msgstr "اسم المستخدم أو كلمة المرور غير صحيحة."
+
+#: users/views.py:55 users/views.py:63 users/views.py:67
+msgid "Impossible de vous connecter."
+msgstr "تعذر تسجيل دخولك."
+
+#: users/views.py:80 users/views.py:84 users/views.py:91
+msgid "Impossible de vous connecter pour le moment."
+msgstr "تعذر تسجيل دخولك في الوقت الحالي."
+
+#: users/views.py:109
+msgid "Connexion réussie."
+msgstr "تم تسجيل الدخول بنجاح."
+
+#: users/views.py:301
+msgid "Un lien de réinitialisation a été envoyé à votre adresse e-mail."
+msgstr "تم إرسال رابط إعادة التعيين إلى عنوان بريدك الإلكتروني."
+
+#: users/views.py:303
+msgid "Erreur lors de l'envoi de l'e-mail."
+msgstr "خطأ أثناء إرسال البريد الإلكتروني."
+
+#: users/views.py:305
+msgid "Nom d'utilisateur invalide."
+msgstr "اسم المستخدم غير صالح."
+
+#: users/views.py:342 users/views.py:381
+msgid "Le lien de réinitialisation est invalide ou a expiré."
+msgstr "رابط إعادة التعيين غير صالح أو انتهت صلاحيته."
+
+#: users/views.py:516
+msgid "L'utilisateur est introuvable."
+msgstr "المستخدم غير موجود."
+
+#: users/views.py:561
+msgid ""
+"Impossible de modifier le statut d'un utilisateur lorsque l'année est en "
+"cours de déroulement."
+msgstr "تعذر تعديل حالة المستخدم عندما تكون السنة في مرحلة السير العادي."
+
+#: users/views.py:565
+msgid "L'utilisateur a bien été modifié."
+msgstr "تم تعديل المستخدم بنجاح."
+
+#: users/views.py:572
+msgid "Veuillez compléter le formulaire."
+msgstr "يرجى إتمام النموذج."
+
+#: users/views.py:577
+msgid "L'adresse email existe déjà."
+msgstr "عنوان البريد الإلكتروني موجود مسبقاً."
+
+#: users/views.py:592
+msgid "L'école est introuvale."
+msgstr "المدرسة غير موجودة."
+
+#: users/views.py:641
+msgid "L'utilisateur a bien été crée."
+msgstr "تم إنشاء المستخدم بنجاح."
+
+#: users/views.py:644
+#, python-brace-format
+msgid "Integrity error: {error}"
+msgstr "خطأ في السلامة: {error}"
+
+#: users/views.py:646 users/views.py:671
+#, python-brace-format
+msgid "An error occurred: {error}"
+msgstr "حدث خطأ ما: {error}"
+
+#: users/views.py:657
+msgid "School ID is required."
+msgstr "معرف المدرسة مطلوب."
+
+#: users/views.py:664
+msgid "School selected successfully."
+msgstr "تم تحديد المدرسة بنجاح."
+
+#: users/views.py:666
+msgid "School not found."
+msgstr "المدرسة غير موجودة."
+
+#: users/views.py:668 users/views.py:706
+msgid "Permission denied."
+msgstr "تم رفض الإذن."
+
+#: users/views.py:699
+msgid "Vous ne pouvez pas modifier le statut d'un autre proviseur."
+msgstr "لا يمكنك تعديل حالة مدير آخر."
+
+#: users/views.py:703
+msgid "Vous ne pouvez pas modifier le statut d'un membre du personnel."
+msgstr "لا يمكنك تعديل حالة أحد أعضاء الطاقم."
+
+#: users/views.py:711
+msgid "Utilisateur activé avec succès."
+msgstr "تم تفعيل المستخدم بنجاح."
+
+#: users/views.py:714
+msgid "Utilisateur désactivé avec succès."
+msgstr "تم تعطيل المستخدم بنجاح."
+
+#: users/views.py:716
+msgid "Action invalide."
+msgstr "إجراء غير صالح."
+
+#: users/views.py:722
+#, python-brace-format
+msgid "Une erreur est survenue: {error}"
+msgstr "حدث خطأ ما: {error}"
+
+#: users/views.py:823
+msgid "Données manquantes (parent_id, student_id, action)."
+msgstr "بيانات مفقودة (parent_id, student_id, action)."
+
+#: users/views.py:840
+#, python-brace-format
+msgid "Lien créé : {student_name} est maintenant un enfant de {parent_name}."
+msgstr "تم إنشاء الرابط : {student_name} أصبح الآن طفلاً لـ {parent_name}."
+
+#: users/views.py:853
+#, python-brace-format
+msgid "Lien supprimé : {student_name} n'est plus un enfant de {parent_name}."
+msgstr "تم حذف الرابط : {student_name} لم يعد طفلاً لـ {parent_name}."
+
+#: users/views.py:856
+msgid "Le lien n'existe pas, aucune suppression effectuée."
+msgstr "الرابط غير موجود، لم يتم إجراء أي حذف."
+
+#: users/views.py:867
+msgid "Étudiant non trouvé."
+msgstr "الطالب غير موجود."
+
+#: users/views.py:895
+msgid "Cet enfant n'est pas lié à votre compte."
+msgstr "هذا الطفل غير مرتبط بحسابك."
+
+#: users/views.py:936
+msgid "Tous les champs sont obligatoires."
+msgstr "جميع الحقول إزامية."
+
+#: users/views.py:950
+msgid "Votre mot de passe actuel est incorrect."
+msgstr "كلمة المرور الحالية غير صحيحة."
+
+#: users/views.py:960
+msgid "Votre mot de passe a été modifié avec succès."
+msgstr "تم تعديل كلمة المرور الخاصة بك بنجاح."
+
+#: users/views.py:966
+msgid "Une erreur serveur est survenue."
+msgstr "حدث خطأ في الخادم."
+
+#: users/views.py:990
+msgid "Aucun fichier reçu."
+msgstr "لم يتم استلام أي ملف."
+
+#: users/views.py:996
+msgid "Le fichier doit être une image."
+msgstr "يجب أن يكون الملف صورة."
+
+#: users/views.py:1009
+msgid "Photo mise à jour avec succès."
+msgstr "تم تحديث الصورة بنجاح."
+
+#: users/views.py:1014
+#, python-brace-format
+msgid "Erreur serveur : {error}"
+msgstr "خطأ في الخادم : {error}"
+
+#: users/views.py:1029
+msgid "Photo supprimée."
+msgstr "تم حذف الصورة."
+
+#: users/views.py:1033
+#, python-brace-format
+msgid "Erreur lors de la suppression : {error}"
+msgstr "خطأ أثناء الحذف : {error}"
+
+#: users/views.py:1050
+msgid "Coordonnées manquantes."
+msgstr "الإحداثيات مفقودة."
+
+#: users/views.py:1056
+msgid "Utilisateur non autorisé."
+msgstr "مستخدم غير مصرح به."
+
+#: users/views.py:1062
+msgid "Position enregistrée avec succès."
+msgstr "تم حفظ الموقع بنجاح."
+
+#: users/views.py:1064
+msgid "Erreur lors de la géolocalisation."
+msgstr "خطأ أثناء تحديد الموقع الجغرافي."

@@ -151,17 +151,18 @@ REST_FRAMEWORK = {
 }
 
 MIDDLEWARE = [
-    "corsheaders.middleware.CorsMiddleware",  # Doit être en premier pour CORS
+    "corsheaders.middleware.CorsMiddleware", 
     "django.middleware.security.SecurityMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
+    "django.middleware.locale.LocaleMiddleware", # <-- (Gère la langue par défaut/navigateur)
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
     'allauth.account.middleware.AccountMiddleware',
+    'schools.middleware.SchoolLanguageMiddleware', # Middleware qui prend le relais après la connexion
 ]
-
 ROOT_URLCONF = "ProjectSchool.urls"
 
 TEMPLATES = [{
@@ -174,13 +175,12 @@ TEMPLATES = [{
             "django.template.context_processors.request",
             "django.contrib.auth.context_processors.auth",
             "django.contrib.messages.context_processors.messages",
-            'users.context_processors.user_roles', # Pour faire des vérifications en fonction du rôle de l'utilisateur dans les pages du sites
+            "django.template.context_processors.i18n", # <-- (Indispensable pour {{ LANGUAGE_CODE }})
+            'users.context_processors.user_roles',
             'schools.context_processors.school_context', 
-
         ],
     },
-  },
-]
+}]
 
 WSGI_APPLICATION = "ProjectSchool.wsgi.application"
 
@@ -240,7 +240,7 @@ else:
 
 
 # LANGUAGE_CODE = "en-us"
-LANGUAGE_CODE = "fr-fr"
+LANGUAGE_CODE = "fr"
 
 TIME_ZONE = "Europe/Paris"
 USE_I18N = True
@@ -369,6 +369,10 @@ API_COOKIE_SAMESITE = "Lax" if DEBUG else "None"
 
 # Durée de vie des sessions
 SESSION_COOKIE_AGE = 86400  # 24 heures
+
+LOCALE_PATHS = [
+    BASE_DIR / 'locale',
+]
 
 """
 LOGGING = {

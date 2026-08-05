@@ -11,6 +11,8 @@ from schools.models import School
 from users.models import Staff
 from .models import Subject, TeacherSubject
 
+from django.utils.translation import gettext_lazy as _
+
 """
 ======================
 GESTION DES MATIERES :
@@ -42,9 +44,9 @@ def create_subject(name, color, school_id, is_active=True):
         )
         return subject, None
     except ObjectDoesNotExist:
-        return None, "Erreur: L'école spécifiée n'existe pas."
+        return None, _("Erreur: L'école spécifiée n'existe pas.")
     except Exception as e:
-        return None, f"Erreur lors de la création de la matière : {str(e)}"
+        return None, _("Erreur lors de la création de la matière : {error}").format(error=str(e))
 
 def get_subject_by_id(subject_id):
     """
@@ -95,9 +97,9 @@ def update_subject(subject_id, **kwargs):
         subject.save()
         return subject, None
     except Subject.DoesNotExist:
-        return None, "Erreur: La matière spécifiée n'existe pas."
+        return None, _("Erreur: La matière spécifiée n'existe pas.")
     except Exception as e:
-        return None, f"Erreur lors de la mise à jour de la matière : {str(e)}"
+        return None, _("Erreur lors de la mise à jour de la matière : {error}").format(error=str(e))
 
 def delete_subject(subject_id):
     """
@@ -150,9 +152,9 @@ def create_teacher_subject(subject_id, teacher_id, is_active=True):
         )
         return assignment, None
     except ObjectDoesNotExist as e:
-        return None, f"Erreur: L'objet spécifié n'existe pas. Détails: {str(e)}"
+        return None, _("Erreur: L'objet spécifié n'existe pas. Détails: {error}").format(error=str(e))
     except Exception as e:
-        return None, f"Erreur lors de la création de l'affectation : {str(e)}"
+        return None, _("Erreur lors de la création de l'affectation : {error}").format(error=str(e))
 
 def get_teacher_subject_by_id(assignment_id):
     """
@@ -223,9 +225,9 @@ def update_teacher_subject(assignment_id, **kwargs):
         assignment.save()
         return assignment, None
     except TeacherSubject.DoesNotExist:
-        return None, "Erreur: L'affectation spécifiée n'existe pas."
+        return None, _("Erreur: L'affectation spécifiée n'existe pas.")
     except Exception as e:
-        return None, f"Erreur lors de la mise à jour de l'affectation : {str(e)}"
+        return None, _("Erreur lors de la mise à jour de l'affectation : {error}").format(error=str(e))
 
 def delete_teacher_subject(assignment_id):
     """

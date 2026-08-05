@@ -3,9 +3,10 @@ from schools.models import Year
 from classes.models import Classroom, Class
 from subjects.models import TeacherSubject
 from users.models import User
+from django.utils.translation import gettext_lazy as _
 
 class WeeklyScheduleTemplate(models.Model):
-    name = models.CharField(max_length=150, default="Semaine Type")
+    name = models.CharField(max_length=150, default=_("Semaine Type"))
     description = models.TextField(blank=True, null=True)
     
     # Le template est spécifique à une année
@@ -18,13 +19,13 @@ class WeeklyScheduleTemplate(models.Model):
     )
 
     def __str__(self):
-        return f"Template {self.name} - {self.student_class} ({self.year})"
+        return _("Template {name} - {student_class} ({year})").format(name=self.name, student_class=self.student_class, year=self.year)
 
 
 # Modèle Course (représente un cours DANS UN TEMPLATE de semaine)
 class CourseTemplate(models.Model): # Renommé pour plus de clarté
     day_of_week = models.IntegerField(
-        choices=[(1, 'Lundi'), (2, 'Mardi'), (3, 'Mercredi'), (4, 'Jeudi'), (5, 'Vendredi'), (6, 'Samedi'), (7, 'Dimanche')]
+        choices=[(1, _('Lundi')), (2, _('Mardi')), (3, _('Mercredi')), (4, _('Jeudi')), (5, _('Vendredi')), (6, _('Samedi')), (7, _('Dimanche'))]
     )           
     start_time = models.TimeField()              
     end_time = models.TimeField()                
@@ -68,9 +69,9 @@ class ScheduledCourse(models.Model):
     
     # [MODIFIÉ] Ajout des choix de statut
     STATUS_CHOICES = [
-        ('ACTIVE', 'Actif'),
-        ('CANCELLED', 'Cours annulé'),
-        ('TEACHER_ABSENT', 'Professeur absent'),
+        ('ACTIVE', _('Actif')),
+        ('CANCELLED', _('Cours annulé')),
+        ('TEACHER_ABSENT', _('Professeur absent')),
     ]
 
     # Lien vers l'objet "template" qui a servi à le créer (pour la traçabilité)
@@ -112,5 +113,5 @@ class ScheduledCourse(models.Model):
     
     def __str__(self):
         # Amélioration du __str__ pour inclure le statut
-        return f"{self.teacher_subject} - {self.student_class} ({self.start_datetime.strftime('%Y-%m-%d %H:%M')}) [{self.status}]"
+        return _("{teacher_subject} - {student_class} ({date}) [{self.status}]").format(teacher_subject=self.teacher_subject, student_class=self.student_class, date=self.start_datetime.strftime('%Y-%m-%d %H:%M'))
 

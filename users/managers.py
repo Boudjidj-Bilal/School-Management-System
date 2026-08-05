@@ -1,6 +1,7 @@
 # Fichier managers.py
 
 from django.contrib.auth.models import BaseUserManager
+from django.utils.translation import gettext_lazy as _
 
 # Gère la création des utilisateurs pour les modèles personnalisés.
 # Ce manager remplace le gestionnaire par défaut de Django pour permettre l'utilisation
@@ -23,7 +24,7 @@ class CustomUserManager(BaseUserManager):
         """
         # Vérifie que l'email est présent.
         if not username:
-            raise ValueError("Le nom d'utilisateur doit être définie.")
+            raise ValueError(_("Le nom d'utilisateur doit être définie."))
         
         # Crée une instance du modèle utilisateur (sans la sauvegarder).
         user = self.model(username=username, **extra_fields)
@@ -59,9 +60,9 @@ class CustomUserManager(BaseUserManager):
 
         # S'assure que les permissions de staff et super-utilisateur sont bien actives.
         if extra_fields.get('is_staff') is not True:
-            raise ValueError("Le super-utilisateur doit avoir is_staff=True.")
+            raise ValueError(_("Le super-utilisateur doit avoir is_staff=True."))
         if extra_fields.get('is_superuser') is not True:
-            raise ValueError("Le super-utilisateur doit avoir is_superuser=True.")
+            raise ValueError(_("Le super-utilisateur doit avoir is_superuser=True."))
 
         # Appelle la méthode 'create_user' pour créer l'utilisateur avec les permissions de super-utilisateur.
         return self.create_user(username, password, **extra_fields)

@@ -15,16 +15,17 @@ from users.models import Staff
 from users.utils import get_user_type
 from schools.utils import get_user_school, get_authorisation_stape_run_year
 
+from django.utils.translation import gettext_lazy as _
 
 # Choix des couleurs pour le formulaire de création/modification
 COLOR_CHOICES = [
-    ('RED', 'Rouge'), 
-    ('BLUE', 'Bleu'), 
-    ('GREEN', 'Vert'), 
-    ('YELLOW', 'Jaune'), 
-    ('ORANGE', 'Orange'), 
-    ('PURPLE', 'Violet'), 
-    ('GRAY', 'Gris'),
+    ('RED', _('Rouge')), 
+    ('BLUE', _('Bleu')), 
+    ('GREEN', _('Vert')), 
+    ('YELLOW', _('Jaune')), 
+    ('ORANGE', _('Orange')), 
+    ('PURPLE', _('Violet')), 
+    ('GRAY', _('Gris')),
 ]
 
 @login_required
@@ -45,17 +46,17 @@ def manage_subjects(request):
         # Le Super Admin gère les matières pour l'école sélectionnée dans la session
         school_id_filter = request.session.get('selected_school_id')
         if not school_id_filter:
-            return render(request, 'subjects/manage_subjects.html', {'error': 'Veuillez sélectionner une école pour gérer les matières.'})
+            return render(request, 'subjects/manage_subjects.html', {'error': _('Veuillez sélectionner une école pour gérer les matières.')})
         try:
             school_filter = School.objects.get(id=school_id_filter)
         except School.DoesNotExist:
-            return render(request, 'subjects/manage_subjects.html', {'error': 'École sélectionnée introuvable.'})
+            return render(request, 'subjects/manage_subjects.html', {'error': _('École sélectionnée introuvable.')})
         
     elif user_type == "Principal":
         # Le Principal gère les matières pour son école
         user_school = get_user_school(request.user, request.session.get('selected_school_id'))
         if not user_school:
-            return render(request, 'subjects/manage_subjects.html', {'error': 'Impossible de déterminer l\'école associée à votre compte.'})
+            return render(request, 'subjects/manage_subjects.html', {'error': _('Impossible de déterminer l’école associée à votre compte.')})
         school_filter = user_school
     
     # 3. Récupération des matières avec contrôle
@@ -102,7 +103,7 @@ def create_or_update_subject(request):
         
         # 2. Validation des champs obligatoires
         if not name or not color:
-            return JsonResponse({"success": False, "message": "Le nom de la matière et la couleur sont obligatoires."}, status=400)
+            return JsonResponse({"success": False, "message": _("Le nom de la matière et la couleur sont obligatoires.")}, status=400)
 
         # 3. Détermination de l'école cible (Sécurité)
         
@@ -110,13 +111,13 @@ def create_or_update_subject(request):
         if user_type == "SuperAdministrator":
             school_id_filter = request.session.get('selected_school_id')
             if not school_id_filter:
-                 return JsonResponse({"success": False, "message": "Veuillez sélectionner une école."}, status=400)
+                 return JsonResponse({"success": False, "message": _("Veuillez sélectionner une école.")}, status=400)
             school = get_object_or_404(School, id=school_id_filter)
         
         else: # Principal
             school = get_user_school(request.user, request.session.get('selected_school_id'))
             if not school:
-                 return JsonResponse({"success": False, "message": "École utilisateur introuvable."}, status=403)
+                 return JsonResponse({"success": False, "message": _("École utilisateur introuvable.")}, status=403)
         
         
         if subject_id:
@@ -129,13 +130,13 @@ def create_or_update_subject(request):
             subject.color = color
             subject.save()
             
-            message = f'La matière **"{name}"** a été mise à jour avec succès.'
+            message = _('La matière **"{name}"** a été mise à jour avec succès.').format(name=name)
         
         else:
             # --- MODE CRÉATION ---
             # Vérifier l'unicité du nom pour cette école (optionnel mais recommandé)
             if Subject.objects.filter(school=school, name=name).exists():
-                 return JsonResponse({"success": False, "message": f'Une matière nommée "{name}" existe déjà dans cette école.'}, status=400)
+                 return JsonResponse({"success": False, "message": _('Une matière nommée "{name}" existe déjà dans cette école.').format(name=name)}, status=400)
                  
             subject = Subject.objects.create(
                 school=school,
@@ -143,7 +144,7 @@ def create_or_update_subject(request):
                 color=color,
                 is_active=True # Nouvelle matière active par défaut
             )
-            message = f'La matière **"{name}"** a été créée avec succès.'
+            message = _('La matière **"{name}"** a été créée avec succès.').format(name=name)
             
         return JsonResponse({
             "success": True, 
@@ -154,11 +155,11 @@ def create_or_update_subject(request):
         })
 
     except json.JSONDecodeError:
-        return JsonResponse({"success": False, "message": "Requête JSON invalide."}, status=400)
+        return JsonResponse({"success": False, "message": _("Requête JSON invalide.")}, status=400)
     except Subject.DoesNotExist:
-         return JsonResponse({"success": False, "message": "Matière introuvable pour cette école."}, status=404)
+         return JsonResponse({"success": False, "message": _("Matière introuvable pour cette école.")}, status=404)
     except Exception as e:
-        return JsonResponse({"success": False, "message": f"Erreur inattendue : {str(e)}"}, status=500)
+        return JsonResponse({"success": False, "message": _("Erreur inattendue : {error}").format(error=str(e))}, status=500)
 
 
 @require_http_methods(["POST"])
@@ -185,7 +186,7 @@ def toggle_subject_status(request):
         else: # Principal
             school = get_user_school(request.user, request.session.get('selected_school_id'))
             if not school:
-                 return JsonResponse({"success": False, "message": "École utilisateur introuvable."}, status=403)
+                 return JsonResponse({"success": False, "message": _("École utilisateur introuvable.")}, status=403)
 
         # 3. Récupération et mise à jour de la matière
         # On s'assure que la matière appartient à l'école cible
@@ -202,13 +203,13 @@ def toggle_subject_status(request):
             # Si l'année est en cours de déroulement, impossible d'enlever une matière d'un professeurs
             if current_year:
                 if current_year.running == True:
-                    return JsonResponse({'success': False, 'message': "Vous ne pouvez pas désactiver une matière lorsque l'école est dans sa phase de déroulement."}, status=500)
+                    return JsonResponse({'success': False, 'message': _("Vous ne pouvez pas désactiver une matière lorsque l'école est dans sa phase de déroulement.")}, status=500)
     
         subject.is_active = new_status
         subject.save()
         
-        action_str = "activée" if new_status else "désactivée"
-        message = f'La matière **"{subject.name}"** a été {action_str} avec succès.'
+        action_str = _("activée") if new_status else _("désactivée")
+        message = _('La matière **"{subject}"** a été {action} avec succès.').format(subject=subject.name, action=action_str)
         
         return JsonResponse({
             "success": True, 
@@ -217,11 +218,11 @@ def toggle_subject_status(request):
         })
 
     except json.JSONDecodeError:
-        return JsonResponse({"success": False, "message": "Requête JSON invalide."}, status=400)
+        return JsonResponse({"success": False, "message": _("Requête JSON invalide.")}, status=400)
     except Subject.DoesNotExist:
-         return JsonResponse({"success": False, "message": "Matière introuvable ou non associée à l'école cible."}, status=404)
+         return JsonResponse({"success": False, "message": _("Matière introuvable ou non associée à l'école cible.")}, status=404)
     except Exception as e:
-        return JsonResponse({"success": False, "message": f"Erreur inattendue : {str(e)}"}, status=500)
+        return JsonResponse({"success": False, "message": _("Erreur inattendue : {error}").format(error=str(e))}, status=500)
 
 
 @login_required(login_url='login')
@@ -325,23 +326,23 @@ def toggle_teacher_subject_assignment_api(request):
         action = data.get('action') # 'link' ou 'unlink'
 
         if not all([teacher_id, subject_id, action]):
-            return JsonResponse({'success': False, 'message': 'Données manquantes.'}, status=400)
+            return JsonResponse({'success': False, 'message': _('Données manquantes.')}, status=400)
 
         # 2. Récupérer les objets (l'utilisateur DOIT être un TEACHER)
         try:
             teacher = Staff.objects.select_related('user').get(pk=teacher_id, staff_type='TEACHER')
         except Staff.DoesNotExist:
-            return JsonResponse({'success': False, 'message': 'Professeur non trouvé ou type de personnel incorrect.'}, status=404)
+            return JsonResponse({'success': False, 'message': _('Professeur non trouvé ou type de personnel incorrect.')}, status=404)
 
         try:
             subject = Subject.objects.get(pk=subject_id)
         except Subject.DoesNotExist:
-            return JsonResponse({'success': False, 'message': 'Matière non trouvée.'}, status=404)
+            return JsonResponse({'success': False, 'message': _('Matière non trouvée.')}, status=404)
         
         
         # 3. Vérification de la cohésion de l'école (Prof et Matière dans la même école)
         if teacher.school.id != subject.school.id:
-            return JsonResponse({'success': False, 'message': 'Cohésion échouée: Le professeur et la matière n\'appartiennent pas à la même école.'}, status=400)
+            return JsonResponse({'success': False, 'message': _('Cohésion échouée: Le professeur et la matière n’appartiennent pas à la même école.')}, status=400)
             
         
         teacher_full_name = f"{teacher.user.username}"
@@ -352,11 +353,11 @@ def toggle_teacher_subject_assignment_api(request):
                 with transaction.atomic():
                     TeacherSubject.objects.create(teacher=teacher, subject=subject)
                 
-                message = f"Lien créé : {teacher_full_name} enseignera {subject.name}."
+                message = _("Lien créé : {name} enseignera {subject}.").format(name=teacher_full_name, subject=subject.name)
                 return JsonResponse({'success': True, 'message': message})
             except IntegrityError:
                 # Le lien existe déjà (géré par unique_together)
-                message = "Le lien existe déjà."
+                message = _("Le lien existe déjà.")
                 return JsonResponse({'success': True, 'message': message}) 
 
         elif action == 'unlink':
@@ -376,23 +377,24 @@ def toggle_teacher_subject_assignment_api(request):
 
                 # Si l'année est en cours de déroulement, impossible d'enlever une matière d'un professeurs
                 if not authorisation:
-                    return JsonResponse({'success': False, 'message': "Vous ne pouvez pas désactiver une matière lorsque l'école est dans sa phase de déroulement."}, status=500)
+                    return JsonResponse({'success': False, 'message': _("Vous ne pouvez pas désactiver une matière lorsque l'école est dans sa phase de déroulement.")}, status=500)
 
-                deleted_count, _ = TeacherSubject.objects.filter(teacher=teacher, subject=subject).delete()
+                # On utilise deleted_info au lieu de _ pour ne pas écraser la fonction de traduction
+                deleted_count, deleted_info = TeacherSubject.objects.filter(teacher=teacher, subject=subject).delete()
 
                 if deleted_count > 0:
-                    message = f"Lien supprimé : {teacher_full_name} n'enseignera plus {subject.name}."
+                    message = _("Lien supprimé : {teacher_full_name} n'enseignera plus {subject}.").format(teacher_full_name=teacher_full_name, subject=subject.name)
                     return JsonResponse({'success': True, 'message': message})
                 else:
-                    message = "Le lien n'existe pas."
+                    message = _("Le lien n'existe pas.")
                     return JsonResponse({'success': True, 'message': message})
             except Exception as e:
-                return JsonResponse({'success': False, 'message': f"Erreur lors de la suppression: {str(e)}"}, status=500)
+                return JsonResponse({'success': False, 'message': _("Erreur lors de la suppression: {error}").format(error=str(e))}, status=500)
         
         else:
-            return JsonResponse({'success': False, 'message': 'Action non reconnue. Utilisez "link" ou "unlink".'}, status=400)
+            return JsonResponse({'success': False, 'message': _('Action non reconnue. Utilisez "link" ou "unlink".')}, status=400)
 
     except json.JSONDecodeError:
-        return JsonResponse({'success': False, 'message': 'Requête invalide (JSON non valide).'}, status=400)
+        return JsonResponse({'success': False, 'message': _('Requête invalide (JSON non valide).')}, status=400)
     except Exception as e:
-        return JsonResponse({'success': False, 'message': f'Erreur interne du serveur: {str(e)}'}, status=500)
+        return JsonResponse({'success': False, 'message': _('Erreur interne du serveur: {error}').format(error=str(e))}, status=500)

@@ -1,33 +1,46 @@
 {% extends 'base.html' %}
-{% load static %}
+{% load static i18n %}
 
-{% block title %}Faire l'appel - {{ student_class.name }}{% endblock %}
+{% block title %}{% trans "Faire l'appel" %} - {{ student_class.name }}{% endblock %}
 
 {% block content %}
     
+    <!-- Conteneur principal avec configuration injectée et traductions JS -->
     <div id="attendance-container" 
-         class="flex flex-col lg:flex-row gap-8"
+         class="flex flex-col lg:flex-row gap-8 text-start"
          data-class-id="{{ student_class.id }}"
          data-api-save-url="{% url 'attendance:api_save_attendance_session' %}"
-         data-api-details-url="{% url 'attendance:api_get_session_details' %}">
+         data-api-details-url="{% url 'attendance:api_get_session_details' %}"
+         data-msg-saving="{% trans 'Enregistrement...' %}"
+         data-msg-save-success="{% trans 'Appel enregistré avec succès !' %}"
+         data-msg-term-closed="{% trans 'Ce trimestre est clos, modification impossible.' %}"
+         data-msg-btn-edit="{% trans 'Modifier l’appel' %}"
+         data-msg-session-loaded="{% trans 'Session chargée pour modification.' %}"
+         data-msg-create-mode="{% trans 'Mode création activé.' %}"
+         data-msg-justified-badge="{% trans 'Absence justifiée (CPE)' %}"
+         data-msg-conn-error="{% trans 'Erreur de connexion.' %}"
+         data-msg-btn-save="{% trans 'Enregistrer l’appel' %}">
         
         <div class="w-full lg:w-3/4">
             
             <div class="bg-white p-6 rounded-xl shadow-md border border-gray-200 mb-6">
-                <div class="flex justify-between items-center">
+                <div class="flex justify-between items-center gap-4 flex-wrap">
                     <div>
-                        <h1 class="text-2xl font-bold text-gray-900 flex items-center">
-                            <i class="fas fa-pen-alt text-green-600 mr-3"></i>
-                            Feuille d'Appel
+                        <!-- Séparation icône + texte avec gap-3 -->
+                        <h1 class="text-2xl font-bold text-gray-900 flex items-center gap-3">
+                            <i class="fas fa-pen-alt text-green-600"></i>
+                            <span>{% trans "Feuille d'Appel" %}</span>
                         </h1>
-                        <p class="text-gray-600 mt-1">
-                            Classe : <span class="font-bold text-indigo-600">{{ student_class.name }}</span> 
+                        <p class="text-gray-600 mt-1" dir="auto">
+                            {% trans "Classe :" %} <span class="font-bold text-indigo-600">{{ student_class.name }}</span> 
                             <span class="mx-2">|</span> 
-                            Professeur : {{ teacher_staff.user.first_name }} {{ teacher_staff.user.last_name }}
+                            {% trans "Professeur :" %} {{ teacher_staff.user.first_name }} {{ teacher_staff.user.last_name }}
                         </p>
                     </div>
-                    <a href="{% url 'attendance:attendance_hub' %}" class="text-sm text-gray-500 hover:text-gray-700 flex items-center transition-colors">
-                        <i class="fas fa-arrow-left mr-1"></i> Retour au choix
+                    <!-- Séparation icône + texte avec gap-2 -->
+                    <a href="{% url 'attendance:attendance_hub' %}" class="text-sm text-gray-500 hover:text-gray-700 inline-flex items-center gap-2 transition-colors">
+                        <i class="fas fa-arrow-left"></i> 
+                        <span>{% trans "Retour au choix" %}</span>
                     </a>
                 </div>
             </div>
@@ -39,106 +52,118 @@
 
                 <div class="bg-white rounded-xl shadow-md border border-gray-200 overflow-hidden">
                     <div class="bg-gray-50 px-6 py-4 border-b border-gray-200">
-                        <h2 class="text-lg font-semibold text-gray-800">1. Informations de la séance</h2>
+                        <h2 class="text-lg font-semibold text-gray-800">{% trans "1. Informations de la séance" %}</h2>
                     </div>
                     <div class="p-6 grid grid-cols-1 md:grid-cols-3 gap-6">
                         <div>
-                            <label for="date" class="block text-sm font-medium text-gray-700 mb-1">Date</label>
-                            <input type="date" id="date" name="date" value="{{ today }}" required
-                                   class="w-full rounded-md border-gray-300 bg-gray-100 text-gray-900 shadow-sm focus:bg-white focus:border-green-500 focus:ring focus:ring-green-200 transition">
+                            <label for="date" class="block text-sm font-medium text-gray-700 mb-1">{% trans "Date" %}</label>
+                            <input type="date" id="date" name="date" value="{{ today }}" required dir="ltr"
+                                   class="w-full rounded-md border-gray-300 bg-gray-100 text-gray-900 shadow-sm focus:bg-white focus:border-green-500 focus:ring focus:ring-green-200 transition text-sm">
                         </div>
                         <div>
-                            <label for="start_time" class="block text-sm font-medium text-gray-700 mb-1">Heure de début</label>
-                            <input type="time" id="start_time" name="start_time" value="{{ current_time }}" required
-                                   class="w-full rounded-md border-gray-300 bg-gray-100 text-gray-900 shadow-sm focus:bg-white focus:border-green-500 focus:ring focus:ring-green-200 transition">
+                            <label for="start_time" class="block text-sm font-medium text-gray-700 mb-1">{% trans "Heure de début" %}</label>
+                            <input type="time" id="start_time" name="start_time" value="{{ current_time }}" required dir="ltr"
+                                   class="w-full rounded-md border-gray-300 bg-gray-100 text-gray-900 shadow-sm focus:bg-white focus:border-green-500 focus:ring focus:ring-green-200 transition text-sm">
                         </div>
                         <div>
-                            <label for="end_time" class="block text-sm font-medium text-gray-700 mb-1">Heure de fin</label>
-                            <input type="time" id="end_time" name="end_time" required
-                                   class="w-full rounded-md border-gray-300 bg-gray-100 text-gray-900 shadow-sm focus:bg-white focus:border-green-500 focus:ring focus:ring-green-200 transition">
+                            <label for="end_time" class="block text-sm font-medium text-gray-700 mb-1">{% trans "Heure de fin" %}</label>
+                            <input type="time" id="end_time" name="end_time" required dir="ltr"
+                                   class="w-full rounded-md border-gray-300 bg-gray-100 text-gray-900 shadow-sm focus:bg-white focus:border-green-500 focus:ring focus:ring-green-200 transition text-sm">
                         </div>
                     </div>
                 </div>
 
                 <div class="bg-white rounded-xl shadow-md border border-gray-200 overflow-hidden">
-                    <div class="px-6 py-4 border-b border-gray-200 bg-gray-50 flex justify-between items-center">
-                        <h2 class="text-lg font-semibold text-gray-800">2. Liste des élèves</h2>
-                        <div class="text-sm text-gray-500 hidden sm:block">
-                            <i class="fas fa-info-circle mr-1"></i> Statut par défaut : "Présent"
+                    <div class="px-6 py-4 border-b border-gray-200 bg-gray-50 flex justify-between items-center gap-4 flex-wrap">
+                        <h2 class="text-lg font-semibold text-gray-800">{% trans "2. Liste des élèves" %}</h2>
+                        <!-- Séparation icône + texte avec gap-2 -->
+                        <div class="text-sm text-gray-500 hidden sm:flex items-center gap-2">
+                            <i class="fas fa-info-circle"></i> 
+                            <span>{% trans 'Statut par défaut : "Présent"' %}</span>
                         </div>
                     </div>
                     
                     <div class="divide-y divide-gray-200">
                         {% for link in students %}
-                        <div class="student-row p-4 flex flex-col sm:flex-row items-center justify-between hover:bg-gray-50 transition-colors" 
+                        <div class="student-row p-4 flex flex-col sm:flex-row items-center justify-between hover:bg-gray-50 transition-colors gap-4" 
                              data-student-id="{{ link.student.id }}">
                             
-                            <div class="flex items-center w-full sm:w-1/3 mb-3 sm:mb-0">
-                                <div class="h-10 w-10 rounded-full bg-indigo-100 text-indigo-600 flex items-center justify-center font-bold text-sm mr-3 border border-indigo-200">
+                            <!-- Séparation avec gap-3 -->
+                            <div class="flex items-center w-full sm:w-1/3 gap-3">
+                                <div class="h-10 w-10 rounded-full bg-indigo-100 text-indigo-600 flex items-center justify-center font-bold text-sm border border-indigo-200 flex-shrink-0" dir="ltr">
                                     {{ link.student.user.first_name|slice:":1" }}{{ link.student.user.last_name|slice:":1" }}
                                 </div>
-                                <div>
-                                    <p class="font-bold text-gray-800">
+                                <div class="min-w-0">
+                                    <p class="font-bold text-gray-800 truncate" dir="auto">
                                         {{ link.student.user.last_name }} {{ link.student.user.first_name }}
-                                        <!-- Nom d'utilisateur -->
                                         {% if link.student.user.username %}
-                                            <span class="text-xs text-gray-400 font-normal ml-1">({{ link.student.user.username }})</span>
+                                            <span class="text-xs text-gray-400 font-normal ms-1" dir="ltr">({{ link.student.user.username }})</span>
                                         {% endif %}
                                     </p>
-                                    <span class="justification-badge hidden text-xs bg-gray-100 text-gray-600 px-2 py-0.5 rounded border border-gray-300 mt-1"></span>
+                                    <span class="justification-badge hidden text-xs bg-gray-100 text-gray-600 px-2 py-0.5 rounded border border-gray-300 mt-1" dir="auto"></span>
                                 </div>
                             </div>
 
-                            <div class="flex space-x-2 w-full sm:w-2/3 justify-end">
+                            <!-- Séparation avec gap-2 -->
+                            <div class="flex gap-2 w-full sm:w-2/3 justify-end flex-wrap">
                                 <label class="cursor-pointer flex-1 sm:flex-none">
                                     <input type="radio" name="status_{{ link.student.id }}" value="" checked class="peer sr-only status-radio">
-                                    <div class="px-4 py-2 rounded-lg border border-gray-200 text-center text-sm font-medium text-gray-600 bg-gray-50 hover:bg-white hover:border-gray-300 peer-checked:bg-green-100 peer-checked:text-green-800 peer-checked:border-green-400 transition-all shadow-sm">
-                                        <i class="fas fa-check mr-1"></i> Présent
+                                    <!-- Séparation icône + texte avec gap-1 -->
+                                    <div class="px-4 py-2 rounded-lg border border-gray-200 text-center text-sm font-medium text-gray-600 bg-gray-50 hover:bg-white hover:border-gray-300 peer-checked:bg-green-100 peer-checked:text-green-800 peer-checked:border-green-400 transition-all shadow-sm inline-flex items-center justify-center gap-1">
+                                        <i class="fas fa-check"></i> 
+                                        <span>{% trans "Présent" %}</span>
                                     </div>
                                 </label>
 
                                 <label class="cursor-pointer flex-1 sm:flex-none">
                                     <input type="radio" name="status_{{ link.student.id }}" value="DELAY" class="peer sr-only status-radio">
-                                    <div class="px-4 py-2 rounded-lg border border-gray-200 text-center text-sm font-medium text-gray-600 bg-gray-50 hover:bg-white hover:border-gray-300 peer-checked:bg-orange-100 peer-checked:text-orange-800 peer-checked:border-orange-400 transition-all shadow-sm">
-                                        <i class="fas fa-clock mr-1"></i> Retard
+                                    <!-- Séparation icône + texte avec gap-1 -->
+                                    <div class="px-4 py-2 rounded-lg border border-gray-200 text-center text-sm font-medium text-gray-600 bg-gray-50 hover:bg-white hover:border-gray-300 peer-checked:bg-orange-100 peer-checked:text-orange-800 peer-checked:border-orange-400 transition-all shadow-sm inline-flex items-center justify-center gap-1">
+                                        <i class="fas fa-clock"></i> 
+                                        <span>{% trans "Retard" %}</span>
                                     </div>
                                 </label>
 
                                 <label class="cursor-pointer flex-1 sm:flex-none">
                                     <input type="radio" name="status_{{ link.student.id }}" value="ABSENCE" class="peer sr-only status-radio">
-                                    <div class="px-4 py-2 rounded-lg border border-gray-200 text-center text-sm font-medium text-gray-600 bg-gray-50 hover:bg-white hover:border-gray-300 peer-checked:bg-red-100 peer-checked:text-red-800 peer-checked:border-red-400 transition-all shadow-sm">
-                                        <i class="fas fa-times mr-1"></i> Absent
+                                    <!-- Séparation icône + texte avec gap-1 -->
+                                    <div class="px-4 py-2 rounded-lg border border-gray-200 text-center text-sm font-medium text-gray-600 bg-gray-50 hover:bg-white hover:border-gray-300 peer-checked:bg-red-100 peer-checked:text-red-800 peer-checked:border-red-400 transition-all shadow-sm inline-flex items-center justify-center gap-1">
+                                        <i class="fas fa-times"></i> 
+                                        <span>{% trans "Absent" %}</span>
                                     </div>
                                 </label>
                             </div>
                         </div>
                         {% empty %}
                         <div class="p-8 text-center text-gray-500 italic">
-                            Aucun élève inscrit dans cette classe.
+                            {% trans "Aucun élève inscrit dans cette classe." %}
                         </div>
                         {% endfor %}
                     </div>
                 </div>
 
                 <div class="flex justify-end pt-4 pb-8">
-                    <button type="submit" id="submit-btn" class="px-8 py-3 bg-green-600 text-white font-bold rounded-xl shadow-lg hover:bg-green-700 focus:outline-none focus:ring-4 focus:ring-green-300 transition-transform transform hover:scale-105">
-                        <i class="fas fa-save mr-2"></i> Enregistrer l'appel
+                    <!-- Séparation icône + texte avec gap-2 -->
+                    <button type="submit" id="submit-btn" class="px-8 py-3 bg-green-600 text-white font-bold rounded-xl shadow-lg hover:bg-green-700 focus:outline-none focus:ring-4 focus:ring-green-300 transition-transform transform hover:scale-105 inline-flex items-center gap-2">
+                        <i class="fas fa-save"></i> 
+                        <span>{% trans "Enregistrer l'appel" %}</span>
                     </button>
                 </div>
             </form>
         </div>
 
-
         <div class="w-full lg:w-1/4">
             <div class="bg-white rounded-xl shadow-lg border border-gray-200 sticky top-24 overflow-hidden">
                 <div class="p-4 border-b border-gray-200 bg-gray-50">
-                    <h3 class="font-bold text-gray-800">Historique des Appels</h3>
-                    <p class="text-xs text-gray-500 mt-1">Année en cours</p>
+                    <h3 class="font-bold text-gray-800">{% trans "Historique des Appels" %}</h3>
+                    <p class="text-xs text-gray-500 mt-1">{% trans "Année en cours" %}</p>
                 </div>
                 
                 <div class="max-h-[600px] overflow-y-auto p-2 space-y-2 custom-scrollbar">
-                    <button id="btn-new-session" class="w-full text-left px-4 py-3 rounded-lg border-2 border-dashed border-gray-300 text-gray-600 hover:border-green-500 hover:text-green-700 hover:bg-green-50 transition-colors flex items-center justify-center mb-2 font-medium bg-gray-50">
-                        <i class="fas fa-plus-circle mr-2"></i> Nouvel appel
+                    <!-- Séparation icône + texte avec gap-2 -->
+                    <button id="btn-new-session" class="w-full text-center px-4 py-3 rounded-lg border-2 border-dashed border-gray-300 text-gray-600 hover:border-green-500 hover:text-green-700 hover:bg-green-50 transition-colors inline-flex items-center justify-center gap-2 mb-2 font-medium bg-gray-50">
+                        <i class="fas fa-plus-circle"></i> 
+                        <span>{% trans "Nouvel appel" %}</span>
                     </button>
 
                     {% for session in history %}
@@ -146,23 +171,24 @@
                          data-session-id="{{ session.id }}">
                         
                         <div class="flex justify-between items-start">
-                            <span class="font-semibold text-gray-800 text-sm">
+                            <span class="font-semibold text-gray-800 text-sm" dir="ltr">
                                 {{ session.date|date:"d M Y" }}
                             </span>
                             {% if session.term_year.finished %}
-                                <i class="fas fa-lock text-xs text-gray-400" title="Trimestre clos (Lecture seule)"></i>
+                                <i class="fas fa-lock text-xs text-gray-400" title="{% trans 'Trimestre clos (Lecture seule)' %}"></i>
                             {% else %}
                                 <i class="fas fa-edit text-xs text-indigo-300 group-hover:text-indigo-600"></i>
                             {% endif %}
                         </div>
                         
-                        <div class="text-xs text-gray-500 mt-1 flex items-center">
-                            <i class="far fa-clock mr-1"></i>
-                            {{ session.start_time|time:"H:i" }} - {{ session.end_time|time:"H:i" }}
+                        <!-- Séparation icône + texte avec gap-1.5 -->
+                        <div class="text-xs text-gray-500 mt-1 inline-flex items-center gap-1.5" dir="ltr">
+                            <i class="far fa-clock"></i>
+                            <span>{{ session.start_time|time:"H:i" }} - {{ session.end_time|time:"H:i" }}</span>
                         </div>
                     </div>
                     {% empty %}
-                    <p class="text-sm text-gray-400 italic text-center py-4">Aucun historique pour cette classe.</p>
+                    <p class="text-sm text-gray-400 italic text-center py-4">{% trans "Aucun historique pour cette classe." %}</p>
                     {% endfor %}
                 </div>
             </div>
@@ -170,10 +196,24 @@
 
     </div>
 
-    <div id="notification-area" class="fixed bottom-4 right-4 z-50 space-y-2"></div>
+    <!-- MODIFICATION RTL : end-4 à la place de right-4 -->
+    <div id="notification-area" class="fixed bottom-4 end-4 z-50 space-y-2"></div>
 
 {% endblock %}
 
 {% block extra_js %}
+    <script id="available-students-data" type="application/json">
+        {{ available_students_json|safe }}
+    </script>
+    <script id="assigned-students-data" type="application/json">
+        {{ assigned_students_json|safe }}
+    </script>
+    <script id="available-teachers-data" type="application/json">
+        {{ available_teacher_subjects_json|safe }}
+    </script>
+    <script id="assigned-teachers-data" type="application/json">
+        {{ assigned_teachers_json|safe }}
+    </script>
+
     <script src="{% static 'js/attendance/create_session.js' %}"></script>
 {% endblock %}

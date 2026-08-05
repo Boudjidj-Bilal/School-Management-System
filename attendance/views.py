@@ -8,6 +8,7 @@ from django.views.decorators.http import require_http_methods
 from django.views.decorators.csrf import csrf_exempt
 from django.db import transaction
 from django.utils import timezone
+from django.utils.translation import gettext_lazy as _
 
 from users.models import Student
 from classes.models import Class
@@ -48,7 +49,7 @@ def attendance_hub_view(request):
     current_year = get_current_year_for_school(school_filter)
     if not current_year or not current_year.running:
         return render(request, 'attendance/class_hub.html', {
-            'error_message': "L'année scolaire n'est pas active ou non définie."
+            'error_message': _("L'année scolaire n'est pas active ou non définie.")
         })
 
     # Récupération des classes via Utils
@@ -128,7 +129,7 @@ def api_save_attendance_session(request):
     user_type = get_user_type(user)
 
     if user_type != "Teacher":
-        return JsonResponse({"success": False, "message": "Accès refusé."}, status=403)
+        return JsonResponse({"success": False, "message": _("Accès refusé.")}, status=403)
 
     try:
         data = json.loads(request.body)
@@ -146,7 +147,7 @@ def api_save_attendance_session(request):
         try:
             date_obj = datetime.strptime(date_str, '%Y-%m-%d').date()
         except ValueError:
-            return JsonResponse({"success": False, "message": "Format de date invalide."}, status=400)
+            return JsonResponse({"success": False, "message": _("Format de date invalide.")}, status=400)
 
         try:
             school_filter = get_user_school(request.user, request.session.get('selected_school_id'))
@@ -157,7 +158,7 @@ def api_save_attendance_session(request):
             return render(request, "404.html", status=404)
         
         elif not school_filter.is_active:
-            return JsonResponse({"success": False, "message": "L'école sélectionnée est désactivée. Impossible de procéder."}, status=403) 
+            return JsonResponse({"success": False, "message": _("L'école sélectionnée est désactivée. Impossible de procéder.")}, status=403) 
             
         current_year = get_current_year_for_school(school_filter)
 
@@ -166,14 +167,14 @@ def api_save_attendance_session(request):
                 term_year = TermYearLevel.objects.get(level=student_class.level, year=current_year, finished=False)
 
                 if not term_year:
-                    return JsonResponse({"success": False, "message": "Aucun trimestre correspondant à cette date n'a été trouvé."}, status=400)
+                    return JsonResponse({"success": False, "message": _("Aucun trimestre correspondant à cette date n'a été trouvé.")}, status=400)
                 
                 if term_year.finished:
-                    return JsonResponse({"success": False, "message": "Ce trimestre est clos. Impossible de modifier ou créer un appel."}, status=403)
+                    return JsonResponse({"success": False, "message": _("Ce trimestre est clos. Impossible de modifier ou créer un appel.")}, status=403)
             else:
-                return JsonResponse({"success": False, "message": "L'année scolaire n'est pas active ou non définie."}, status=403) 
+                return JsonResponse({"success": False, "message": _("L'année scolaire n'est pas active ou non définie.")}, status=403) 
         except:
-            return JsonResponse({"success": False, "message": "L'année scolaire n'est pas active ou non définie."}, status=403) 
+            return JsonResponse({"success": False, "message": _("L'année scolaire n'est pas active ou non définie.")}, status=403) 
 
         
         with transaction.atomic():
@@ -226,7 +227,7 @@ def api_save_attendance_session(request):
                     if existing_att:
                         existing_att.delete()
 
-        return JsonResponse({"success": True, "message": "Appel enregistré avec succès.", "session_id": session.id})
+        return JsonResponse({"success": True, "message": _("Appel enregistré avec succès."), "session_id": session.id})
 
     except Exception as e:
         print(f"Erreur Save Attendance: {e}")
@@ -339,7 +340,7 @@ def api_justify_attendance(request):
     user_type = get_user_type(user)
 
     if user_type != "CPE":
-        return JsonResponse({"success": False, "message": "Seul le CPE peut justifier les absences."}, status=403)
+        return JsonResponse({"success": False, "message": _("Seul le CPE peut justifier les absences.")}, status=403)
 
     try:
         data = json.loads(request.body)
@@ -352,7 +353,7 @@ def api_justify_attendance(request):
         # Vérification du trimestre
         term_year = attendance.session.term_year
         if term_year.finished:
-            return JsonResponse({"success": False, "message": "Impossible de modifier : le trimestre de cette absence est clos."}, status=403)
+            return JsonResponse({"success": False, "message": _("Impossible de modifier : le trimestre de cette absence est clos.")}, status=403)
 
         # Mise à jour
         attendance.justified = justified
@@ -361,10 +362,10 @@ def api_justify_attendance(request):
         # La date de justification est gérée automatiquement par la méthode save() du modèle
         attendance.save()
 
-        status_text = "Justifié" if justified else "Non justifié"
+        status_text = _("Justifié") if justified else _("Non justifié")
         return JsonResponse({
             "success": True, 
-            "message": f"Statut mis à jour : {status_text}.",
+            "message": _("Statut mis à jour : {status_text}.").format(status_text=status_text),
             "justification_date": attendance.justification_date.strftime('%d/%m/%Y') if attendance.justification_date else None
         })
 
@@ -402,14 +403,14 @@ def student_attendance_dashboard_view(request):
     current_year = get_current_year_for_school(school)
     if not current_year:
         return render(request, 'attendance/student_attendance.html', {
-            'error_message': "Aucune année scolaire active."
+            'error_message': _("Aucune année scolaire active.")
         })
 
     data = get_student_attendance_view_data(student, current_year)
 
     if not data:
         return render(request, 'attendance/student_attendance.html', {
-            'error_message': "Vous n'êtes inscrit dans aucune classe pour cette année."
+            'error_message': _("Vous n'êtes inscrit dans aucune classe pour cette année.")
         })
 
     context = {

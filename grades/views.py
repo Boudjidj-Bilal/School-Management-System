@@ -6,6 +6,7 @@ from django.views.decorators.csrf import csrf_exempt
 from django.db import transaction
 from django.contrib.auth.decorators import login_required
 from django.views.decorators.http import require_http_methods
+from django.utils.translation import gettext_lazy as _
 
 # Import des modèles
 from .models import Evaluation, Grade, Appreciation, Mention
@@ -187,12 +188,11 @@ def api_get_grades_for_term_views(request):
         is_self = (hasattr(user, 'staff_user') and user.staff_user.id == teacher_staff.id)
         
         if not (is_admin_or_principal or is_self):
-            return JsonResponse({"success": False, "message": "Accès refusé."}, status=403)
+            return JsonResponse({"success": False, "message": _("Accès refusé.")}, status=403)
         
         # 2. Récupération des données SPÉCIFIQUES pour ce contexte
         # [APPEL UTILS]
         context_data = get_grades_data_for_specific_context(
-            teacher_staff=teacher_staff, 
             current_year=current_year, 
             student_class=student_class, 
             teacher_subject_id=ts_id, # Peut être None
@@ -200,13 +200,13 @@ def api_get_grades_for_term_views(request):
         )
         
         if not context_data:
-            return JsonResponse({"success": False, "message": "Aucune donnée trouvée pour ce contexte."}, status=404)
+            return JsonResponse({"success": False, "message": _("Aucune donnée trouvée pour ce contexte.")}, status=404)
 
         return JsonResponse({"success": True, "data": context_data})
 
     except Exception as e:
         print(f"Erreur dans api_get_grades_for_term: {e}")
-        return JsonResponse({"success": False, "message": f"Erreur interne : {str(e)}"}, status=500)
+        return JsonResponse({"success": False, "message": _("Erreur interne : {error}").format(error=str(e))}, status=500)
 
 # ---
 # Actions (CRUD)
@@ -223,12 +223,12 @@ def api_manage_evaluation_views(request):
     user_type = get_user_type(user)
 
     if not user_type == "Teacher":
-        return JsonResponse({"success": False, "message": "Accès refusé."}, status=403)
+        return JsonResponse({"success": False, "message": _("Accès refusé.")}, status=403)
        
     try:
         teacher_staff = get_object_or_404(Staff, user=user)
     except Staff.DoesNotExist:
-         return JsonResponse({"success": False, "message": "Profil enseignant non trouvé."}, status=403)
+         return JsonResponse({"success": False, "message": _("Profil enseignant non trouvé.")}, status=403)
 
     try:
         data = json.loads(request.body)
@@ -256,13 +256,13 @@ def api_manage_evaluation_views(request):
 
                 # Validation Trimestre
                 if term_year.finished:
-                    return JsonResponse({"success": False, "message": "Action impossible : ce trimestre est clôturé."}, status=403)
+                    return JsonResponse({"success": False, "message": _("Action impossible : ce trimestre est clôturé.")}, status=403)
 
                 if term_year.level != student_class.level:
-                    return JsonResponse({"success": False, "message": "Le trimestre ne correspond pas au niveau de la classe."}, status=400)
+                    return JsonResponse({"success": False, "message": _("Le trimestre ne correspond pas au niveau de la classe.")}, status=400)
 
                 if teacher_subject.teacher != teacher_staff:
-                     return JsonResponse({"success": False, "message": "Matière non autorisée."}, status=403)
+                     return JsonResponse({"success": False, "message": _("Matière non autorisée.")}, status=403)
                 
                 # Validation des notes
                 for grade_data in grades_list:
@@ -273,9 +273,9 @@ def api_manage_evaluation_views(request):
                         try:
                             grade_float = float(grade_val)
                             if grade_float > max_grade:
-                                return JsonResponse({"success": False, "message": f"La note {grade_float} dépasse le maximum ({max_grade})."}, status=400)
+                                return JsonResponse({"success": False, "message": _("La note {grade_float} dépasse le maximum ({max_grade}).").format(grade_float=grade_float, max_grade=max_grade)}, status=400)
                         except ValueError:
-                             return JsonResponse({"success": False, "message": f"Note invalide : {grade_val}"}, status=400)
+                             return JsonResponse({"success": False, "message": _("Note invalide : {grade_val}").format(grade_val=grade_val)}, status=400)
 
                 new_evaluation = Evaluation.objects.create(
                     name=name, 
@@ -302,7 +302,7 @@ def api_manage_evaluation_views(request):
                         is_absent=bool(grade_data.get("absent", False))
                     )
                
-                return JsonResponse({"success": True, "message": "Évaluation créée."})
+                return JsonResponse({"success": True, "message": _("Évaluation créée.")})
 
             # --- ACTION: UPDATE ---
             elif action == "update":
@@ -318,10 +318,10 @@ def api_manage_evaluation_views(request):
                 evaluation = get_object_or_404(Evaluation, pk=evaluation_id)
 
                 if evaluation.term_year.finished:
-                    return JsonResponse({"success": False, "message": "Trimestre clos."}, status=403)
+                    return JsonResponse({"success": False, "message": _("Trimestre clos.")}, status=403)
 
                 if evaluation.teacher_subject.teacher != teacher_staff:
-                     return JsonResponse({"success": False, "message": "Non autorisé."}, status=403)
+                     return JsonResponse({"success": False, "message": _("Non autorisé.")}, status=403)
 
                 # Validation (Même logique)
                 for grade_data in grades_list:
@@ -330,9 +330,9 @@ def api_manage_evaluation_views(request):
                     if not is_absent and grade_val is not None and grade_val != "":
                         try:
                             if float(grade_val) > max_grade:
-                                return JsonResponse({"success": False, "message": "Note hors limite."}, status=400)
+                                return JsonResponse({"success": False, "message": _("Note hors limite.")}, status=400)
                         except ValueError:
-                             return JsonResponse({"success": False, "message": "Note invalide."}, status=400)
+                             return JsonResponse({"success": False, "message": _("Note invalide.")}, status=400)
 
                 evaluation.name = name
                 evaluation.coefficient = coefficient
@@ -355,7 +355,7 @@ def api_manage_evaluation_views(request):
                         }
                     )
 
-                return JsonResponse({"success": True, "message": "Évaluation mise à jour."})
+                return JsonResponse({"success": True, "message": _("Évaluation mise à jour.")})
 
             # --- ACTION: DELETE ---
             elif action == "delete":
@@ -363,13 +363,13 @@ def api_manage_evaluation_views(request):
                 evaluation = get_object_or_404(Evaluation, pk=evaluation_id)
                 
                 if evaluation.term_year.finished:
-                    return JsonResponse({"success": False, "message": "Trimestre clos."}, status=403)
+                    return JsonResponse({"success": False, "message": _("Trimestre clos.")}, status=403)
                
                 if evaluation.teacher_subject.teacher != teacher_staff:
-                     return JsonResponse({"success": False, "message": "Non autorisé."}, status=403)
+                     return JsonResponse({"success": False, "message": _("Non autorisé.")}, status=403)
 
                 evaluation.delete()
-                return JsonResponse({"success": True, "message": "Évaluation supprimée."})
+                return JsonResponse({"success": True, "message": _("Évaluation supprimée.")})
 
             # --- ACTION: GET_DETAILS ---
             elif action == "get_details":
@@ -391,11 +391,11 @@ def api_manage_evaluation_views(request):
                 })
                
             else:
-                return JsonResponse({"success": False, "message": "Action inconnue."}, status=400)
+                return JsonResponse({"success": False, "message": _("Action inconnue.")}, status=400)
 
     except Exception as e:
         print(f"Erreur api_manage_evaluation: {e}")
-        return JsonResponse({"success": False, "message": f"Erreur interne: {str(e)}"}, status=500)
+        return JsonResponse({"success": False, "message": _("Erreur interne: {error}").format(error=str(e))}, status=500)
     
 
 @login_required(login_url='login')
@@ -426,7 +426,7 @@ def view_my_grades_student(request):
     current_year = get_current_year_for_school(student.school)
     if not current_year:
         return render(request, 'grades/student_grades.html', {
-            'error': "Aucune année scolaire active configurée pour votre école."
+            'error': _("Aucune année scolaire active configurée pour votre école.")
         })
 
     # 3. Récupération des données via l'utilitaire
@@ -434,7 +434,7 @@ def view_my_grades_student(request):
 
     if data is None:
         return render(request, 'grades/student_grades.html', {
-            'error': "Vous n'êtes inscrit dans aucune classe pour cette année scolaire."
+            'error': _("Vous n'êtes inscrit dans aucune classe pour cette année scolaire.")
         })
 
     # 4. Construction du contexte
@@ -585,7 +585,7 @@ def api_save_appreciations(request):
 
     # Sécurité supplémentaire côté API
     if user_type != "Teacher":
-        return JsonResponse({"success": False, "message": "Seuls les professeurs peuvent saisir des appréciations."}, status=403)
+        return JsonResponse({"success": False, "message": _("Seuls les professeurs peuvent saisir des appréciations.")}, status=403)
 
     try:
         data = json.loads(request.body)
@@ -598,13 +598,13 @@ def api_save_appreciations(request):
         term_year = get_object_or_404(TermYearLevel, pk=term_id)
         
         if term_year.finished:
-             return JsonResponse({"success": False, "message": "Ce trimestre est clos. Modification impossible."}, status=403)
+             return JsonResponse({"success": False, "message": _("Ce trimestre est clos. Modification impossible.")}, status=403)
 
         teacher_subject = None
         if not is_global and ts_id:
             teacher_subject = get_object_or_404(TeacherSubject, pk=ts_id)
             if teacher_subject.teacher.user != user:
-                return JsonResponse({"success": False, "message": "Vous ne pouvez pas modifier les appréciations d'un autre professeur."}, status=403)
+                return JsonResponse({"success": False, "message": _("Vous ne pouvez pas modifier les appréciations d'un autre professeur.")}, status=403)
 
         with transaction.atomic():
             count_updated = 0
@@ -636,7 +636,7 @@ def api_save_appreciations(request):
                 
                 count_updated += 1
 
-        return JsonResponse({"success": True, "message": f"{count_updated} appréciations enregistrées."})
+        return JsonResponse({"success": True, "message": _("{count_updated} appréciations enregistrées.").format(count_updated=count_updated)})
 
     except Exception as e:
         print(f"Erreur API Appreciations Save: {e}")

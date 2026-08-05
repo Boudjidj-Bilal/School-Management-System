@@ -1,6 +1,7 @@
 from django.db.models import Sum, F, ExpressionWrapper, FloatField
 from django.utils import timezone
 from django.shortcuts import get_object_or_404 
+from django.utils.translation import gettext_lazy as _
 
 from .models import Evaluation, Grade, Appreciation, Mention
 from schools.models import TermYearLevel
@@ -196,7 +197,7 @@ def calculate_overall_student_average(student, term_year):
 # FONCTIONS DE RÉCUPÉRATION DE DONNÉES (Pour les Vues)
 # ====================================================================
 
-def get_grades_data_for_specific_context(teacher_staff, current_year, student_class, teacher_subject_id, selected_term):
+def get_grades_data_for_specific_context(current_year, student_class, teacher_subject_id, selected_term):
     """
     [MODIFIÉ] Récupère les données (évals, moyennes) pour UN SEUL CONTEXTE
     """
@@ -298,16 +299,16 @@ def get_student_grades_view_data(student, current_year):
 
     terms_data = []
 
-    terme_string = ""
-    if student_class.level.term_type == "TRIMESTRE":
-        terme_string = f"Trimestre {term.counter}" 
-    elif student_class.level.term_type == "SEMESTRE":
-        terme_string = f"Semestre {term.counter}"
-    else:
-        terme_string = f"Unique {term.counter}"
-
     # 4. Boucle sur chaque trimestre
     for term in terms:
+        terme_string = ""
+        if student_class.level.term_type == "TRIMESTRE":
+            terme_string = _("Trimestre {counter}").format(counter=term.counter)
+        elif student_class.level.term_type == "SEMESTRE":
+            terme_string = _("Semestre {counter}").format(counter=term.counter)
+        else:
+            terme_string = _("Unique {counter}").format(counter=term.counter)
+
         term_payload = {
             'term_id': term.id,
             'term_name': terme_string,
@@ -361,10 +362,7 @@ def get_student_grades_view_data(student, current_year):
                     'date': evaluation.date,
                     'coefficient': evaluation.coefficient,
                     'max_grade': evaluation.max_grade,
-                    
-                    # [AJOUT ICI] On passe l'info "Note Principale" au template
                     'is_main_grade': evaluation.is_main_grade, 
-                    
                     'value': 'N/A',
                     'is_absent': False,
                 }
@@ -389,7 +387,6 @@ def get_student_grades_view_data(student, current_year):
         'student_class': student_class,
         'terms_data': terms_data
     }
-
 
 # ====================================================================
 # FONCTIONS POUR LE TABLEAU DE BORD DES APPRÉCIATIONS
@@ -475,7 +472,7 @@ def get_grades_dashboard_data(teacher_staff, current_year):
         current_term = terms_for_level.filter(start_date__lte=today, end_date__gte=today).first()
         if not current_term: current_term = terms_for_level.first()
         
-        context_data = get_grades_data_for_specific_context(teacher_staff, current_year, student_class, ts.id, current_term)
+        context_data = get_grades_data_for_specific_context(current_year, student_class, ts.id, current_term)
         context_data['available_terms'] = list(terms_for_level.values('id', 'counter', 'start_date', 'end_date'))
         context_data['current_term_id'] = current_term.id if current_term else None
         
@@ -493,7 +490,7 @@ def get_grades_dashboard_data(teacher_staff, current_year):
         current_term = terms_for_level.filter(start_date__lte=today, end_date__gte=today).first()
         if not current_term: current_term = terms_for_level.first()
 
-        context_data = get_grades_data_for_specific_context(teacher_staff, current_year, main_class, None, current_term)
+        context_data = get_grades_data_for_specific_context(current_year, main_class, None, current_term)
         context_data['class_name'] = main_class.name
         context_data['available_terms'] = list(terms_for_level.values('id', 'counter', 'start_date', 'end_date'))
         context_data['current_term_id'] = current_term.id if current_term else None
@@ -599,7 +596,7 @@ def get_dashboard_grades_summary(student, current_year):
     if not active_term: active_term = TermYearLevel.objects.filter(year=current_year, level=level).last()
 
     overall_average = "N/A"
-    term_name = "Aucune période"
+    term_name = _("Aucune période")
     
     if active_term:
         avg = calculate_overall_student_average(student, active_term)
