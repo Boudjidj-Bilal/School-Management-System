@@ -1561,8 +1561,8 @@ msgid "Télécharger"
 msgstr "تحميل"
 
 #: communications/templates/communications/dashboard_announcements.html:35
-msgid "à l\\"
-msgstr "في l\\"
+msgid "à l’instant"
+msgstr "منذ لحظات"
 
 #: communications/templates/communications/dashboard_announcements.html:36
 msgid "Annonce marquée comme lue."
@@ -1585,8 +1585,8 @@ msgid "Annonce envoyée avec succès !"
 msgstr "تم إرسال الإعلان بنجاح !"
 
 #: communications/templates/communications/dashboard_announcements.html:41
-msgid "Erreur technique lors de l\\"
-msgstr "خطأ تقني أثناء l\\"
+msgid "Erreur technique lors de l’envoi."
+msgstr "خطأ تقني أثناء الإرسال."
 
 #: communications/templates/communications/dashboard_announcements.html:42
 #: documents/templates/documents/manage_report_cards.html:57
@@ -2774,8 +2774,8 @@ msgstr "عرض العلامات"
 #: grades/templates/grades/grades_dashboard.html:47
 #: grades/templates/grades/grades_dashboard.html:60
 #: grades/templates/grades/grades_dashboard.html:194
-msgid "Supprimer l\\"
-msgstr "حذف l\\"
+msgid "Supprimer l’évaluation"
+msgstr "حذف التقييم"
 
 #: grades/templates/grades/grades_dashboard.html:48
 msgid "Aucune moyenne à afficher."
@@ -2809,12 +2809,12 @@ msgstr "إضافة تقييم"
 #: schools/templates/schools/exception_management.html:20
 #: schools/templates/schools/exception_management.html:22
 #: schools/templates/schools/manage_years.html:18
-msgid "Modifier l\\"
-msgstr "تعديل l\\"
+msgid "Modifier l’année"
+msgstr "تعديل السنة"
 
 #: grades/templates/grades/grades_dashboard.html:58
-msgid "Veuillez entrer un \\"
-msgstr "الرجاء إدخال \\"
+msgid "Veuillez entrer un « Noté sur » valide."
+msgstr "الرجاء إدخال «علامة من» صالحة."
 
 #: grades/templates/grades/grades_dashboard.html:59
 msgid "Certaines notes dépassent le maximum."
@@ -3152,8 +3152,8 @@ msgid "Gestion du Planning :"
 msgstr "إدارة جدول التوقيت :"
 
 #: scheduling/templates/scheduling/schedul_management.html:25
-msgid "Horaires de l\\"
-msgstr "أوقات l\\"
+msgid "Horaires de l’école:"
+msgstr "أوقات المدرسة:"
 
 #: scheduling/templates/scheduling/schedul_management.html:26
 msgid "Exceptions horaires (pauses):"
@@ -3190,8 +3190,8 @@ msgid "Total Hebdomadaire:"
 msgstr "المجموع الأسبوعي:"
 
 #: scheduling/templates/scheduling/schedul_management.html:35
-msgid "Veuillez d\\"
-msgstr "الرجاء d\\"
+msgid "Veuillez d’abord sélectionner ou sauvegarder un modèle."
+msgstr "الرجاء أولاً تحديد أو حفظ نموذج."
 
 #: scheduling/templates/scheduling/schedul_management.html:36
 msgid "Jour non travaillé"
@@ -3218,16 +3218,16 @@ msgid "Prof/Matière Inactif"
 msgstr "الأستاذ/المادة غير نشط"
 
 #: scheduling/templates/scheduling/schedul_management.html:51
-msgid "Cette affectation professeur/matière n\\"
-msgstr "تعيين الأستاذ/المادة هذا n\\"
+msgid "Cette affectation professeur/matière n’est plus active."
+msgstr "تعيين الأستاذ/المادة لم يعد نشطاً."
 
 #: scheduling/templates/scheduling/schedul_management.html:52
 msgid "Salle Inactive"
 msgstr "قاعة معطلة"
 
 #: scheduling/templates/scheduling/schedul_management.html:53
-msgid "Cette salle n\\"
-msgstr "هذه القاعة n\\"
+msgid "Cette salle n’est plus active."
+msgstr "هذه القاعة لم تعد نشطة."
 
 #: scheduling/templates/scheduling/schedul_management.html:54
 msgid "Supprimer ce cours"
@@ -3246,11 +3246,12 @@ msgid "Veuillez remplir tous les champs (jour, début, fin, prof, salle)."
 msgstr "الرجاء ملء جميع الحقول (اليوم، البداية، النهاية، الأستاذ، القاعة)."
 
 #: scheduling/templates/scheduling/schedul_management.html:59
-msgid "L\\"
-msgstr "L\\"
+msgid "L’heure de fin doit être après l’heure de début."
+msgstr "يجب أن يكون وقت الانتهاء بعد وقت البداية."
+
 #: scheduling/templates/scheduling/schedul_management.html:60
-msgid "Ce créneau chevauche les bornes horaires de l\\"
-msgstr "هذا الفترة الزمنية تتداخل مع حدود التوقيت الخاصة بـ l\\"
+msgid "Ce créneau chevauche les bornes horaires de l’école ou une pause (ex: déjeuner)."
+msgstr "هذه الفترة الزمنية تتداخل مع حدود التوقيت الخاصة بالمدرسة أو فترة استراحة (مثال: الغداء)."
 
 #: scheduling/templates/scheduling/schedul_management.html:61
 msgid ""
@@ -3285,16 +3286,16 @@ msgid "Date de début (Lundi)"
 msgstr "تاريخ البدء (الإثنين)"
 
 #: scheduling/templates/scheduling/schedul_management.html:71
-msgid "Doit être un Lundi, dans l\\"
-msgstr "يجب أن يكون يوم الإثنين، في l\\"
+msgid "Doit être un Lundi, dans l’année scolaire."
+msgstr "يجب أن يكون يوم الإثنين، ضمن السنة الدراسية."
 
 #: scheduling/templates/scheduling/schedul_management.html:72
 msgid "Date de fin (Dimanche)"
 msgstr "تاريخ النهاية (الأحد)"
 
 #: scheduling/templates/scheduling/schedul_management.html:73
-msgid "Doit être un Dimanche, dans l\\"
-msgstr "يجب أن يكون يوم الأحد، في l\\"
+msgid "Doit être un Dimanche, dans l’année scolaire."
+msgstr "يجب أن يكون يوم الأحد، ضمن السنة الدراسية."
 
 #: scheduling/templates/scheduling/schedul_management.html:74
 #: scheduling/templates/scheduling/schedul_management.html:151
@@ -3306,8 +3307,8 @@ msgid "Les deux dates (début et fin) sont obligatoires."
 msgstr "كلا التاريخين (البداية والنهاية) إلزاميان."
 
 #: scheduling/templates/scheduling/schedul_management.html:76
-msgid "Les dates doivent être à l\\"
-msgstr "يجب أن تكون التواريخ في l\\"
+msgid "Les dates doivent être à l’intérieur de l’année scolaire."
+msgstr "يجب أن تكون التواريخ ضمن السنة الدراسية."
 
 #: scheduling/templates/scheduling/schedul_management.html:77
 msgid "La date de début doit être un LUNDI."
@@ -3323,8 +3324,8 @@ msgid "La date de début tombe pendant : {type}."
 msgstr "يصادف تاريخ البدء خلال: {type}."
 
 #: scheduling/templates/scheduling/schedul_management.html:80
-msgid "Aucun cours à générer (tous tombent sur des jours d\\"
-msgstr "لا توجد دروس لتوليدها (جميعها تصادف أيام d\\"
+msgid "Aucun cours à générer (tous tombent sur des jours d’exception ou plage invalide)."
+msgstr "لا توجد دروس لتوليدها (جميعها تصادف أياماً استثنائية أو نطاقاً غير صالح)."
 
 #: scheduling/templates/scheduling/schedul_management.html:82
 msgid "Génération en Masse"
@@ -3337,8 +3338,8 @@ msgstr "هل تؤكد إنشاء {count} درساً فعلياً من {start} إ
 
 #: scheduling/templates/scheduling/schedul_management.html:84
 #, python-brace-format
-msgid " ({count} cours ignorés car tombant sur des jours d\\"
-msgstr " ({count} درس تم تجاهله لأنه يصادف أيام d\\"
+msgid " ({count} cours ignorés car tombant sur des jours d’exception)."
+msgstr " ({count} درس تم تجاهله لأنه يصادف أياماً استثنائية)."
 
 #: scheduling/templates/scheduling/schedul_management.html:114
 msgid "1. Modèle de Semaine"
@@ -3766,8 +3767,8 @@ msgid "Gestion des exceptions du calendrier"
 msgstr "إدارة استثناءات التقويم"
 
 #: schools/templates/schools/exception_management.html:17
-msgid "Pause de l\\"
-msgstr "استراحة l\\"
+msgid "Pause de l’année"
+msgstr "استراحة السنة"
 
 #: schools/templates/schools/exception_management.html:18
 #, python-brace-format
@@ -3802,12 +3803,12 @@ msgid "Créer"
 msgstr "إنشاء"
 
 #: schools/templates/schools/exception_management.html:26
-msgid "Êtes-vous sûr de vouloir supprimer ce jour d\\"
-msgstr "هل أنت متأكد من رغبتك في حذف يوم d\\"
+msgid "Êtes-vous sûr de vouloir supprimer ce jour d’exception ?"
+msgstr "هل أنت متأكد من رغبتك في حذف هذا اليوم الاستثنائي؟"
 
 #: schools/templates/schools/exception_management.html:27
-msgid "Êtes-vous sûr de vouloir supprimer cet horaire d\\"
-msgstr "هل أنت متأكد من رغبتك في حذف هذا الوقت d\\"
+msgid "Êtes-vous sûr de vouloir supprimer cet horaire d’exception ?"
+msgstr "هل أنت متأكد من رغبتك في حذف هذا التوقيت الاستثنائي؟"
 
 #: schools/templates/schools/exception_management.html:31
 #: users/templates/users/assign_children.html:18
@@ -3917,8 +3918,8 @@ msgid "Type d'exception"
 msgstr "نوع الاستثناء"
 
 #: schools/templates/schools/exception_management.html:117
-msgid "Ex: Vacances d\\"
-msgstr "مثال: عطلة d\\"
+msgid "Ex: Vacances d’été, Jour férié"
+msgstr "مثال: عطلة الصيف، عطلة رسمية"
 
 #: schools/templates/schools/exception_management.html:122
 msgid "Date de début"
@@ -3965,12 +3966,8 @@ msgstr "إنهاء الدورة"
 
 #: schools/templates/schools/manage_term.html:32
 #, python-brace-format
-msgid ""
-"Êtes-vous sûr de vouloir TERMINER le cycle pour le niveau {level} au terme "
-"{counter} ? Le niveau sera marqué comme COMPLÉTÉ pour l\\"
-msgstr ""
-"هل أنت متأكد من رغبتك في إنهاء الدورة للمستوى {level} في الفصل {counter}؟ "
-"سيتم تعليم المستوى كمكتمل لـ l\\"
+msgid "Êtes-vous sûr de vouloir TERMINER le cycle pour le niveau {level} au terme {counter} ? Le niveau sera marqué comme COMPLÉTÉ pour l’année."
+msgstr "هل أنت متأكد من رغبتك في إنهاء الدورة للمستوى {level} في الفصل {counter}؟ سيتم تحديد المستوى كـ مكتمل للسنة."
 
 #: schools/templates/schools/manage_term.html:33
 #, python-brace-format
@@ -4103,8 +4100,8 @@ msgid "Déroulement en cours"
 msgstr "السير العادي جاري"
 
 #: schools/templates/schools/manage_years.html:12
-msgid "Fin d\\"
-msgstr "نهاية d\\"
+msgid "Fin d’année"
+msgstr "نهاية السنة"
 
 #: schools/templates/schools/manage_years.html:13
 #: schools/templates/schools/manage_years.html:98
@@ -4117,8 +4114,8 @@ msgid "Créer une nouvelle année scolaire"
 msgstr "إنشاء سنة دراسية جديدة"
 
 #: schools/templates/schools/manage_years.html:17
-msgid "Créer l\\"
-msgstr "إنشاء l\\"
+msgid "Créer l’année"
+msgstr "إنشاء السنة"
 
 #: schools/templates/schools/manage_years.html:20
 msgid "Veuillez sélectionner une année scolaire actuelle."
@@ -4129,24 +4126,24 @@ msgid "Erreur de connexion ou du serveur. Veuillez réessayer."
 msgstr "خطأ في الاتصال أو الخادم. يرجى المحاولة مرة أخرى."
 
 #: schools/templates/schools/manage_years.html:23
-msgid "Passer à l\\"
-msgstr "الانتقال إلى l\\"
+msgid "Passer à l’étape suivante ?"
+msgstr "الانتقال إلى الخطوة التالية؟"
 
 #: schools/templates/schools/manage_years.html:24
-msgid "Vous êtes sur le point d\\"
-msgstr "أنت على وشك d\\"
+msgid "Vous êtes sur le point d’avancer dans le cycle de vie de l’année.<br><br><ul class='list-disc ps-5 text-start text-xs text-gray-500'><li>Assurez-vous que toutes les tâches de l’étape actuelle sont terminées.</li><li>Cette action peut ouvrir l’accès aux utilisateurs.</li></ul>"
+msgstr "أنت على وشك التقدم في دورة حياة السنة الدراسية.<br><br><ul class='list-disc ps-5 text-start text-xs text-gray-500'><li>تأكد من إكمال جميع مهام المرحلة الحالية.</li><li>قد يفتح هذا الإجراء الوصول للمستخدمين.</li></ul>"
 
 #: schools/templates/schools/manage_years.html:25
 msgid "Confirmer et Avancer"
 msgstr "تأكيد والتقدم"
 
 #: schools/templates/schools/manage_years.html:27
-msgid "Revenir à l\\"
-msgstr "العودة إلى l\\"
+msgid "Revenir à l’étape précédente ?"
+msgstr "العودة إلى الخطوة السابقة؟"
 
 #: schools/templates/schools/manage_years.html:28
-msgid "<strong class=\\"
-msgstr "<strong class=\\"
+msgid "<strong class='text-orange-600'>Attention :</strong> Vous allez reculer dans le cycle de vie.<br><br>Cela peut avoir des conséquences sur les données enregistrées ou les permissions d’accès. Êtes-vous sûr de vouloir continuer ?"
+msgstr "<strong class='text-orange-600'>تحذير:</strong> أنت على وشك التراجع في دورة الحياة.<br><br>قد تكون لهذا تبعات على البيانات المسجلة أو أذونات الوصول. هل أنت متأكد من رغبتك في الاستمرار؟"
 
 #: schools/templates/schools/manage_years.html:29
 msgid "Confirmer le retour"
@@ -4647,7 +4644,7 @@ msgid ""
 "Impossible d'avancer. Le {counter}e {term_type} est le dernier possible "
 "({max_counter}) pour ce niveau."
 msgstr ""
-"تعذر التقدم. الفصل/السداسي الـ {counter} هو الأخير الممكن ({max_counter}) لهذا المستوى."
+"تعذر التقدم. الـ {term_type} الـ {counter} هو الأخير الممكن ({max_counter}) لهذا المستوى."
 
 #: schools/views.py:696
 #, python-brace-format
@@ -4655,7 +4652,7 @@ msgid ""
 "Avancement réussi ! Le niveau {level} est maintenant au {next_counter}e "
 "{term_type}."
 msgstr ""
-"تم التقدم بنجاح! المستوى {level} أصبح الآن في الفصل/السداسي الـ {next_counter}."
+"تم التقدم بنجاح! المستوى {level} أصبح الآن في الـ {term_type} الـ {next_counter}."
 
 #: schools/views.py:707
 #, python-brace-format
@@ -4663,7 +4660,7 @@ msgid ""
 "Impossible de terminer le cycle. Le niveau {level} est seulement au {counter}"
 "e {term_type}. Il reste encore des termes à créer."
 msgstr ""
-"تعذر إنهاء الدورة. المستوى {level} في الفصل/السداسي الـ {counter} فقط. لا تزال هناك فصول يجب إنشاؤها."
+"تعذر إنهاء الدورة. المستوى {level} في الـ {term_type} الـ {counter} فقط. لا تزال هناك فصول يجب إنشاؤها."
 
 #: schools/views.py:717
 #, python-brace-format
@@ -4671,7 +4668,7 @@ msgid ""
 "Cycle terminé ! Le {counter}e et dernier {term_type} du niveau {level} est "
 "maintenant marqué comme terminé pour l'année {year}."
 msgstr ""
-"انتهت الدورة! تم الآن وسم الفصل/السداسي الأخير الـ {counter} للمستوى {level} كمكتمل للسنة {year}."
+"انتهت الدورة! تم الآن وسم الـ {term_type} الأخير الـ {counter} للمستوى {level} كمكتمل للسنة {year}."
 
 #: schools/views.py:729
 #, python-brace-format
@@ -4806,8 +4803,8 @@ msgid "Erreur de connexion : Impossible de contacter le serveur."
 msgstr "خطأ في الاتصال: تعذر الاتصال بالخادم."
 
 #: subjects/templates/subjects/manage_subjects.html:18
-msgid "Confirmer l\\"
-msgstr "تأكيد l\\"
+msgid "Confirmer l’activation"
+msgstr "تأكيد التفعيل"
 
 #: subjects/templates/subjects/manage_subjects.html:19
 msgid "Confirmer la désactivation"
@@ -4832,8 +4829,8 @@ msgid "Désactiver"
 msgstr "تعطيل"
 
 #: subjects/templates/subjects/manage_subjects.html:24
-msgid "Erreur de connexion : Impossible d\\"
-msgstr "خطأ في الاتصال: تعذر d\\"
+msgid "Erreur de connexion : Impossible d’effectuer l’action."
+msgstr "خطأ في الاتصال: تعذر تنفيذ الإجراء."
 
 #: subjects/templates/subjects/manage_subjects.html:29
 #: templates/sidemenu.html:104
@@ -5247,8 +5244,9 @@ msgid "Lier"
 msgstr "ربط"
 
 #: users/templates/users/assign_children.html:13
-msgid "Aucun enfant n\\"
-msgstr "لا يوجد طفل n\\"
+msgid "Aucun enfant n’est attribué à ce parent."
+msgstr "لا يوجد طفل مخصص لهذا الولي."
+
 #: users/templates/users/assign_children.html:14
 msgid "Tous les étudiants ont été attribués à ce parent ou sont déjà liés."
 msgstr "تم تعيين جميع الطلاب لهذا الولي أو أنهم مرتبطون به مسبقاً."
@@ -5262,8 +5260,8 @@ msgid "Action en cours..."
 msgstr "الإجراء جاري..."
 
 #: users/templates/users/assign_children.html:17
-msgid "Erreur lors de l\\"
-msgstr "خطأ أثناء l\\"
+msgid "Erreur lors de l’action"
+msgstr "خطأ أثناء الإجراء"
 
 #: users/templates/users/assign_children.html:38
 msgid "Aucun parent trouvé."
@@ -5305,8 +5303,8 @@ msgid "École"
 msgstr "المدرسة"
 
 #: users/templates/users/dashboard_page.html:24
-msgid "Erreur lors du changement d\\"
-msgstr "خطأ أثناء تغيير d\\"
+msgid "Erreur lors du changement d’école :"
+msgstr "خطأ أثناء تغيير المدرسة:"
 
 #: users/templates/users/dashboard_page.html:25
 #: users/templates/users/dashboard_page.html:48
@@ -5513,16 +5511,16 @@ msgid "Modifier un utilisateur"
 msgstr "تعديل مستخدم"
 
 #: users/templates/users/manage_users.html:223
-msgid "Êtes-vous sûr de vouloir désactiver l\\"
-msgstr "هل أنت متأكد من رغبتك في تعطيل l\\"
+msgid "Êtes-vous sûr de vouloir désactiver l’utilisateur"
+msgstr "هل أنت متأكد من رغبتك في تعطيل المستخدم"
 
 #: users/templates/users/manage_users.html:224
-msgid "Êtes-vous sûr de vouloir activer l\\"
-msgstr "هل أنت متأكد من رغبتك في تفعيل l\\"
+msgid "Êtes-vous sûr de vouloir activer l’utilisateur"
+msgstr "هل أنت متأكد من رغبتك في تفعيل المستخدم"
 
 #: users/templates/users/manage_users.html:226
-msgid "Une erreur est survenue lors de l\\"
-msgstr "حدث خطأ أثناء l\\"
+msgid "Une erreur est survenue lors de l’opération."
+msgstr "حدث خطأ أثناء العملية."
 
 #: users/templates/users/manage_users.html:246
 msgid "Email"
@@ -5598,9 +5596,9 @@ msgstr "حدث خطأ ما. يرجى المحاولة مرة أخرى."
 msgid "Nom d'utilisateur"
 msgstr "اسم المستخدم"
 
-#: users/templates/users/password_reset.html:63
-msgid "Entrez votre nom d\\"
-msgstr "أدخل اسم d\\"
+#: users/templates/users/password_reset.html:47
+msgid "Entrez votre nom d’utilisateur"
+msgstr "أدخل اسم المستخدم"
 
 #: users/templates/users/password_reset.html:76
 msgid "Envoyer le lien"
