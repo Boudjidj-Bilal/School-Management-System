@@ -1563,8 +1563,8 @@ msgid "Télécharger"
 msgstr "Download"
 
 #: communications/templates/communications/dashboard_announcements.html:35
-msgid "à l\\"
-msgstr "at\\"
+msgid "à l’instant"
+msgstr "just now"
 
 #: communications/templates/communications/dashboard_announcements.html:36
 msgid "Annonce marquée comme lue."
@@ -1587,8 +1587,8 @@ msgid "Annonce envoyée avec succès !"
 msgstr "Announcement sent successfully!"
 
 #: communications/templates/communications/dashboard_announcements.html:41
-msgid "Erreur technique lors de l\\"
-msgstr "Technical error during\\"
+msgid "Erreur technique lors de l’envoi."
+msgstr "Technical error during sending."
 
 #: communications/templates/communications/dashboard_announcements.html:42
 #: documents/templates/documents/manage_report_cards.html:57
@@ -2773,8 +2773,8 @@ msgstr "View grades"
 #: grades/templates/grades/grades_dashboard.html:47
 #: grades/templates/grades/grades_dashboard.html:60
 #: grades/templates/grades/grades_dashboard.html:194
-msgid "Supprimer l\\"
-msgstr "Delete \\"
+msgid "Supprimer l’évaluation"
+msgstr "Delete assessment"
 
 #: grades/templates/grades/grades_dashboard.html:48
 msgid "Aucune moyenne à afficher."
@@ -2808,12 +2808,12 @@ msgstr "Add an Assessment"
 #: schools/templates/schools/exception_management.html:20
 #: schools/templates/schools/exception_management.html:22
 #: schools/templates/schools/manage_years.html:18
-msgid "Modifier l\\"
-msgstr "Edit \\"
+msgid "Modifier l’année"
+msgstr "Edit year"
 
 #: grades/templates/grades/grades_dashboard.html:58
-msgid "Veuillez entrer un \\"
-msgstr "Please enter a \\"
+msgid "Veuillez entrer un « Noté sur » valide."
+msgstr "Please enter a valid 'Graded out of' value."
 
 #: grades/templates/grades/grades_dashboard.html:59
 msgid "Certaines notes dépassent le maximum."
@@ -3151,8 +3151,8 @@ msgid "Gestion du Planning :"
 msgstr "Schedule Management:"
 
 #: scheduling/templates/scheduling/schedul_management.html:25
-msgid "Horaires de l\\"
-msgstr "School hours\\"
+msgid "Horaires de l’école:"
+msgstr "School hours:"
 
 #: scheduling/templates/scheduling/schedul_management.html:26
 msgid "Exceptions horaires (pauses):"
@@ -3189,12 +3189,13 @@ msgid "Total Hebdomadaire:"
 msgstr "Weekly Total:"
 
 #: scheduling/templates/scheduling/schedul_management.html:35
-msgid "Veuillez d\\"
-msgstr "Please d\\"
+msgid "Veuillez d’abord sélectionner ou sauvegarder un modèle."
+msgstr "Please select or save a template first."
 
 #: scheduling/templates/scheduling/schedul_management.html:36
 msgid "Jour non travaillé"
 msgstr "Non-working day"
+
 #: scheduling/templates/scheduling/schedul_management.html:46
 msgid "Jour inconnu"
 msgstr "Unknown day"
@@ -3216,16 +3217,16 @@ msgid "Prof/Matière Inactif"
 msgstr "Inactive Teacher/Subject"
 
 #: scheduling/templates/scheduling/schedul_management.html:51
-msgid "Cette affectation professeur/matière n\\"
-msgstr "This teacher/subject assignment is not\\"
+msgid "Cette affectation professeur/matière n’est plus active."
+msgstr "This teacher/subject assignment is no longer active."
 
 #: scheduling/templates/scheduling/schedul_management.html:52
 msgid "Salle Inactive"
 msgstr "Inactive Room"
 
 #: scheduling/templates/scheduling/schedul_management.html:53
-msgid "Cette salle n\\"
-msgstr "This room is not\\"
+msgid "Cette salle n’est plus active."
+msgstr "This room is no longer active."
 
 #: scheduling/templates/scheduling/schedul_management.html:54
 msgid "Supprimer ce cours"
@@ -3244,12 +3245,12 @@ msgid "Veuillez remplir tous les champs (jour, début, fin, prof, salle)."
 msgstr "Please fill in all fields (day, start, end, teacher, room)."
 
 #: scheduling/templates/scheduling/schedul_management.html:59
-msgid "L\\"
-msgstr "The\\"
+msgid "L’heure de fin doit être après l’heure de début."
+msgstr "The end time must be after the start time."
 
 #: scheduling/templates/scheduling/schedul_management.html:60
-msgid "Ce créneau chevauche les bornes horaires de l\\"
-msgstr "This time slot overlaps the time limits of\\"
+msgid "Ce créneau chevauche les bornes horaires de l’école ou une pause (ex: déjeuner)."
+msgstr "This time slot overlaps school operating hours or a break (e.g. lunch)."
 
 #: scheduling/templates/scheduling/schedul_management.html:61
 msgid ""
@@ -3284,16 +3285,16 @@ msgid "Date de début (Lundi)"
 msgstr "Start date (Monday)"
 
 #: scheduling/templates/scheduling/schedul_management.html:71
-msgid "Doit être un Lundi, dans l\\"
-msgstr "Must be a Monday, within\\"
+msgid "Doit être un Lundi, dans l’année scolaire."
+msgstr "Must be a Monday, within the school year."
 
 #: scheduling/templates/scheduling/schedul_management.html:72
 msgid "Date de fin (Dimanche)"
 msgstr "End date (Sunday)"
 
 #: scheduling/templates/scheduling/schedul_management.html:73
-msgid "Doit être un Dimanche, dans l\\"
-msgstr "Must be a Sunday, within\\"
+msgid "Doit être un Dimanche, dans l’année scolaire."
+msgstr "Must be a Sunday, within the school year."
 
 #: scheduling/templates/scheduling/schedul_management.html:74
 #: scheduling/templates/scheduling/schedul_management.html:151
@@ -3305,8 +3306,8 @@ msgid "Les deux dates (début et fin) sont obligatoires."
 msgstr "Both dates (start and end) are mandatory."
 
 #: scheduling/templates/scheduling/schedul_management.html:76
-msgid "Les dates doivent être à l\\"
-msgstr "Dates must be within\\"
+msgid "Les dates doivent être à l’intérieur de l’année scolaire."
+msgstr "Dates must be within the school year."
 
 #: scheduling/templates/scheduling/schedul_management.html:77
 msgid "La date de début doit être un LUNDI."
@@ -3322,8 +3323,8 @@ msgid "La date de début tombe pendant : {type}."
 msgstr "The start date falls during: {type}."
 
 #: scheduling/templates/scheduling/schedul_management.html:80
-msgid "Aucun cours à générer (tous tombent sur des jours d\\"
-msgstr "No classes to generate (all fall on days of\\"
+msgid "Aucun cours à générer (tous tombent sur des jours d’exception ou plage invalide)."
+msgstr "No classes to generate (all fall on exception days or invalid range)."
 
 #: scheduling/templates/scheduling/schedul_management.html:82
 msgid "Génération en Masse"
@@ -3336,8 +3337,8 @@ msgstr "Do you confirm the creation of {count} actual classes from {start} to {e
 
 #: scheduling/templates/scheduling/schedul_management.html:84
 #, python-brace-format
-msgid " ({count} cours ignorés car tombant sur des jours d\\"
-msgstr " ({count} classes ignored as they fall on days of\\"
+msgid " ({count} cours ignorés car tombant sur des jours d’exception)."
+msgstr " ({count} classes ignored as they fall on exception days)."
 
 #: scheduling/templates/scheduling/schedul_management.html:114
 msgid "1. Modèle de Semaine"
@@ -3771,8 +3772,8 @@ msgid "Gestion des exceptions du calendrier"
 msgstr "Calendar Exception Management"
 
 #: schools/templates/schools/exception_management.html:17
-msgid "Pause de l\\"
-msgstr "Break of l\\"
+msgid "Pause de l’année"
+msgstr "Year break"
 
 #: schools/templates/schools/exception_management.html:18
 #, python-brace-format
@@ -3807,11 +3808,12 @@ msgid "Créer"
 msgstr "Create"
 
 #: schools/templates/schools/exception_management.html:26
-msgid "Êtes-vous sûr de vouloir supprimer ce jour d\\"
-msgstr "Are you sure you want to delete this day of\\"
+msgid "Êtes-vous sûr de vouloir supprimer ce jour d’exception ?"
+msgstr "Are you sure you want to delete this exception day?"
+
 #: schools/templates/schools/exception_management.html:27
-msgid "Êtes-vous sûr de vouloir supprimer cet horaire d\\"
-msgstr "Are you sure you want to delete this schedule of\\"
+msgid "Êtes-vous sûr de vouloir supprimer cet horaire d’exception ?"
+msgstr "Are you sure you want to delete this exception schedule?"
 
 #: schools/templates/schools/exception_management.html:31
 #: users/templates/users/assign_children.html:18
@@ -3921,8 +3923,8 @@ msgid "Type d'exception"
 msgstr "Exception Type"
 
 #: schools/templates/schools/exception_management.html:117
-msgid "Ex: Vacances d\\"
-msgstr "Ex: Holidays of\\"
+msgid "Ex: Vacances d’été, Jour férié"
+msgstr "Ex: Summer holidays, Public holiday"
 
 #: schools/templates/schools/exception_management.html:122
 msgid "Date de début"
@@ -3970,12 +3972,8 @@ msgstr "Finish Cycle"
 
 #: schools/templates/schools/manage_term.html:32
 #, python-brace-format
-msgid ""
-"Êtes-vous sûr de vouloir TERMINER le cycle pour le niveau {level} au terme "
-"{counter} ? Le niveau sera marqué comme COMPLÉTÉ pour l\\"
-msgstr ""
-"Are you sure you want to FINISH the cycle for level {level} at term "
-"{counter}? The level will be marked as COMPLETED for l\\"
+msgid "Êtes-vous sûr de vouloir TERMINER le cycle pour le niveau {level} au terme {counter} ? Le niveau sera marqué comme COMPLÉTÉ pour l’année."
+msgstr "Are you sure you want to FINISH the cycle for level {level} at term {counter}? The level will be marked as COMPLETED for the year."
 
 #: schools/templates/schools/manage_term.html:33
 #, python-brace-format
@@ -4111,8 +4109,8 @@ msgid "Déroulement en cours"
 msgstr "Ongoing"
 
 #: schools/templates/schools/manage_years.html:12
-msgid "Fin d\\"
-msgstr "End of\\"
+msgid "Fin d’année"
+msgstr "End of year"
 
 #: schools/templates/schools/manage_years.html:13
 #: schools/templates/schools/manage_years.html:98
@@ -4123,10 +4121,9 @@ msgstr "Finished"
 #: schools/templates/schools/manage_years.html:117
 msgid "Créer une nouvelle année scolaire"
 msgstr "Create a new school year"
-
 #: schools/templates/schools/manage_years.html:17
-msgid "Créer l\\"
-msgstr "Create l\\"
+msgid "Créer l’année"
+msgstr "Create year"
 
 #: schools/templates/schools/manage_years.html:20
 msgid "Veuillez sélectionner une année scolaire actuelle."
@@ -4137,25 +4134,24 @@ msgid "Erreur de connexion ou du serveur. Veuillez réessayer."
 msgstr "Connection or server error. Please try again."
 
 #: schools/templates/schools/manage_years.html:23
-msgid "Passer à l\\"
-msgstr "Switch to l\\"
+msgid "Passer à l’étape suivante ?"
+msgstr "Move to the next step?"
 
 #: schools/templates/schools/manage_years.html:24
-msgid "Vous êtes sur le point d\\"
-msgstr "You are about to d\\"
+msgid "Vous êtes sur le point d’avancer dans le cycle de vie de l’année.<br><br><ul class='list-disc ps-5 text-start text-xs text-gray-500'><li>Assurez-vous que toutes les tâches de l’étape actuelle sont terminées.</li><li>Cette action peut ouvrir l’accès aux utilisateurs.</li></ul>"
+msgstr "You are about to advance in the lifecycle of the school year.<br><br><ul class='list-disc ps-5 text-start text-xs text-gray-500'><li>Make sure all tasks for the current step are completed.</li><li>This action may open access to users.</li></ul>"
 
 #: schools/templates/schools/manage_years.html:25
 msgid "Confirmer et Avancer"
 msgstr "Confirm and Advance"
 
 #: schools/templates/schools/manage_years.html:27
-msgid "Revenir à l\\"
-msgstr "Return to l\\"
+msgid "Revenir à l’étape précédente ?"
+msgstr "Return to the previous step?"
 
 #: schools/templates/schools/manage_years.html:28
-msgid "<strong class=\\"
-msgstr "<strong class=\\"
-
+msgid "<strong class='text-orange-600'>Attention :</strong> Vous allez reculer dans le cycle de vie.<br><br>Cela peut avoir des conséquences sur les données enregistrées ou les permissions d’accès. Êtes-vous sûr de vouloir continuer ?"
+msgstr "<strong class='text-orange-600'>Warning:</strong> You are about to move backward in the lifecycle.<br><br>This may affect saved data or access permissions. Are you sure you want to continue?"
 #: schools/templates/schools/manage_years.html:29
 msgid "Confirmer le retour"
 msgstr "Confirm return"
@@ -4830,8 +4826,8 @@ msgid "Erreur de connexion : Impossible de contacter le serveur."
 msgstr "Connection error: Unable to contact the server."
 
 #: subjects/templates/subjects/manage_subjects.html:18
-msgid "Confirmer l\\"
-msgstr "Confirm \\"
+msgid "Confirmer l’activation"
+msgstr "Confirm activation"
 
 #: subjects/templates/subjects/manage_subjects.html:19
 msgid "Confirmer la désactivation"
@@ -4856,8 +4852,8 @@ msgid "Désactiver"
 msgstr "Deactivate"
 
 #: subjects/templates/subjects/manage_subjects.html:24
-msgid "Erreur de connexion : Impossible d\\"
-msgstr "Connection error: Unable to \\"
+msgid "Erreur de connexion : Impossible d’effectuer l’action."
+msgstr "Connection error: Unable to perform the action."
 
 #: subjects/templates/subjects/manage_subjects.html:29
 #: templates/sidemenu.html:104
