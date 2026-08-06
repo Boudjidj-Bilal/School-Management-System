@@ -3,6 +3,8 @@
 # Import des modèles nécessaires
 from classes.models import ClassTeacherYear, ClassStudentYear
 from grades.models import Evaluation, Grade, Appreciation, Mention
+from schools.models import TermYearLevel, Year
+
 from django.utils.translation import gettext_lazy as _
 
 # Import des fonctions existantes
@@ -248,3 +250,126 @@ def get_report_card_context(student, term_year):
     context['attendance'] = stats
 
     return context
+
+# Assure-toi que ces fonctions sont bien importées au début de ton fichier utils.py
+# from .utils import calculate_overall_student_average, get_student_attendance_stats
+
+def get_school_dashboard_statistics(school, year_id, term_id=None):
+    """
+    Calcule à la volée toutes les statistiques d'une école pour le tableau de bord Chart.js.
+    """
+    # 1. Sécurisation et récupération de l'année
+    try:
+        year = Year.objects.get(id=year_id, school=school)
+    except Year.DoesNotExist:
+        return None
+
+    # 2. Récupération des trimestres concernés
+    if term_id:
+        terms = TermYearLevel.objects.filter(id=term_id, year=year)
+    else:
+        # Si aucun trimestre précis, on prend tous les trimestres de l'année
+        terms = TermYearLevel.objects.filter(year=year)
+
+    if not terms.exists():
+        return None
+
+    # 3. Récupération des inscriptions (Actives)
+    enrollments = ClassStudentYear.objects.filter(
+        student__school=school,
+        year=year,
+        is_active=True
+    ).select_related('student', 'student__user', 'student_class', 'student_class__level')
+
+    # 4. Initialisation des compteurs pour Chart.js
+    stats = {
+        'demographics': {'boys': 0, 'girls': 0},
+        'mentions': {},
+        'attendance': {
+            'absences_justified': 0, 
+            'absences_unjustified': 0,
+            'delays_justified': 0, 
+            'delays_unjustified': 0
+        },
+        'averages_by_level': {}  # Dict intermédiaire: {'Nom du Niveau': {'sum': 0, 'count': 0}}
+    }
+
+    # 5. Boucle de traitement des élèves (Calculs à la volée)
+    for link in enrollments:
+        student = link.student
+        level_name = link.student_class.level.get_level_display()
+
+        # Démographie (Genre)
+        if student.get_gender_display() in ["Mister", "Garçon", "Male", "M"]:  # Adapte selon tes valeurs exactes
+            stats['demographics']['boys'] += 1
+        else:
+            stats['demographics']['girls'] += 1
+
+        # Initialisation du niveau pour la moyenne
+        if level_name not in stats['averages_by_level']:
+            stats['averages_by_level'][level_name] = {'sum': 0, 'count': 0}
+
+        # Calculs par trimestre pour cet élève
+        for term in terms:
+            # A. Moyennes
+            avg = calculate_overall_student_average(student, term)
+            if avg is not None:
+                stats['averages_by_level'][level_name]['sum'] += float(avg)
+                stats['averages_by_level'][level_name]['count'] += 1
+
+            # B. Mentions
+            mention_obj = Mention.objects.filter(student=student, term_year=term).first()
+            if mention_obj:
+                mention_name = mention_obj.get_mention_type_display()
+                stats['mentions'][mention_name] = stats['mentions'].get(mention_name, 0) + 1
+
+            # C. Assiduité
+            att = get_student_attendance_stats(student, term_year=term)
+            if att:
+                # Absences
+                total_abs = att.get('total_absences', 0)
+                unjustified_abs = att.get('unjustified_absences', 0)
+                stats['attendance']['absences_justified'] += (total_abs - unjustified_abs)
+                stats['attendance']['absences_unjustified'] += unjustified_abs
+                
+                # Retards
+                total_del = att.get('total_delays', 0)
+                unjustified_del = att.get('unjustified_delays', 0)
+                stats['attendance']['delays_justified'] += (total_del - unjustified_del)
+                stats['attendance']['delays_unjustified'] += unjustified_del
+
+    # 6. Formatage final des données pour faciliter l'injection dans Chart.js
+    
+    # Formatage Moyennes par niveau
+    avg_labels = []
+    avg_data = []
+    for lvl, data in stats['averages_by_level'].items():
+        if data['count'] > 0:
+            avg_labels.append(lvl)
+            avg_data.append(round(data['sum'] / data['count'], 2))
+
+    # Formatage Mentions
+    mention_labels = list(stats['mentions'].keys())
+    mention_data = list(stats['mentions'].values())
+
+    chart_js_data = {
+        'demographics': {
+            'labels': [str(_("Filles")), str(_("Garçons"))],
+            'data': [stats['demographics']['girls'], stats['demographics']['boys']]
+        },
+        'averages': {
+            'labels': avg_labels,
+            'data': avg_data
+        },
+        'mentions': {
+            'labels': mention_labels,
+            'data': mention_data
+        },
+        'attendance': {
+            'labels': [str(_("Justifié")), str(_("Non Justifié"))],
+            'absences': [stats['attendance']['absences_justified'], stats['attendance']['absences_unjustified']],
+            'delays': [stats['attendance']['delays_justified'], stats['attendance']['delays_unjustified']]
+        }
+    }
+
+    return chart_js_data

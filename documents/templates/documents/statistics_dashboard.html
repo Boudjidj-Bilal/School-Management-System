@@ -1,0 +1,156 @@
+{% extends 'base.html' %}
+{% load static i18n %}
+
+{% block title %}{% trans "Tableau de Bord des Statistiques" %} - {{ school.name }}{% endblock %}
+
+{% block content %}
+
+    <!-- 1. OVERLAY DE CHARGEMENT (Le Loader) -->
+    <div id="loader-overlay" class="fixed inset-0 bg-white/90 z-50 hidden flex-col items-center justify-center backdrop-blur-sm transition-opacity duration-300">
+        <i class="fas fa-circle-notch fa-spin text-indigo-600 text-6xl mb-6"></i>
+        <p class="text-xl font-bold text-gray-800" dir="auto">{% trans "Calcul des statistiques en cours..." %}</p>
+        <p class="text-sm text-gray-500 mt-2" dir="auto">{% trans "Veuillez patienter, cela peut prendre quelques secondes." %}</p>
+    </div>
+
+    <!-- 2. FORMULAIRE CACHÉ POUR L'EXPORT PDF -->
+    <!-- Le JS viendra remplir ces champs cachés avec les images Base64 avant de soumettre -->
+    <form id="pdf-export-form" method="POST" action="{% url 'documents:export_statistics_pdf' %}" class="hidden">
+        {% csrf_token %}
+        <input type="hidden" name="year_name" id="pdf-year-name">
+        <input type="hidden" name="term_name" id="pdf-term-name">
+        <input type="hidden" name="chart_averages" id="pdf-chart-averages">
+        <input type="hidden" name="chart_mentions" id="pdf-chart-mentions">
+        <input type="hidden" name="chart_attendance" id="pdf-chart-attendance">
+        <input type="hidden" name="chart_demographics" id="pdf-chart-demographics">
+    </form>
+
+    <!-- 3. CONTENEUR PRINCIPAL & DATA-ATTRIBUTES (i18n pour le JS) -->
+    <div id="statistics-container" 
+         class="max-w-7xl mx-auto p-4 sm:p-8 text-start"
+         data-api-url="{% url 'documents:api_statistics_data' %}"
+         data-msg-error="{% trans 'Une erreur est survenue lors de la récupération des données.' %}"
+         data-msg-empty="{% trans 'Aucune donnée disponible pour cette période.' %}"
+         data-msg-label-boys="{% trans 'Garçons' %}"
+         data-msg-label-girls="{% trans 'Filles' %}"
+         data-msg-label-justified="{% trans 'Justifié' %}"
+         data-msg-label-unjustified="{% trans 'Non Justifié' %}"
+         data-msg-title-averages="{% trans 'Moyenne Globale sur 20' %}"
+         data-msg-title-absences="{% trans 'Absences' %}"
+         data-msg-title-delays="{% trans 'Retards' %}">
+
+        <!-- 4. EN-TÊTE & FILTRES -->
+        <header class="mb-8 bg-white p-6 rounded-xl shadow-md border-s-4 border-indigo-600 flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6">
+            
+            <div class="min-w-0">
+                <!-- Séparation icône + texte avec gap-3 -->
+                <h1 class="text-3xl font-extrabold text-gray-900 flex items-center gap-3">
+                    <i class="fas fa-chart-line text-indigo-600"></i>
+                    <span>{% trans "Tableau de Bord Pédagogique" %}</span>
+                </h1>
+                <p class="mt-2 text-lg text-gray-600" dir="auto">
+                    {% trans "École :" %} <span class="font-bold text-indigo-600">{{ school.name }}</span>
+                </p>
+            </div>
+            
+            <!-- Séparation avec gap-4 -->
+            <div class="flex flex-col sm:flex-row items-center gap-4 w-full lg:w-auto">
+                <!-- Filtre : Année -->
+                <div class="w-full sm:w-auto">
+                    <label for="year-select" class="sr-only">{% trans "Année scolaire" %}</label>
+                    <select id="year-select" class="w-full bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-indigo-500 focus:border-indigo-500 block p-2.5">
+                        <option value="" disabled>{% trans "-- Choisir l'année --" %}</option>
+                        {% for year in years %}
+                            <option value="{{ year.id }}" {% if forloop.first %}selected{% endif %}>{{ year.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <!-- Filtre : Période (Alimenté dynamiquement ou global) -->
+                <div class="w-full sm:w-auto">
+                    <label for="term-select" class="sr-only">{% trans "Période" %}</label>
+                    <select id="term-select" class="w-full bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-indigo-500 focus:border-indigo-500 block p-2.5">
+                        <option value="">{% trans "Toute l'année (Bilan global)" %}</option>
+                        <!-- Le JS pourra mettre à jour cette liste selon l'année si besoin -->
+                    </select>
+                </div>
+
+                <!-- Bouton Export PDF (Séparation icône + texte avec gap-2) -->
+                <button type="button" id="btn-export-pdf" class="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-5 py-2.5 bg-red-600 text-white text-sm font-medium rounded-lg hover:bg-red-700 focus:ring-4 focus:ring-red-300 transition-colors shadow-md disabled:opacity-50">
+                    <i class="fas fa-file-pdf"></i>
+                    <span>{% trans "Exporter en PDF" %}</span>
+                </button>
+            </div>
+        </header>
+
+        <!-- ZONE DE NOTIFICATION D'ERREUR -->
+        <div id="error-notification" class="hidden mb-6 p-4 rounded-xl shadow-md bg-red-50 border-s-4 border-red-500 text-start">
+            <div class="flex items-center gap-3 text-red-700">
+                <i class="fas fa-exclamation-circle text-lg"></i>
+                <p id="error-message-text" class="font-medium" dir="auto"></p>
+            </div>
+        </div>
+
+        <!-- 5. GRILLE DES GRAPHIQUES (CHART.JS) -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            
+            <!-- Graphique 1 : Moyennes par Niveau (Bar Chart) -->
+            <div class="bg-white p-6 rounded-xl shadow-md border border-gray-100 flex flex-col h-96">
+                <!-- Séparation icône + texte avec gap-2 -->
+                <h3 class="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2 border-b pb-2">
+                    <i class="fas fa-graduation-cap text-indigo-500"></i>
+                    <span>{% trans "Moyennes par Niveau" %}</span>
+                </h3>
+                <div class="relative flex-1 w-full">
+                    <canvas id="chart-averages"></canvas>
+                </div>
+            </div>
+
+            <!-- Graphique 2 : Répartition des Mentions (Doughnut/Pie Chart) -->
+            <div class="bg-white p-6 rounded-xl shadow-md border border-gray-100 flex flex-col h-96">
+                <!-- Séparation icône + texte avec gap-2 -->
+                <h3 class="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2 border-b pb-2">
+                    <i class="fas fa-award text-yellow-500"></i>
+                    <span>{% trans "Répartition des Mentions" %}</span>
+                </h3>
+                <div class="relative flex-1 w-full">
+                    <canvas id="chart-mentions"></canvas>
+                </div>
+            </div>
+
+            <!-- Graphique 3 : Bilan d'Assiduité (Bar Chart empilé ou double) -->
+            <div class="bg-white p-6 rounded-xl shadow-md border border-gray-100 flex flex-col h-96">
+                <!-- Séparation icône + texte avec gap-2 -->
+                <h3 class="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2 border-b pb-2">
+                    <i class="fas fa-user-clock text-orange-500"></i>
+                    <span>{% trans "Bilan d'Assiduité" %}</span>
+                </h3>
+                <div class="relative flex-1 w-full">
+                    <canvas id="chart-attendance"></canvas>
+                </div>
+            </div>
+
+            <!-- Graphique 4 : Démographie (Pie Chart Filles/Garçons) -->
+            <div class="bg-white p-6 rounded-xl shadow-md border border-gray-100 flex flex-col h-96">
+                <!-- Séparation icône + texte avec gap-2 -->
+                <h3 class="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2 border-b pb-2">
+                    <i class="fas fa-venus-mars text-pink-500"></i>
+                    <span>{% trans "Répartition des Élèves" %}</span>
+                </h3>
+                <div class="relative flex-1 w-full">
+                    <canvas id="chart-demographics"></canvas>
+                </div>
+            </div>
+
+        </div>
+
+    </div>
+
+{% endblock %}
+
+{% block extra_js %}
+    <!-- Chargement de la librairie Chart.js locale -->
+    <script src="{% static 'js/vendor/chart.umd.js' %}"></script>
+    
+    <!-- Notre script de logique (Étape 5) -->
+    <script src="{% static 'js/documents/statistics_dashboard.js' %}"></script>
+{% endblock %}

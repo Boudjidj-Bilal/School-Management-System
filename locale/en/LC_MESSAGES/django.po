@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-08-06 01:56+0200\n"
+"POT-Creation-Date: 2026-08-06 15:54+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -47,6 +47,7 @@ msgid "Gestion des Absences et Retards"
 msgstr "Attendance and Lateness Management"
 
 #: attendance/templates/attendance/class_hub.html:19
+#: documents/templates/documents/statistics_pdf_report.html:118
 #: scheduling/templates/scheduling/schedul_management.html:69
 msgid "Année scolaire :"
 msgstr "School year:"
@@ -259,6 +260,8 @@ msgstr "Justify"
 #: attendance/templates/attendance/manage_attendance.html:137
 #: attendance/templates/attendance/student_attendance.html:139
 #: attendance/views.py:365
+#: documents/templates/documents/statistics_dashboard.html:35
+#: documents/utils.py:369
 msgid "Justifié"
 msgstr "Excused"
 
@@ -461,8 +464,8 @@ msgstr "No period"
 msgid "L'année scolaire n'est pas active ou non définie."
 msgstr "The school year is not active or not defined."
 
-#: attendance/views.py:132 grades/views.py:191 grades/views.py:226
-#: scheduling/views.py:308 scheduling/views.py:689
+#: attendance/views.py:132 documents/views.py:650 grades/views.py:191
+#: grades/views.py:226 scheduling/views.py:308 scheduling/views.py:689
 msgid "Accès refusé."
 msgstr "Access denied."
 
@@ -787,6 +790,7 @@ msgstr "Network error:"
 #: classes/templates/classes/classroom_management.html:35
 #: classes/templates/classes/level_management.html:33
 #: communications/templates/communications/homework_detail.html:30
+#: documents/templates/documents/statistics_dashboard.html:51
 msgid "École :"
 msgstr "School:"
 
@@ -1226,9 +1230,9 @@ msgid "Action non reconnue."
 msgstr "Unrecognized action."
 
 #: classes/views.py:138 classes/views.py:288 classes/views.py:474
-#: schools/views.py:118 schools/views.py:548 schools/views.py:726
-#: schools/views.py:878 users/views.py:114 users/views.py:308
-#: users/views.py:963 users/views.py:1067
+#: documents/views.py:673 schools/views.py:118 schools/views.py:548
+#: schools/views.py:726 schools/views.py:878 users/views.py:114
+#: users/views.py:308 users/views.py:963 users/views.py:1067
 msgid "Données JSON invalides."
 msgstr "Invalid JSON data."
 
@@ -1303,8 +1307,6 @@ msgid "Niveau \"{level_name}\" supprimé."
 msgstr "Level \"{level_name}\" deleted."
 
 #: classes/views.py:290
-#, fuzzy
-#| msgid "Erreur d'intégrité de la base de données. Vérifiez les contraintes."
 msgid "Erreur d’intégrité de la base de données. Vérifiez les contraintes."
 msgstr "Database integrity error. Check constraints."
 
@@ -1336,10 +1338,6 @@ msgid "La classe \"{name}\" a été créée avec succès."
 msgstr "The class \"{name}\" has been created successfully."
 
 #: classes/views.py:428
-#, fuzzy
-#| msgid ""
-#| "L'ID de la classe, le nom et le niveau sont obligatoires pour la mise à "
-#| "jour."
 msgid ""
 "L’ID de la classe, le nom et le niveau sont obligatoires pour la mise à jour."
 msgstr "The class ID, name, and level are mandatory for the update."
@@ -1372,8 +1370,6 @@ msgid "Classe non trouvée pour cette école."
 msgstr "Class not found for this school."
 
 #: classes/views.py:476
-#, fuzzy
-#| msgid "Erreur d'intégrité de la base de données. Opération annulée."
 msgid "Erreur d’intégrité de la base de données. Opération annulée."
 msgstr "Database integrity error. Operation cancelled."
 
@@ -1381,7 +1377,7 @@ msgstr "Database integrity error. Operation cancelled."
 msgid "Permission refusée. Rôle non autorisé."
 msgstr "Permission denied. Unauthorized role."
 
-#: classes/views.py:647 schools/views.py:905
+#: classes/views.py:647 documents/views.py:661 schools/views.py:905
 msgid "École introuvable."
 msgstr "School not found."
 
@@ -1623,8 +1619,8 @@ msgstr "{count} recipient(s) selected"
 
 #: communications/templates/communications/dashboard_announcements.html:53
 #: communications/templates/communications/dashboard_announcements.html:90
-#: templates/sidemenu.html:171 templates/sidemenu.html:213
-#: templates/sidemenu.html:262 templates/sidemenu.html:302
+#: templates/sidemenu.html:178 templates/sidemenu.html:220
+#: templates/sidemenu.html:269 templates/sidemenu.html:309
 msgid "Annonces"
 msgstr "Announcements"
 
@@ -1737,8 +1733,8 @@ msgid "Envoyer"
 msgstr "Send"
 
 #: communications/templates/communications/dashboard_communication.html:4
-#: templates/sidemenu.html:161 templates/sidemenu.html:207
-#: templates/sidemenu.html:256 templates/sidemenu.html:278
+#: templates/sidemenu.html:168 templates/sidemenu.html:214
+#: templates/sidemenu.html:263 templates/sidemenu.html:285
 #: users/templates/users/dashboard_page.html:158
 msgid "Messagerie"
 msgstr "Messaging"
@@ -1957,7 +1953,7 @@ msgstr "Submit my work"
 msgid "Proviseur"
 msgstr "Principal / Headmaster"
 
-#: communications/utils.py:22 templates/sidemenu.html:68 users/views.py:454
+#: communications/utils.py:22 templates/sidemenu.html:75 users/views.py:454
 msgid "CPE"
 msgstr "CPE (Education Advisor)"
 
@@ -2108,16 +2104,16 @@ msgid "École"
 msgstr "School"
 
 #: documents/export.py:101
-#, fuzzy
-#| msgid "Année Scolaire :"
 msgid "Année Scolaire"
 msgstr "School Year:"
 
-#: documents/export.py:102 users/templates/users/dashboard_page.html:340
+#: documents/export.py:102
+#: documents/templates/documents/statistics_dashboard.html:70
+#: users/templates/users/dashboard_page.html:340
 msgid "Période"
 msgstr "Period"
 
-#: documents/export.py:102 documents/utils.py:145 grades/utils.py:306
+#: documents/export.py:102 documents/utils.py:147 grades/utils.py:306
 #, python-brace-format
 msgid "Trimestre {counter}"
 msgstr "Term {counter}"
@@ -2139,26 +2135,18 @@ msgid "Genre"
 msgstr "Gender"
 
 #: documents/export.py:110
-#, fuzzy
-#| msgid "Date de naissance"
 msgid "Date Naissance"
 msgstr "Date of birth"
 
 #: documents/export.py:113
-#, fuzzy
-#| msgid "Moyenne Générale :"
 msgid "Moy. Générale Élève"
 msgstr "Student General Average"
 
 #: documents/export.py:114
-#, fuzzy
-#| msgid "Moyenne Générale de la Classe :"
 msgid "Moy. Générale Classe"
 msgstr "Class General Average:"
 
 #: documents/export.py:115
-#, fuzzy
-#| msgid "Prof. Principal :"
 msgid "Moy. Principale Élève"
 msgstr "Main Teacher:"
 
@@ -2178,8 +2166,6 @@ msgid "Absences Totales"
 msgstr "Total Absences"
 
 #: documents/export.py:122
-#, fuzzy
-#| msgid "Absences Totales"
 msgid "Absences Non Justif."
 msgstr "Total Absences"
 
@@ -2188,14 +2174,10 @@ msgid "Retards Totaux"
 msgstr "Total Lateness"
 
 #: documents/export.py:124
-#, fuzzy
-#| msgid "Retards Totaux"
 msgid "Retards Non Justif."
 msgstr "Total Lateness"
 
 #: documents/export.py:135
-#, fuzzy
-#| msgid "Aucune donnée trouvée pour ce contexte."
 msgid "Aucune donnée trouvée pour les critères sélectionnés."
 msgstr "No data found for this context."
 
@@ -2465,6 +2447,130 @@ msgstr "The Main Teacher"
 msgid "Le Chef d'Établissement"
 msgstr "The Headmaster / Principal"
 
+#: documents/templates/documents/statistics_dashboard.html:4
+msgid "Tableau de Bord des Statistiques"
+msgstr "Statistics Dashboard"
+
+#: documents/templates/documents/statistics_dashboard.html:11
+msgid "Calcul des statistiques en cours..."
+msgstr "Calculating statistics..."
+
+#: documents/templates/documents/statistics_dashboard.html:12
+msgid "Veuillez patienter, cela peut prendre quelques secondes."
+msgstr "Please wait, this may take a few seconds."
+
+#: documents/templates/documents/statistics_dashboard.html:31
+msgid "Une erreur est survenue lors de la récupération des données."
+msgstr "An error occurred during the operation."
+
+#: documents/templates/documents/statistics_dashboard.html:32
+msgid "Aucune donnée disponible pour cette période."
+msgstr "No data available for this period."
+
+#: documents/templates/documents/statistics_dashboard.html:33
+#: documents/utils.py:357
+msgid "Garçons"
+msgstr "Boys"
+
+#: documents/templates/documents/statistics_dashboard.html:34
+#: documents/utils.py:357
+msgid "Filles"
+msgstr "Girls"
+
+#: documents/templates/documents/statistics_dashboard.html:36
+#: documents/utils.py:369
+msgid "Non Justifié"
+msgstr "Unexcused"
+
+#: documents/templates/documents/statistics_dashboard.html:37
+msgid "Moyenne Globale sur 20"
+msgstr "Overall Average out of 20"
+
+#: documents/templates/documents/statistics_dashboard.html:38
+msgid "Absences"
+msgstr "Absences"
+
+#: documents/templates/documents/statistics_dashboard.html:39
+msgid "Retards"
+msgstr "Late"
+
+#: documents/templates/documents/statistics_dashboard.html:48
+#: documents/templates/documents/statistics_pdf_report.html:116
+msgid "Tableau de Bord Pédagogique"
+msgstr "Dashboard"
+
+#: documents/templates/documents/statistics_dashboard.html:59
+#: users/templates/users/dashboard_page.html:14
+msgid "Année scolaire"
+msgstr "School year"
+
+#: documents/templates/documents/statistics_dashboard.html:61
+msgid "-- Choisir l'année --"
+msgstr "-- Select year --"
+
+#: documents/templates/documents/statistics_dashboard.html:72
+msgid "Toute l'année (Bilan global)"
+msgstr "Entire year (Overall summary)"
+
+#: documents/templates/documents/statistics_dashboard.html:80
+msgid "Exporter en PDF"
+msgstr "Export to PDF"
+
+#: documents/templates/documents/statistics_dashboard.html:101
+#: documents/templates/documents/statistics_pdf_report.html:134
+msgid "Moyennes par Niveau"
+msgstr "Averages by Level"
+
+#: documents/templates/documents/statistics_dashboard.html:113
+#: documents/templates/documents/statistics_pdf_report.html:144
+msgid "Répartition des Mentions"
+msgstr "Honors Distribution"
+
+#: documents/templates/documents/statistics_dashboard.html:125
+#: documents/templates/documents/statistics_pdf_report.html:157
+msgid "Bilan d'Assiduité"
+msgstr "Attendance Summary"
+
+#: documents/templates/documents/statistics_dashboard.html:137
+#: documents/templates/documents/statistics_pdf_report.html:167
+msgid "Répartition des Élèves"
+msgstr "Student Distribution"
+
+#: documents/templates/documents/statistics_pdf_report.html:6
+msgid "Rapport Statistique"
+msgstr "Statistical Report"
+
+#: documents/templates/documents/statistics_pdf_report.html:21
+msgid "Généré le"
+msgstr "Generated on"
+
+#: documents/templates/documents/statistics_pdf_report.html:119
+msgid "Période :"
+msgstr "Period"
+
+#: documents/templates/documents/statistics_pdf_report.html:136
+msgid "Graphique Moyennes"
+msgstr "Averages Chart"
+
+#: documents/templates/documents/statistics_pdf_report.html:138
+#: documents/templates/documents/statistics_pdf_report.html:148
+#: documents/templates/documents/statistics_pdf_report.html:161
+#: documents/templates/documents/statistics_pdf_report.html:171
+msgid "Données non disponibles"
+msgstr "Not available"
+
+#: documents/templates/documents/statistics_pdf_report.html:146
+msgid "Graphique Mentions"
+msgstr "Honors Chart"
+
+#: documents/templates/documents/statistics_pdf_report.html:159
+msgid "Graphique Assiduité"
+msgstr "Attendance Chart"
+
+#: documents/templates/documents/statistics_pdf_report.html:169
+msgid "Graphique Démographie"
+msgstr "Demographics Chart"
+
 #: documents/templates/documents/student_documents.html:4
 msgid "Mes Documents"
 msgstr "My Documents"
@@ -2611,24 +2717,24 @@ msgstr "PDF only (Max 10MB)"
 msgid "Déposer le document"
 msgstr "Upload document"
 
-#: documents/utils.py:115
+#: documents/utils.py:117
 msgid "Non défini"
 msgstr "Not defined"
 
-#: documents/views.py:41
+#: documents/views.py:46
 msgid "WeasyPrint n'est pas installé."
 msgstr "WeasyPrint is not installed."
 
-#: documents/views.py:46
+#: documents/views.py:51
 msgid "Impossible de récupérer les données (élève non inscrit ?)"
 msgstr "Unable to retrieve data (student not enrolled?)"
 
-#: documents/views.py:58
+#: documents/views.py:63
 #, python-brace-format
 msgid "Erreur WeasyPrint : {e}"
 msgstr "WeasyPrint error: {e}"
 
-#: documents/views.py:125
+#: documents/views.py:130
 #, python-brace-format
 msgid ""
 "Redirection : Vous tentiez d'accéder à une archive ({year}). Vous avez été "
@@ -2637,78 +2743,110 @@ msgstr ""
 "Redirection: You were trying to access an archive ({year}). You have been "
 "redirected to the current year."
 
-#: documents/views.py:160
+#: documents/views.py:165
 msgid "Le trimestre n'est pas terminé. Impossible de générer les bulletins."
 msgstr "The term is not over. Cannot generate report cards."
 
-#: documents/views.py:167
+#: documents/views.py:172
 #, python-brace-format
 msgid "{count} bulletins générés avec succès."
 msgstr "{count} report cards generated successfully."
 
-#: documents/views.py:180
+#: documents/views.py:185
 msgid "publiés"
 msgstr "published"
 
-#: documents/views.py:180
+#: documents/views.py:185
 msgid "masqués"
 msgstr "hidden"
 
-#: documents/views.py:181
+#: documents/views.py:186
 #, python-brace-format
 msgid "Les bulletins ont été {status_msg} pour les élèves."
 msgstr "The report cards have been {status_msg} for the students."
 
-#: documents/views.py:223
+#: documents/views.py:228
 msgid "Impossible de régénérer : Le trimestre n'est pas clôturé."
 msgstr "Unable to regenerate: The term is not closed."
 
-#: documents/views.py:228
+#: documents/views.py:233
 #, python-brace-format
 msgid "Bulletin de {student} mis à jour."
 msgstr "Report card for {student} updated."
 
-#: documents/views.py:230
+#: documents/views.py:235
 #, python-brace-format
 msgid "Erreur : {msg}"
 msgstr "Error: {msg}"
 
-#: documents/views.py:268
+#: documents/views.py:273
 msgid "Erreur : Votre profil staff est incomplet."
 msgstr "Error: Your staff profile is incomplete."
 
-#: documents/views.py:281
+#: documents/views.py:286
 #, python-brace-format
 msgid "Document ajouté avec succès pour {student}."
 msgstr "Document added successfully for {student}."
 
-#: documents/views.py:284
+#: documents/views.py:289
 msgid "Élève introuvable ou ne faisant pas partie de votre établissement."
 msgstr "Student not found or not part of your institution."
 
-#: documents/views.py:286
+#: documents/views.py:291
 msgid "Veuillez remplir tous les champs."
 msgstr "Please fill in all fields."
 
-#: documents/views.py:360
+#: documents/views.py:365
 msgid "Le fichier physique est introuvable."
 msgstr "The physical file cannot be found."
 
-#: documents/views.py:369
+#: documents/views.py:374
 msgid "Erreur de lecture du fichier."
 msgstr "File reading error."
 
-#: documents/views.py:485
+#: documents/views.py:490
 msgid "Le fichier n'existe pas."
 msgstr "The file does not exist."
 
-#: documents/views.py:524 schools/views.py:901
+#: documents/views.py:529 documents/views.py:620 schools/views.py:901
 msgid "Aucune école associée à votre compte."
 msgstr "No school associated with your account."
 
-#: documents/views.py:546
+#: documents/views.py:551
 msgid "Profil enseignant introuvable."
 msgstr "Teacher profile not found."
+
+#: documents/views.py:610 documents/views.py:703 schools/views.py:892
+msgid "Vous n'avez pas accès à cette fonctionnalité."
+msgstr "You do not have access to this feature."
+
+#: documents/views.py:624
+msgid "École introuvable ou non active."
+msgstr "School not found."
+
+#: documents/views.py:644
+msgid "Méthode non autorisée."
+msgstr "Method not allowed."
+
+#: documents/views.py:658
+msgid "Aucune école associée."
+msgstr "No associated school."
+
+#: documents/views.py:670
+msgid "L'année scolaire est requise."
+msgstr "The school year is required."
+
+#: documents/views.py:681
+msgid "Aucune donnée trouvée pour cette période."
+msgstr "No data found for this context."
+
+#: documents/views.py:707
+msgid "WeasyPrint n'est pas installé sur le serveur."
+msgstr "WeasyPrint is not installed."
+
+#: documents/views.py:744
+msgid "Erreur lors de la génération du PDF."
+msgstr "Error generating the PDF."
 
 #: grades/models.py:19
 msgid "Est une note principale"
@@ -2901,8 +3039,6 @@ msgid "Ajouter une Évaluation"
 msgstr "Add an Assessment"
 
 #: grades/templates/grades/grades_dashboard.html:55
-#, fuzzy
-#| msgid "Supprimer l’évaluation"
 msgid "Modifier l’Évaluation"
 msgstr "Delete assessment"
 
@@ -3890,8 +4026,6 @@ msgid "De {start} à {end}"
 msgstr "From {start} to {end}"
 
 #: schools/templates/schools/exception_management.html:20
-#, fuzzy
-#| msgid "Ajouter une Exception Journalière"
 msgid "Modifier l’Exception Journalière"
 msgstr "Add a Daily Exception"
 
@@ -3900,8 +4034,6 @@ msgid "Ajouter une Exception Journalière"
 msgstr "Add a Daily Exception"
 
 #: schools/templates/schools/exception_management.html:22
-#, fuzzy
-#| msgid "Ajouter une Exception Horaire"
 msgid "Modifier l’Exception Horaire"
 msgstr "Add a Schedule Exception"
 
@@ -4647,8 +4779,6 @@ msgid "Une erreur interne est survenue: {error}"
 msgstr "An internal error occurred: {error}"
 
 #: schools/views.py:312
-#, fuzzy
-#| msgid "Impossible de modifier le statut d'une année terminée."
 msgid "Impossible de modifier le statut d’une année terminée."
 msgstr "Cannot modify the status of a finished year."
 
@@ -4662,10 +4792,6 @@ msgid "Statut invalide: '{new_status}'."
 msgstr "Invalid status: '{new_status}'."
 
 #: schools/views.py:331
-#, fuzzy
-#| msgid ""
-#| "Une année terminée ne peut être modifiée que pour revenir à l'étape \"Fin "
-#| "d'année\"."
 msgid ""
 "Une année terminée ne peut être modifiée que pour revenir à l’étape \"Fin "
 "d’année\"."
@@ -4718,8 +4844,6 @@ msgstr ""
 "school year is at the creation stage"
 
 #: schools/views.py:439
-#, fuzzy
-#| msgid "Type d'exception invalide."
 msgid "Type d’exception invalide."
 msgstr "Invalid exception type."
 
@@ -4733,8 +4857,6 @@ msgid "Exception de jour \"{type_name}\" créée avec succès."
 msgstr "Day exception \"{type_name}\" created successfully."
 
 #: schools/views.py:473 schools/views.py:521
-#, fuzzy
-#| msgid "ID de l'exception manquant pour la mise à jour."
 msgid "ID de l’exception manquant pour la mise à jour."
 msgstr "Missing exception ID for update."
 
@@ -4748,8 +4870,6 @@ msgid "Exception de jour non trouvée."
 msgstr "Day exception not found."
 
 #: schools/views.py:487 schools/views.py:534
-#, fuzzy
-#| msgid "ID de l'exception manquant pour la suppression."
 msgid "ID de l’exception manquant pour la suppression."
 msgstr "Missing exception ID for deletion."
 
@@ -4759,32 +4879,23 @@ msgid "Exception de jour \"{exception_name}\" supprimée."
 msgstr "Day exception \"{exception_name}\" deleted."
 
 #: schools/views.py:505
-#, fuzzy
-#| msgid "L'heure de début et l'heure de fin sont obligatoires."
 msgid "L’heure de début et l’heure de fin sont obligatoires."
 msgstr "The start time and end time are mandatory."
 
 #: schools/views.py:517
-#, fuzzy
-#| msgid "Horaire d'exception créé avec succès."
 msgid "Horaire d’exception créé avec succès."
 msgstr "Schedule exception created successfully."
 
 #: schools/views.py:528
-#, fuzzy
-#| msgid "Horaire d'exception mis à jour avec succès."
 msgid "Horaire d’exception mis à jour avec succès."
 msgstr "Schedule exception updated successfully."
 
 #: schools/views.py:530 schools/views.py:542
-#, fuzzy
-#| msgid "Horaire d'exception non trouvé."
 msgid "Horaire d’exception non trouvé."
 msgstr "Schedule exception not found."
 
 #: schools/views.py:540
-#, fuzzy, python-brace-format
-#| msgid "Horaire d'exception \"{exception_name}\" supprimé."
+#, python-brace-format
 msgid "Horaire d’exception \"{exception_name}\" supprimé."
 msgstr "Schedule exception \"{exception_name}\" deleted."
 
@@ -4810,26 +4921,18 @@ msgstr ""
 "school year is at the Running stage."
 
 #: schools/views.py:631
-#, fuzzy
-#| msgid "L'ID du niveau et l'action sont obligatoires."
 msgid "L’ID du niveau et l’action sont obligatoires."
 msgstr "The level ID and action are mandatory."
 
 #: schools/views.py:649
-#, fuzzy, python-brace-format
-#| msgid ""
-#| "Aucun trimestre/semestre actif trouvé pour le niveau {level} et l'année "
-#| "en cours."
+#, python-brace-format
 msgid ""
 "Aucun trimestre/semestre actif trouvé pour le niveau {level} et l’année en "
 "cours."
 msgstr "No active term/semester found for level {level} and the current year."
 
 #: schools/views.py:674
-#, fuzzy, python-brace-format
-#| msgid ""
-#| "Impossible d'avancer. Le {counter}e {term_type} est le dernier possible "
-#| "({max_counter}) pour ce niveau."
+#, python-brace-format
 msgid ""
 "Impossible d’avancer. Le {counter}e {term_type} est le dernier possible "
 "({max_counter}) pour ce niveau."
@@ -4856,10 +4959,7 @@ msgstr ""
 "{term_type}. There are still terms to create."
 
 #: schools/views.py:717
-#, fuzzy, python-brace-format
-#| msgid ""
-#| "Cycle terminé ! Le {counter}e et dernier {term_type} du niveau {level} "
-#| "est maintenant marqué comme terminé pour l'année {year}."
+#, python-brace-format
 msgid ""
 "Cycle terminé ! Le {counter}e et dernier {term_type} du niveau {level} est "
 "maintenant marqué comme terminé pour l’année {year}."
@@ -4900,10 +5000,6 @@ msgstr "Another school is already using this email."
 #, python-brace-format
 msgid "L'école {school} a été mise à jour avec succès."
 msgstr "The school {school} has been successfully updated."
-
-#: schools/views.py:892
-msgid "Vous n'avez pas accès à cette fonctionnalité."
-msgstr "You do not have access to this feature."
 
 #: schools/views.py:908
 msgid "École non active."
@@ -5031,7 +5127,7 @@ msgid "Erreur de connexion : Impossible d’effectuer l’action."
 msgstr "Connection error: Unable to perform the action."
 
 #: subjects/templates/subjects/manage_subjects.html:29
-#: templates/sidemenu.html:104
+#: templates/sidemenu.html:111
 msgid "Matières"
 msgstr "Subjects"
 
@@ -5115,8 +5211,6 @@ msgid "École sélectionnée introuvable."
 msgstr "Selected school not found."
 
 #: subjects/views.py:59
-#, fuzzy
-#| msgid "Impossible de déterminer l'école associée à votre compte."
 msgid "Impossible de déterminer l’école associée à votre compte."
 msgstr "Unable to determine the school associated with your account."
 
@@ -5185,10 +5279,6 @@ msgid "Matière non trouvée."
 msgstr "Subject not found."
 
 #: subjects/views.py:345
-#, fuzzy
-#| msgid ""
-#| "Cohésion échouée: Le professeur et la matière n'appartiennent pas à la "
-#| "même école."
 msgid ""
 "Cohésion échouée: Le professeur et la matière n’appartiennent pas à la même "
 "école."
@@ -5301,95 +5391,99 @@ msgstr "Edit school"
 msgid "Établissement"
 msgstr "Institution"
 
-#: templates/sidemenu.html:52 users/templates/users/manage_users.html:4
+#: templates/sidemenu.html:52
+msgid "Statistiques"
+msgstr "Statistics"
+
+#: templates/sidemenu.html:59 users/templates/users/manage_users.html:4
 msgid "Gestion des utilisateurs"
 msgstr "User Management"
 
-#: templates/sidemenu.html:57
+#: templates/sidemenu.html:64
 msgid "Proviseurs"
 msgstr "Principals"
 
-#: templates/sidemenu.html:64
+#: templates/sidemenu.html:71
 msgid "Professeurs"
 msgstr "Teachers"
 
-#: templates/sidemenu.html:72
+#: templates/sidemenu.html:79
 msgid "Administrateurs"
 msgstr "Administrators"
 
-#: templates/sidemenu.html:79 users/templates/users/assign_children.html:23
+#: templates/sidemenu.html:86 users/templates/users/assign_children.html:23
 #: users/templates/users/manage_users.html:15
 msgid "Parents"
 msgstr "Parents"
 
-#: templates/sidemenu.html:83 users/templates/users/manage_users.html:13
+#: templates/sidemenu.html:90 users/templates/users/manage_users.html:13
 msgid "Étudiants"
 msgstr "Students"
 
-#: templates/sidemenu.html:87
+#: templates/sidemenu.html:94
 msgid "Enfants"
 msgstr "Children"
 
-#: templates/sidemenu.html:89
+#: templates/sidemenu.html:96
 msgid "Gestion de l'école"
 msgstr "School Management"
 
-#: templates/sidemenu.html:98
+#: templates/sidemenu.html:105
 msgid "Années"
 msgstr "Years"
 
-#: templates/sidemenu.html:110
+#: templates/sidemenu.html:117
 msgid "Attribution Profs"
 msgstr "Teacher Assignments"
 
-#: templates/sidemenu.html:116
+#: templates/sidemenu.html:123
 msgid "Salles de Classe"
 msgstr "Classrooms"
 
-#: templates/sidemenu.html:122
+#: templates/sidemenu.html:129
 msgid "Exceptions Calendrier"
 msgstr "Calendar Exceptions"
 
-#: templates/sidemenu.html:128
+#: templates/sidemenu.html:135
 msgid "Niveaux Scolaires"
 msgstr "School Levels"
 
-#: templates/sidemenu.html:134
+#: templates/sidemenu.html:141
 msgid "Découpage de l'année"
 msgstr "Year Breakdown"
 
-#: templates/sidemenu.html:143
+#: templates/sidemenu.html:150
 msgid "Gestion des classes"
 msgstr "Class Management"
 
-#: templates/sidemenu.html:152 templates/sidemenu.html:201
-#: templates/sidemenu.html:250 templates/sidemenu.html:296
+#: templates/sidemenu.html:159 templates/sidemenu.html:208
+#: templates/sidemenu.html:257 templates/sidemenu.html:303
 msgid "Absences & Retards"
 msgstr "Absences & Lateness"
 
-#: templates/sidemenu.html:181 templates/sidemenu.html:244
-#: templates/sidemenu.html:290
+#: templates/sidemenu.html:188 templates/sidemenu.html:251
+#: templates/sidemenu.html:297
 msgid "Notes"
 msgstr "Grades"
 
-#: templates/sidemenu.html:188 templates/sidemenu.html:237
-#: templates/sidemenu.html:284
+#: templates/sidemenu.html:195 templates/sidemenu.html:244
+#: templates/sidemenu.html:291
 msgid "Planning"
 msgstr "Schedule"
 
-#: templates/sidemenu.html:195
+#: templates/sidemenu.html:202
 msgid "Appréciations"
 msgstr "Appreciations"
 
-#: templates/sidemenu.html:218
+#: templates/sidemenu.html:225
 msgid "Bulletins"
 msgstr "Report Cards"
 
-#: templates/sidemenu.html:226
+#: templates/sidemenu.html:233
 msgid "Dépôt Documents"
 msgstr "Document Upload"
 
-#: templates/sidemenu.html:268 templates/sidemenu.html:308
+#: templates/sidemenu.html:275 templates/sidemenu.html:315
 msgid "Documents"
 msgstr "Documents"
 
@@ -5453,8 +5547,6 @@ msgid "Lier"
 msgstr "Link"
 
 #: users/templates/users/assign_children.html:13
-#, fuzzy
-#| msgid "Aucun enfant n'est attribué à ce parent."
 msgid "Aucun enfant n’est attribué à ce parent."
 msgstr "No children are assigned to this parent."
 
@@ -5471,8 +5563,6 @@ msgid "Action en cours..."
 msgstr "Action in progress..."
 
 #: users/templates/users/assign_children.html:17
-#, fuzzy
-#| msgid "Erreur lors de la validation."
 msgid "Erreur lors de l’action"
 msgstr "Error during validation."
 
@@ -5506,13 +5596,7 @@ msgstr "All students have been assigned."
 msgid "Bonjour, %(username)s"
 msgstr "Hello, %(username)s"
 
-#: users/templates/users/dashboard_page.html:14
-msgid "Année scolaire"
-msgstr "School year"
-
 #: users/templates/users/dashboard_page.html:24
-#, fuzzy
-#| msgid "Erreur lors du changement d\""
 msgid "Erreur lors du changement d’école :"
 msgstr "Error during change of\""
 
@@ -5796,8 +5880,6 @@ msgid "Nom d'utilisateur"
 msgstr "Username"
 
 #: users/templates/users/password_reset.html:47
-#, fuzzy
-#| msgid "Entrez votre nom d\""
 msgid "Entrez votre nom d’utilisateur"
 msgstr "Enter your name d\""
 
@@ -6301,8 +6383,6 @@ msgid "Un lien de réinitialisation a été envoyé à votre adresse e-mail."
 msgstr "A reset link has been sent to your email address."
 
 #: users/views.py:303
-#, fuzzy
-#| msgid "Erreur lors de l'envoi de l'e-mail."
 msgid "Erreur lors de l’envoi de l'e-mail."
 msgstr "Error while sending the email."
 

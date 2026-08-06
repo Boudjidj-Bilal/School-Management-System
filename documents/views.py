@@ -1,9 +1,12 @@
+import json
 from django.shortcuts import render
 
 # Create your views here.
 # ... imports existants ...
 from .export import generate_statistics_excel 
 from schools.utils import get_user_school, get_current_year_for_school
+from schools.models import School, Year
+from .utils import get_school_dashboard_statistics
 
 from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib.auth.decorators import login_required
@@ -14,6 +17,8 @@ from django.contrib import messages
 from django.utils.translation import gettext_lazy as _
 
 from django.shortcuts import get_object_or_404
+
+from django.http import JsonResponse, HttpResponse
 
 # Librairie PDF
 try:
@@ -591,3 +596,160 @@ def teacher_main_classes_dashboard(request):
         'classes_data': classes_data,
     }
     return render(request, 'documents/teacher_main_classes.html', context)
+
+@login_required
+def statistics_dashboard_view(request):
+    """
+    Vue principale affichant le tableau de bord web (HTML)
+    """
+    user = request.user
+    user_type = get_user_type(user)
+    
+    # 1. Vérification des Permissions
+    if user_type not in ("SuperAdministrator", "Principal"):
+        messages.error(request, _("Vous n'avez pas accès à cette fonctionnalité."))
+        return redirect('dashboard')
+    
+    # 2. Récupération de l'école ciblée
+    try:
+        school = get_user_school(user, request.session.get('selected_school_id'))
+    except AttributeError:
+        if user.is_superuser:
+            school = School.objects.first()
+        else:
+            messages.error(request, _("Aucune école associée à votre compte."))
+            return redirect('dashboard')
+
+    if not school or not school.is_active:
+        messages.error(request, _("École introuvable ou non active."))
+        return redirect('dashboard')
+
+    # 3. Récupération des filtres pour l'interface (Années scolaires)
+    years = Year.objects.filter(school=school).order_by('-start_date')
+    
+    context = {
+        'school': school,
+        'years': years,
+    }
+    return render(request, 'documents/statistics_dashboard.html', context)
+
+
+@login_required
+def api_statistics_data_view(request):
+    """
+    Vue API (AJAX) qui retourne les statistiques calculées en JSON pour Chart.js
+    """
+    # N'accepte que les requêtes POST (car on reçoit du JSON)
+    if request.method != "POST":
+        return JsonResponse({'success': False, 'message': str(_("Méthode non autorisée."))}, status=405)
+
+    user = request.user
+    user_type = get_user_type(user)
+
+    if user_type not in ("SuperAdministrator", "Principal"):
+        return JsonResponse({'success': False, 'message': str(_("Accès refusé."))}, status=403)
+
+    try:
+        school = get_user_school(user, request.session.get('selected_school_id'))
+    except AttributeError:
+        if user.is_superuser:
+            school = School.objects.first()
+        else:
+            return JsonResponse({'success': False, 'message': str(_("Aucune école associée."))}, status=400)
+
+    if not school:
+        return JsonResponse({'success': False, 'message': str(_("École introuvable."))}, status=404)
+
+    # 1. Extraction des filtres envoyés par le JavaScript
+    try:
+        data = json.loads(request.body)
+        year_id = data.get('year_id')
+        term_id = data.get('term_id') # Peut être vide/None si on veut toute l'année
+        
+        if not year_id:
+            return JsonResponse({'success': False, 'message': str(_("L'année scolaire est requise."))}, status=400)
+            
+    except Exception:
+        return JsonResponse({'success': False, 'message': str(_("Données JSON invalides."))}, status=400)
+
+    # 2. Appel de la logique de calcul (Utils)
+    stats_data = get_school_dashboard_statistics(school, year_id, term_id)
+
+    if stats_data is None:
+        return JsonResponse({
+            'success': False, 
+            'message': str(_("Aucune donnée trouvée pour cette période."))
+        }, status=404)
+
+    # 3. Renvoi des données formatées
+    return JsonResponse({
+        'success': True,
+        'data': stats_data
+    })
+
+
+@login_required
+def export_statistics_pdf_view(request):
+    """
+    Vue qui génère le PDF à partir du HTML et des graphiques Base64
+    """
+    if request.method != "POST":
+        return redirect('documents:statistics_dashboard')
+
+    user = request.user
+    user_type = get_user_type(user)
+
+    if user_type not in ("SuperAdministrator", "Principal"):
+        messages.error(request, _("Vous n'avez pas accès à cette fonctionnalité."))
+        return redirect('dashboard')
+
+    if HTML is None:
+        messages.error(request, _("WeasyPrint n'est pas installé sur le serveur."))
+        return redirect('documents:statistics_dashboard')
+
+    try:
+        school = get_user_school(user, request.session.get('selected_school_id'))
+    except AttributeError:
+        if user.is_superuser:
+            school = School.objects.first()
+        else:
+            school = None
+
+    # 1. Récupération des filtres et des images Base64 (envoyées via formulaire caché en JS)
+    year_name = request.POST.get('year_name', '')
+    term_name = request.POST.get('term_name', '')
+    chart_averages = request.POST.get('chart_averages', '')
+    chart_mentions = request.POST.get('chart_mentions', '')
+    chart_attendance = request.POST.get('chart_attendance', '')
+    chart_demographics = request.POST.get('chart_demographics', '')
+
+    context = {
+        'school': school,
+        'year_name': year_name,
+        'term_name': term_name,
+        'chart_averages': chart_averages,
+        'chart_mentions': chart_mentions,
+        'chart_attendance': chart_attendance,
+        'chart_demographics': chart_demographics,
+    }
+
+    # 2. Génération du HTML
+    html_string = render_to_string('documents/statistics_pdf_report.html', context, request=request)
+    base_url = request.build_absolute_uri('/')
+    
+    # 3. Conversion en PDF
+    try:
+        pdf_file = HTML(string=html_string, base_url=base_url).write_pdf()
+    except Exception as e:
+        messages.error(request, str(_("Erreur lors de la génération du PDF.")))
+        return redirect('documents:statistics_dashboard') 
+
+    # 4. Envoi du fichier au navigateur
+    response = HttpResponse(pdf_file, content_type='application/pdf')
+    school_str = school.name.replace(" ", "_") if school else "Global"
+    filename = f"Statistiques_{school_str}_{year_name.replace(' ', '_')}.pdf"
+    
+    # 'inline' affiche dans le navigateur, 'attachment' force le téléchargement
+    response['Content-Disposition'] = f'attachment; filename="{filename}"'
+    
+    return response

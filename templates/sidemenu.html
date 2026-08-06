@@ -45,6 +45,11 @@
                     <i class="fas fa-university w-6 text-center"></i>
                     <span>{% trans "Établissement" %}</span>
                 </a>
+                <!-- MODIFICATION : gap-2 au lieu de space-x -->
+                <a href="{% url 'documents:statistics_dashboard' %}" class="flex items-center gap-2 text-gray-300 hover:bg-gray-700 hover:text-white rounded-lg p-2 transition-colors duration-200">
+                    <i class="fas fa-chart-line text-lg w-6 text-center"></i>
+                    <span>{% trans "Statistiques" %}</span>
+                </a>
             {% endif %}
 
             <!-- GESTION UTILISATEURS -->

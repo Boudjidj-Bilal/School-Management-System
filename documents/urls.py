@@ -19,4 +19,8 @@ urlpatterns = [
     path('document/download/<int:document_id>/', views.download_student_document, name='download_student_document'),
 
     path('statistiques/download/', views.download_school_statistics, name='download_stats'),
+
+    path('statistics/', views.statistics_dashboard_view, name='statistics_dashboard'),
+    path('api/statistics/data/', views.api_statistics_data_view, name='api_statistics_data'),
+    path('statistics/export-pdf/', views.export_statistics_pdf_view, name='export_statistics_pdf'),
 ]

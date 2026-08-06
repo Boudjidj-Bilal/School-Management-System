@@ -1,0 +1,179 @@
+{% load i18n static %}
+<!DOCTYPE html>
+<html lang="{{ LANGUAGE_CODE }}" dir="{% if LANGUAGE_CODE == 'ar' %}rtl{% else %}ltr{% endif %}">
+<head>
+    <meta charset="UTF-8">
+    <title>{% trans "Rapport Statistique" %} - {{ school.name }}</title>
+    <style>
+        /* 1. Configuration de la page pour WeasyPrint (A4 Paysage) */
+        @page {
+            size: A4 landscape;
+            margin: 1.5cm;
+            
+            /* Pagination automatique en bas à droite */
+            @bottom-right {
+                content: "Page " counter(page) " / " counter(pages);
+                font-size: 9pt;
+                color: #666;
+            }
+            /* Horodatage en bas à gauche */
+            @bottom-left {
+                content: "{% trans 'Généré le' %} {% now 'd/m/Y H:i' %}";
+                font-size: 9pt;
+                color: #666;
+            }
+        }
+
+        /* 2. Styles globaux */
+        body {
+            font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+            color: #333;
+            margin: 0;
+            padding: 0;
+            font-size: 12pt;
+        }
+
+        /* 3. En-tête (Layout Table pour robustesse PDF) */
+        .header {
+            width: 100%;
+            border-bottom: 2px solid #4F46E5; /* Indigo-600 */
+            padding-bottom: 10px;
+            margin-bottom: 25px;
+            display: table; 
+        }
+        .header-left {
+            display: table-cell;
+            vertical-align: bottom;
+            width: 60%;
+        }
+        .header-right {
+            display: table-cell;
+            vertical-align: bottom;
+            text-align: end; /* S'adapte au RTL/LTR */
+            width: 40%;
+        }
+        .title {
+            font-size: 22pt;
+            font-weight: bold;
+            color: #111;
+            margin: 0 0 8px 0;
+        }
+        .subtitle {
+            font-size: 12pt;
+            color: #555;
+            margin: 0;
+        }
+        .school-name {
+            font-size: 16pt;
+            font-weight: bold;
+            color: #4F46E5;
+            margin: 0;
+        }
+
+        /* 4. Grille des graphiques (Layout Table 2x2) */
+        .charts-container {
+            width: 100%;
+            display: table;
+            border-collapse: separate;
+            border-spacing: 20px; /* Espacement entre les graphiques */
+            margin-top: -10px;
+        }
+        .chart-row {
+            display: table-row;
+        }
+        .chart-cell {
+            display: table-cell;
+            width: 50%;
+            background-color: #f9fafb;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            padding: 15px;
+            text-align: center;
+            vertical-align: top;
+        }
+        .chart-title {
+            font-size: 12pt;
+            font-weight: bold;
+            color: #374151;
+            margin-bottom: 15px;
+            border-bottom: 1px solid #e5e7eb;
+            padding-bottom: 5px;
+            text-align: start; /* S'adapte au RTL/LTR */
+        }
+        /* Contrainte forte sur l'image pour éviter de déborder de la page A4 */
+        .chart-img {
+            max-width: 100%;
+            max-height: 240px; 
+            object-fit: contain;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- En-tête du document -->
+    <div class="header">
+        <div class="header-left">
+            <h1 class="title">{% trans "Tableau de Bord Pédagogique" %}</h1>
+            <p class="subtitle">
+                {% trans "Année scolaire :" %} <strong>{{ year_name }}</strong>
+                {% if term_name %} | {% trans "Période :" %} <strong>{{ term_name }}</strong>{% endif %}
+            </p>
+        </div>
+        <div class="header-right">
+            <h2 class="school-name">{{ school.name|default:"GLOBAL" }}</h2>
+        </div>
+    </div>
+
+    <!-- Conteneur des graphiques (2x2) -->
+    <div class="charts-container">
+        
+        <!-- Ligne 1 -->
+        <div class="chart-row">
+            <!-- Graphique 1 -->
+            <div class="chart-cell">
+                <div class="chart-title">{% trans "Moyennes par Niveau" %}</div>
+                {% if chart_averages %}
+                    <img class="chart-img" src="{{ chart_averages }}" alt="{% trans 'Graphique Moyennes' %}">
+                {% else %}
+                    <p style="color: #999; margin-top: 50px;">{% trans "Données non disponibles" %}</p>
+                {% endif %}
+            </div>
+
+            <!-- Graphique 2 -->
+            <div class="chart-cell">
+                <div class="chart-title">{% trans "Répartition des Mentions" %}</div>
+                {% if chart_mentions %}
+                    <img class="chart-img" src="{{ chart_mentions }}" alt="{% trans 'Graphique Mentions' %}">
+                {% else %}
+                    <p style="color: #999; margin-top: 50px;">{% trans "Données non disponibles" %}</p>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Ligne 2 -->
+        <div class="chart-row">
+            <!-- Graphique 3 -->
+            <div class="chart-cell">
+                <div class="chart-title">{% trans "Bilan d'Assiduité" %}</div>
+                {% if chart_attendance %}
+                    <img class="chart-img" src="{{ chart_attendance }}" alt="{% trans 'Graphique Assiduité' %}">
+                {% else %}
+                    <p style="color: #999; margin-top: 50px;">{% trans "Données non disponibles" %}</p>
+                {% endif %}
+            </div>
+
+            <!-- Graphique 4 -->
+            <div class="chart-cell">
+                <div class="chart-title">{% trans "Répartition des Élèves" %}</div>
+                {% if chart_demographics %}
+                    <img class="chart-img" src="{{ chart_demographics }}" alt="{% trans 'Graphique Démographie' %}">
+                {% else %}
+                    <p style="color: #999; margin-top: 50px;">{% trans "Données non disponibles" %}</p>
+                {% endif %}
+            </div>
+        </div>
+
+    </div>
+
+</body>
+</html>
