@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-08-05 20:59+0200\n"
+"POT-Creation-Date: 2026-08-06 01:56+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -199,6 +199,7 @@ msgstr "Save attendance"
 #: attendance/templates/attendance/create_session.html:158
 msgid "Historique des Appels"
 msgstr "Attendance History"
+
 #: attendance/templates/attendance/create_session.html:159
 #: users/templates/users/dashboard_page.html:300
 msgid "Année en cours"
@@ -398,6 +399,7 @@ msgstr "Cancel"
 #: schools/templates/schools/settings.html:150
 msgid "Enregistrer"
 msgstr "Save"
+
 #: attendance/templates/attendance/student_attendance.html:4
 #: attendance/templates/attendance/student_attendance.html:13
 msgid "Mon Assiduité"
@@ -597,6 +599,7 @@ msgstr "1st year"
 #: classes/models.py:31
 msgid "2e année"
 msgstr "2nd year"
+
 #: classes/models.py:32
 msgid "3e année"
 msgstr "3rd year"
@@ -739,8 +742,8 @@ msgid ""
 "Êtes-vous sûr de vouloir retirer cette affectation ? Cette action "
 "désactivera le lien pour l'année scolaire en cours."
 msgstr ""
-"Are you sure you want to remove this assignment? This action "
-"will disable the link for the current school year."
+"Are you sure you want to remove this assignment? This action will disable "
+"the link for the current school year."
 
 #: classes/templates/classes/class_assignment.html:137
 #: classes/templates/classes/class_management.html:196
@@ -802,6 +805,7 @@ msgstr "Operations blocked."
 #: classes/templates/classes/level_management.html:146
 msgid "Niveau Scolaire"
 msgstr "School Level"
+
 #: classes/templates/classes/class_management.html:70
 msgid "Sélectionnez le niveau"
 msgstr "Select the level"
@@ -818,13 +822,13 @@ msgstr "Ex: 6th Grade A or Terminale S1"
 msgid "Classes Existantes"
 msgstr "Existing Classes"
 
-#: classes/templates/classes/class_management.html:110
+#: classes/templates/classes/class_management.html:110 documents/export.py:106
 #: documents/templates/documents/report_card_pdf.html:226
 #: users/templates/users/dashboard_page.html:128
 msgid "Classe"
 msgstr "Class"
 
-#: classes/templates/classes/class_management.html:111
+#: classes/templates/classes/class_management.html:111 documents/export.py:105
 #: schools/templates/schools/manage_term.html:85
 #: users/templates/users/dashboard_page.html:339
 msgid "Niveau"
@@ -997,6 +1001,7 @@ msgstr "School Level Management"
 #: schools/templates/schools/manage_years.html:14
 msgid "Succès"
 msgstr "Success"
+
 #: classes/templates/classes/level_management.html:22
 #: classes/templates/classes/level_management.html:135
 msgid "Ajouter un Nouveau Niveau"
@@ -1041,9 +1046,9 @@ msgid ""
 "de période (Trimestre, Semestre ou Unique) qui définit son cycle "
 "d'évaluation."
 msgstr ""
-"A <strong>School Level</strong> represents a class level (e.g., "
-"6th grade, Terminale) within your school. Each level is associated with a period "
-"type (Term, Semester, or Single) that defines its evaluation cycle."
+"A <strong>School Level</strong> represents a class level (e.g., 6th grade, "
+"Terminale) within your school. Each level is associated with a period type "
+"(Term, Semester, or Single) that defines its evaluation cycle."
 
 #: classes/templates/classes/level_management.html:51
 msgid ""
@@ -1052,9 +1057,9 @@ msgid ""
 "type de période) lorsque l'Année Scolaire est à l'étape : <strong>Création</"
 "strong>."
 msgstr ""
-"<strong>Creation and Modification of Levels:</strong> You can "
-"only create, delete, or modify level details (level, period "
-"type) when the School Year is at the step: <strong>Creation</strong>."
+"<strong>Creation and Modification of Levels:</strong> You can only create, "
+"delete, or modify level details (level, period type) when the School Year is "
+"at the step: <strong>Creation</strong>."
 
 #: classes/templates/classes/level_management.html:64
 msgid "Ajouter un Niveau"
@@ -1203,6 +1208,7 @@ msgstr ""
 #: classes/views.py:126 subjects/views.py:211
 msgid "activée"
 msgstr "activated"
+
 #: classes/views.py:126 subjects/views.py:211
 msgid "désactivée"
 msgstr "deactivated"
@@ -1237,8 +1243,8 @@ msgid ""
 "Opération non autorisée. La gestion des niveaux n'est possible que lorsque "
 "l'année scolaire est à l'étape de Création."
 msgstr ""
-"Unauthorized operation. Level management is only possible when "
-"the school year is at the Creation stage."
+"Unauthorized operation. Level management is only possible when the school "
+"year is at the Creation stage."
 
 #: classes/views.py:214
 msgid "Le code de niveau et le type de niveau sont obligatoires."
@@ -1285,9 +1291,7 @@ msgstr "Level not found for this school."
 msgid ""
 "L'année actuelle doit être à l'étape de la création. Impossible de supprimer "
 "un niveau."
-msgstr ""
-"The current year must be at the creation stage. Cannot delete "
-"a level."
+msgstr "The current year must be at the creation stage. Cannot delete a level."
 
 #: classes/views.py:274
 msgid "ID du niveau manquant pour la suppression."
@@ -1299,7 +1303,9 @@ msgid "Niveau \"{level_name}\" supprimé."
 msgstr "Level \"{level_name}\" deleted."
 
 #: classes/views.py:290
-msgid "Erreur d'intégrité de la base de données. Vérifiez les contraintes."
+#, fuzzy
+#| msgid "Erreur d'intégrité de la base de données. Vérifiez les contraintes."
+msgid "Erreur d’intégrité de la base de données. Vérifiez les contraintes."
 msgstr "Database integrity error. Check constraints."
 
 #: classes/views.py:362
@@ -1308,8 +1314,8 @@ msgid ""
 "Suppression) n'est possible que lorsque l'année scolaire est à l'étape de "
 "Création."
 msgstr ""
-"Unauthorized operation. Class management (Creation/Modification/"
-"Deletion) is only possible when the school year is at the Creation stage."
+"Unauthorized operation. Class management (Creation/Modification/Deletion) is "
+"only possible when the school year is at the Creation stage."
 
 #: classes/views.py:392
 msgid "Le nom de la classe et le niveau sont obligatoires."
@@ -1330,10 +1336,13 @@ msgid "La classe \"{name}\" a été créée avec succès."
 msgstr "The class \"{name}\" has been created successfully."
 
 #: classes/views.py:428
+#, fuzzy
+#| msgid ""
+#| "L'ID de la classe, le nom et le niveau sont obligatoires pour la mise à "
+#| "jour."
 msgid ""
-"L'ID de la classe, le nom et le niveau sont obligatoires pour la mise à jour."
-msgstr ""
-"The class ID, name, and level are mandatory for the update."
+"L’ID de la classe, le nom et le niveau sont obligatoires pour la mise à jour."
+msgstr "The class ID, name, and level are mandatory for the update."
 
 #: classes/views.py:435
 msgid "Classe ou Niveau non trouvé/valide pour cette école."
@@ -1363,7 +1372,9 @@ msgid "Classe non trouvée pour cette école."
 msgstr "Class not found for this school."
 
 #: classes/views.py:476
-msgid "Erreur d'intégrité de la base de données. Opération annulée."
+#, fuzzy
+#| msgid "Erreur d'intégrité de la base de données. Opération annulée."
+msgid "Erreur d’intégrité de la base de données. Opération annulée."
 msgstr "Database integrity error. Operation cancelled."
 
 #: classes/views.py:642
@@ -1407,6 +1418,7 @@ msgstr "Active student assignment not found for deactivation."
 #: classes/views.py:735
 msgid "Affectation élève introuvable."
 msgstr "Student assignment not found."
+
 #: classes/views.py:741
 #, python-brace-format
 msgid "Statut élève mis à jour: {status_text}."
@@ -1599,6 +1611,7 @@ msgstr "Classes"
 #: users/templates/users/manage_users.html:17
 msgid "Personnel"
 msgstr "Staff"
+
 #: communications/templates/communications/dashboard_announcements.html:44
 msgid "Aucun destinataire disponible."
 msgstr "No recipients available."
@@ -1692,8 +1705,7 @@ msgstr "Allow students to submit homework"
 #: communications/templates/communications/dashboard_announcements.html:238
 msgid ""
 "Les élèves destinataires pourront téléverser des documents et un commentaire."
-msgstr ""
-"Targeted students will be able to upload documents and a comment."
+msgstr "Targeted students will be able to upload documents and a comment."
 
 #: communications/templates/communications/dashboard_announcements.html:246
 msgid "Destinataires"
@@ -1708,6 +1720,7 @@ msgid "0 destinataire(s) sélectionné(s)"
 msgstr "0 recipient(s) selected"
 
 #: communications/templates/communications/dashboard_announcements.html:257
+#: documents/export.py:131 documents/export.py:135
 msgid "Message"
 msgstr "Message"
 
@@ -1745,7 +1758,7 @@ msgstr "Start a new one"
 #: scheduling/templates/scheduling/view_schedule.html:66
 #: scheduling/templates/scheduling/view_teacher_schedule.html:30
 #: scheduling/templates/scheduling/view_teacher_schedule.html:66
-#: users/templates/users/password_reset.html:69
+#: users/templates/users/password_reset.html:53
 #: users/templates/users/password_reset_confirm.html:53
 msgid "Chargement..."
 msgstr "Loading..."
@@ -1801,6 +1814,7 @@ msgstr "Search for a contact..."
 #: communications/templates/communications/dashboard_communication.html:129
 msgid "Chargement de l'annuaire..."
 msgstr "Loading directory..."
+
 #: communications/templates/communications/homework_detail.html:4
 msgid "Détail du Devoir"
 msgstr "Homework Details"
@@ -1996,6 +2010,7 @@ msgstr "Groups: {text_groupe}"
 #: communications/utils.py:652
 msgid " Membres du personnel"
 msgstr " Staff members"
+
 #: communications/utils.py:654
 msgid " Membre du personnel"
 msgstr " Staff member"
@@ -2044,7 +2059,7 @@ msgstr "School not found."
 msgid "L'année n'est pas à l'état d'enregistrement, en cours ou fini."
 msgstr "The year is not in recording, in progress, or finished state."
 
-#: communications/views.py:403 communications/views.py:543
+#: communications/views.py:403 communications/views.py:549
 msgid "Impossible de trouver l'année."
 msgstr "Unable to find the year."
 
@@ -2085,6 +2100,108 @@ msgstr "This homework does not require any submission."
 #, python-brace-format
 msgid "Une erreur est survenue : {error}"
 msgstr "An error occurred: {error}"
+
+#: documents/export.py:100 documents/export.py:131 documents/export.py:133
+#: users/templates/users/dashboard_page.html:21
+#: users/templates/users/manage_users.html:266
+msgid "École"
+msgstr "School"
+
+#: documents/export.py:101
+#, fuzzy
+#| msgid "Année Scolaire :"
+msgid "Année Scolaire"
+msgstr "School Year:"
+
+#: documents/export.py:102 users/templates/users/dashboard_page.html:340
+msgid "Période"
+msgstr "Period"
+
+#: documents/export.py:102 documents/utils.py:145 grades/utils.py:306
+#, python-brace-format
+msgid "Trimestre {counter}"
+msgstr "Term {counter}"
+
+#: documents/export.py:107 documents/export.py:131 documents/export.py:134
+#: documents/templates/documents/teacher_main_classes.html:49
+#: users/templates/users/manage_users.html:240
+msgid "Nom"
+msgstr "Last Name"
+
+#: documents/export.py:108
+#: documents/templates/documents/teacher_main_classes.html:52
+#: users/templates/users/manage_users.html:234
+msgid "Prénom"
+msgstr "First Name"
+
+#: documents/export.py:109
+msgid "Genre"
+msgstr "Gender"
+
+#: documents/export.py:110
+#, fuzzy
+#| msgid "Date de naissance"
+msgid "Date Naissance"
+msgstr "Date of birth"
+
+#: documents/export.py:113
+#, fuzzy
+#| msgid "Moyenne Générale :"
+msgid "Moy. Générale Élève"
+msgstr "General Average:"
+
+#: documents/export.py:114
+#, fuzzy
+#| msgid "Moyenne Générale de la Classe :"
+msgid "Moy. Générale Classe"
+msgstr "Class General Average:"
+
+#: documents/export.py:115
+#, fuzzy
+#| msgid "Prof. Principal :"
+msgid "Moy. Principale Élève"
+msgstr "Main Teacher:"
+
+#: documents/export.py:117
+#: grades/templates/grades/appreciations_dashboard.html:29
+#: grades/templates/grades/appreciations_dashboard.html:107
+msgid "Mention"
+msgstr "Honor / Distinction"
+
+#: documents/export.py:118
+#: documents/templates/documents/report_card_pdf.html:228
+msgid "Appréciation"
+msgstr "Appreciation / Comment"
+
+#: documents/export.py:121 users/templates/users/dashboard_page.html:306
+msgid "Absences Totales"
+msgstr "Total Absences"
+
+#: documents/export.py:122
+#, fuzzy
+#| msgid "Absences Totales"
+msgid "Absences Non Justif."
+msgstr "Total Absences"
+
+#: documents/export.py:123 users/templates/users/dashboard_page.html:312
+msgid "Retards Totaux"
+msgstr "Total Lateness"
+
+#: documents/export.py:124
+#, fuzzy
+#| msgid "Retards Totaux"
+msgid "Retards Non Justif."
+msgstr "Total Lateness"
+
+#: documents/export.py:135
+#, fuzzy
+#| msgid "Aucune donnée trouvée pour ce contexte."
+msgid "Aucune donnée trouvée pour les critères sélectionnés."
+msgstr "No data found for this context."
+
+#: documents/export.py:145
+msgid "GLOBAL"
+msgstr "GLOBAL"
 
 #: documents/models.py:39
 msgid "Publié"
@@ -2201,6 +2318,7 @@ msgstr "Visible"
 #: documents/templates/documents/manage_report_cards.html:224
 msgid "Généré mais masqué"
 msgstr "Generated but hidden"
+
 #: documents/templates/documents/manage_report_cards.html:226
 msgid "Masqué"
 msgstr "Hidden"
@@ -2298,10 +2416,6 @@ msgstr "Coeff."
 #: documents/templates/documents/report_card_pdf.html:227
 msgid "Min / Max"
 msgstr "Min / Max"
-
-#: documents/templates/documents/report_card_pdf.html:228
-msgid "Appréciation"
-msgstr "Appreciation / Comment"
 
 #: documents/templates/documents/report_card_pdf.html:251
 msgid "RÉSULTATS GLOBAUX"
@@ -2424,16 +2538,6 @@ msgstr "in progress"
 msgid "Clôturé"
 msgstr "Closed"
 
-#: documents/templates/documents/teacher_main_classes.html:49
-#: users/templates/users/manage_users.html:240
-msgid "Nom"
-msgstr "Last Name"
-
-#: documents/templates/documents/teacher_main_classes.html:52
-#: users/templates/users/manage_users.html:234
-msgid "Prénom"
-msgstr "First Name"
-
 #: documents/templates/documents/teacher_main_classes.html:69
 #: grades/templates/grades/appreciations_dashboard.html:134
 msgid "Aucun élève dans cette classe."
@@ -2494,6 +2598,7 @@ msgstr "Category"
 #: documents/templates/documents/upload_document.html:124
 msgid "Fichier PDF"
 msgstr "PDF File"
+
 #: documents/templates/documents/upload_document.html:130
 msgid "Cliquez pour sélectionner"
 msgstr "Click to select"
@@ -2509,11 +2614,6 @@ msgstr "Upload document"
 #: documents/utils.py:115
 msgid "Non défini"
 msgstr "Not defined"
-
-#: documents/utils.py:145 grades/utils.py:306
-#, python-brace-format
-msgid "Trimestre {counter}"
-msgstr "Term {counter}"
 
 #: documents/views.py:41
 msgid "WeasyPrint n'est pas installé."
@@ -2676,11 +2776,6 @@ msgstr "Network connection error."
 msgid "Trimestre clos"
 msgstr "Closed term"
 
-#: grades/templates/grades/appreciations_dashboard.html:29
-#: grades/templates/grades/appreciations_dashboard.html:107
-msgid "Mention"
-msgstr "Honor / Distinction"
-
 #: grades/templates/grades/appreciations_dashboard.html:30
 #: grades/templates/grades/appreciations_dashboard.html:111
 msgid "-- Aucune --"
@@ -2710,6 +2805,7 @@ msgstr "Saved"
 #: grades/templates/grades/appreciations_dashboard.html:43
 msgid "Consultation des Appréciations"
 msgstr "Consulting Appreciations"
+
 #: grades/templates/grades/appreciations_dashboard.html:61
 msgid "Appréciations Globales"
 msgstr "Overall Appreciations"
@@ -2805,11 +2901,10 @@ msgid "Ajouter une Évaluation"
 msgstr "Add an Assessment"
 
 #: grades/templates/grades/grades_dashboard.html:55
-#: schools/templates/schools/exception_management.html:20
-#: schools/templates/schools/exception_management.html:22
-#: schools/templates/schools/manage_years.html:18
-msgid "Modifier l’année"
-msgstr "Edit year"
+#, fuzzy
+#| msgid "Supprimer l’évaluation"
+msgid "Modifier l’Évaluation"
+msgstr "Delete assessment"
 
 #: grades/templates/grades/grades_dashboard.html:58
 msgid "Veuillez entrer un « Noté sur » valide."
@@ -2996,6 +3091,7 @@ msgstr "Unauthorized subject."
 #, python-brace-format
 msgid "La note {grade_float} dépasse le maximum ({max_grade})."
 msgstr "The grade {grade_float} exceeds the maximum ({max_grade})."
+
 #: grades/views.py:278
 #, python-brace-format
 msgid "Note invalide : {grade_val}"
@@ -3249,8 +3345,11 @@ msgid "L’heure de fin doit être après l’heure de début."
 msgstr "The end time must be after the start time."
 
 #: scheduling/templates/scheduling/schedul_management.html:60
-msgid "Ce créneau chevauche les bornes horaires de l’école ou une pause (ex: déjeuner)."
-msgstr "This time slot overlaps school operating hours or a break (e.g. lunch)."
+msgid ""
+"Ce créneau chevauche les bornes horaires de l’école ou une pause (ex: "
+"déjeuner)."
+msgstr ""
+"This time slot overlaps school operating hours or a break (e.g. lunch)."
 
 #: scheduling/templates/scheduling/schedul_management.html:61
 msgid ""
@@ -3323,7 +3422,9 @@ msgid "La date de début tombe pendant : {type}."
 msgstr "The start date falls during: {type}."
 
 #: scheduling/templates/scheduling/schedul_management.html:80
-msgid "Aucun cours à générer (tous tombent sur des jours d’exception ou plage invalide)."
+msgid ""
+"Aucun cours à générer (tous tombent sur des jours d’exception ou plage "
+"invalide)."
 msgstr "No classes to generate (all fall on exception days or invalid range)."
 
 #: scheduling/templates/scheduling/schedul_management.html:82
@@ -3333,7 +3434,8 @@ msgstr "Bulk Generation"
 #: scheduling/templates/scheduling/schedul_management.html:83
 #, python-brace-format
 msgid "Confirmez-vous la création de {count} cours réels du {start} au {end} ?"
-msgstr "Do you confirm the creation of {count} actual classes from {start} to {end}?"
+msgstr ""
+"Do you confirm the creation of {count} actual classes from {start} to {end}?"
 
 #: scheduling/templates/scheduling/schedul_management.html:84
 #, python-brace-format
@@ -3365,8 +3467,8 @@ msgid ""
 "Utilisez le modèle de planning actuel pour <b>générer les cours réels</b> "
 "pour une ou plusieurs semaines."
 msgstr ""
-"Use the current schedule template to <b>generate actual classes</b> "
-"for one or more weeks."
+"Use the current schedule template to <b>generate actual classes</b> for one "
+"or more weeks."
 
 #: scheduling/templates/scheduling/schedul_management.html:161
 msgid "2. Ajouter un Cours au Modèle"
@@ -3399,6 +3501,7 @@ msgstr "Classroom"
 #: scheduling/templates/scheduling/schedul_management.html:219
 msgid "Ajouter ce cours au modèle"
 msgstr "Add this class to the template"
+
 #: scheduling/templates/scheduling/schedul_management.html:232
 msgid "Cours dans le Modèle Actuel"
 msgstr "Classes in Current Template"
@@ -3410,8 +3513,7 @@ msgstr "Total:"
 #: scheduling/templates/scheduling/schedul_management.html:242
 msgid ""
 "Ce modèle est vide. Ajoutez des cours en utilisant le formulaire ci-dessus."
-msgstr ""
-"This template is empty. Add classes using the form above."
+msgstr "This template is empty. Add classes using the form above."
 
 #: scheduling/templates/scheduling/schedul_management.html:257
 msgid "Êtes-vous sûr ?"
@@ -3445,8 +3547,7 @@ msgid ""
 "Êtes-vous sûr de vouloir supprimer ce cours ?<br>Cette action est "
 "irréversible."
 msgstr ""
-"Are you sure you want to delete this class?<br>This action is "
-"irreversible."
+"Are you sure you want to delete this class?<br>This action is irreversible."
 
 #: scheduling/templates/scheduling/view_schedule.html:49
 msgid "Planning de la classe :"
@@ -3462,7 +3563,7 @@ msgid "Changer le statut du cours :"
 msgstr "Change class status:"
 
 #: scheduling/templates/scheduling/view_schedule.html:140
-#: scheduling/templates/scheduling/view_teacher_schedule.html:155
+#: scheduling/templates/scheduling/view_teacher_schedule.html:160
 msgid "Prof. Absent"
 msgstr "Teacher Absent"
 
@@ -3555,8 +3656,8 @@ msgid ""
 "Le professeur ({existing_teacher}) a déjà un cours sur ce créneau (Classe: "
 "{existing_student})."
 msgstr ""
-"The teacher ({existing_teacher}) already has a class in this time slot (Class: "
-"{existing_student})."
+"The teacher ({existing_teacher}) already has a class in this time slot "
+"(Class: {existing_student})."
 
 #: scheduling/utils.py:202
 #, python-brace-format
@@ -3571,7 +3672,8 @@ msgstr "The class already has a class in this time slot."
 msgid ""
 "Conflit interne: Le même professeur est assigné à deux cours en même temps."
 msgstr ""
-"Internal conflict: The same teacher is assigned to two classes at the same time."
+"Internal conflict: The same teacher is assigned to two classes at the same "
+"time."
 
 #: scheduling/utils.py:252
 msgid ""
@@ -3606,6 +3708,7 @@ msgstr "The template ID is required for deletion."
 #: scheduling/views.py:217
 msgid "Template de semaine supprimé avec succès."
 msgstr "Week template deleted successfully."
+
 #: scheduling/views.py:221
 msgid "Erreur d’unicité : un template similaire existe déjà."
 msgstr "Uniqueness error: a similar template already exists."
@@ -3651,7 +3754,8 @@ msgstr "{nb_courses} classes were created successfully."
 #: scheduling/views.py:404
 #, python-brace-format
 msgid "{nb_courses} cours créés. {nb_errors} cours en erreur (voir détails)."
-msgstr "{nb_courses} classes created. {nb_errors} classes with errors (see details)."
+msgstr ""
+"{nb_courses} classes created. {nb_errors} classes with errors (see details)."
 
 #: scheduling/views.py:416 subjects/views.py:158 subjects/views.py:221
 msgid "Requête JSON invalide."
@@ -3700,8 +3804,7 @@ msgstr "Teacher not found."
 #: scheduling/views.py:734
 msgid ""
 "Accès refusé. Seul un administrateur peut supprimer ou annuler un cours."
-msgstr ""
-"Access denied. Only an administrator can delete or cancel a class."
+msgstr "Access denied. Only an administrator can delete or cancel a class."
 
 #: scheduling/views.py:739
 msgid "Accès refusé. Vous n'êtes pas l'enseignant de ce cours."
@@ -3765,7 +3868,8 @@ msgid ""
 "La langue de l'école ne peut être modifiée que lorsque l'année en cours est "
 "à l'étape de création."
 msgstr ""
-"The school language can only be modified when the current year is at the creation stage."
+"The school language can only be modified when the current year is at the "
+"creation stage."
 
 #: schools/templates/schools/exception_management.html:4
 msgid "Gestion des exceptions du calendrier"
@@ -3785,9 +3889,21 @@ msgstr "From {start} to {end}"
 msgid "De {start} à {end}"
 msgstr "From {start} to {end}"
 
+#: schools/templates/schools/exception_management.html:20
+#, fuzzy
+#| msgid "Ajouter une Exception Journalière"
+msgid "Modifier l’Exception Journalière"
+msgstr "Add a Daily Exception"
+
 #: schools/templates/schools/exception_management.html:21
 msgid "Ajouter une Exception Journalière"
 msgstr "Add a Daily Exception"
+
+#: schools/templates/schools/exception_management.html:22
+#, fuzzy
+#| msgid "Ajouter une Exception Horaire"
+msgid "Modifier l’Exception Horaire"
+msgstr "Add a Schedule Exception"
 
 #: schools/templates/schools/exception_management.html:23
 msgid "Ajouter une Exception Horaire"
@@ -3845,23 +3961,24 @@ msgid ""
 "un planning précis, mais ne sont pas obligatoires."
 msgstr ""
 "These exceptions allow you to fine-tune the school year planning. They are "
-"<strong>strongly recommended</strong> to ensure an accurate schedule, but they are not mandatory."
+"<strong>strongly recommended</strong> to ensure an accurate schedule, but "
+"they are not mandatory."
 
 #: schools/templates/schools/exception_management.html:50
 msgid ""
 "Attention : La gestion des exceptions n'est possible que lorsque l'année "
 "scolaire est à l'étape de la <strong>création</strong>."
 msgstr ""
-"Caution: Exception management is only possible when the school year is at the "
-"<strong>creation</strong> stage."
+"Caution: Exception management is only possible when the school year is at "
+"the <strong>creation</strong> stage."
 
 #: schools/templates/schools/exception_management.html:55
 msgid ""
 "<strong>Jours d'exception :</strong> Ils définissent des périodes (jours, "
 "semaines) où il n'y a <strong>pas de cours</strong>."
 msgstr ""
-"<strong>Exception Days:</strong> They define periods (days, "
-"weeks) where there are <strong>no classes</strong>."
+"<strong>Exception Days:</strong> They define periods (days, weeks) where "
+"there are <strong>no classes</strong>."
 
 #: schools/templates/schools/exception_management.html:56
 msgid "Exemple :"
@@ -3873,8 +3990,8 @@ msgid ""
 "de début est la même que la Date de fin</strong>, il s'agit d'un "
 "<strong>jour unique</strong> sans cours."
 msgstr ""
-"School holidays, public holidays, teacher training days. If the <strong>Start "
-"date is the same as the End date</strong>, it is a "
+"School holidays, public holidays, teacher training days. If the "
+"<strong>Start date is the same as the End date</strong>, it is a "
 "<strong>single day</strong> without classes."
 
 #: schools/templates/schools/exception_management.html:59
@@ -3886,9 +4003,9 @@ msgid ""
 "n'utilisez pas cette fonctionnalité."
 msgstr ""
 "<strong>Exception Schedules:</strong> They allow you to define annual "
-"<strong>breaks</strong> (start and end times). These schedules "
-"are applied recurrently throughout the school year. If your institution's break "
-"times change depending on the days, do not use this feature."
+"<strong>breaks</strong> (start and end times). These schedules are applied "
+"recurrently throughout the school year. If your institution's break times "
+"change depending on the days, do not use this feature."
 
 #: schools/templates/schools/exception_management.html:71
 msgid "Jours d'exception"
@@ -3963,8 +4080,8 @@ msgid ""
 "Êtes-vous sûr de vouloir AVANCER le niveau {level} au {counter}e terme ? "
 "Cette action est IRRÉVERSIBLE."
 msgstr ""
-"Are you sure you want to ADVANCE level {level} to term {counter}? "
-"This action is IRREVERSIBLE."
+"Are you sure you want to ADVANCE level {level} to term {counter}? This "
+"action is IRREVERSIBLE."
 
 #: schools/templates/schools/manage_term.html:31
 msgid "Terminer le Cycle"
@@ -3972,8 +4089,12 @@ msgstr "Finish Cycle"
 
 #: schools/templates/schools/manage_term.html:32
 #, python-brace-format
-msgid "Êtes-vous sûr de vouloir TERMINER le cycle pour le niveau {level} au terme {counter} ? Le niveau sera marqué comme COMPLÉTÉ pour l’année."
-msgstr "Are you sure you want to FINISH the cycle for level {level} at term {counter}? The level will be marked as COMPLETED for the year."
+msgid ""
+"Êtes-vous sûr de vouloir TERMINER le cycle pour le niveau {level} au terme "
+"{counter} ? Le niveau sera marqué comme COMPLÉTÉ pour l’année."
+msgstr ""
+"Are you sure you want to FINISH the cycle for level {level} at term "
+"{counter}? The level will be marked as COMPLETED for the year."
 
 #: schools/templates/schools/manage_term.html:33
 #, python-brace-format
@@ -4002,9 +4123,9 @@ msgid ""
 "permet de faire passer manuellement les niveaux scolaires d'une période "
 "(trimestre, semestre, unique) à la suivante."
 msgstr ""
-"This function is essential for the continuity of the school year. It "
-"allows you to manually move school levels from one period "
-"(term, semester, single) to the next."
+"This function is essential for the continuity of the school year. It allows "
+"you to manually move school levels from one period (term, semester, single) "
+"to the next."
 
 #: schools/templates/schools/manage_term.html:60
 msgid ""
@@ -4013,18 +4134,18 @@ msgid ""
 "Il est disponible tant que la `Période Actuelle` n'a pas atteint le maximum "
 "défini (`Max`)."
 msgstr ""
-"The <strong>Advance</strong> button moves the level to the "
-"<strong>next period</strong> (for example, from Period 1 to Period 2). "
-"It is available as long as the `Current Period` has not reached the defined maximum "
-"(`Max`)."
+"The <strong>Advance</strong> button moves the level to the <strong>next "
+"period</strong> (for example, from Period 1 to Period 2). It is available as "
+"long as the `Current Period` has not reached the defined maximum (`Max`)."
+
 #: schools/templates/schools/manage_term.html:63
 msgid ""
 "Le bouton <strong>Terminer</strong> permet de <strong>clôturer le cycle</"
 "strong> pour l'année en cours, marquant le niveau comme `Terminé` et "
 "empêchant toute autre action d'avancement."
 msgstr ""
-"The <strong>Finish</strong> button allows you to <strong>close the cycle</strong> "
-"for the current year, marking the level as `Completed` and "
+"The <strong>Finish</strong> button allows you to <strong>close the cycle</"
+"strong> for the current year, marking the level as `Completed` and "
 "preventing any further advancement action."
 
 #: schools/templates/schools/manage_term.html:66
@@ -4121,9 +4242,14 @@ msgstr "Finished"
 #: schools/templates/schools/manage_years.html:117
 msgid "Créer une nouvelle année scolaire"
 msgstr "Create a new school year"
+
 #: schools/templates/schools/manage_years.html:17
 msgid "Créer l’année"
 msgstr "Create year"
+
+#: schools/templates/schools/manage_years.html:18
+msgid "Modifier l’année"
+msgstr "Edit year"
 
 #: schools/templates/schools/manage_years.html:20
 msgid "Veuillez sélectionner une année scolaire actuelle."
@@ -4138,8 +4264,16 @@ msgid "Passer à l’étape suivante ?"
 msgstr "Move to the next step?"
 
 #: schools/templates/schools/manage_years.html:24
-msgid "Vous êtes sur le point d’avancer dans le cycle de vie de l’année.<br><br><ul class='list-disc ps-5 text-start text-xs text-gray-500'><li>Assurez-vous que toutes les tâches de l’étape actuelle sont terminées.</li><li>Cette action peut ouvrir l’accès aux utilisateurs.</li></ul>"
-msgstr "You are about to advance in the lifecycle of the school year.<br><br><ul class='list-disc ps-5 text-start text-xs text-gray-500'><li>Make sure all tasks for the current step are completed.</li><li>This action may open access to users.</li></ul>"
+msgid ""
+"Vous êtes sur le point d’avancer dans le cycle de vie de l’année.<br><br><ul "
+"class='list-disc ps-5 text-start text-xs text-gray-500'><li>Assurez-vous que "
+"toutes les tâches de l’étape actuelle sont terminées.</li><li>Cette action "
+"peut ouvrir l’accès aux utilisateurs.</li></ul>"
+msgstr ""
+"You are about to advance in the lifecycle of the school year.<br><br><ul "
+"class='list-disc ps-5 text-start text-xs text-gray-500'><li>Make sure all "
+"tasks for the current step are completed.</li><li>This action may open "
+"access to users.</li></ul>"
 
 #: schools/templates/schools/manage_years.html:25
 msgid "Confirmer et Avancer"
@@ -4150,8 +4284,15 @@ msgid "Revenir à l’étape précédente ?"
 msgstr "Return to the previous step?"
 
 #: schools/templates/schools/manage_years.html:28
-msgid "<strong class='text-orange-600'>Attention :</strong> Vous allez reculer dans le cycle de vie.<br><br>Cela peut avoir des conséquences sur les données enregistrées ou les permissions d’accès. Êtes-vous sûr de vouloir continuer ?"
-msgstr "<strong class='text-orange-600'>Warning:</strong> You are about to move backward in the lifecycle.<br><br>This may affect saved data or access permissions. Are you sure you want to continue?"
+msgid ""
+"<strong class='text-orange-600'>Attention :</strong> Vous allez reculer dans "
+"le cycle de vie.<br><br>Cela peut avoir des conséquences sur les données "
+"enregistrées ou les permissions d’accès. Êtes-vous sûr de vouloir continuer ?"
+msgstr ""
+"<strong class='text-orange-600'>Warning:</strong> You are about to move "
+"backward in the lifecycle.<br><br>This may affect saved data or access "
+"permissions. Are you sure you want to continue?"
+
 #: schools/templates/schools/manage_years.html:29
 msgid "Confirmer le retour"
 msgstr "Confirm return"
@@ -4251,6 +4392,7 @@ msgid ""
 msgstr ""
 "These elements are used to generate school report cards and official "
 "documents. Any changes are immediate."
+
 #: schools/templates/schools/settings.html:34
 msgid "1. Paramètres Généraux"
 msgstr "1. General Settings"
@@ -4268,7 +4410,8 @@ msgid ""
 "La langue ne peut être modifiée que lorsque l'année en cours est à l'étape "
 "de création."
 msgstr ""
-"The language can only be modified when the current year is at the creation stage."
+"The language can only be modified when the current year is at the creation "
+"stage."
 
 #: schools/templates/schools/settings.html:62
 msgid "Couleur Principale"
@@ -4412,7 +4555,8 @@ msgid ""
 "Erreur lors de la création du trimestre/semestre : le numéro du trimestre/"
 "semestr/ est incorecte."
 msgstr ""
-"Error while creating the term/semester: the term/semester number is incorrect."
+"Error while creating the term/semester: the term/semester number is "
+"incorrect."
 
 #: schools/utils.py:666
 msgid "Trimestre/semestre non trouvé."
@@ -4444,7 +4588,8 @@ msgid ""
 "Il manque le premier trimestre/semestre (counter=1) pour {missing_count} "
 "niveau(x) de cette école pour l'année spécifiée."
 msgstr ""
-"The first term/semester (counter=1) is missing for {missing_count} level(s) of this school for the specified year."
+"The first term/semester (counter=1) is missing for {missing_count} level(s) "
+"of this school for the specified year."
 
 #: schools/utils.py:804
 #, python-brace-format
@@ -4465,8 +4610,7 @@ msgstr "Please complete all mandatory fields (name, dates, times)."
 #: schools/views.py:209
 msgid ""
 "Impossible de modifier l'année, vous devez être dans la phase de création."
-msgstr ""
-"Unable to modify the year, you must be in the creation phase."
+msgstr "Unable to modify the year, you must be in the creation phase."
 
 #: schools/views.py:218
 #, python-brace-format
@@ -4477,8 +4621,7 @@ msgstr "The school year {year} has been successfully modified."
 msgid ""
 "Impossible de créer une nouvelle année, vous devez d'abord terminer la "
 "précédente."
-msgstr ""
-"Unable to create a new year, you must first finish the previous one."
+msgstr "Unable to create a new year, you must first finish the previous one."
 
 #: schools/views.py:229
 #, python-brace-format
@@ -4497,13 +4640,16 @@ msgstr ""
 #, python-brace-format
 msgid "Erreur d'intégrité de la base de données : {error}"
 msgstr "Database integrity error: {error}"
+
 #: schools/views.py:281
 #, python-brace-format
 msgid "Une erreur interne est survenue: {error}"
 msgstr "An internal error occurred: {error}"
 
 #: schools/views.py:312
-msgid "Impossible de modifier le statut d'une année terminée."
+#, fuzzy
+#| msgid "Impossible de modifier le statut d'une année terminée."
+msgid "Impossible de modifier le statut d’une année terminée."
 msgstr "Cannot modify the status of a finished year."
 
 #: schools/views.py:319
@@ -4516,9 +4662,13 @@ msgid "Statut invalide: '{new_status}'."
 msgstr "Invalid status: '{new_status}'."
 
 #: schools/views.py:331
+#, fuzzy
+#| msgid ""
+#| "Une année terminée ne peut être modifiée que pour revenir à l'étape \"Fin "
+#| "d'année\"."
 msgid ""
-"Une année terminée ne peut être modifiée que pour revenir à l'étape \"Fin "
-"d'année\"."
+"Une année terminée ne peut être modifiée que pour revenir à l’étape \"Fin "
+"d’année\"."
 msgstr ""
 "A finished year can only be modified to return to the \"End of year\" stage."
 
@@ -4527,8 +4677,8 @@ msgid ""
 "Impossible de passer à l'étape de fin d'année car vous avez encore un "
 "trimestre ou un semestre qui n'es pas terminé."
 msgstr ""
-"Unable to proceed to the end-of-year stage because you still have a "
-"term or semester that is not completed."
+"Unable to proceed to the end-of-year stage because you still have a term or "
+"semester that is not completed."
 
 #: schools/views.py:352
 #, python-brace-format
@@ -4536,8 +4686,7 @@ msgid ""
 "L'année '{year}' est passée à l'étape '{statut}'. (Veuillez recharger la "
 "page)"
 msgstr ""
-"The year '{year}' has moved to the '{statut}' stage. (Please reload the "
-"page)"
+"The year '{year}' has moved to the '{statut}' stage. (Please reload the page)"
 
 #: schools/views.py:367
 #, python-brace-format
@@ -4565,11 +4714,13 @@ msgid ""
 "Opération non autorisée. La gestion des exceptions n'est possible que "
 "lorsque l'année scolaire est à l'étape de création"
 msgstr ""
-"Unauthorized operation. Exception management is only possible "
-"when the school year is at the creation stage"
+"Unauthorized operation. Exception management is only possible when the "
+"school year is at the creation stage"
 
 #: schools/views.py:439
-msgid "Type d'exception invalide."
+#, fuzzy
+#| msgid "Type d'exception invalide."
+msgid "Type d’exception invalide."
 msgstr "Invalid exception type."
 
 #: schools/views.py:457
@@ -4582,7 +4733,9 @@ msgid "Exception de jour \"{type_name}\" créée avec succès."
 msgstr "Day exception \"{type_name}\" created successfully."
 
 #: schools/views.py:473 schools/views.py:521
-msgid "ID de l'exception manquant pour la mise à jour."
+#, fuzzy
+#| msgid "ID de l'exception manquant pour la mise à jour."
+msgid "ID de l’exception manquant pour la mise à jour."
 msgstr "Missing exception ID for update."
 
 #: schools/views.py:481
@@ -4595,7 +4748,9 @@ msgid "Exception de jour non trouvée."
 msgstr "Day exception not found."
 
 #: schools/views.py:487 schools/views.py:534
-msgid "ID de l'exception manquant pour la suppression."
+#, fuzzy
+#| msgid "ID de l'exception manquant pour la suppression."
+msgid "ID de l’exception manquant pour la suppression."
 msgstr "Missing exception ID for deletion."
 
 #: schools/views.py:493
@@ -4604,24 +4759,33 @@ msgid "Exception de jour \"{exception_name}\" supprimée."
 msgstr "Day exception \"{exception_name}\" deleted."
 
 #: schools/views.py:505
-msgid "L'heure de début et l'heure de fin sont obligatoires."
+#, fuzzy
+#| msgid "L'heure de début et l'heure de fin sont obligatoires."
+msgid "L’heure de début et l’heure de fin sont obligatoires."
 msgstr "The start time and end time are mandatory."
 
 #: schools/views.py:517
-msgid "Horaire d'exception créé avec succès."
+#, fuzzy
+#| msgid "Horaire d'exception créé avec succès."
+msgid "Horaire d’exception créé avec succès."
 msgstr "Schedule exception created successfully."
 
 #: schools/views.py:528
-msgid "Horaire d'exception mis à jour avec succès."
+#, fuzzy
+#| msgid "Horaire d'exception mis à jour avec succès."
+msgid "Horaire d’exception mis à jour avec succès."
 msgstr "Schedule exception updated successfully."
 
 #: schools/views.py:530 schools/views.py:542
-msgid "Horaire d'exception non trouvé."
+#, fuzzy
+#| msgid "Horaire d'exception non trouvé."
+msgid "Horaire d’exception non trouvé."
 msgstr "Schedule exception not found."
 
 #: schools/views.py:540
-#, python-brace-format
-msgid "Horaire d'exception \"{exception_name}\" supprimé."
+#, fuzzy, python-brace-format
+#| msgid "Horaire d'exception \"{exception_name}\" supprimé."
+msgid "Horaire d’exception \"{exception_name}\" supprimé."
 msgstr "Schedule exception \"{exception_name}\" deleted."
 
 #: schools/views.py:551
@@ -4634,33 +4798,40 @@ msgid ""
 "Opération non autorisée. La gestion des trimestres/semestres n'est possible "
 "que lorsque l'année est créer."
 msgstr ""
-"Unauthorized operation. Term/semester management is only possible "
-"when the year is created."
+"Unauthorized operation. Term/semester management is only possible when the "
+"year is created."
 
 #: schools/views.py:622
 msgid ""
 "Opération non autorisée. La gestion des trimestres/semestres n'est possible "
 "que lorsque l'année scolaire est à l'étape de Déroulement (Running)."
 msgstr ""
-"Unauthorized operation. Term/semester management is only possible "
-"when the school year is at the Running stage."
+"Unauthorized operation. Term/semester management is only possible when the "
+"school year is at the Running stage."
 
 #: schools/views.py:631
-msgid "L'ID du niveau et l'action sont obligatoires."
+#, fuzzy
+#| msgid "L'ID du niveau et l'action sont obligatoires."
+msgid "L’ID du niveau et l’action sont obligatoires."
 msgstr "The level ID and action are mandatory."
 
 #: schools/views.py:649
-#, python-brace-format
+#, fuzzy, python-brace-format
+#| msgid ""
+#| "Aucun trimestre/semestre actif trouvé pour le niveau {level} et l'année "
+#| "en cours."
 msgid ""
-"Aucun trimestre/semestre actif trouvé pour le niveau {level} et l'année en "
+"Aucun trimestre/semestre actif trouvé pour le niveau {level} et l’année en "
 "cours."
-msgstr ""
-"No active term/semester found for level {level} and the current year."
+msgstr "No active term/semester found for level {level} and the current year."
 
 #: schools/views.py:674
-#, python-brace-format
+#, fuzzy, python-brace-format
+#| msgid ""
+#| "Impossible d'avancer. Le {counter}e {term_type} est le dernier possible "
+#| "({max_counter}) pour ce niveau."
 msgid ""
-"Impossible d'avancer. Le {counter}e {term_type} est le dernier possible "
+"Impossible d’avancer. Le {counter}e {term_type} est le dernier possible "
 "({max_counter}) pour ce niveau."
 msgstr ""
 "Cannot advance. The {counter}e {term_type} is the last possible "
@@ -4681,17 +4852,20 @@ msgid ""
 "Impossible de terminer le cycle. Le niveau {level} est seulement au {counter}"
 "e {term_type}. Il reste encore des termes à créer."
 msgstr ""
-"Cannot finish the cycle. Level {level} is only at the {counter}"
-"e {term_type}. There are still terms to create."
+"Cannot finish the cycle. Level {level} is only at the {counter}e "
+"{term_type}. There are still terms to create."
 
 #: schools/views.py:717
-#, python-brace-format
+#, fuzzy, python-brace-format
+#| msgid ""
+#| "Cycle terminé ! Le {counter}e et dernier {term_type} du niveau {level} "
+#| "est maintenant marqué comme terminé pour l'année {year}."
 msgid ""
 "Cycle terminé ! Le {counter}e et dernier {term_type} du niveau {level} est "
-"maintenant marqué comme terminé pour l'année {year}."
+"maintenant marqué comme terminé pour l’année {year}."
 msgstr ""
-"Cycle finished! The {counter}e and final {term_type} of level {level} is "
-"now marked as completed for the year {year}."
+"Cycle finished! The {counter}e and final {term_type} of level {level} is now "
+"marked as completed for the year {year}."
 
 #: schools/views.py:729
 #, python-brace-format
@@ -4763,6 +4937,7 @@ msgstr "Assign the subjects taught to each teacher in the school"
 #: subjects/templates/subjects/assign_subjects.html:16
 msgid "Cliquez sur une matière pour l'attribuer ou la retirer."
 msgstr "Click on a subject to assign or remove it."
+
 #: subjects/templates/subjects/assign_subjects.html:22
 msgid "Matières disponibles"
 msgstr "Available subjects"
@@ -4940,7 +5115,9 @@ msgid "École sélectionnée introuvable."
 msgstr "Selected school not found."
 
 #: subjects/views.py:59
-msgid "Impossible de déterminer l'école associée à votre compte."
+#, fuzzy
+#| msgid "Impossible de déterminer l'école associée à votre compte."
+msgid "Impossible de déterminer l’école associée à votre compte."
 msgstr "Unable to determine the school associated with your account."
 
 #: subjects/views.py:106
@@ -4990,6 +5167,7 @@ msgstr ""
 #, python-brace-format
 msgid "La matière **\"{subject}\"** a été {action} avec succès."
 msgstr "The subject **\"{subject}\"** has been successfully {action}."
+
 #: subjects/views.py:223
 msgid "Matière introuvable ou non associée à l'école cible."
 msgstr "Subject not found or not associated with the target school."
@@ -5007,11 +5185,16 @@ msgid "Matière non trouvée."
 msgstr "Subject not found."
 
 #: subjects/views.py:345
+#, fuzzy
+#| msgid ""
+#| "Cohésion échouée: Le professeur et la matière n'appartiennent pas à la "
+#| "même école."
 msgid ""
-"Cohésion échouée: Le professeur et la matière n'appartiennent pas à la même "
+"Cohésion échouée: Le professeur et la matière n’appartiennent pas à la même "
 "école."
 msgstr ""
-"Cohesion failed: The teacher and the subject do not belong to the same school."
+"Cohesion failed: The teacher and the subject do not belong to the same "
+"school."
 
 #: subjects/views.py:356
 #, python-brace-format
@@ -5080,7 +5263,7 @@ msgstr "Menu"
 msgid "Une erreur est survenue"
 msgstr "An error occurred"
 
-#: templates/error_page.html:31 users/templates/users/password_reset.html:80
+#: templates/error_page.html:31 users/templates/users/password_reset.html:64
 #: users/templates/users/password_reset_confirm.html:63
 msgid "Retour à la connexion"
 msgstr "Back to login"
@@ -5193,6 +5376,7 @@ msgstr "Grades"
 #: templates/sidemenu.html:284
 msgid "Planning"
 msgstr "Schedule"
+
 #: templates/sidemenu.html:195
 msgid "Appréciations"
 msgstr "Appreciations"
@@ -5269,8 +5453,10 @@ msgid "Lier"
 msgstr "Link"
 
 #: users/templates/users/assign_children.html:13
-msgid "Aucun enfant n\""
-msgstr "No child n\""
+#, fuzzy
+#| msgid "Aucun enfant n'est attribué à ce parent."
+msgid "Aucun enfant n’est attribué à ce parent."
+msgstr "No children are assigned to this parent."
 
 #: users/templates/users/assign_children.html:14
 msgid "Tous les étudiants ont été attribués à ce parent ou sont déjà liés."
@@ -5285,8 +5471,10 @@ msgid "Action en cours..."
 msgstr "Action in progress..."
 
 #: users/templates/users/assign_children.html:17
-msgid "Erreur lors de l\""
-msgstr "Error during l\""
+#, fuzzy
+#| msgid "Erreur lors de la validation."
+msgid "Erreur lors de l’action"
+msgstr "Error during validation."
 
 #: users/templates/users/assign_children.html:38
 msgid "Aucun parent trouvé."
@@ -5295,8 +5483,7 @@ msgstr "No parent found."
 #: users/templates/users/assign_children.html:48
 msgid ""
 "Sélectionnez un parent dans la liste pour commencer à attribuer des enfants."
-msgstr ""
-"Select a parent from the list to start assigning children."
+msgstr "Select a parent from the list to start assigning children."
 
 #: users/templates/users/assign_children.html:60
 msgid "Enfants attribués (Cliquer pour délier)"
@@ -5323,13 +5510,10 @@ msgstr "Hello, %(username)s"
 msgid "Année scolaire"
 msgstr "School year"
 
-#: users/templates/users/dashboard_page.html:21
-#: users/templates/users/manage_users.html:266
-msgid "École"
-msgstr "School"
-
 #: users/templates/users/dashboard_page.html:24
-msgid "Erreur lors du changement d\""
+#, fuzzy
+#| msgid "Erreur lors du changement d\""
+msgid "Erreur lors du changement d’école :"
 msgstr "Error during change of\""
 
 #: users/templates/users/dashboard_page.html:25
@@ -5390,6 +5574,7 @@ msgstr "unread"
 #: users/templates/users/dashboard_page.html:161
 msgid "Voir les messages"
 msgstr "View messages"
+
 #: users/templates/users/dashboard_page.html:163
 msgid "nouveau"
 msgstr "new"
@@ -5446,14 +5631,6 @@ msgstr "Nothing to report."
 msgid "Indicateurs Assiduité"
 msgstr "Attendance Indicators"
 
-#: users/templates/users/dashboard_page.html:306
-msgid "Absences Totales"
-msgstr "Total Absences"
-
-#: users/templates/users/dashboard_page.html:312
-msgid "Retards Totaux"
-msgstr "Total Lateness"
-
 #: users/templates/users/dashboard_page.html:317
 msgid "Voir les détails"
 msgstr "View details"
@@ -5465,10 +5642,6 @@ msgstr "Academic Performance"
 #: users/templates/users/dashboard_page.html:329
 msgid "Globale :"
 msgstr "Overall:"
-
-#: users/templates/users/dashboard_page.html:340
-msgid "Période"
-msgstr "Period"
 
 #: users/templates/users/dashboard_page.html:361
 msgid "Pas de données pour la période actuelle."
@@ -5591,6 +5764,7 @@ msgstr "Female"
 #: users/templates/users/manage_users.html:300
 msgid "Adresse"
 msgstr "Address"
+
 #: users/templates/users/manage_users.html:305
 msgid "Date de naissance"
 msgstr "Date of birth"
@@ -5607,8 +5781,7 @@ msgstr "Forgot password?"
 msgid ""
 "Entrez votre nom d'utilisateur pour recevoir un lien de réinitialisation par "
 "e-mail."
-msgstr ""
-"Enter your username to receive a password reset link by email."
+msgstr "Enter your username to receive a password reset link by email."
 
 #: users/templates/users/password_reset.html:27
 msgid "Erreur lors sur lien."
@@ -5618,15 +5791,17 @@ msgstr "Error with the link."
 msgid "Une erreur est survenue. Veuillez réessayer."
 msgstr "An error occurred. Please try again."
 
-#: users/templates/users/password_reset.html:49
+#: users/templates/users/password_reset.html:33
 msgid "Nom d'utilisateur"
 msgstr "Username"
 
-#: users/templates/users/password_reset.html:63
-msgid "Entrez votre nom d\""
+#: users/templates/users/password_reset.html:47
+#, fuzzy
+#| msgid "Entrez votre nom d\""
+msgid "Entrez votre nom d’utilisateur"
 msgstr "Enter your name d\""
 
-#: users/templates/users/password_reset.html:76
+#: users/templates/users/password_reset.html:60
 msgid "Envoyer le lien"
 msgstr "Send link"
 
@@ -5791,6 +5966,7 @@ msgstr "Password updated successfully."
 #, python-brace-format
 msgid "Erreur d'envoi d'email: {e}"
 msgstr "Email sending error: {e}"
+
 #: users/utils.py:287
 msgid "Votre compte a été créé"
 msgstr "Your account has been created"
@@ -5826,15 +6002,14 @@ msgstr ""
 "\n"
 "    Hello,\n"
 "\n"
-"    Your user account on the school management platform has been "
-"created.\n"
+"    Your user account on the school management platform has been created.\n"
 "\n"
 "    Here are your temporary credentials:\n"
 "    - Username: {username}\n"
 "    - Password: {password}\n"
 "\n"
-"    For security reasons, we ask you to change your password "
-"immediately after your first login to a more robust and secure password.\n"
+"    For security reasons, we ask you to change your password immediately "
+"after your first login to a more robust and secure password.\n"
 "\n"
 "    You can log in using this link:\n"
 "    {reset_link}\n"
@@ -5886,7 +6061,8 @@ msgstr ""
 "\n"
 "    {reset_link}\n"
 "\n"
-"    This link is valid for 3 days. For security reasons, do not share it with anyone.\n"
+"    This link is valid for 3 days. For security reasons, do not share it "
+"with anyone.\n"
 "\n"
 "    If you did not request this, please ignore this email.\n"
 "    "
@@ -5920,8 +6096,8 @@ msgstr ""
 "\n"
 "Dear Administrator,\n"
 "\n"
-"The registration stage for the new school year has officially "
-"begun for {school}.\n"
+"The registration stage for the new school year has officially begun for "
+"{school}.\n"
 "\n"
 "You can now log in to the platform to:\n"
 "1. Validate new student enrollments.\n"
@@ -5962,8 +6138,7 @@ msgstr ""
 "\n"
 "Dear Staff Member (Teacher / CPE / Administrator),\n"
 "\n"
-"The normal operation stage of the school year is now active "
-"for {school}.\n"
+"The normal operation stage of the school year is now active for {school}.\n"
 "\n"
 "The platform is fully operational for:\n"
 "1. Entering grades and appreciations.\n"
@@ -5984,8 +6159,7 @@ msgstr "email_to_fill@gmail.com"
 #, python-brace-format
 msgid ""
 "Aucun destinataire trouvé pour l'étape '{year_stape}' à l'école {school}."
-msgstr ""
-"No recipient found for stage '{year_stape}' at school {school}."
+msgstr "No recipient found for stage '{year_stape}' at school {school}."
 
 #: users/utils.py:578
 msgid ""
@@ -6057,6 +6231,7 @@ msgstr "Error while updating the student profile: {error}"
 #, python-brace-format
 msgid "Erreur lors de la mise à jour du profil du parent : {error}"
 msgstr "Error while updating the parent profile: {error}"
+
 #: users/utils.py:1142
 msgid "Le lien entre cet élève et ce parent existe déjà."
 msgstr "The link between this student and this parent already exists."
@@ -6126,7 +6301,9 @@ msgid "Un lien de réinitialisation a été envoyé à votre adresse e-mail."
 msgstr "A reset link has been sent to your email address."
 
 #: users/views.py:303
-msgid "Erreur lors de l'envoi de l'e-mail."
+#, fuzzy
+#| msgid "Erreur lors de l'envoi de l'e-mail."
+msgid "Erreur lors de l’envoi de l'e-mail."
 msgstr "Error while sending the email."
 
 #: users/views.py:305
@@ -6145,8 +6322,7 @@ msgstr "User not found."
 msgid ""
 "Impossible de modifier le statut d'un utilisateur lorsque l'année est en "
 "cours de déroulement."
-msgstr ""
-"Unable to modify a user's status when the year is ongoing."
+msgstr "Unable to modify a user's status when the year is ongoing."
 
 #: users/views.py:565
 msgid "L'utilisateur a bien été modifié."
@@ -6302,3 +6478,9 @@ msgstr "Position saved successfully."
 #: users/views.py:1064
 msgid "Erreur lors de la géolocalisation."
 msgstr "Error during geolocation."
+
+#~ msgid "Aucun enfant n\""
+#~ msgstr "No child n\""
+
+#~ msgid "Erreur lors de l\""
+#~ msgstr "Error during l\""

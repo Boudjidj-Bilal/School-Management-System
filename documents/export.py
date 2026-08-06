@@ -1,5 +1,6 @@
 import pandas as pd
 from django.http import HttpResponse
+from django.utils.translation import gettext_lazy as _
 
 # Imports de tes modèles
 from schools.models import TermYearLevel
@@ -96,50 +97,57 @@ def generate_statistics_excel(school=None):
             # D. Construction de la ligne Excel
             row = {
                 # --- CONTEXTE ---
-                "École": student.school.name,
-                "Année Scolaire": year.name,
-                "Période": f"Trimestre {term.counter}",
+                _("École"): student.school.name,
+                _("Année Scolaire"): year.name,
+                _("Période"): _("Trimestre {counter}").format(counter=term.counter),
                 
                 # --- IDENTITÉ ---
-                "Niveau": student_class.level.get_level_display(),
-                "Classe": student_class.name,
-                "Nom": student.user.last_name,
-                "Prénom": student.user.first_name,
-                "Genre": student.get_gender_display(), # M ou F
-                "Date Naissance": student.birth_date.strftime("%d/%m/%Y") if student.birth_date else "",
+                _("Niveau"): student_class.level.get_level_display(),
+                _("Classe"): student_class.name,
+                _("Nom"): student.user.last_name,
+                _("Prénom"): student.user.first_name,
+                _("Genre"): student.get_gender_display(), # M ou F
+                _("Date Naissance"): student.birth_date.strftime("%d/%m/%Y") if student.birth_date else "",
 
                 # --- RÉSULTATS ---
-                "Moy. Générale Élève": avg_gen_student,
-                "Moy. Générale Classe": avg_gen_class,
-                "Moy. Principale Élève": avg_main_student,
+                _("Moy. Générale Élève"): avg_gen_student,
+                _("Moy. Générale Classe"): avg_gen_class,
+                _("Moy. Principale Élève"): avg_main_student,
                 # "Moy. Principale Classe": (Calculable mais lourd, on saute pour l'instant),
-                "Mention": mention_text,
-                "Appréciation": appr_text,
+                _("Mention"): mention_text,
+                _("Appréciation"): appr_text,
 
                 # --- VIE SCOLAIRE ---
-                "Absences Totales": attendance.get('total_absences', 0),
-                "Absences Non Justif.": attendance.get('unjustified_absences', 0),
-                "Retards Totaux": attendance.get('total_delays', 0),
-                "Retards Non Justif.": attendance.get('unjustified_delays', 0),
+                _("Absences Totales"): attendance.get('total_absences', 0),
+                _("Absences Non Justif."): attendance.get('unjustified_absences', 0),
+                _("Retards Totaux"): attendance.get('total_delays', 0),
+                _("Retards Non Justif."): attendance.get('unjustified_delays', 0),
             }
             data.append(row)
 
     # 3. Création du DataFrame Pandas
     if not data:
         # Si vide, on crée un Excel vide avec les colonnes
-        df = pd.DataFrame(columns=["École", "Nom", "Message"])
-        row = {"École": "-", "Nom": "-", "Message": "Aucune donnée trouvée pour les critères sélectionnés."}
+        df = pd.DataFrame(columns=[_("École"), _("Nom"), _("Message")])
+        row = {
+            _("École"): "-", 
+            _("Nom"): "-", 
+            _("Message"): _("Aucune donnée trouvée pour les critères sélectionnés.")
+        }
         df = pd.concat([df, pd.DataFrame([row])], ignore_index=True)
     else:
         df = pd.DataFrame(data)
 
     # 4. Préparation de la réponse HTTP (Téléchargement)
     response = HttpResponse(content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
-    filename = f"Statistiques_{school.name if school else 'GLOBAL'}.xlsx"
+    
+    # Gestion du nom de fichier avec traduction de GLOBAL
+    school_name_file = school.name if school else _("GLOBAL")
+    filename = "Statistiques_{}.xlsx".format(school_name_file)
+    
     response['Content-Disposition'] = f'attachment; filename="{filename}"'
 
     # Export avec le moteur openpyxl
     df.to_excel(response, index=False, engine='openpyxl')
     
     return response
-

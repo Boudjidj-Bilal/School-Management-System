@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-08-05 22:14+0200\n"
+"POT-Creation-Date: 2026-08-06 01:56+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -217,6 +217,7 @@ msgstr "فصل مغلق (قراءة فقط)"
 #: attendance/templates/attendance/create_session.html:191
 msgid "Aucun historique pour cette classe."
 msgstr "لا يوجد سجل لهذا القسم."
+
 #: attendance/templates/attendance/manage_attendance.html:4
 msgid "Gestion des Absences"
 msgstr "إدارة الغيابات"
@@ -448,6 +449,7 @@ msgstr "أبلغ عنها :"
 #: attendance/templates/attendance/student_attendance.html:170
 msgid "Aucun incident"
 msgstr "لا توجد أي حوادث"
+
 #: attendance/templates/attendance/student_attendance.html:171
 msgid "Bravo ! Aucune absence ni retard sur cette période."
 msgstr "أحسنت! لا توجد أي غيابات أو تأخرات في هذه الفترة."
@@ -697,6 +699,7 @@ msgstr "رجوع"
 #: classes/templates/classes/class_assignment.html:34
 msgid "Gestion de l'Affectation :"
 msgstr "إدارة التعيينات :"
+
 #: classes/templates/classes/class_assignment.html:36
 #: documents/templates/documents/student_documents.html:37
 #: scheduling/templates/scheduling/schedul_management.html:97
@@ -820,13 +823,13 @@ msgstr "مثال: 6eA أو Terminale S1"
 msgid "Classes Existantes"
 msgstr "الأقسام الموجودة"
 
-#: classes/templates/classes/class_management.html:110
+#: classes/templates/classes/class_management.html:110 documents/export.py:106
 #: documents/templates/documents/report_card_pdf.html:226
 #: users/templates/users/dashboard_page.html:128
 msgid "Classe"
 msgstr "القسم"
 
-#: classes/templates/classes/class_management.html:111
+#: classes/templates/classes/class_management.html:111 documents/export.py:105
 #: schools/templates/schools/manage_term.html:85
 #: users/templates/users/dashboard_page.html:339
 msgid "Niveau"
@@ -852,6 +855,7 @@ msgstr "لا يوجد أي فصل مهيأ لهذا المستوى"
 #: users/templates/users/manage_users.html:66
 msgid "Voir le planning"
 msgstr "عرض جدول التوقيت"
+
 #: classes/templates/classes/class_management.html:144
 msgid "Gérer le planning"
 msgstr "إدارة جدول التوقيت"
@@ -1043,9 +1047,9 @@ msgid ""
 "de période (Trimestre, Semestre ou Unique) qui définit son cycle "
 "d'évaluation."
 msgstr ""
-"يمثل <strong>المستوى الدراسي</strong> مستوى صفياً (مثل: السادس ابتدائي، "
-"السنة النهائية) داخل مدرستك. يرتبط كل مستوى بنوع فترة (فصل، سداسي، أو مفرد) "
-"يحدد دورة تقييمه."
+"يمثل <strong>المستوى الدراسي</strong> مستوى صفياً (مثل: السادس ابتدائي، السنة "
+"النهائية) داخل مدرستك. يرتبط كل مستوى بنوع فترة (فصل، سداسي، أو مفرد) يحدد "
+"دورة تقييمه."
 
 #: classes/templates/classes/level_management.html:51
 msgid ""
@@ -1061,6 +1065,7 @@ msgstr ""
 #: classes/templates/classes/level_management.html:64
 msgid "Ajouter un Niveau"
 msgstr "إضافة مستوى"
+
 #: classes/templates/classes/level_management.html:69
 msgid "Liste des Niveaux"
 msgstr "قائمة المستويات"
@@ -1286,8 +1291,7 @@ msgstr "المستوى غير موجود لهذه المدرسة."
 msgid ""
 "L'année actuelle doit être à l'étape de la création. Impossible de supprimer "
 "un niveau."
-msgstr ""
-"يجب أن تكون السنة الحالية في مرحلة الإنشاء. يتعذر حذف أي مستوى."
+msgstr "يجب أن تكون السنة الحالية في مرحلة الإنشاء. يتعذر حذف أي مستوى."
 
 #: classes/views.py:274
 msgid "ID du niveau manquant pour la suppression."
@@ -1299,7 +1303,9 @@ msgid "Niveau \"{level_name}\" supprimé."
 msgstr "تم حذف المستوى \"{level_name}\"."
 
 #: classes/views.py:290
-msgid "Erreur d'intégrité de la base de données. Vérifiez les contraintes."
+#, fuzzy
+#| msgid "Erreur d'intégrité de la base de données. Vérifiez les contraintes."
+msgid "Erreur d’intégrité de la base de données. Vérifiez les contraintes."
 msgstr "خطأ في سلامة قاعدة البيانات. تحقق من القيود."
 
 #: classes/views.py:362
@@ -1314,6 +1320,7 @@ msgstr ""
 #: classes/views.py:392
 msgid "Le nom de la classe et le niveau sont obligatoires."
 msgstr "اسم القسم والمستوى إلزاميان."
+
 #: classes/views.py:398
 msgid "Niveau scolaire non trouvé ou non valide pour cette école."
 msgstr "المستوى الدراسي غير موجود أو غير صالح لهذه المدرسة."
@@ -1329,8 +1336,11 @@ msgid "La classe \"{name}\" a été créée avec succès."
 msgstr "تم إنشاء القسم \"{name}\" بنجاح."
 
 #: classes/views.py:428
-msgid ""
-"L'ID de la classe, le nom et le niveau sont obligatoires pour la mise à jour."
+#, fuzzy
+#| msgid ""
+#| "L'ID de la classe, le nom et le niveau sont obligatoires pour la mise à "
+#| "jour."
+msgid "L’ID de la classe, le nom et le niveau sont obligatoires pour la mise à jour."
 msgstr "معرف القسم، الاسم، والمستوى إلزامية للتحديث."
 
 #: classes/views.py:435
@@ -1361,7 +1371,9 @@ msgid "Classe non trouvée pour cette école."
 msgstr "القسم غير موجود لهذه المدرسة."
 
 #: classes/views.py:476
-msgid "Erreur d'intégrité de la base de données. Opération annulée."
+#, fuzzy
+#| msgid "Erreur d'intégrité de la base de données. Opération annulée."
+msgid "Erreur d’intégrité de la base de données. Opération annulée."
 msgstr "خطأ في سلامة قاعدة البيانات. تم إلغاء العملية."
 
 #: classes/views.py:642
@@ -1517,6 +1529,7 @@ msgstr "خطأ في التحميل."
 #: communications/templates/communications/dashboard_announcements.html:24
 msgid "Impossible de charger les annonces."
 msgstr "تعذر تحميل الإعلانات."
+
 #: communications/templates/communications/dashboard_announcements.html:25
 #: users/templates/users/dashboard_page.html:283
 msgid "Aucune annonce."
@@ -1706,6 +1719,7 @@ msgid "0 destinataire(s) sélectionné(s)"
 msgstr "تم تحديد 0 مستلم(ين)"
 
 #: communications/templates/communications/dashboard_announcements.html:257
+#: documents/export.py:131 documents/export.py:135
 msgid "Message"
 msgstr "الرسالة"
 
@@ -1743,10 +1757,11 @@ msgstr "بدء محادثة جديدة"
 #: scheduling/templates/scheduling/view_schedule.html:66
 #: scheduling/templates/scheduling/view_teacher_schedule.html:30
 #: scheduling/templates/scheduling/view_teacher_schedule.html:66
-#: users/templates/users/password_reset.html:69
+#: users/templates/users/password_reset.html:53
 #: users/templates/users/password_reset_confirm.html:53
 msgid "Chargement..."
 msgstr "جاري التحميل..."
+
 #: communications/templates/communications/dashboard_communication.html:33
 msgid "Début de la conversation."
 msgstr "بداية المحادثة."
@@ -1998,6 +2013,7 @@ msgstr "المجموعات: {text_groupe}"
 #: communications/utils.py:652
 msgid " Membres du personnel"
 msgstr " أعضاء الطاقم"
+
 #: communications/utils.py:654
 msgid " Membre du personnel"
 msgstr " عضو في الطاقم"
@@ -2046,7 +2062,7 @@ msgstr "المدرسة غير موجودة."
 msgid "L'année n'est pas à l'état d'enregistrement, en cours ou fini."
 msgstr "السنة ليست في حالة التسجيل، أو السير العادي، أو المنتهية."
 
-#: communications/views.py:403 communications/views.py:543
+#: communications/views.py:403 communications/views.py:549
 msgid "Impossible de trouver l'année."
 msgstr "تعذر العثور على السنة."
 
@@ -2087,6 +2103,108 @@ msgstr "هذا الواجب لا يتطلب أي تسليم."
 #, python-brace-format
 msgid "Une erreur est survenue : {error}"
 msgstr "حدث خطأ ما : {error}"
+
+#: documents/export.py:100 documents/export.py:131 documents/export.py:133
+#: users/templates/users/dashboard_page.html:21
+#: users/templates/users/manage_users.html:266
+msgid "École"
+msgstr "المدرسة"
+
+#: documents/export.py:101
+#, fuzzy
+#| msgid "Année Scolaire :"
+msgid "Année Scolaire"
+msgstr "السنة الدراسية :"
+
+#: documents/export.py:102 users/templates/users/dashboard_page.html:340
+msgid "Période"
+msgstr "الفترة"
+
+#: documents/export.py:102 documents/utils.py:145 grades/utils.py:306
+#, python-brace-format
+msgid "Trimestre {counter}"
+msgstr "الفصل {counter}"
+
+#: documents/export.py:107 documents/export.py:131 documents/export.py:134
+#: documents/templates/documents/teacher_main_classes.html:49
+#: users/templates/users/manage_users.html:240
+msgid "Nom"
+msgstr "النسب"
+
+#: documents/export.py:108
+#: documents/templates/documents/teacher_main_classes.html:52
+#: users/templates/users/manage_users.html:234
+msgid "Prénom"
+msgstr "الاسم الشخصي"
+
+#: documents/export.py:109
+msgid "Genre"
+msgstr "الجنس"
+
+#: documents/export.py:110
+#, fuzzy
+#| msgid "Date de naissance"
+msgid "Date Naissance"
+msgstr "تاريخ الازدياد"
+
+#: documents/export.py:113
+#, fuzzy
+#| msgid "Moyenne Générale :"
+msgid "Moy. Générale Élève"
+msgstr "المعدل العام :"
+
+#: documents/export.py:114
+#, fuzzy
+#| msgid "Moyenne Générale de la Classe :"
+msgid "Moy. Générale Classe"
+msgstr "المعدل العام للقسم :"
+
+#: documents/export.py:115
+#, fuzzy
+#| msgid "Prof. Principal :"
+msgid "Moy. Principale Élève"
+msgstr "الأستاذ الرئيسي :"
+
+#: documents/export.py:117
+#: grades/templates/grades/appreciations_dashboard.html:29
+#: grades/templates/grades/appreciations_dashboard.html:107
+msgid "Mention"
+msgstr "الميزة"
+
+#: documents/export.py:118
+#: documents/templates/documents/report_card_pdf.html:228
+msgid "Appréciation"
+msgstr "التقدير"
+
+#: documents/export.py:121 users/templates/users/dashboard_page.html:306
+msgid "Absences Totales"
+msgstr "إجمالي الغيابات"
+
+#: documents/export.py:122
+#, fuzzy
+#| msgid "Absences Totales"
+msgid "Absences Non Justif."
+msgstr "إجمالي الغيابات"
+
+#: documents/export.py:123 users/templates/users/dashboard_page.html:312
+msgid "Retards Totaux"
+msgstr "إجمالي التأخرات"
+
+#: documents/export.py:124
+#, fuzzy
+#| msgid "Retards Totaux"
+msgid "Retards Non Justif."
+msgstr "إجمالي التأخرات"
+
+#: documents/export.py:135
+#, fuzzy
+#| msgid "Aucune donnée trouvée pour ce contexte."
+msgid "Aucune donnée trouvée pour les critères sélectionnés."
+msgstr "لم يتم العثور على أي بيانات لهذا السياق."
+
+#: documents/export.py:145
+msgid "GLOBAL"
+msgstr "عام"
 
 #: documents/models.py:39
 msgid "Publié"
@@ -2259,6 +2377,7 @@ msgstr "كشف النقاط"
 #: documents/templates/documents/report_card_pdf.html:165
 msgid "Bulletin Scolaire"
 msgstr "كشف النقاط المدرسي"
+
 #: documents/templates/documents/report_card_pdf.html:185
 msgid "Prof. Principal :"
 msgstr "الأستاذ الرئيسي :"
@@ -2300,10 +2419,6 @@ msgstr "رئيسي"
 #: documents/templates/documents/report_card_pdf.html:227
 msgid "Min / Max"
 msgstr "الأدنى / الأقصى"
-
-#: documents/templates/documents/report_card_pdf.html:228
-msgid "Appréciation"
-msgstr "التقدير"
 
 #: documents/templates/documents/report_card_pdf.html:251
 msgid "RÉSULTATS GLOBAUX"
@@ -2426,16 +2541,6 @@ msgstr "جارٍ"
 msgid "Clôturé"
 msgstr "مغلق"
 
-#: documents/templates/documents/teacher_main_classes.html:49
-#: users/templates/users/manage_users.html:240
-msgid "Nom"
-msgstr "النسب"
-
-#: documents/templates/documents/teacher_main_classes.html:52
-#: users/templates/users/manage_users.html:234
-msgid "Prénom"
-msgstr "الاسم الشخصي"
-
 #: documents/templates/documents/teacher_main_classes.html:69
 #: grades/templates/grades/appreciations_dashboard.html:134
 msgid "Aucun élève dans cette classe."
@@ -2504,6 +2609,7 @@ msgstr "انقر للاختيار"
 #: documents/templates/documents/upload_document.html:132
 msgid "PDF uniquement (Max 10MB)"
 msgstr "ملفات PDF فقط (الحد الأقصى 10 ميغابايت)"
+
 #: documents/templates/documents/upload_document.html:142
 msgid "Déposer le document"
 msgstr "إيداع المستند"
@@ -2511,11 +2617,6 @@ msgstr "إيداع المستند"
 #: documents/utils.py:115
 msgid "Non défini"
 msgstr "غير محدد"
-
-#: documents/utils.py:145 grades/utils.py:306
-#, python-brace-format
-msgid "Trimestre {counter}"
-msgstr "الفصل {counter}"
 
 #: documents/views.py:41
 msgid "WeasyPrint n'est pas installé."
@@ -2536,7 +2637,8 @@ msgid ""
 "Redirection : Vous tentiez d'accéder à une archive ({year}). Vous avez été "
 "redirigé vers l'année en cours."
 msgstr ""
-"إعادة توجيه: كنت تحاول الوصول إلى أرشيف ({year}). تم توجيهك إلى السنة الحالية."
+"إعادة توجيه: كنت تحاول الوصول إلى أرشيف ({year}). تم توجيهك إلى السنة "
+"الحالية."
 
 #: documents/views.py:160
 msgid "Le trimestre n'est pas terminé. Impossible de générer les bulletins."
@@ -2677,11 +2779,6 @@ msgstr "خطأ في اتصال الشبكة."
 msgid "Trimestre clos"
 msgstr "الفصل مغلق"
 
-#: grades/templates/grades/appreciations_dashboard.html:29
-#: grades/templates/grades/appreciations_dashboard.html:107
-msgid "Mention"
-msgstr "الميزة"
-
 #: grades/templates/grades/appreciations_dashboard.html:30
 #: grades/templates/grades/appreciations_dashboard.html:111
 msgid "-- Aucune --"
@@ -2745,6 +2842,7 @@ msgstr "التقدير الخاص بـ"
 #: grades/templates/grades/grades_dashboard.html:20
 msgid "Gestion des Évaluations"
 msgstr "إدارة التقييمات"
+
 #: grades/templates/grades/grades_dashboard.html:40
 msgid "Erreur critique : Token CSRF introuvable."
 msgstr "خطأ حرج: رمز الحماية ضد تزوير الطلبات (CSRF) غير موجود."
@@ -2806,11 +2904,10 @@ msgid "Ajouter une Évaluation"
 msgstr "إضافة تقييم"
 
 #: grades/templates/grades/grades_dashboard.html:55
-#: schools/templates/schools/exception_management.html:20
-#: schools/templates/schools/exception_management.html:22
-#: schools/templates/schools/manage_years.html:18
-msgid "Modifier l’année"
-msgstr "تعديل السنة"
+#, fuzzy
+#| msgid "Supprimer l’évaluation"
+msgid "Modifier l’Évaluation"
+msgstr "حذف التقييم"
 
 #: grades/templates/grades/grades_dashboard.html:58
 msgid "Veuillez entrer un « Noté sur » valide."
@@ -2997,6 +3094,7 @@ msgstr "مادة غير مصرح بها."
 #, python-brace-format
 msgid "La note {grade_float} dépasse le maximum ({max_grade})."
 msgstr "العلامة {grade_float} تتجاوز الحد الأقصى ({max_grade})."
+
 #: grades/views.py:278
 #, python-brace-format
 msgid "Note invalide : {grade_val}"
@@ -3250,8 +3348,12 @@ msgid "L’heure de fin doit être après l’heure de début."
 msgstr "يجب أن يكون وقت الانتهاء بعد وقت البداية."
 
 #: scheduling/templates/scheduling/schedul_management.html:60
-msgid "Ce créneau chevauche les bornes horaires de l’école ou une pause (ex: déjeuner)."
-msgstr "هذه الفترة الزمنية تتداخل مع حدود التوقيت الخاصة بالمدرسة أو فترة استراحة (مثال: الغداء)."
+msgid ""
+"Ce créneau chevauche les bornes horaires de l’école ou une pause (ex: "
+"déjeuner)."
+msgstr ""
+"هذه الفترة الزمنية تتداخل مع حدود التوقيت الخاصة بالمدرسة أو فترة استراحة "
+"(مثال: الغداء)."
 
 #: scheduling/templates/scheduling/schedul_management.html:61
 msgid ""
@@ -3324,8 +3426,11 @@ msgid "La date de début tombe pendant : {type}."
 msgstr "يصادف تاريخ البدء خلال: {type}."
 
 #: scheduling/templates/scheduling/schedul_management.html:80
-msgid "Aucun cours à générer (tous tombent sur des jours d’exception ou plage invalide)."
-msgstr "لا توجد دروس لتوليدها (جميعها تصادف أياماً استثنائية أو نطاقاً غير صالح)."
+msgid ""
+"Aucun cours à générer (tous tombent sur des jours d’exception ou plage "
+"invalide)."
+msgstr ""
+"لا توجد دروس لتوليدها (جميعها تصادف أياماً استثنائية أو نطاقاً غير صالح)."
 
 #: scheduling/templates/scheduling/schedul_management.html:82
 msgid "Génération en Masse"
@@ -3366,8 +3471,8 @@ msgid ""
 "Utilisez le modèle de planning actuel pour <b>générer les cours réels</b> "
 "pour une ou plusieurs semaines."
 msgstr ""
-"استخدم نموذج جدول التوقيت الحالي لـ <b>توليد الدروس الفعلية</b> لأسبوع واحد أو "
-"أكثر."
+"استخدم نموذج جدول التوقيت الحالي لـ <b>توليد الدروس الفعلية</b> لأسبوع واحد "
+"أو أكثر."
 
 #: scheduling/templates/scheduling/schedul_management.html:161
 msgid "2. Ajouter un Cours au Modèle"
@@ -3648,7 +3753,8 @@ msgstr "تم إنشاء {nb_courses} درساً بنجاح."
 #: scheduling/views.py:404
 #, python-brace-format
 msgid "{nb_courses} cours créés. {nb_errors} cours en erreur (voir détails)."
-msgstr "تم إنشاء {nb_courses} درساً. ووجد {nb_errors} درس في حالة خطأ (انظر التفاصيل)."
+msgstr ""
+"تم إنشاء {nb_courses} درساً. ووجد {nb_errors} درس في حالة خطأ (انظر التفاصيل)."
 
 #: scheduling/views.py:416 subjects/views.py:158 subjects/views.py:221
 msgid "Requête JSON invalide."
@@ -3755,6 +3861,7 @@ msgstr "رمز اللون الستيني العشري لكشف النقاط (م�
 #: schools/models.py:67
 msgid "Signature du Proviseur (Image)"
 msgstr "توقيع المدير (صورة)"
+
 #: schools/models.py:81
 msgid ""
 "La langue de l'école ne peut être modifiée que lorsque l'année en cours est "
@@ -3780,9 +3887,21 @@ msgstr "من {start} إلى {end}"
 msgid "De {start} à {end}"
 msgstr "من {start} إلى {end}"
 
+#: schools/templates/schools/exception_management.html:20
+#, fuzzy
+#| msgid "Ajouter une Exception Journalière"
+msgid "Modifier l’Exception Journalière"
+msgstr "إضافة استثناء يومي"
+
 #: schools/templates/schools/exception_management.html:21
 msgid "Ajouter une Exception Journalière"
 msgstr "إضافة استثناء يومي"
+
+#: schools/templates/schools/exception_management.html:22
+#, fuzzy
+#| msgid "Ajouter une Exception Horaire"
+msgid "Modifier l’Exception Horaire"
+msgstr "إضافة استثناء زمني"
 
 #: schools/templates/schools/exception_management.html:23
 msgid "Ajouter une Exception Horaire"
@@ -3869,8 +3988,8 @@ msgid ""
 "<strong>jour unique</strong> sans cours."
 msgstr ""
 "العطل المدرسية، الأيام العطل الرسمية، الأيام التربوية. إذا كان <strong>تاريخ "
-"البداية مطابقاً لتاريخ النهاية</strong>، فهذا يعتبر <strong>يوماً واحداً</strong> "
-"بدون دراسة."
+"البداية مطابقاً لتاريخ النهاية</strong>، فهذا يعتبر <strong>يوماً واحداً</"
+"strong> بدون دراسة."
 
 #: schools/templates/schools/exception_management.html:59
 msgid ""
@@ -3882,8 +4001,8 @@ msgid ""
 msgstr ""
 "<strong>الأوقات الاستثنائية:</strong> تتيح تحديد <strong>الاستراحات</strong> "
 "السنوية (وقت البداية والنهاية). تُطبق هذه الأوقات بشكل متكرر طوال السنة "
-"الداسية. إذا كانت أوقات الاستراحات في مؤسستك تتغير حسب الأيام، فلا تستخدم هذه "
-"الميزة."
+"الداسية. إذا كانت أوقات الاستراحات في مؤسستك تتغير حسب الأيام، فلا تستخدم "
+"هذه الميزة."
 
 #: schools/templates/schools/exception_management.html:71
 msgid "Jours d'exception"
@@ -3957,8 +4076,8 @@ msgid ""
 "Êtes-vous sûr de vouloir AVANCER le niveau {level} au {counter}e terme ? "
 "Cette action est IRRÉVERSIBLE."
 msgstr ""
-"هل أنت متأكد من رغبتك في التقدم بالمستوى {level} إلى الفصل {counter}؟ "
-"هذا الإجراء لا رجعة فيه."
+"هل أنت متأكد من رغبتك في التقدم بالمستوى {level} إلى الفصل {counter}؟ هذا "
+"الإجراء لا رجعة فيه."
 
 #: schools/templates/schools/manage_term.html:31
 msgid "Terminer le Cycle"
@@ -3966,8 +4085,12 @@ msgstr "إنهاء الدورة"
 
 #: schools/templates/schools/manage_term.html:32
 #, python-brace-format
-msgid "Êtes-vous sûr de vouloir TERMINER le cycle pour le niveau {level} au terme {counter} ? Le niveau sera marqué comme COMPLÉTÉ pour l’année."
-msgstr "هل أنت متأكد من رغبتك في إنهاء الدورة للمستوى {level} في الفصل {counter}؟ سيتم تحديد المستوى كـ مكتمل للسنة."
+msgid ""
+"Êtes-vous sûr de vouloir TERMINER le cycle pour le niveau {level} au terme "
+"{counter} ? Le niveau sera marqué comme COMPLÉTÉ pour l’année."
+msgstr ""
+"هل أنت متأكد من رغبتك في إنهاء الدورة للمستوى {level} في الفصل {counter}؟ "
+"سيتم تحديد المستوى كـ مكتمل للسنة."
 
 #: schools/templates/schools/manage_term.html:33
 #, python-brace-format
@@ -4006,9 +4129,9 @@ msgid ""
 "Il est disponible tant que la `Période Actuelle` n'a pas atteint le maximum "
 "défini (`Max`)."
 msgstr ""
-"يقوم زر <strong>تقدم</strong> بنقل المستوى إلى <strong>الفترة التالية</strong> "
-"(على سبيل المثال، من الفترة 1 إلى الفترة 2). وهو متاح طالما أن `الفترة "
-"الحالية` لم تصل إلى الحد الأقصى المحدد (`Max`)."
+"يقوم زر <strong>تقدم</strong> بنقل المستوى إلى <strong>الفترة التالية</"
+"strong> (على سبيل المثال، من الفترة 1 إلى الفترة 2). وهو متاح طالما أن "
+"`الفترة الحالية` لم تصل إلى الحد الأقصى المحدد (`Max`)."
 
 #: schools/templates/schools/manage_term.html:63
 msgid ""
@@ -4018,13 +4141,14 @@ msgid ""
 msgstr ""
 "يسمح زر <strong>إنهاء</strong> بـ <strong>إغلاق الدورة</strong> للسنة "
 "الحالية، مع وسم المستوى كـ `منتهي` ومنع أي إجراء تقدم آخر."
+
 #: schools/templates/schools/manage_term.html:66
 msgid ""
 "<strong>Important :</strong> Les deux actions sont <strong>IRRÉVERSIBLES</"
 "strong>. L'action doit toujours être confirmée dans la fenêtre de dialogue."
 msgstr ""
-"<strong>هام:</strong> كلا الإجراءين <strong>لا رجعة فيهما</strong>. يجب دائماً "
-"تأكيد الإجراء في نافذة الحوار."
+"<strong>هام:</strong> كلا الإجراءين <strong>لا رجعة فيهما</strong>. يجب "
+"دائماً تأكيد الإجراء في نافذة الحوار."
 
 #: schools/templates/schools/manage_term.html:75
 msgid "Traitement en cours... Veuillez patienter."
@@ -4117,6 +4241,10 @@ msgstr "إنشاء سنة دراسية جديدة"
 msgid "Créer l’année"
 msgstr "إنشاء السنة"
 
+#: schools/templates/schools/manage_years.html:18
+msgid "Modifier l’année"
+msgstr "تعديل السنة"
+
 #: schools/templates/schools/manage_years.html:20
 msgid "Veuillez sélectionner une année scolaire actuelle."
 msgstr "الرجاء تحديد سنة دراسية حالية."
@@ -4130,8 +4258,15 @@ msgid "Passer à l’étape suivante ?"
 msgstr "الانتقال إلى الخطوة التالية؟"
 
 #: schools/templates/schools/manage_years.html:24
-msgid "Vous êtes sur le point d’avancer dans le cycle de vie de l’année.<br><br><ul class='list-disc ps-5 text-start text-xs text-gray-500'><li>Assurez-vous que toutes les tâches de l’étape actuelle sont terminées.</li><li>Cette action peut ouvrir l’accès aux utilisateurs.</li></ul>"
-msgstr "أنت على وشك التقدم في دورة حياة السنة الدراسية.<br><br><ul class='list-disc ps-5 text-start text-xs text-gray-500'><li>تأكد من إكمال جميع مهام المرحلة الحالية.</li><li>قد يفتح هذا الإجراء الوصول للمستخدمين.</li></ul>"
+msgid ""
+"Vous êtes sur le point d’avancer dans le cycle de vie de l’année.<br><br><ul "
+"class='list-disc ps-5 text-start text-xs text-gray-500'><li>Assurez-vous que "
+"toutes les tâches de l’étape actuelle sont terminées.</li><li>Cette action "
+"peut ouvrir l’accès aux utilisateurs.</li></ul>"
+msgstr ""
+"أنت على وشك التقدم في دورة حياة السنة الدراسية.<br><br><ul class='list-disc "
+"ps-5 text-start text-xs text-gray-500'><li>تأكد من إكمال جميع مهام المرحلة "
+"الحالية.</li><li>قد يفتح هذا الإجراء الوصول للمستخدمين.</li></ul>"
 
 #: schools/templates/schools/manage_years.html:25
 msgid "Confirmer et Avancer"
@@ -4142,8 +4277,14 @@ msgid "Revenir à l’étape précédente ?"
 msgstr "العودة إلى الخطوة السابقة؟"
 
 #: schools/templates/schools/manage_years.html:28
-msgid "<strong class='text-orange-600'>Attention :</strong> Vous allez reculer dans le cycle de vie.<br><br>Cela peut avoir des conséquences sur les données enregistrées ou les permissions d’accès. Êtes-vous sûr de vouloir continuer ?"
-msgstr "<strong class='text-orange-600'>تحذير:</strong> أنت على وشك التراجع في دورة الحياة.<br><br>قد تكون لهذا تبعات على البيانات المسجلة أو أذونات الوصول. هل أنت متأكد من رغبتك في الاستمرار؟"
+msgid ""
+"<strong class='text-orange-600'>Attention :</strong> Vous allez reculer dans "
+"le cycle de vie.<br><br>Cela peut avoir des conséquences sur les données "
+"enregistrées ou les permissions d’accès. Êtes-vous sûr de vouloir continuer ?"
+msgstr ""
+"<strong class='text-orange-600'>تحذير:</strong> أنت على وشك التراجع في دورة "
+"الحياة.<br><br>قد تكون لهذا تبعات على البيانات المسجلة أو أذونات الوصول. هل "
+"أنت متأكد من رغبتك في الاستمرار؟"
 
 #: schools/templates/schools/manage_years.html:29
 msgid "Confirmer le retour"
@@ -4252,6 +4393,7 @@ msgstr "1. الإعدادات العامة"
 #: schools/templates/schools/settings.html:41
 msgid "Langue de l'interface"
 msgstr "لغة الواجهة"
+
 #: schools/templates/schools/settings.html:45
 msgid "Choisissez la langue principale de l'école."
 msgstr "اختر اللغة الرئيسية للمدرسة."
@@ -4270,7 +4412,8 @@ msgstr "اللون الرئيسي"
 msgid ""
 "Cette couleur sera utilisée pour les titres, les bordures et les accents sur "
 "les bulletins PDF."
-msgstr "سيُستخدم هذا اللون للعناوين، الحدود، والتبريزات في كشوف النقاط بصيغة PDF."
+msgstr ""
+"سيُستخدم هذا اللون للعناوين، الحدود، والتبريزات في كشوف النقاط بصيغة PDF."
 
 #: schools/templates/schools/settings.html:84
 msgid "2. Images Officielles"
@@ -4402,8 +4545,7 @@ msgstr "خطأ أثناء تحديث الاستثناء الزمني : {error}"
 msgid ""
 "Erreur lors de la création du trimestre/semestre : le numéro du trimestre/"
 "semestr/ est incorecte."
-msgstr ""
-"خطأ أثناء إنشاء الفصل/السداسي: رقم الفصل/السداسي غير صحيح."
+msgstr "خطأ أثناء إنشاء الفصل/السداسي: رقم الفصل/السداسي غير صحيح."
 
 #: schools/utils.py:666
 msgid "Trimestre/semestre non trouvé."
@@ -4435,7 +4577,8 @@ msgid ""
 "Il manque le premier trimestre/semestre (counter=1) pour {missing_count} "
 "niveau(x) de cette école pour l'année spécifiée."
 msgstr ""
-"ينقص الفصل/السداسي الأول (counter=1) لـ {missing_count} مستوى (مستويات) من هذه المدرسة للسنة المحددة."
+"ينقص الفصل/السداسي الأول (counter=1) لـ {missing_count} مستوى (مستويات) من "
+"هذه المدرسة للسنة المحددة."
 
 #: schools/utils.py:804
 #, python-brace-format
@@ -4491,7 +4634,9 @@ msgid "Une erreur interne est survenue: {error}"
 msgstr "حدث خطأ داخلي: {error}"
 
 #: schools/views.py:312
-msgid "Impossible de modifier le statut d'une année terminée."
+#, fuzzy
+#| msgid "Impossible de modifier le statut d'une année terminée."
+msgid "Impossible de modifier le statut d’une année terminée."
 msgstr "تعذر تعديل حالة سنة منتهية."
 
 #: schools/views.py:319
@@ -4502,19 +4647,22 @@ msgstr "تنسيق بيانات JSON غير صالح."
 #, python-brace-format
 msgid "Statut invalide: '{new_status}'."
 msgstr "حالة غير صالحة: '{new_status}'."
+
 #: schools/views.py:331
+#, fuzzy
+#| msgid ""
+#| "Une année terminée ne peut être modifiée que pour revenir à l'étape \"Fin "
+#| "d'année\"."
 msgid ""
-"Une année terminée ne peut être modifiée que pour revenir à l'étape \"Fin "
-"d'année\"."
-msgstr ""
-"لا يمكن تعديل سنة منتهية إلا للعودة إلى مرحلة \"نهاية السنة\"."
+"Une année terminée ne peut être modifiée que pour revenir à l’étape \"Fin "
+"d’année\"."
+msgstr "لا يمكن تعديل سنة منتهية إلا للعودة إلى مرحلة \"نهاية السنة\"."
 
 #: schools/views.py:342
 msgid ""
 "Impossible de passer à l'étape de fin d'année car vous avez encore un "
 "trimestre ou un semestre qui n'es pas terminé."
-msgstr ""
-"تعذر الانتقال إلى مرحلة نهاية السنة لعدم انتهاء فصل أو سداسي بعد."
+msgstr "تعذر الانتقال إلى مرحلة نهاية السنة لعدم انتهاء فصل أو سداسي بعد."
 
 #: schools/views.py:352
 #, python-brace-format
@@ -4530,7 +4678,8 @@ msgid ""
 "L'année '{year}' est passée à l'étape '{statut}', les premier trimestres ou "
 "semestres ont été créer. (Veuillez recharger la page)"
 msgstr ""
-"انتقلت السنة '{year}' إلى المرحلة '{statut}'، وتم إنشاء الفصول أو السداسيات الأولى. (يرجى إعادة تحميل الصفحة)"
+"انتقلت السنة '{year}' إلى المرحلة '{statut}'، وتم إنشاء الفصول أو السداسيات "
+"الأولى. (يرجى إعادة تحميل الصفحة)"
 
 #: schools/views.py:384
 msgid "Année scolaire non trouvée ou accès refusé."
@@ -4549,10 +4698,13 @@ msgid ""
 "Opération non autorisée. La gestion des exceptions n'est possible que "
 "lorsque l'année scolaire est à l'étape de création"
 msgstr ""
-"عملية غير مصرح بها. إدارة الاستثناءات ممكنة فقط عندما تكون السنة الدراسية في مرحلة الإنشاء"
+"عملية غير مصرح بها. إدارة الاستثناءات ممكنة فقط عندما تكون السنة الدراسية في "
+"مرحلة الإنشاء"
 
 #: schools/views.py:439
-msgid "Type d'exception invalide."
+#, fuzzy
+#| msgid "Type d'exception invalide."
+msgid "Type d’exception invalide."
 msgstr "نوع الاستثناء غير صالح."
 
 #: schools/views.py:457
@@ -4565,7 +4717,9 @@ msgid "Exception de jour \"{type_name}\" créée avec succès."
 msgstr "تم إنشاء استثناء اليوم \"{type_name}\" بنجاح."
 
 #: schools/views.py:473 schools/views.py:521
-msgid "ID de l'exception manquant pour la mise à jour."
+#, fuzzy
+#| msgid "ID de l'exception manquant pour la mise à jour."
+msgid "ID de l’exception manquant pour la mise à jour."
 msgstr "معرف الاستثناء مفقود للتحديث."
 
 #: schools/views.py:481
@@ -4578,7 +4732,9 @@ msgid "Exception de jour non trouvée."
 msgstr "استثناء اليوم غير موجود."
 
 #: schools/views.py:487 schools/views.py:534
-msgid "ID de l'exception manquant pour la suppression."
+#, fuzzy
+#| msgid "ID de l'exception manquant pour la suppression."
+msgid "ID de l’exception manquant pour la suppression."
 msgstr "معرف الاستثناء مفقود للحذف."
 
 #: schools/views.py:493
@@ -4587,24 +4743,33 @@ msgid "Exception de jour \"{exception_name}\" supprimée."
 msgstr "تم حذف استثناء اليوم \"{exception_name}\"."
 
 #: schools/views.py:505
-msgid "L'heure de début et l'heure de fin sont obligatoires."
+#, fuzzy
+#| msgid "L'heure de début et l'heure de fin sont obligatoires."
+msgid "L’heure de début et l’heure de fin sont obligatoires."
 msgstr "وقت البداية ووقت النهاية إلزابيان."
 
 #: schools/views.py:517
-msgid "Horaire d'exception créé avec succès."
+#, fuzzy
+#| msgid "Horaire d'exception créé avec succès."
+msgid "Horaire d’exception créé avec succès."
 msgstr "تم إنشاء الاستثناء الزمني بنجاح."
 
 #: schools/views.py:528
-msgid "Horaire d'exception mis à jour avec succès."
+#, fuzzy
+#| msgid "Horaire d'exception mis à jour avec succès."
+msgid "Horaire d’exception mis à jour avec succès."
 msgstr "تم تحديث الاستثناء الزمني بنجاح."
 
 #: schools/views.py:530 schools/views.py:542
-msgid "Horaire d'exception non trouvé."
+#, fuzzy
+#| msgid "Horaire d'exception non trouvé."
+msgid "Horaire d’exception non trouvé."
 msgstr "الاستثناء الزمني غير موجود."
 
 #: schools/views.py:540
-#, python-brace-format
-msgid "Horaire d'exception \"{exception_name}\" supprimé."
+#, fuzzy, python-brace-format
+#| msgid "Horaire d'exception \"{exception_name}\" supprimé."
+msgid "Horaire d’exception \"{exception_name}\" supprimé."
 msgstr "تم حذف الاستثناء الزمني \"{exception_name}\"."
 
 #: schools/views.py:551
@@ -4624,27 +4789,36 @@ msgid ""
 "Opération non autorisée. La gestion des trimestres/semestres n'est possible "
 "que lorsque l'année scolaire est à l'étape de Déroulement (Running)."
 msgstr ""
-"عملية غير مصرح بها. إدارة الفصول/السداسيات ممكنة فقط عندما تكون السنة الدراسية في مرحلة السير العادي."
+"عملية غير مصرح بها. إدارة الفصول/السداسيات ممكنة فقط عندما تكون السنة "
+"الدراسية في مرحلة السير العادي."
 
 #: schools/views.py:631
-msgid "L'ID du niveau et l'action sont obligatoires."
+#, fuzzy
+#| msgid "L'ID du niveau et l'action sont obligatoires."
+msgid "L’ID du niveau et l’action sont obligatoires."
 msgstr "معرف المستوى والإجراء إلزابيان."
 
 #: schools/views.py:649
-#, python-brace-format
+#, fuzzy, python-brace-format
+#| msgid ""
+#| "Aucun trimestre/semestre actif trouvé pour le niveau {level} et l'année "
+#| "en cours."
 msgid ""
-"Aucun trimestre/semestre actif trouvé pour le niveau {level} et l'année en "
+"Aucun trimestre/semestre actif trouvé pour le niveau {level} et l’année en "
 "cours."
-msgstr ""
-"لم يتم العثور على أي فصل/سداسي نشط للمستوى {level} والسنة الحالية."
+msgstr "لم يتم العثور على أي فصل/سداسي نشط للمستوى {level} والسنة الحالية."
 
 #: schools/views.py:674
-#, python-brace-format
+#, fuzzy, python-brace-format
+#| msgid ""
+#| "Impossible d'avancer. Le {counter}e {term_type} est le dernier possible "
+#| "({max_counter}) pour ce niveau."
 msgid ""
-"Impossible d'avancer. Le {counter}e {term_type} est le dernier possible "
+"Impossible d’avancer. Le {counter}e {term_type} est le dernier possible "
 "({max_counter}) pour ce niveau."
 msgstr ""
-"تعذر التقدم. الـ {term_type} الـ {counter} هو الأخير الممكن ({max_counter}) لهذا المستوى."
+"تعذر التقدم. الـ {term_type} الـ {counter} هو الأخير الممكن ({max_counter}) "
+"لهذا المستوى."
 
 #: schools/views.py:696
 #, python-brace-format
@@ -4652,7 +4826,8 @@ msgid ""
 "Avancement réussi ! Le niveau {level} est maintenant au {next_counter}e "
 "{term_type}."
 msgstr ""
-"تم التقدم بنجاح! المستوى {level} أصبح الآن في الـ {term_type} الـ {next_counter}."
+"تم التقدم بنجاح! المستوى {level} أصبح الآن في الـ {term_type} الـ "
+"{next_counter}."
 
 #: schools/views.py:707
 #, python-brace-format
@@ -4660,15 +4835,20 @@ msgid ""
 "Impossible de terminer le cycle. Le niveau {level} est seulement au {counter}"
 "e {term_type}. Il reste encore des termes à créer."
 msgstr ""
-"تعذر إنهاء الدورة. المستوى {level} في الـ {term_type} الـ {counter} فقط. لا تزال هناك فصول يجب إنشاؤها."
+"تعذر إنهاء الدورة. المستوى {level} في الـ {term_type} الـ {counter} فقط. لا "
+"تزال هناك فصول يجب إنشاؤها."
 
 #: schools/views.py:717
-#, python-brace-format
+#, fuzzy, python-brace-format
+#| msgid ""
+#| "Cycle terminé ! Le {counter}e et dernier {term_type} du niveau {level} "
+#| "est maintenant marqué comme terminé pour l'année {year}."
 msgid ""
 "Cycle terminé ! Le {counter}e et dernier {term_type} du niveau {level} est "
-"maintenant marqué comme terminé pour l'année {year}."
+"maintenant marqué comme terminé pour l’année {year}."
 msgstr ""
-"انتهت الدورة! تم الآن وسم الـ {term_type} الأخير الـ {counter} للمستوى {level} كمكتمل للسنة {year}."
+"انتهت الدورة! تم الآن وسم الـ {term_type} الأخير الـ {counter} للمستوى "
+"{level} كمكتمل للسنة {year}."
 
 #: schools/views.py:729
 #, python-brace-format
@@ -4756,6 +4936,7 @@ msgstr "لم يتم العثور على أي أستاذ لهذه المدرسة.
 #: subjects/templates/subjects/assign_subjects.html:74
 msgid "Erreur de chargement des données initiales. Vérifiez la console."
 msgstr "خطأ في تحميل البيانات الأولية. تحقق من وحدة التحكم."
+
 #: subjects/templates/subjects/assign_subjects.html:75
 msgid "Attribution..."
 msgstr "جاري التخصيص..."
@@ -4917,7 +5098,9 @@ msgid "École sélectionnée introuvable."
 msgstr "المدرسة المحددة غير موجودة."
 
 #: subjects/views.py:59
-msgid "Impossible de déterminer l'école associée à votre compte."
+#, fuzzy
+#| msgid "Impossible de déterminer l'école associée à votre compte."
+msgid "Impossible de déterminer l’école associée à votre compte."
 msgstr "تعذر تحديد المدرسة المرتبطة بحسابك."
 
 #: subjects/views.py:106
@@ -4984,8 +5167,12 @@ msgid "Matière non trouvée."
 msgstr "المادة غير موجودة."
 
 #: subjects/views.py:345
+#, fuzzy
+#| msgid ""
+#| "Cohésion échouée: Le professeur et la matière n'appartiennent pas à la "
+#| "même école."
 msgid ""
-"Cohésion échouée: Le professeur et la matière n'appartiennent pas à la même "
+"Cohésion échouée: Le professeur et la matière n’appartiennent pas à la même "
 "école."
 msgstr "فشل الاتساق: الأستاذ والمادة لا ينتميان إلى نفس المدرسة."
 
@@ -4993,6 +5180,7 @@ msgstr "فشل الاتساق: الأستاذ والمادة لا ينتميان
 #, python-brace-format
 msgid "Lien créé : {name} enseignera {subject}."
 msgstr "تم إنشاء الرابط: {name} سيدرس {subject}."
+
 #: subjects/views.py:360 users/views.py:844
 msgid "Le lien existe déjà."
 msgstr "الرابط موجود مسبقاً."
@@ -5054,7 +5242,7 @@ msgstr "القائمة"
 msgid "Une erreur est survenue"
 msgstr "حدث خطأ ما"
 
-#: templates/error_page.html:31 users/templates/users/password_reset.html:80
+#: templates/error_page.html:31 users/templates/users/password_reset.html:64
 #: users/templates/users/password_reset_confirm.html:63
 msgid "Retour à la connexion"
 msgstr "العودة إلى تسجيل الدخول"
@@ -5297,11 +5485,6 @@ msgstr "أهلاً بك، %(username)s"
 msgid "Année scolaire"
 msgstr "السنة الدراسية"
 
-#: users/templates/users/dashboard_page.html:21
-#: users/templates/users/manage_users.html:266
-msgid "École"
-msgstr "المدرسة"
-
 #: users/templates/users/dashboard_page.html:24
 msgid "Erreur lors du changement d’école :"
 msgstr "خطأ أثناء تغيير المدرسة:"
@@ -5421,14 +5604,6 @@ msgstr "لا توجد أي ملاحظات."
 msgid "Indicateurs Assiduité"
 msgstr "مؤشرات المواظبة"
 
-#: users/templates/users/dashboard_page.html:306
-msgid "Absences Totales"
-msgstr "إجمالي الغيابات"
-
-#: users/templates/users/dashboard_page.html:312
-msgid "Retards Totaux"
-msgstr "إجمالي التأخرات"
-
 #: users/templates/users/dashboard_page.html:317
 msgid "Voir les détails"
 msgstr "عرض التفاصيل"
@@ -5440,10 +5615,6 @@ msgstr "الأداء البيداغوجي"
 #: users/templates/users/dashboard_page.html:329
 msgid "Globale :"
 msgstr "العام :"
-
-#: users/templates/users/dashboard_page.html:340
-msgid "Période"
-msgstr "الفترة"
 
 #: users/templates/users/dashboard_page.html:361
 msgid "Pas de données pour la période actuelle."
@@ -5497,6 +5668,7 @@ msgstr "تفعيل الحساب"
 #: users/templates/users/manage_users.html:198
 msgid "Aucun utilisateur de ce type trouvé."
 msgstr "لم يتم العثور على أي مستخدم من هذا النوع."
+
 #: users/templates/users/manage_users.html:205
 #: users/templates/users/manage_users.html:219
 msgid "Créer un nouvel utilisateur"
@@ -5582,7 +5754,8 @@ msgstr "نسيت كلمة المرور؟"
 msgid ""
 "Entrez votre nom d'utilisateur pour recevoir un lien de réinitialisation par "
 "e-mail."
-msgstr "أدخل اسم المستخدم الخاص بك لتلقي رابط إعادة التين عبر البريد الإلكتروني."
+msgstr ""
+"أدخل اسم المستخدم الخاص بك لتلقي رابط إعادة التين عبر البريد الإلكتروني."
 
 #: users/templates/users/password_reset.html:27
 msgid "Erreur lors sur lien."
@@ -5592,7 +5765,7 @@ msgstr "خطأ في الرابط."
 msgid "Une erreur est survenue. Veuillez réessayer."
 msgstr "حدث خطأ ما. يرجى المحاولة مرة أخرى."
 
-#: users/templates/users/password_reset.html:49
+#: users/templates/users/password_reset.html:33
 msgid "Nom d'utilisateur"
 msgstr "اسم المستخدم"
 
@@ -5600,7 +5773,7 @@ msgstr "اسم المستخدم"
 msgid "Entrez votre nom d’utilisateur"
 msgstr "أدخل اسم المستخدم"
 
-#: users/templates/users/password_reset.html:76
+#: users/templates/users/password_reset.html:60
 msgid "Envoyer le lien"
 msgstr "إرسال الرابط"
 
@@ -5747,6 +5920,7 @@ msgstr "يوجد مستخدم بهذا البريد الإلكتروني مسب�
 #: users/utils.py:810 users/utils.py:981
 msgid "Utilisateur non trouvé."
 msgstr "المستخدم غير موجود."
+
 #: users/utils.py:174
 #, python-brace-format
 msgid "Une erreur s'est produite lors de la vérification de l'email : {e}"
@@ -5806,8 +5980,8 @@ msgstr ""
 "    - اسم المستخدم : {username}\n"
 "    - كلمة المرور : {password}\n"
 "\n"
-"    لأسباب أمنية، نطلب منك تغيير كلمة المرور الخاصة بك فور تسجيل الدخول "
-"لأول مرة لتكون كلمة مرور أكثر قوة وأماناً.\n"
+"    لأسباب أمنية، نطلب منك تغيير كلمة المرور الخاصة بك فور تسجيل الدخول لأول "
+"مرة لتكون كلمة مرور أكثر قوة وأماناً.\n"
 "\n"
 "    يمكنك تسجيل الدخول باستخدام هذا الرابط :\n"
 "    {reset_link}\n"
@@ -6059,11 +6233,13 @@ msgstr "يجب أن تحتوي كلمة المرور على حرف صغير وا
 #: users/utils.py:1378
 msgid "Le mot de passe doit contenir au moins un chiffre."
 msgstr "يجب أن تحتوي كلمة المرور على رقم واحد على الأقل."
+
 #: users/utils.py:1382
 msgid ""
 "Le mot de passe doit contenir au moins un caractère spécial (ex: @, #, !, ?, "
 "etc.)."
-msgstr "يجب أن تحتوي كلمة المرور على رمز خاص واحد على الأقل (مثل: @, #, !, ?, إلخ)."
+msgstr ""
+"يجب أن تحتوي كلمة المرور على رمز خاص واحد على الأقل (مثل: @, #, !, ?, إلخ)."
 
 #: users/utils.py:1384
 msgid "Le mot de passe est valide."
@@ -6094,7 +6270,9 @@ msgid "Un lien de réinitialisation a été envoyé à votre adresse e-mail."
 msgstr "تم إرسال رابط إعادة التعيين إلى عنوان بريدك الإلكتروني."
 
 #: users/views.py:303
-msgid "Erreur lors de l'envoi de l'e-mail."
+#, fuzzy
+#| msgid "Erreur lors de l'envoi de l'e-mail."
+msgid "Erreur lors de l’envoi de l'e-mail."
 msgstr "خطأ أثناء إرسال البريد الإلكتروني."
 
 #: users/views.py:305
