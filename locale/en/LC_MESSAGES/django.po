@@ -2148,7 +2148,7 @@ msgstr "Date of birth"
 #, fuzzy
 #| msgid "Moyenne Générale :"
 msgid "Moy. Générale Élève"
-msgstr "General Average:"
+msgstr "Student General Average"
 
 #: documents/export.py:114
 #, fuzzy
