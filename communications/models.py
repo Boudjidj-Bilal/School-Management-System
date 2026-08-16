@@ -167,7 +167,7 @@ class Messaging(models.Model):
         constraints = [
             models.UniqueConstraint(
                 fields=["user1", "user2"],
-                name=_("unique_conversation")
+                name="unique_conversation"
             )
         ]
 
