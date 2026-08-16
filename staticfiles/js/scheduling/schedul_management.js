@@ -1,25 +1,78 @@
 // ====================================================================
-// LOGIQUE JAVASCRIPT POUR schedul_management.js (Fichier Complet)
+// LOGIQUE JAVASCRIPT POUR schedul_management.js (Partie 1/2)
 // ====================================================================
 
 document.addEventListener('DOMContentLoaded', () => {
 
     const backBtn = document.getElementById('btn-back');
-    // On vérifie si le bouton existe sur la page pour éviter des erreurs
     if (backBtn) {
         backBtn.addEventListener('click', (event) => {
-            event.preventDefault(); // Empêche le lien de recharger la page avec '#'
-            window.history.back();  // Fait l'action de retour
+            event.preventDefault(); 
+            window.history.back();  
         });
     }
 
     // --- 0. CONFIGURATION & DONNÉES CONTEXTUELLES ---
-    // Récupération sécurisée depuis les data-attributes du conteneur
     const container = document.getElementById('schedule-manager-container');
     if (!container) {
         console.error("Conteneur principal #schedule-manager-container introuvable.");
         return;
     }
+
+    // Récupération des traductions dynamiques
+    const msgErrCritical = container.getAttribute('data-msg-err-critical') || "Erreur critique au chargement des données.";
+    const msgSchoolHours = container.getAttribute('data-msg-school-hours') || "Horaires de l'école:";
+    const msgTimeExceptions = container.getAttribute('data-msg-time-exceptions') || "Exceptions horaires (pauses):";
+    const msgSelectSubjectTeacher = container.getAttribute('data-msg-select-subject-teacher') || "-- Sélectionnez Matière/Prof --";
+    const msgSelectRoom = container.getAttribute('data-msg-select-room') || "-- Sélectionnez une Salle --";
+    const msgLoading = container.getAttribute('data-msg-loading') || "Chargement...";
+    const msgServerError = container.getAttribute('data-msg-server-error') || "Erreur serveur (Status {status}).";
+    const msgOperationFailed = container.getAttribute('data-msg-operation-failed') || "Opération échouée.";
+    const msgConnectionError = container.getAttribute('data-msg-connection-error') || "Erreur de connexion au serveur : {error}";
+    const msgNetworkError = container.getAttribute('data-msg-network-error') || "Erreur de connexion réseau.";
+    const msgWeeklyTotal = container.getAttribute('data-msg-weekly-total') || "Total Hebdomadaire:";
+    const msgTooltipSelectTemplate = container.getAttribute('data-msg-tooltip-select-template') || "Veuillez d'abord sélectionner ou sauvegarder un modèle.";
+    const msgNoWorkDay = container.getAttribute('data-msg-no-work-day') || "Jour non travaillé";
+
+    const msgUnknownDay = container.getAttribute('data-msg-unknown-day') || 'Jour inconnu';
+    const msgSubjectUnknown = container.getAttribute('data-msg-subject-unknown') || 'Matière ?';
+    const msgTeacherUnknown = container.getAttribute('data-msg-teacher-unknown') || 'Prof ?';
+    const msgRoomUnknown = container.getAttribute('data-msg-room-unknown') || 'Salle ?';
+    const msgInactiveTs = container.getAttribute('data-msg-inactive-ts') || "Prof/Matière Inactif";
+    const msgInactiveTsTitle = container.getAttribute('data-msg-inactive-ts-title') || "Cette affectation professeur/matière n'est plus active.";
+    const msgInactiveRoom = container.getAttribute('data-msg-inactive-room') || "Salle Inactive";
+    const msgInactiveRoomTitle = container.getAttribute('data-msg-inactive-room-title') || "Cette salle n'est plus active.";
+    const msgDeleteCourseTitle = container.getAttribute('data-msg-delete-course-title') || "Supprimer ce cours";
+    
+    const msgConfirmDelTitle = container.getAttribute('data-msg-confirm-del-title') || "Confirmation Suppression";
+    const msgConfirmDelBody = container.getAttribute('data-msg-confirm-del-body') || "Voulez-vous retirer ce cours du modèle de planning ?";
+    const msgFillAllFields = container.getAttribute('data-msg-fill-all-fields') || "Veuillez remplir tous les champs (jour, début, fin, prof, salle).";
+    const msgEndBeforeStart = container.getAttribute('data-msg-end-before-start') || "L'heure de fin doit être après l'heure de début.";
+    const msgConflictSchoolHours = container.getAttribute('data-msg-conflict-school-hours') || "Ce créneau chevauche les bornes horaires de l'école ou une pause (ex: déjeuner).";
+    const msgConflictTemplate = container.getAttribute('data-msg-conflict-template') || "Conflit de classe: Ce créneau chevauche un autre cours déjà défini dans le modèle pour ce jour.";
+    
+    const msgNewTemplate = container.getAttribute('data-msg-new-template') || "Nouveau Modèle";
+    const msgTemplateNameLabel = container.getAttribute('data-msg-template-name-label') || "Nom du modèle :";
+    const msgSaveTemplateTitle = container.getAttribute('data-msg-save-template-title') || "Enregistrer le Modèle";
+    const msgNameCannotBeEmpty = container.getAttribute('data-msg-name-cannot-be-empty') || "Le nom ne peut pas être vide.";
+    
+    const msgErrEmptyTemplate = container.getAttribute('data-msg-err-empty-template') || "Le modèle de semaine est vide ou non sauvegardé.";
+    const msgSchoolYearDuration = container.getAttribute('data-msg-school-year-duration') || "Année scolaire :";
+    const msgStartDateMonday = container.getAttribute('data-msg-start-date-monday') || "Date de début (Lundi)";
+    const msgMustBeMonday = container.getAttribute('data-msg-must-be-monday') || "Doit être un Lundi, dans l'année scolaire.";
+    const msgEndDateSunday = container.getAttribute('data-msg-end-date-sunday') || "Date de fin (Dimanche)";
+    const msgMustBeSunday = container.getAttribute('data-msg-must-be-sunday') || "Doit être un Dimanche, dans l'année scolaire.";
+    const msgGenerateRealCourses = container.getAttribute('data-msg-generate-real-courses') || "Générer les Cours Réels";
+    const msgBothDatesRequired = container.getAttribute('data-msg-both-dates-required') || "Les deux dates (début et fin) sont obligatoires.";
+    const msgDatesOutsideYear = container.getAttribute('data-msg-dates-outside-year') || "Les dates doivent être à l'intérieur de l'année scolaire.";
+    const msgErrNotMonday = container.getAttribute('data-msg-err-not-monday') || "La date de début doit être un LUNDI.";
+    const msgErrNotSunday = container.getAttribute('data-msg-err-not-sunday') || "La date de fin doit être un DIMANCHE.";
+    const msgExceptionConflict = container.getAttribute('data-msg-exception-conflict') || "La date de début tombe pendant : {type}.";
+    const msgNoCoursesToGenerate = container.getAttribute('data-msg-no-courses-to-generate') || "Aucun cours à générer (tous tombent sur des jours d'exception ou plage invalide).";
+    
+    const msgConfirmGenTitle = container.getAttribute('data-msg-confirm-gen-title') || "Génération en Masse";
+    const msgConfirmGenBody = container.getAttribute('data-msg-confirm-gen-body') || "Confirmez-vous la création de {count} cours réels du {start} au {end} ?";
+    const msgConfirmGenSkipped = container.getAttribute('data-msg-confirm-gen-skipped') || " ({count} cours ignorés car tombant sur des jours d'exception).";
 
     const CONFIG = {
         classPk: container.dataset.classPk,
@@ -57,7 +110,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const modalTitle = document.getElementById('modal-title');
     const modalMessage = document.getElementById('modal-message');
     const modalCancelBtn = document.getElementById('modal-cancel-btn');
-    const modalConfirmBtn = document.getElementById('modal-confirm-btn'); // Ajouté pour référence
+    const modalConfirmBtn = document.getElementById('modal-confirm-btn'); 
     
     // Modal de Saisie (Texte/Date)
     const inputModal = document.getElementById('input-modal');
@@ -74,25 +127,24 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
     // --- 2. Modèle de Données Global ---
-    let DATA = {}; // Contient les données JSON du backend
-    let currentTemplateId = null; // ID du WeeklyScheduleTemplate en cours d'édition
-    let currentCourseTemplates = []; // Liste des cours du template actuel
+    let DATA = {}; 
+    let currentTemplateId = null; 
+    let currentCourseTemplates = []; 
     
-    // Jours de la semaine
+    // Jours de la semaine traduits dynamiquement
     const DAYS_OF_WEEK = [
-        { key: 1, name: 'Lundi' },
-        { key: 2, name: 'Mardi' },
-        { key: 3, name: 'Mercredi' },
-        { key: 4, name: 'Jeudi' },
-        { key: 5, name: 'Vendredi' },
-        { key: 6, name: 'Samedi' },
-        { key: 7, name: 'Dimanche' },
+        { key: 1, name: container.getAttribute('data-msg-monday') || 'Lundi' },
+        { key: 2, name: container.getAttribute('data-msg-tuesday') || 'Mardi' },
+        { key: 3, name: container.getAttribute('data-msg-wednesday') || 'Mercredi' },
+        { key: 4, name: container.getAttribute('data-msg-thursday') || 'Jeudi' },
+        { key: 5, name: container.getAttribute('data-msg-friday') || 'Vendredi' },
+        { key: 6, name: container.getAttribute('data-msg-saturday') || 'Samedi' },
+        { key: 7, name: container.getAttribute('data-msg-sunday') || 'Dimanche' },
     ];
 
 
     // --- 3. Fonctions d'Utilité (CSRF, JSON Parsing, API) ---
 
-    /** Parse les données JSON injectées dans le DOM. */
     const parseInitialData = () => {
         try {
             const getData = (id) => {
@@ -111,8 +163,6 @@ document.addEventListener('DOMContentLoaded', () => {
             DATA.exception_days = getData('exception_days_data');
             DATA.exception_times = getData('exception_times_data');
 
-            console.log("Données initiales chargées.");
-
             currentTemplateId = templateSelect.value === 'NEW' ? null : parseInt(templateSelect.value);
             
             renderSchoolHoursInfo();
@@ -121,34 +171,35 @@ document.addEventListener('DOMContentLoaded', () => {
 
         } catch (e) {
             console.error("Erreur de parsing des données initiales:", e);
-            showNotification("Erreur critique au chargement des données.", 'error');
+            showNotification(msgErrCritical, 'error');
         }
     };
 
-    /** Affiche les bornes horaires et les exceptions (pauses) de l'école. */
     function renderSchoolHoursInfo() {
         if (!schoolHoursInfoBox) return;
 
-        let html = `<div class="flex items-center"><i class="fas fa-info-circle mr-2"></i><strong class="mr-1">Horaires de l'école:</strong> ${CONFIG.yearMinTime} - ${CONFIG.yearMaxTime}</div>`;
+        // MODIFICATION : flex et gap-2 pour espacer l'icône et le texte, pas de margin
+        let html = `<div class="flex items-center gap-2"><i class="fas fa-info-circle"></i><strong>${msgSchoolHours}</strong> <span dir="ltr">${CONFIG.yearMinTime} - ${CONFIG.yearMaxTime}</span></div>`;
 
         if (DATA.exception_times && DATA.exception_times.length > 0) {
-            html += `<div class="font-semibold mt-2 pt-2 border-t border-teal-200">Exceptions horaires (pauses):</div><ul class="list-disc list-inside ml-2">`;
+            // MODIFICATION RTL : ml-2 devient ps-2
+            html += `<div class="font-semibold mt-2 pt-2 border-t border-teal-200">${msgTimeExceptions}</div><ul class="list-disc list-inside ps-2 mt-1">`;
             DATA.exception_times.forEach(ex => {
                 const start = ex.start_time.substring(0, 5);
                 const end = ex.end_time.substring(0, 5);
-                html += `<li>${start} - ${end}</li>`;
+                // Utilisation de dir="ltr" pour les heures (RTL safe)
+                html += `<li dir="ltr">${start} - ${end}</li>`;
             });
             html += `</ul>`;
         }
         schoolHoursInfoBox.innerHTML = html;
     }
 
-    /** Remplit les listes <select> au démarrage. */
     function populateSelects() {
         if (!teacherSubjectSelect || !classroomSelect) return;
         
-        teacherSubjectSelect.innerHTML = '<option value="" disabled selected>-- Sélectionnez Matière/Prof --</option>';
-        classroomSelect.innerHTML = '<option value="" disabled selected>-- Sélectionnez une Salle --</option>';
+        teacherSubjectSelect.innerHTML = `<option value="" disabled selected>${msgSelectSubjectTeacher}</option>`;
+        classroomSelect.innerHTML = `<option value="" disabled selected>${msgSelectRoom}</option>`;
 
         DATA.teacher_subjects
             .filter(ts => ts.is_active === true)
@@ -167,7 +218,6 @@ document.addEventListener('DOMContentLoaded', () => {
             });
     }
 
-    /** Affiche une notification. */
     function showNotification(message, type) {
         if (!notificationArea) return;
         
@@ -179,8 +229,9 @@ document.addEventListener('DOMContentLoaded', () => {
         const icon = type === 'success' ? 'fa-check-circle' : (type === 'error' ? 'fa-times-circle' : 'fa-info-circle');
 
         const notificationDiv = document.createElement('div');
-        notificationDiv.className = `p-4 rounded-xl border shadow-md ${colorMap[type]} flex items-center transition duration-300 opacity-0 transform translate-y-2`;
-        notificationDiv.innerHTML = `<i class="fas ${icon} mr-3 text-lg"></i><p class="font-semibold">${message}</p>`;
+        // MODIFICATION : flex items-center gap-3, suppression de mr-3 sur l'icône
+        notificationDiv.className = `p-4 rounded-xl border shadow-md ${colorMap[type]} flex items-center gap-3 transition duration-300 opacity-0 transform translate-y-2`;
+        notificationDiv.innerHTML = `<i class="fas ${icon} text-lg"></i><p class="font-semibold">${message}</p>`;
 
         notificationArea.prepend(notificationDiv);
         
@@ -191,7 +242,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }, 15000);
     }
 
-    /** Fonction d'appel API générique. */
     async function apiFetch(url, data) {
         const allActionBtns = [
             document.getElementById('save-template-btn'),
@@ -205,7 +255,8 @@ document.addEventListener('DOMContentLoaded', () => {
             if (!btn.disabled) {
                 originalTexts.set(btn, btn.innerHTML);
                 btn.disabled = true;
-                btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> Chargement...';
+                // MODIFICATION : Injection de gap-2
+                btn.innerHTML = `<div class="flex items-center justify-center gap-2"><i class="fas fa-spinner fa-spin"></i><span>${msgLoading}</span></div>`;
             }
         });
 
@@ -222,13 +273,13 @@ document.addEventListener('DOMContentLoaded', () => {
             const json = await response.json();
             
             if (!response.ok) {
-                const message = json.message || `Erreur serveur (Status ${response.status}).`;
+                const message = json.message || msgServerError.replace('{status}', response.status);
                 showNotification(message, 'error');
                 return { success: false, ...json };
             }
 
             if (!json.success) {
-                showNotification(json.message || "Opération échouée.", 'error');
+                showNotification(json.message || msgOperationFailed, 'error');
             } else if (json.message) {
                 showNotification(json.message, 'success');
             }
@@ -237,8 +288,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
         } catch (error) {
             console.error("Erreur réseau/générale:", error);
-            showNotification(`Erreur de connexion au serveur : ${error.message}`, 'error');
-            return { success: false, message: "Erreur de connexion réseau." };
+            showNotification(msgConnectionError.replace('{error}', error.message), 'error');
+            return { success: false, message: msgNetworkError };
         } finally {
             allActionBtns.forEach(btn => {
                 if (originalTexts.has(btn)) {
@@ -253,14 +304,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- 4. Logique de Rendu du Planning ---
 
-    /** Helper pour convertir "HH:MM:SS" en minutes. */
     function parseTimeToMinutes(timeStr) {
         if (!timeStr) return 0;
         const [hours, minutes] = timeStr.split(':').map(Number);
         return (hours * 60) + (minutes || 0);
     }
 
-    /** Calcule et affiche le total des heures pour le template actuel. */
     function updateTemplateTotalHoursDisplay() {
         if (!templateTotalHoursEl) return;
 
@@ -277,14 +326,13 @@ document.addEventListener('DOMContentLoaded', () => {
         if (totalMinutes > 0) {
             const hours = Math.floor(totalMinutes / 60);
             const minutes = totalMinutes % 60;
-            templateTotalHoursEl.textContent = `Total Hebdomadaire: ${hours}h ${String(minutes).padStart(2, '0')}m`;
+            templateTotalHoursEl.textContent = `${msgWeeklyTotal} ${hours}h ${String(minutes).padStart(2, '0')}m`;
             templateTotalHoursEl.style.display = 'block';
         } else {
             templateTotalHoursEl.style.display = 'none';
         }
     }
 
-    /** Met à jour les cours affichés ET le total des heures. */
     function updateCurrentCourseTemplates() {
         if (currentTemplateId) {
             currentCourseTemplates = DATA.course_templates.filter(
@@ -298,25 +346,22 @@ document.addEventListener('DOMContentLoaded', () => {
         updateTemplateTotalHoursDisplay();
     }
 
-    /** Active/Désactive le bouton de génération */
     function updateGenerateButtonState() {
         if (createScheduledCoursesBtn) createScheduledCoursesBtn.disabled = !currentCourseTemplates.length;
         
-        // Gère l'état du formulaire d'ajout
         const formDisabled = !currentTemplateId;
         [daySelect, startTimeInput, endTimeInput, teacherSubjectSelect, classroomSelect, addCourseBtn].forEach(
             el => { if(el) el.disabled = formDisabled; }
         );
         if (addCourseBtn) {
             if (formDisabled) {
-                addCourseBtn.title = "Veuillez d'abord sélectionner ou sauvegarder un modèle.";
+                addCourseBtn.title = msgTooltipSelectTemplate;
             } else {
                 addCourseBtn.title = "";
             }
         }
     }
 
-    /** Vérifie si un créneau chevauche les exceptions horaires. */
     function isTimeInExceptions(startTime, endTime) {
         if (startTime < CONFIG.yearMinTime || endTime > CONFIG.yearMaxTime || endTime < CONFIG.yearMinTime || startTime > CONFIG.yearMaxTime) {
             return true;
@@ -332,7 +377,6 @@ document.addEventListener('DOMContentLoaded', () => {
         return false;
     }
 
-    /** Vérifie si le créneau chevauche un autre cours DÉJÀ PRÉSENT */
     function isTemplateConflict(day, startTime, endTime) {
         const coursesOnSameDay = currentCourseTemplates.filter(
             course => course.day_of_week == day
@@ -349,18 +393,16 @@ document.addEventListener('DOMContentLoaded', () => {
         return false;
     }
 
-    /** Vérifie si une date tombe sur un jour d'exception */
     function getDayExceptionType(checkDate) {
         const checkDateStr = new Date(checkDate.getTime() - (checkDate.getTimezoneOffset() * 60000)).toISOString().split('T')[0];
         for (const ex of DATA.exception_days) {
             if (checkDateStr >= ex.start_date && checkDateStr <= ex.end_date) {
-                return ex.type || "Jour non travaillé";
+                return ex.type || msgNoWorkDay;
             }
         }
         return null;
     }
-
-    /** Rend les cartes de cours au lieu d'une grille statique. */
+    
     function renderSchedule() {
         if (!scheduleGridContainer) return;
         scheduleGridContainer.innerHTML = '';
@@ -385,7 +427,7 @@ document.addEventListener('DOMContentLoaded', () => {
         sortedCourses.forEach(course => {
             if (course.day_of_week !== currentDay) {
                 currentDay = course.day_of_week;
-                const dayName = DAYS_OF_WEEK.find(d => d.key == currentDay)?.name || 'Jour inconnu';
+                const dayName = DAYS_OF_WEEK.find(d => d.key == currentDay)?.name || msgUnknownDay;
                 
                 dayContainer = document.createElement('div');
                 dayContainer.className = "col-span-1 md:col-span-1";
@@ -396,40 +438,47 @@ document.addEventListener('DOMContentLoaded', () => {
             const ts = DATA.teacher_subjects.find(t => t.js_pk === course.teacher_subject__id);
             const classroom = DATA.classrooms.find(r => r.pk === course.classroom__id);
             
-            const subjectName = ts ? ts.subject_name : 'Matière ?';
-            const teacherName = ts ? ts.teacher_name : 'Prof ?';
-            const roomName = classroom ? classroom.name : 'Salle ?';
+            const subjectName = ts ? ts.subject_name : msgSubjectUnknown;
+            const teacherName = ts ? ts.teacher_name : msgTeacherUnknown;
+            const roomName = classroom ? classroom.name : msgRoomUnknown;
             
             const tsInactive = (ts && ts.is_active === false);
             const roomInactive = (classroom && classroom.is_active === false);
 
-            let inactiveClass = 'border-l-4 border-transparent';
+            // MODIFICATION RTL: border-l-4 devient border-s-4
+            let inactiveClass = 'border-s-4 border-transparent';
             if (tsInactive || roomInactive) {
-                inactiveClass = 'opacity-60 border-l-4 border-red-500';
+                inactiveClass = 'opacity-60 border-s-4 border-red-500';
             }
 
             const courseCard = document.createElement('div');
-            courseCard.className = `bg-white p-3 rounded-lg shadow-md border border-gray-200 mb-3 relative transition hover:shadow-lg ${inactiveClass}`;
+            // MODIFICATION: Suppression de relative, ajout de flex et group pour le bouton delete
+            courseCard.className = `group bg-white p-3 rounded-lg shadow-md border border-gray-200 mb-3 transition hover:shadow-lg flex justify-between items-start ${inactiveClass}`;
             
             let inactiveHtml = '';
             if (tsInactive) {
-                inactiveHtml += `<p class="text-xs text-red-600 font-semibold mt-1" title="Cette affectation professeur/matière n'est plus active."><i class="fas fa-exclamation-triangle mr-1"></i> Prof/Matière Inactif</p>`;
+                // MODIFICATION : flex gap-1
+                inactiveHtml += `<p class="flex items-center gap-1 text-xs text-red-600 font-semibold mt-1" title="${msgInactiveTsTitle}"><i class="fas fa-exclamation-triangle"></i> <span>${msgInactiveTs}</span></p>`;
             }
             if (roomInactive) {
-                inactiveHtml += `<p class="text-xs text-red-600 font-semibold mt-1" title="Cette salle n'est plus active."><i class="fas fa-exclamation-triangle mr-1"></i> Salle Inactive</p>`;
+                // MODIFICATION : flex gap-1
+                inactiveHtml += `<p class="flex items-center gap-1 text-xs text-red-600 font-semibold mt-1" title="${msgInactiveRoomTitle}"><i class="fas fa-exclamation-triangle"></i> <span>${msgInactiveRoom}</span></p>`;
             }
 
+            // MODIFICATION: Le contenu de la carte est dans une div (flex-1), et le bouton delete à côté, le tout géré par le flex-parent
             courseCard.innerHTML = `
-                <p class="text-sm font-bold text-gray-900">${subjectName}</p>
-                <p class="text-sm text-gray-600">${teacherName}</p>
-                <p class="text-xs text-gray-500 mt-1"><i class="fas fa-door-open mr-1"></i> ${roomName}</p>
-                <p class="text-sm font-semibold text-indigo-600 mt-2">
-                    <i class="fas fa-clock mr-1"></i>
-                    ${course.start_time.substring(0, 5)} - ${course.end_time.substring(0, 5)}
-                </p>
-                ${inactiveHtml}
-                <button class="delete-course-btn absolute top-2 right-2 text-red-400 hover:text-red-600 transition"
-                        data-course-pk="${course.pk}" title="Supprimer ce cours">
+                <div class="flex-1">
+                    <p class="text-sm font-bold text-gray-900">${subjectName}</p>
+                    <p class="text-sm text-gray-600">${teacherName}</p>
+                    <p class="flex items-center gap-1 text-xs text-gray-500 mt-1"><i class="fas fa-door-open"></i> <span>${roomName}</span></p>
+                    <p class="flex items-center gap-1 text-sm font-semibold text-indigo-600 mt-2" dir="ltr">
+                        <i class="fas fa-clock"></i>
+                        <span>${course.start_time.substring(0, 5)} - ${course.end_time.substring(0, 5)}</span>
+                    </p>
+                    ${inactiveHtml}
+                </div>
+                <button class="delete-course-btn text-gray-300 hover:text-red-600 transition p-1"
+                        data-course-pk="${course.pk}" title="${msgDeleteCourseTitle}">
                     <i class="fas fa-trash-alt"></i>
                 </button>
             `;
@@ -437,7 +486,6 @@ document.addEventListener('DOMContentLoaded', () => {
             if (dayContainer) dayContainer.appendChild(courseCard);
         });
 
-        // Event Listener pour les boutons delete
         document.querySelectorAll('.delete-course-btn').forEach(btn => {
             if (typeof handleDeleteCourseClick === 'function') {
                 btn.addEventListener('click', handleDeleteCourseClick);
@@ -445,27 +493,20 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-
     // --- 5. Logique d'Interaction (Ajout/Suppression de Cours) ---
 
-    /**
-     * Gère le clic sur le bouton "Supprimer" d'une carte de cours.
-     */
     function handleDeleteCourseClick(e) {
         const course_pk = e.currentTarget.dataset.coursePk;
         if (!course_pk) return;
 
-        openConfirmModal("Confirmation Suppression", "Voulez-vous retirer ce cours du modèle de planning ?", () => 
+        openConfirmModal(msgConfirmDelTitle, msgConfirmDelBody, () => 
             handleManageCourse('delete', parseInt(course_pk))
         );
     }
 
-    /**
-     * Gère le clic sur "Ajouter ce cours au modèle".
-     */
     async function handleAddCourseClick() {
         if (!currentTemplateId) {
-            showNotification("Veuillez d'abord enregistrer ou sélectionner un modèle.", 'error');
+            showNotification(msgTooltipSelectTemplate, 'error');
             return;
         }
 
@@ -476,30 +517,27 @@ document.addEventListener('DOMContentLoaded', () => {
         const classroom_id = parseInt(classroomSelect.value);
 
         if (!start_time || !end_time || !teacher_subject_id || !classroom_id) {
-            showNotification("Veuillez remplir tous les champs (jour, début, fin, prof, salle).", 'error');
+            showNotification(msgFillAllFields, 'error');
             return;
         }
         if (end_time <= start_time) {
-            showNotification("L'heure de fin doit être après l'heure de début.", 'error');
+            showNotification(msgEndBeforeStart, 'error');
             return;
         }
 
         if (isTimeInExceptions(start_time, end_time)) {
-            showNotification("Ce créneau chevauche les bornes horaires de l'école ou une pause (ex: déjeuner).", 'error');
+            showNotification(msgConflictSchoolHours, 'error');
             return;
         }
 
         if (isTemplateConflict(day_of_week, start_time, end_time)) {
-            showNotification("Conflit de classe: Ce créneau chevauche un autre cours déjà défini dans le modèle pour ce jour.", 'error');
+            showNotification(msgConflictTemplate, 'error');
             return;
         }
 
         await handleManageCourse('add', null, teacher_subject_id, classroom_id, day_of_week, start_time, end_time);
     }
 
-    /**
-     * Gère l'ajout/suppression d'un CourseTemplate via l'API.
-     */
     async function handleManageCourse(action, course_pk, teacher_subject_id = null, classroom_id = null, day_of_week = null, start_time = null, end_time = null) {
         const data = {
             action: action,
@@ -515,7 +553,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 classroom_id: classroom_id,
                 teacher_subject_id: teacher_subject_id
             });
-            // Ajout des secondes pour correspondre au format TimeField Django
             data.start_time = `${start_time}:00`;
             data.end_time = `${end_time}:00`;
         }
@@ -544,24 +581,21 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- 6. Logique de Gestion des Templates Hebdomadaires ---
 
-    /**
-     * Utilise la modale de saisie pour sauvegarder le modèle.
-     */
     async function handleSaveTemplate() {
         const isNew = templateSelect.value === 'NEW';
         const action = isNew ? 'create' : 'update';
         
-        const currentName = isNew ? "Nouveau Modèle" : templateSelect.options[templateSelect.selectedIndex].text;
+        const currentName = isNew ? msgNewTemplate : templateSelect.options[templateSelect.selectedIndex].text;
         
         const contentHtml = `
-            <label for="modal-input-field" class="block text-sm font-semibold text-gray-700">Nom du modèle :</label>
+            <label for="modal-input-field" class="block text-sm font-semibold text-gray-700">${msgTemplateNameLabel}</label>
             <input type="text" id="modal-input-field" class="w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm" value="${currentName}">
         `;
 
-        openInputModal("Enregistrer le Modèle", contentHtml, async (inputValue) => {
+        openInputModal(msgSaveTemplateTitle, contentHtml, async (inputValue) => {
             const templateName = inputValue.name;
             if (!templateName) {
-                showNotification("Le nom ne peut pas être vide.", 'error');
+                showNotification(msgNameCannotBeEmpty, 'error');
                 return;
             }
 
@@ -599,49 +633,45 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- 7. Logique de Génération des Cours Réels ---
 
-    /**
-     * Gère la génération multi-semaines.
-     */
     async function handleCreateScheduledCourses() {
         if (!currentTemplateId || currentCourseTemplates.length === 0) {
-            showNotification("Le modèle de semaine est vide ou non sauvegardé.", 'error');
+            showNotification(msgErrEmptyTemplate, 'error');
             return;
         }
 
         const contentHtml = `
             <div class="space-y-4">
-                <div class="p-3 rounded-lg bg-gray-100 text-sm text-gray-700">
-                    <p><strong>Année scolaire :</strong> du ${CONFIG.yearStartDate} au ${CONFIG.yearEndDate}</p>
+                <div class="p-3 rounded-lg bg-gray-100 text-sm text-gray-700" dir="ltr">
+                    <p><strong>${msgSchoolYearDuration}</strong> <span dir="ltr">${CONFIG.yearStartDate} - ${CONFIG.yearEndDate}</span></p>
                 </div>
                 <div>
-                    <label for="modal-input-start-date" class="block text-sm font-semibold text-gray-700">Date de début (Lundi)</label>
+                    <label for="modal-input-start-date" class="block text-sm font-semibold text-gray-700">${msgStartDateMonday}</label>
                     <input type="date" id="modal-input-start-date" class="w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm"
                            min="${CONFIG.yearStartDate}" max="${CONFIG.yearEndDate}">
-                    <p class="text-xs text-gray-500">Doit être un Lundi, dans l'année scolaire.</p>
+                    <p class="text-xs text-gray-500">${msgMustBeMonday}</p>
                 </div>
                 <div>
-                    <label for="modal-input-end-date" class="block text-sm font-semibold text-gray-700">Date de fin (Dimanche)</label>
+                    <label for="modal-input-end-date" class="block text-sm font-semibold text-gray-700">${msgEndDateSunday}</label>
                     <input type="date" id="modal-input-end-date" class="w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm"
                            min="${CONFIG.yearStartDate}" max="${CONFIG.yearEndDate}">
-                    <p class="text-xs text-gray-500">Doit être un Dimanche, dans l'année scolaire.</p>
+                    <p class="text-xs text-gray-500">${msgMustBeSunday}</p>
                 </div>
             </div>
         `;
 
-        openInputModal("Générer les Cours Réels", contentHtml, (inputs) => {
+        openInputModal(msgGenerateRealCourses, contentHtml, (inputs) => {
             const { dateDebut, dateFin } = inputs;
 
-            // Validation
             if (!dateDebut || !dateFin) {
-                showNotification("Les deux dates (début et fin) sont obligatoires.", 'error');
+                showNotification(msgBothDatesRequired, 'error');
                 return;
             }
             if (dateFin < dateDebut) {
-                showNotification("La date de fin doit être après la date de début.", 'error');
+                showNotification(msgEndBeforeStart, 'error');
                 return;
             }
             if (dateDebut < CONFIG.yearStartDate || dateFin > CONFIG.yearEndDate) {
-                showNotification("Les dates doivent être à l'intérieur de l'année scolaire.", 'error');
+                showNotification(msgDatesOutsideYear, 'error');
                 return;
             }
 
@@ -649,21 +679,20 @@ document.addEventListener('DOMContentLoaded', () => {
             const endDate = new Date(dateFin.replace(/-/g, '/'));
 
             if (startDate.getDay() !== 1) { 
-                showNotification("La date de début doit être un LUNDI.", 'error');
+                showNotification(msgErrNotMonday, 'error');
                 return;
             }
             if (endDate.getDay() !== 0) { 
-                showNotification("La date de fin doit être un DIMANCHE.", 'error');
+                showNotification(msgErrNotSunday, 'error');
                 return;
             }
 
             const exceptionType = getDayExceptionType(startDate);
             if (exceptionType) {
-                showNotification(`La date de début tombe pendant : ${exceptionType}.`, 'error');
+                showNotification(msgExceptionConflict.replace('{type}', exceptionType), 'error');
                 return;
             }
             
-            // Boucle de génération
             let allCourses_list = [];
             let totalSkippedCount = 0;
             let currentMonday = new Date(startDate.getTime());
@@ -688,10 +717,8 @@ document.addEventListener('DOMContentLoaded', () => {
                     const start_datetime = new Date(courseDate.getFullYear(), courseDate.getMonth(), courseDate.getDate(), start_h, start_m);
                     const end_datetime = new Date(courseDate.getFullYear(), courseDate.getMonth(), courseDate.getDate(), end_h, end_m);
 
-                    // Correction du décalage horaire pour l'envoi JSON (ISO String en UTC peut décaler le jour)
-                    // On utilise une astuce pour garder l'heure locale
                     const toLocalISOString = (date) => {
-                        const tzOffset = date.getTimezoneOffset() * 60000; // offset in milliseconds
+                        const tzOffset = date.getTimezoneOffset() * 60000;
                         return (new Date(date - tzOffset)).toISOString().slice(0, -1);
                     };
 
@@ -699,7 +726,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         teacher_subject_id: course.teacher_subject__id,
                         classroom_id: course.classroom__id,
                         student_class_id: parseInt(CONFIG.classPk),
-                        start_datetime: toLocalISOString(start_datetime), // Utilisation de l'heure locale formatée ISO
+                        start_datetime: toLocalISOString(start_datetime),
                         end_datetime: toLocalISOString(end_datetime),
                     };
                 }).filter(Boolean);
@@ -710,22 +737,22 @@ document.addEventListener('DOMContentLoaded', () => {
             }
 
             if (allCourses_list.length === 0) {
-                showNotification("Aucun cours à générer (tous tombent sur des jours d'exception ou plage invalide).", 'info');
+                showNotification(msgNoCoursesToGenerate, 'info');
                 return;
             }
 
-            let confirmationMessage = `Confirmez-vous la création de ${allCourses_list.length} cours réels du ${dateDebut} au ${dateFin} ?`;
+            let confirmationMessage = msgConfirmGenBody.replace('{count}', allCourses_list.length).replace('{start}', dateDebut).replace('{end}', dateFin);
             if (totalSkippedCount > 0) {
-                confirmationMessage += ` (${totalSkippedCount} cours ignorés car tombant sur des jours d'exception).`;
+                confirmationMessage += msgConfirmGenSkipped.replace('{count}', totalSkippedCount);
             }
 
-            openConfirmModal(`Génération en Masse`, confirmationMessage, async () => {
+            openConfirmModal(msgConfirmGenTitle, confirmationMessage, async () => {
                 const payload = { courses_list: allCourses_list, year_id: CONFIG.yearPk };
                 const result = await apiFetch(CONFIG.urls.createScheduled, payload);
 
                 if (!result.success && result.errors) {
                     const errorMessages = result.errors.map(err => `<li>${err.reason}</li>`).join('');
-                    showNotification(`${result.message}<br><ul>${errorMessages}</ul>`, 'error');
+                    showNotification(`${result.message}<br><ul class="list-disc ms-4 mt-2">${errorMessages}</ul>`, 'error');
                 } else if (result.success) {
                     showNotification(result.message, 'success');
                 }
@@ -740,7 +767,6 @@ document.addEventListener('DOMContentLoaded', () => {
         modalTitle.innerHTML = title;
         modalMessage.innerHTML = message;
         
-        // Clone pour nettoyer les anciens écouteurs
         let currentConfirmBtn = document.getElementById('modal-confirm-btn');
         const newConfirmBtn = currentConfirmBtn.cloneNode(true);
         currentConfirmBtn.parentNode.replaceChild(newConfirmBtn, currentConfirmBtn);
@@ -804,11 +830,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- 9. Initialisation et Événements ---
 
-    // Initialisation
     parseInitialData();
     populateSelects();
 
-    // Événements globaux
     if(templateSelect) {
         templateSelect.addEventListener('change', (e) => {
             currentTemplateId = e.target.value === 'NEW' ? null : parseInt(e.target.value);

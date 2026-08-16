@@ -1,6 +1,6 @@
 /**
  * manage_levels.js
- * Gestion des Niveaux Scolaires (Mode Production Safe)
+ * Gestion des Niveaux Scolaires (Mode Production Safe, Multilingue & RTL)
  */
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -15,6 +15,18 @@ document.addEventListener('DOMContentLoaded', () => {
     const API_URL = container.dataset.apiUrl;
     const csrfInput = document.querySelector('[name=csrfmiddlewaretoken]');
     const CSRF_TOKEN = csrfInput ? csrfInput.value : '';
+
+    // Récupération des traductions dynamiques (data-attributes)
+    const msgSuccessTitle = container.getAttribute('data-msg-success-title') || "Succès";
+    const msgErrorTitle = container.getAttribute('data-msg-error-title') || "Erreur";
+    const msgCreateTitle = container.getAttribute('data-msg-create-title') || "Ajouter un Nouveau Niveau";
+    const msgUpdateTitleFormat = container.getAttribute('data-msg-update-title') || "Modifier le Niveau: {name}";
+    const msgBtnSave = container.getAttribute('data-msg-btn-save') || "Enregistrer";
+    const msgBtnUpdate = container.getAttribute('data-msg-btn-update') || "Mettre à Jour";
+    const msgNetworkError = container.getAttribute('data-msg-network-error') || "Erreur réseau.";
+    const msgEmptyRow = container.getAttribute('data-msg-empty-row') || "Aucun niveau scolaire trouvé pour cette école.";
+    const msgEditTitle = container.getAttribute('data-msg-edit-title') || "Modifier";
+    const msgDeleteTitle = container.getAttribute('data-msg-delete-title') || "Supprimer";
 
     // Lecture sécurisée des JSON scripts (données statiques)
     let levelChoicesData = [];
@@ -78,7 +90,7 @@ document.addEventListener('DOMContentLoaded', () => {
             : `<i class="fas fa-exclamation-triangle text-2xl ${errorColor}"></i>`;
 
         modalIconContainer.innerHTML = icon;
-        modalTitleMsg.textContent = isSuccess ? 'Succès' : 'Erreur';
+        modalTitleMsg.textContent = isSuccess ? msgSuccessTitle : msgErrorTitle;
         modalMessage.textContent = message;
         
         modalContentMsg.classList.remove('border-emerald-500', 'border-red-500');
@@ -109,20 +121,19 @@ document.addEventListener('DOMContentLoaded', () => {
         levelForm.reset();
         levelIdInput.value = '';
         actionTypeInput.value = 'create';
-        modalTitle.textContent = 'Ajouter un Nouveau Niveau';
+        modalTitle.textContent = msgCreateTitle;
         
-        submitButton.textContent = 'Enregistrer';
+        submitButton.textContent = msgBtnSave;
         submitButton.classList.remove('bg-red-600', 'hover:bg-red-700');
         submitButton.classList.add('bg-emerald-600', 'hover:bg-emerald-700');
 
         const submitIcon = submitButton.querySelector('i');
-        if (submitIcon) submitIcon.className = 'fas fa-save mr-2';
+        if (submitIcon) submitIcon.className = 'fas fa-save';
 
         levelModal.classList.remove('hidden');
         levelModal.classList.add('flex');
     }
 
-    // Anciennement openModalById
     function openEditModal(rowElement) {
         const id = rowElement.dataset.id;
         
@@ -131,14 +142,14 @@ document.addEventListener('DOMContentLoaded', () => {
         levelCodeSelect.value = rowElement.dataset.levelCode;
         termTypeSelect.value = rowElement.dataset.termType;
 
-        modalTitle.textContent = `Modifier le Niveau: ${rowElement.dataset.levelDisplay}`;
-        submitButton.textContent = 'Mettre à Jour';
+        modalTitle.textContent = msgUpdateTitleFormat.replace('{name}', rowElement.dataset.levelDisplay);
+        submitButton.textContent = msgBtnUpdate;
         
         submitButton.classList.remove('bg-red-600', 'hover:bg-red-700');
         submitButton.classList.add('bg-emerald-600', 'hover:bg-emerald-700');
 
         const submitIcon = submitButton.querySelector('i');
-        if (submitIcon) submitIcon.className = 'fas fa-edit mr-2';
+        if (submitIcon) submitIcon.className = 'fas fa-edit';
 
         levelModal.classList.remove('hidden');
         levelModal.classList.add('flex');
@@ -155,7 +166,6 @@ document.addEventListener('DOMContentLoaded', () => {
         levelToDeleteId = null;
     }
 
-    // Anciennement handleDeleteLevel
     function openDeleteConfirm(id, levelName) {
         levelToDeleteId = id;
         confirmLevelName.textContent = levelName;
@@ -203,7 +213,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 showMessageModal(false, result.message || `Erreur ${response.status}`);
             }
         } catch (error) {
-            showMessageModal(false, 'Erreur réseau.');
+            showMessageModal(false, msgNetworkError);
             console.error('Erreur API:', error);
         } finally {
             if (action !== 'delete') {
@@ -220,7 +230,6 @@ document.addEventListener('DOMContentLoaded', () => {
         let count = parseInt(levelCountDisplay.textContent);
 
         if (action === 'create') {
-            // Création de la nouvelle ligne sans onclick, avec classes JS
             const newRow = document.createElement('tr');
             newRow.id = `level-row-${levelId}`;
             newRow.dataset.id = levelId;
@@ -229,16 +238,19 @@ document.addEventListener('DOMContentLoaded', () => {
             newRow.dataset.termType = data.term_type;
             newRow.className = "hover:bg-emerald-50/50 transition duration-100";
             
+            // Séparation icône + texte avec gap-2 (et ms-3 pour l'espacement logique à la place de ml-3)
             newRow.innerHTML = `
-                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${levelDisplay}</td>
-                <td class="px-6 py-4 whitespace-nowrap hidden sm:table-cell text-sm text-gray-500">${termDisplay}</td>
-                <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                    <button type="button" class="js-edit-btn text-emerald-600 hover:text-emerald-800 p-2 rounded-full hover:bg-gray-100 transition duration-150" title="Modifier">
-                        <i class="fas fa-edit pointer-events-none"></i>
-                    </button>
-                    <button type="button" class="js-delete-btn text-red-600 hover:text-red-800 ml-3 p-2 rounded-full hover:bg-gray-100 transition duration-150" title="Supprimer">
-                        <i class="fas fa-trash-alt pointer-events-none"></i>
-                    </button>
+                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900" dir="auto">${escapeHtml(levelDisplay)}</td>
+                <td class="px-6 py-4 whitespace-nowrap hidden sm:table-cell text-sm text-gray-500" dir="auto">${escapeHtml(termDisplay)}</td>
+                <td class="px-6 py-4 whitespace-nowrap text-end text-sm font-medium">
+                    <div class="inline-flex items-center gap-2">
+                        <button type="button" class="js-edit-btn text-emerald-600 hover:text-emerald-800 p-2 rounded-full hover:bg-gray-100 transition duration-150 inline-flex items-center justify-center" title="${msgEditTitle}">
+                            <i class="fas fa-edit pointer-events-none"></i>
+                        </button>
+                        <button type="button" class="js-delete-btn text-red-600 hover:text-red-800 p-2 rounded-full hover:bg-gray-100 transition duration-150 inline-flex items-center justify-center" title="${msgDeleteTitle}">
+                            <i class="fas fa-trash-alt pointer-events-none"></i>
+                        </button>
+                    </div>
                 </td>
             `;
             
@@ -258,7 +270,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 
                 row.children[0].textContent = levelDisplay;
                 row.children[1].textContent = termDisplay;
-                // Pas besoin de mettre à jour les boutons car ils utilisent la délégation
             }
 
         } else if (action === 'delete') {
@@ -271,7 +282,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (parseInt(levelCountDisplay.textContent) === 0) {
                 const emptyRow = document.createElement('tr');
                 emptyRow.id = "no-level-row";
-                emptyRow.innerHTML = `<td colspan="3" class="px-6 py-4 text-center text-gray-500">Aucun niveau scolaire trouvé pour cette école.</td>`;
+                emptyRow.innerHTML = `<td colspan="3" class="px-6 py-4 text-center text-gray-500" dir="auto">${escapeHtml(msgEmptyRow)}</td>`;
                 levelsTableBody.appendChild(emptyRow);
             }
         }
@@ -282,10 +293,8 @@ document.addEventListener('DOMContentLoaded', () => {
     // 5. ÉCOUTEURS D'ÉVÉNEMENTS (Délégation)
     // ----------------------------------------------------------------------
 
-    // Bouton Créer
     document.getElementById('open-create-modal-btn')?.addEventListener('click', openCreateModal);
 
-    // Bouton Confirmer Suppression
     if(confirmDeleteBtn) {
         confirmDeleteBtn.addEventListener('click', () => {
             if (levelToDeleteId) {
@@ -295,7 +304,6 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // Soumission Formulaire
     if(levelForm) {
         levelForm.addEventListener('submit', function(e) {
             e.preventDefault();
@@ -309,7 +317,6 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // DÉLÉGATION SUR LE TABLEAU (Edit / Delete)
     if(levelsTableBody) {
         levelsTableBody.addEventListener('click', (e) => {
             const editBtn = e.target.closest('.js-edit-btn');
@@ -328,7 +335,6 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // Fermeture Modales (Boutons X ou Annuler)
     const closeBtns = document.querySelectorAll('.js-close-modal, .js-close-confirm-modal, .js-close-msg-modal');
     closeBtns.forEach(btn => {
         btn.addEventListener('click', (e) => {
@@ -338,7 +344,6 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 
-    // Fermeture Clic Outside / Escape
     [levelModal, messageModal, confirmModal].forEach(modal => {
         if(!modal) return;
         modal.addEventListener('click', (e) => {
@@ -357,5 +362,12 @@ document.addEventListener('DOMContentLoaded', () => {
             if (confirmModal && !confirmModal.classList.contains('hidden')) closeConfirmModal();
         }
     });
+
+    function escapeHtml(text) {
+        if (!text) return '';
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
+    }
 
 });

@@ -1,11 +1,5 @@
 /**
  * Gestion de la page de profil utilisateur.
- * - Changement de mot de passe via API
- * - Afficher/Masquer le mot de passe
- * - Gestion de la photo de profil (Upload/Delete)
- * * VERSION SÉCURISÉE (CSP Compliant) :
- * - Plus de dépendance à window.PROFILE_CONFIG
- * - Récupération des URLs via data-attributes
  */
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -24,11 +18,24 @@ document.addEventListener('DOMContentLoaded', () => {
     const profileImgDisplay = document.getElementById('profile-image-display');
     const profileInitialsDisplay = document.getElementById('profile-initials-display');
     const btnDeletePhoto = document.getElementById('btn-delete-photo');
-    const triggerUploadBtn = document.getElementById('trigger-upload-btn'); // Bouton caméra
+    const triggerUploadBtn = document.getElementById('trigger-upload-btn'); 
 
-    // URLs API (récupérées depuis les data-attributes)
+    // URLs API
     const apiChangePasswordUrl = form ? form.getAttribute('data-api-url') : null;
     const apiProfilePictureUrl = profileInput ? profileInput.getAttribute('data-api-url') : null;
+
+    // Récupération des Textes Traduits
+    const msgMismatch = form ? form.dataset.msgMismatch : "Les nouveaux mots de passe ne correspondent pas.";
+    const msgShort = form ? form.dataset.msgShort : "Le mot de passe doit faire au moins 4 caractères.";
+    const msgTechError = form ? form.dataset.msgTechError : "Une erreur technique est survenue.";
+    const msgProcessing = form ? form.dataset.msgProcessing : "Traitement...";
+    
+    const msgErrorUpdate = profileInput ? profileInput.dataset.msgErrorUpdate : "Impossible de mettre à jour la photo.";
+    const msgErrorPrefix = profileInput ? profileInput.dataset.msgErrorPrefix : "Erreur :";
+    
+    const modalFooter = document.querySelector('.sm\\:flex-row-reverse');
+    const msgErrorDelete = modalFooter ? modalFooter.dataset.msgErrorDelete : "Impossible de supprimer la photo.";
+
 
     // =================================================================
     // 1. TOGGLE PASSWORD VISIBILITY (Afficher/Masquer)
@@ -65,7 +72,8 @@ document.addEventListener('DOMContentLoaded', () => {
             hideMessage();
             const originalBtnText = submitBtn.innerHTML;
             submitBtn.disabled = true;
-            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> Traitement...';
+            // Utilisation du message traduit et de me-2 au lieu de mr-2 pour l'icône de chargement
+            submitBtn.innerHTML = `<i class="fas fa-spinner fa-spin me-2"></i> ${msgProcessing}`;
             
             // --- B. Récupération des données ---
             const currentPassword = document.getElementById('current_password').value;
@@ -74,13 +82,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
             // --- C. Validation Client basique ---
             if (newPassword !== confirmPassword) {
-                showMessage("Les nouveaux mots de passe ne correspondent pas.", "error");
+                showMessage(msgMismatch, "error");
                 resetButton(originalBtnText);
                 return;
             }
             
             if (newPassword.length < 4) {
-                showMessage("Le mot de passe doit faire au moins 4 caractères.", "error");
+                showMessage(msgShort, "error");
                 resetButton(originalBtnText);
                 return;
             }
@@ -105,7 +113,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 const result = await response.json();
 
                 if (result.success) {
-                    showMessage(result.message, "success");
+                    showMessage(result.message, "success"); // result.message est déjà traduit par le backend Python
                     form.reset(); 
                 } else {
                     showMessage(result.message, "error");
@@ -113,7 +121,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
             } catch (error) {
                 console.error("Erreur API MDP:", error);
-                showMessage("Une erreur technique est survenue.", "error");
+                showMessage(msgTechError, "error");
             } finally {
                 resetButton(originalBtnText);
             }
@@ -124,28 +132,23 @@ document.addEventListener('DOMContentLoaded', () => {
     // 3. GESTION DE LA PHOTO DE PROFIL
     // =================================================================
 
-    // --- A. Trigger Upload (Clic sur l'icône caméra) ---
-    // Remplace le onclick="..." qui a été supprimé du HTML
     if (triggerUploadBtn && profileInput) {
         triggerUploadBtn.addEventListener('click', () => {
             profileInput.click();
         });
     }
 
-    // --- B. Upload d'une nouvelle image ---
     if (profileInput) {
         profileInput.addEventListener('change', async function(e) {
             const file = e.target.files[0];
             if (!file) return;
 
-            // Préparation des données
             const formData = new FormData();
             formData.append('profile_picture', file);
 
             try {
                 if (!apiProfilePictureUrl) throw new Error("URL API Photo manquante");
 
-                // Petit effet visuel d'attente
                 if(profileImgDisplay) profileImgDisplay.style.opacity = '0.5';
 
                 const response = await fetch(apiProfilePictureUrl, {
@@ -159,23 +162,17 @@ document.addEventListener('DOMContentLoaded', () => {
                 const result = await response.json();
 
                 if (result.success) {
-                    // 1. Mettre à jour la source
                     profileImgDisplay.src = result.new_image_url; 
-                    
-                    // 2. Afficher l'image et cacher les initiales
                     profileImgDisplay.classList.remove('hidden');
                     if (profileInitialsDisplay) profileInitialsDisplay.classList.add('hidden');
-                    
-                    // 3. Afficher le bouton supprimer
                     if (btnDeletePhoto) btnDeletePhoto.classList.remove('hidden');
-
                 } else {
-                    alert("Erreur : " + result.message);
+                    alert(`${msgErrorPrefix} ${result.message}`);
                 }
 
             } catch (error) {
                 console.error("Erreur API Photo:", error);
-                alert("Impossible de mettre à jour la photo.");
+                alert(msgErrorUpdate);
             } finally {
                 if(profileImgDisplay) profileImgDisplay.style.opacity = '1';
                 profileInput.value = ''; 
@@ -183,12 +180,10 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // --- C. Suppression de l'image (AVEC MODAL) ---
     const deleteModal = document.getElementById('delete-photo-modal');
     const confirmDeleteBtn = document.getElementById('confirm-delete-btn');
     const modalCancelBtn = document.getElementById('modal-cancel-btn');
 
-    // 1. Ouvrir la modale
     if (btnDeletePhoto) {
         btnDeletePhoto.addEventListener('click', function(e) {
             e.preventDefault();
@@ -196,14 +191,12 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // 2. Fermer la modale (Nouveau gestionnaire pour le bouton Annuler)
     if (modalCancelBtn && deleteModal) {
         modalCancelBtn.addEventListener('click', () => {
             deleteModal.classList.add('hidden');
         });
     }
 
-    // 3. Action réelle de suppression
     if (confirmDeleteBtn) {
         confirmDeleteBtn.addEventListener('click', async function() {
             
@@ -223,23 +216,19 @@ document.addEventListener('DOMContentLoaded', () => {
                 const result = await response.json();
 
                 if (result.success) {
-                    // Mise à jour UI
                     if (profileImgDisplay) {
                         profileImgDisplay.classList.add('hidden');
                         profileImgDisplay.src = '#';
                     }
-                    
                     if (profileInitialsDisplay) profileInitialsDisplay.classList.remove('hidden');
-                    
                     if (btnDeletePhoto) btnDeletePhoto.classList.add('hidden');
-
                 } else {
-                    alert("Erreur : " + result.message);
+                    alert(`${msgErrorPrefix} ${result.message}`);
                 }
 
             } catch (error) {
                 console.error("Erreur API Suppression:", error);
-                alert("Impossible de supprimer la photo.");
+                alert(msgErrorDelete);
             }
         });
     }
@@ -249,14 +238,17 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function showMessage(message, type) {
         messageArea.classList.remove('hidden', 'bg-green-100', 'text-green-800', 'border-green-200', 'bg-red-100', 'text-red-800', 'border-red-200');
-        messageArea.classList.add('border', 'border-l-4');
+        // MODIFICATION RTL : border-l-4 devient border-s-4
+        messageArea.classList.add('border', 'border-s-4');
         
         if (type === 'success') {
             messageArea.classList.add('bg-green-50', 'text-green-800', 'border-green-500');
-            messageArea.innerHTML = `<i class="fas fa-check-circle mr-2"></i> ${message}`;
+            // MODIFICATION RTL : mr-2 devient me-2
+            messageArea.innerHTML = `<i class="fas fa-check-circle me-2"></i> ${message}`;
         } else {
             messageArea.classList.add('bg-red-50', 'text-red-800', 'border-red-500');
-            messageArea.innerHTML = `<i class="fas fa-exclamation-circle mr-2"></i> ${message}`;
+            // MODIFICATION RTL : mr-2 devient me-2
+            messageArea.innerHTML = `<i class="fas fa-exclamation-circle me-2"></i> ${message}`;
         }
     }
 

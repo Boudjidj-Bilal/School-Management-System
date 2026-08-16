@@ -1,6 +1,6 @@
 // ====================================================================
 // LOGIQUE JAVASCRIPT POUR le HUB D'ÉVALUATIONS (grades_dashboard.js)
-// VERSION SÉCURISÉE (CSP Compliant) & CORRIGÉE
+// VERSION SÉCURISÉE (CSP Compliant), CORRIGÉE & MULTILINGUE (Partie 1/2)
 // ====================================================================
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -8,7 +8,6 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- 1. CONFIGURATION & CONTEXTE ---
     const container = document.getElementById('grades-dashboard-container');
     
-    // Récupération robuste du CSRF (Input standard Django ou custom)
     const csrfInput = document.querySelector('[name=csrfmiddlewaretoken]') || document.getElementById('csrf-token');
     const CSRF_TOKEN_VALUE = csrfInput ? csrfInput.value : '';
 
@@ -17,11 +16,35 @@ document.addEventListener('DOMContentLoaded', () => {
         return;
     }
 
+    // Récupération des traductions dynamiques (via dataset du conteneur HTML)
+    const msgErrorNoCsrf = container.getAttribute('data-msg-error-no-csrf') || 'Erreur critique : Token CSRF introuvable.';
+    const msgAccessDenied = container.getAttribute('data-msg-access-denied') || 'Accès refusé. Vérifiez vos droits ou rafraîchissez la page.';
+    const msgServerError = container.getAttribute('data-msg-server-error') || 'Erreur serveur.';
+    const msgConnectionError = container.getAttribute('data-msg-connection-error') || 'Erreur de connexion.';
+    const msgDataLoadError = container.getAttribute('data-msg-data-load-error') || 'Erreur critique au chargement des données.';
+    const msgEditView = container.getAttribute('data-msg-edit-view') || 'Voir / Modifier';
+    const msgViewGrades = container.getAttribute('data-msg-view-grades') || 'Voir les notes';
+    const msgDeleteEval = container.getAttribute('data-msg-delete-eval') || "Supprimer l'évaluation";
+    const msgNoAverages = container.getAttribute('data-msg-no-averages') || 'Aucune moyenne à afficher.';
+    const msgMainEval = container.getAttribute('data-msg-main-eval') || 'Principale';
+    const msgCoeff = container.getAttribute('data-msg-coeff') || 'Coeff:';
+    const msgOutOf = container.getAttribute('data-msg-out-of') || 'Sur:';
+    const msgNoEvaluations = container.getAttribute('data-msg-no-evaluations') || 'Aucune évaluation pour ce trimestre.';
+    const msgNa = container.getAttribute('data-msg-na') || 'N/A';
+
+    const msgAddEvalTitle = container.getAttribute('data-msg-add-eval-title') || "Ajouter une Évaluation";
+    const msgEditEvalTitle = container.getAttribute('data-msg-edit-eval-title') || "Modifier l'Évaluation";
+    const msgAbsent = container.getAttribute('data-msg-absent') || "Absent";
+    const msgUnauthorized = container.getAttribute('data-msg-unauthorized') || "Action non autorisée.";
+    const msgInvalidMaxGrade = container.getAttribute('data-msg-invalid-max-grade') || "Veuillez entrer un 'Noté sur' valide.";
+    const msgGradesExceedMax = container.getAttribute('data-msg-grades-exceed-max') || "Certaines notes dépassent le maximum.";
+    const msgDeleteEvalTitle = container.getAttribute('data-msg-delete-eval-title') || "Supprimer l'évaluation";
+    const msgDeleteEvalBody = container.getAttribute('data-msg-delete-eval-body') || "Êtes-vous sûr de vouloir supprimer <strong>{name}</strong> ?<br>Toutes les notes associées seront perdues.";    
+
     if (!CSRF_TOKEN_VALUE) {
-        console.error("Erreur critique : Token CSRF introuvable.");
+        console.error(msgErrorNoCsrf);
     }
 
-    // Récupération de la configuration depuis les data-attributes
     const CONFIG = {
         staffPk: container.dataset.staffPk,
         canEdit: container.dataset.canEdit === 'true',
@@ -32,11 +55,10 @@ document.addEventListener('DOMContentLoaded', () => {
         csrfToken: CSRF_TOKEN_VALUE
     };
 
-    // État global de l'application
     const STATE = {
         mainClassData: {},
         taughtClassesData: {},
-        onConfirmCallback: null // Fonction à exécuter après confirmation
+        onConfirmCallback: null 
     };
 
 
@@ -45,12 +67,10 @@ document.addEventListener('DOMContentLoaded', () => {
     const subjectClassContainer = document.getElementById('subject-class-container');
     const notificationArea = document.getElementById('notification-area');
 
-    // Modales
     const genericConfirmModal = document.getElementById('generic-confirm-modal');
     const evaluationModal = document.getElementById('evaluation-modal');
     const evaluationForm = document.getElementById('evaluation-form');
     
-    // Champs Formulaire Évaluation
     const evalIdInput = document.getElementById('eval-id-input');
     const evalClassIdInput = document.getElementById('eval-class-id-input');
     const evalTsIdInput = document.getElementById('eval-ts-id-input');
@@ -62,7 +82,6 @@ document.addEventListener('DOMContentLoaded', () => {
     
     const studentGradesListContainer = document.getElementById('student-grades-list-container');
     
-    // Boutons Modales
     const evaluationModalCancelBtn = document.getElementById('evaluation-modal-cancel-btn');
     const evaluationModalSaveBtn = document.getElementById('evaluation-modal-save-btn');
     const genericConfirmCancelBtn = document.getElementById('generic-confirm-cancel-btn');
@@ -78,25 +97,20 @@ document.addEventListener('DOMContentLoaded', () => {
         const icon = type === 'success' ? 'fa-check-circle' : 'fa-exclamation-circle';
 
         const div = document.createElement('div');
-        div.className = `p-4 rounded-xl border shadow-md flex items-center mb-4 transition-all duration-300 ${colorClass}`;
-        div.innerHTML = `<i class="fas ${icon} mr-3 text-lg"></i><p class="font-semibold">${message}</p>`;
+        // MODIFICATION : flex items-center gap-3 pour espacer l'icône du texte
+        div.className = `p-4 rounded-xl border shadow-md flex items-center gap-3 mb-4 transition-all duration-300 ${colorClass}`;
+        div.innerHTML = `<i class="fas ${icon} text-lg"></i><p class="font-semibold">${message}</p>`;
 
         notificationArea.prepend(div);
         
-        // Animation d'entrée
         setTimeout(() => div.classList.remove('opacity-0', '-translate-y-2'), 10);
-        // Disparition auto
         setTimeout(() => {
             div.classList.add('opacity-0', '-translate-y-2');
             div.addEventListener('transitionend', () => div.remove());
         }, 5000);
     }
 
-    /**
-     * Fonction d'appel API centralisée
-     */
     async function apiFetch(url, payload) {
-        // On ajoute toujours l'ID du staff pour le contexte
         payload.staff_id = CONFIG.staffPk;
 
         try {
@@ -110,19 +124,18 @@ document.addEventListener('DOMContentLoaded', () => {
             });
 
             if (response.status === 403) {
-                console.error("Erreur 403 Forbidden : Problème de CSRF ou de Permissions.");
-                showNotification("Accès refusé. Vérifiez vos droits ou rafraîchissez la page.", 'error');
+                console.error("Erreur 403 Forbidden");
+                showNotification(msgAccessDenied, 'error');
                 return { success: false };
             }
 
             const json = await response.json();
 
             if (!response.ok) {
-                showNotification(json.message || "Erreur serveur.", 'error');
+                showNotification(json.message || msgServerError, 'error');
                 return { success: false };
             }
 
-            // Notification de succès (sauf pour lecture seule)
             if (json.success && payload.action !== 'get_details' && url !== CONFIG.urls.getTermData) {
                 showNotification(json.message, 'success');
             }
@@ -131,7 +144,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         } catch (error) {
             console.error("Erreur API :", error);
-            showNotification("Erreur de connexion.", 'error');
+            showNotification(msgConnectionError, 'error');
             return { success: false };
         }
     }
@@ -142,12 +155,11 @@ document.addEventListener('DOMContentLoaded', () => {
             if (scriptTag) {
                 const data = JSON.parse(scriptTag.textContent);
                 STATE.mainClassData = data.main_class_data || {};
-                STATE.taughtClassesData = data.taught_classes_data || {}; // Clé snake_case venant de Django
-                console.log("Données chargées.");
+                STATE.taughtClassesData = data.taught_classes_data || {}; 
             }
         } catch (e) {
             console.error("Erreur parsing JSON:", e);
-            showNotification("Erreur critique au chargement des données.", 'error');
+            showNotification(msgDataLoadError, 'error');
         }
     }
 
@@ -159,7 +171,6 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!block) return;
 
         let dataBlock;
-        // Détermine si c'est un bloc matière (ex: "1-5") ou prof principal (ex: "1")
         if (contextKey.includes('-')) {
             dataBlock = STATE.taughtClassesData[contextKey];
         } else {
@@ -168,9 +179,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
         if (!dataBlock) return;
 
-        // Si l'ID du terme n'est pas fourni, on cherche celui de l'onglet actif
         if (!activeTermId) {
-            const activeTab = block.querySelector('.border-b-2'); // Classe de l'onglet actif
+            const activeTab = block.querySelector('.border-b-2'); 
             if (activeTab) {
                 activeTermId = activeTab.dataset.termId;
             } else {
@@ -181,11 +191,9 @@ document.addEventListener('DOMContentLoaded', () => {
         
         const termInfo = dataBlock.available_terms.find(t => t.id == activeTermId);
         
-        // RÈGLE : Modifiable si Admin/Prof (CONFIG.canEdit) ET Trimestre NON FINI
         const isFinished = termInfo ? termInfo.finished : true;
         const isEditable = CONFIG.canEdit && !isFinished;
 
-        // 1. Bouton "Ajouter Évaluation"
         const addBtn = block.querySelector('.add-eval-btn');
         if (addBtn) {
             addBtn.disabled = !isEditable;
@@ -200,15 +208,13 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         }
 
-        // 2. Boutons d'édition
         block.querySelectorAll('.edit-eval-btn').forEach(btn => {
             const textSpan = btn.querySelector('span');
             if (textSpan) {
-                textSpan.textContent = isEditable ? 'Voir / Modifier' : 'Voir les notes';
+                textSpan.textContent = isEditable ? msgEditView : msgViewGrades;
             }
         });
         
-        // 3. Boutons Supprimer
         block.querySelectorAll('.delete-eval-btn').forEach(btn => {
             btn.disabled = !isEditable;
             btn.style.display = isEditable ? 'inline-block' : 'none';
@@ -220,7 +226,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const studentListContainer = document.getElementById(`student-main-avg-${contextKey}`);
 
         if (avgContainer) {
-            avgContainer.textContent = data.overall_class_average || 'N/A';
+            avgContainer.textContent = data.overall_class_average || msgNa;
         }
         
         if (studentListContainer) {
@@ -229,71 +235,69 @@ document.addEventListener('DOMContentLoaded', () => {
             studentsData.sort((a, b) => a.student_name.localeCompare(b.student_name));
 
             studentsData.forEach(student => {
-                // Balise pour le nom d'utilisateur s'il existe
-                const usernameHtml = student.username ? `<span class="text-xs text-gray-400 ml-1">(${student.username})</span>` : '';
+                // MODIFICATION : flex gap-2 au lieu de margins pour la structure du nom d'utilisateur
+                const usernameHtml = student.username ? `<span class="text-xs text-gray-400" dir="ltr">(${student.username})</span>` : '';
                 
                 studentsHtml += `
                     <li class="flex justify-between items-center text-sm py-1">
-                        <span class="text-gray-700">
-                            ${student.student_name}
+                        <span class="text-gray-700 flex items-center gap-2">
+                            <span>${student.student_name}</span>
                             ${usernameHtml}
                         </span>
-                        <span class="font-bold text-gray-900">${student.average}</span>
+                        <span class="font-bold text-gray-900" dir="ltr">${student.average}</span>
                     </li>
                 `;
             });
-            studentListContainer.innerHTML = studentsHtml || '<li class="text-sm text-gray-500 italic">Aucune moyenne à afficher.</li>';
+            studentListContainer.innerHTML = studentsHtml || `<li class="text-sm text-gray-500 italic">${msgNoAverages}</li>`;
         }
     }
 
     function renderSubjectClassBlock(contextKey, data) {
-        // Met à jour la moyenne et la liste des évaluations
         const avgContainer = document.getElementById(`subject-avg-container-${contextKey}`);
         
         if (avgContainer) {
-            avgContainer.textContent = data.class_average || 'N/A';
+            avgContainer.textContent = data.class_average || msgNa;
         }
         
         updateSubjectBlockDOM(contextKey, data);
     }
 
     function updateSubjectBlockDOM(contextKey, data) {
-        // Mise à jour de la liste des évaluations (DOM)
         const listContainer = document.getElementById(`eval-list-container-${contextKey}`);
         
         if(listContainer) {
             let html = '';
             if(data.evaluations && data.evaluations.length > 0) {
                 data.evaluations.forEach(ev => {
-                    const editButtonText = CONFIG.canEdit ? 'Voir / Modifier' : 'Voir les notes';
+                    const editButtonText = CONFIG.canEdit ? msgEditView : msgViewGrades;
                     const deleteButtonHtml = CONFIG.canEdit ? `
-                        <button data-action="delete-eval" data-eval-id="${ev.id}" data-eval-name="${ev.name}" class="delete-eval-btn can-edit-hide px-3 py-1 text-sm text-red-600 hover:text-red-800 transition" title="Supprimer l'évaluation">
+                        <button data-action="delete-eval" data-eval-id="${ev.id}" data-eval-name="${ev.name}" class="delete-eval-btn can-edit-hide px-3 py-1 text-sm text-red-600 hover:text-red-800 transition" title="${msgDeleteEval}">
                             <i class="fas fa-trash"></i>
                         </button>
                     ` : '';
 
+                    // MODIFICATION : Utilisation de gap-2 pour le badge principal et les boutons
                     html += `
                     <div class="flex justify-between items-center p-2 bg-white border rounded-md transition-colors duration-200 ${ev.is_main_grade ? 'bg-amber-50 border-amber-200' : 'bg-white border-gray-200'}">
-                        <div class="text-sm">
+                        <div class="text-sm flex flex-wrap items-center gap-2">
                             <strong class="text-gray-800">${ev.name}</strong>
-                            ${ev.is_main_grade ? '<span class="ml-2 inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-amber-100 text-amber-800 border border-amber-200"><i class="fas fa-star mr-1 text-amber-600"></i> Principale</span>' : ''}
-                            <span class="text-gray-500 ml-1">(Coeff: ${ev.coefficient} / Sur: ${ev.max_grade})</span>
+                            ${ev.is_main_grade ? `<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-medium bg-amber-100 text-amber-800 border border-amber-200"><i class="fas fa-star text-amber-600"></i> <span>${msgMainEval}</span></span>` : ''}
+                            <span class="text-gray-500" dir="ltr">(${msgCoeff} ${ev.coefficient} / ${msgOutOf} ${ev.max_grade})</span>
                         </div>
-                        <div>
-                            <button data-action="view-eval" data-eval-id="${ev.id}" class="edit-eval-btn px-3 py-1 text-sm text-indigo-600 hover:text-indigo-800" title="${editButtonText}">
-                                <i class="fas fa-edit mr-1"></i> <span>${editButtonText}</span>
+                        <div class="flex items-center gap-2">
+                            <button data-action="view-eval" data-eval-id="${ev.id}" class="edit-eval-btn flex items-center gap-1 px-3 py-1 text-sm text-indigo-600 hover:text-indigo-800" title="${editButtonText}">
+                                <i class="fas fa-edit"></i> <span>${editButtonText}</span>
                             </button>
                             ${deleteButtonHtml}
                         </div>
                     </div>`;
                 });
             } else {
-                html = '<p class="text-sm text-gray-500 italic">Aucune évaluation pour ce trimestre.</p>';
+                html = `<p class="text-sm text-gray-500 italic">${msgNoEvaluations}</p>`;
             }
             listContainer.innerHTML = html;
         }
 
-        // Mise à jour de la liste des moyennes élèves
         const studentListContainer = document.getElementById(`student-subject-avg-${contextKey}`);
         if (studentListContainer) {
             const ul = studentListContainer.querySelector('ul');
@@ -302,16 +306,15 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (data.student_averages && data.student_averages.length > 0) {
                     data.student_averages.sort((a, b) => a.student_name.localeCompare(b.student_name));
                     data.student_averages.forEach(student => {
-                        // Balise pour le nom d'utilisateur s'il existe
-                        const usernameHtml = student.username ? `<span class="text-xs text-gray-400 ml-1">(${student.username})</span>` : '';
+                        const usernameHtml = student.username ? `<span class="text-xs text-gray-400" dir="ltr">(${student.username})</span>` : '';
                         
                         studentsHtml += `
                             <li class="flex justify-between items-center text-sm py-1">
-                                <span class="text-gray-700">
-                                    ${student.student_name}
+                                <span class="text-gray-700 flex items-center gap-2">
+                                    <span>${student.student_name}</span>
                                     ${usernameHtml}
                                 </span>
-                                <span class="font-bold text-gray-900">${student.average}</span>
+                                <span class="font-bold text-gray-900" dir="ltr">${student.average}</span>
                             </li>
                         `;
                     });
@@ -321,13 +324,12 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-
     // --- 5. LOGIQUE DE NAVIGATION ---
 
     async function handleTermChange(btn) {
         const contextKey = btn.dataset.contextKey;
         const newTermId = btn.dataset.termId;
-        const type = btn.dataset.type; // 'main' ou 'subject'
+        const type = btn.dataset.type; 
 
         // UI Active Tab
         document.querySelectorAll(`.term-tab-${contextKey}`).forEach(t => {
@@ -348,7 +350,6 @@ document.addEventListener('DOMContentLoaded', () => {
         });
 
         if (result.success) {
-            // Mise à jour de l'état local + Rendu
             if (type === 'main') {
                 STATE.mainClassData[contextKey] = { ...STATE.mainClassData[contextKey], ...result.data };
                 renderMainClassBlock(contextKey, result.data);
@@ -357,26 +358,21 @@ document.addEventListener('DOMContentLoaded', () => {
                 renderSubjectClassBlock(contextKey, result.data);
             }
             
-            // Mise à jour des permissions (Boutons Ajouter/Supprimer)
             updateBlockPermissions(contextKey, newTermId);
         }
     }
 
     // --- 6. GESTION DES MODALES (Eval & Confirm) ---
 
-    // -- Helpers Modale --
     function showModal(m) { m.classList.remove('opacity-0', 'pointer-events-none'); m.querySelector('div').classList.remove('translate-y-4'); }
     function closeModal(m) { m.classList.add('opacity-0', 'pointer-events-none'); m.querySelector('div').classList.add('translate-y-4'); }
 
-    // -- Modale Évaluation --
     function openEvaluationModal(mode, data) {
         evaluationForm.reset();
         
-        // Remplissage des IDs
         evalClassIdInput.value = data.classId;
         evalTsIdInput.value = data.tsId;
         
-        // Détection du trimestre actif
         let activeTermId = null;
         document.querySelectorAll(`.term-tab-${data.contextKey}`).forEach(tab => {
             if (!tab.classList.contains('border-transparent')) {
@@ -385,7 +381,6 @@ document.addEventListener('DOMContentLoaded', () => {
         });
         evalTermIdInput.value = activeTermId;
 
-        // Permissions
         const dataBlock = STATE.taughtClassesData[data.contextKey];
         const termInfo = dataBlock.available_terms.find(t => t.id == activeTermId);
         const isFinished = termInfo ? termInfo.finished : true;
@@ -397,7 +392,7 @@ document.addEventListener('DOMContentLoaded', () => {
         let maxGrade = 20.0;
 
         if (mode === 'add') {
-            document.getElementById('evaluation-modal-title').textContent = "Ajouter une Évaluation";
+            document.getElementById('evaluation-modal-title').textContent = msgAddEvalTitle;
             evalIdInput.value = '';
             evalMaxGradeInput.value = '20.0';
             if(evalIsMainInput) evalIsMainInput.checked = false;
@@ -406,14 +401,13 @@ document.addEventListener('DOMContentLoaded', () => {
             showModal(evaluationModal);
 
         } else { // Edit
-            document.getElementById('evaluation-modal-title').textContent = "Modifier l'Évaluation";
+            document.getElementById('evaluation-modal-title').textContent = msgEditEvalTitle;
             evalIdInput.value = data.evalId;
             evalNameInput.value = data.evalName;
             evalCoeffInput.value = data.evalCoeff;
             evalMaxGradeInput.value = data.evalMaxGrade;
             maxGrade = parseFloat(data.evalMaxGrade);
 
-            // Charger les détails
             apiFetch(CONFIG.urls.manageEval, {
                 action: 'get_details',
                 evaluation_id: data.evalId
@@ -449,24 +443,25 @@ document.addEventListener('DOMContentLoaded', () => {
             const isAbsent = gradeInfo.is_absent || false;
             const disabled = isReadOnly || isAbsent ? 'disabled' : '';
 
-            // Affichage du nom d'utilisateur dans la liste de saisie (avec passage à la ligne sur mobile)
-            const usernameHtml = student.username ? `<span class="text-xs text-gray-400 block sm:inline sm:ml-1">(${student.username})</span>` : '';
+            // MODIFICATION : Sécurisation LTR pour les noms d'utilisateurs
+            const usernameHtml = student.username ? `<span class="text-xs text-gray-400 block sm:inline" dir="ltr">(${student.username})</span>` : '';
 
+            // MODIFICATION : flex gap-2 pour le label, dir="ltr" pour l'input number, flex gap-2 au lieu de mr-2 pour la checkbox
             const html = `
-                <div class="grid grid-cols-3 gap-4 items-center p-2 hover:bg-gray-50 border-b">
-                    <label class="text-sm font-medium text-gray-700">
-                        ${student.student_name}
+                <div class="grid grid-cols-3 gap-4 items-center p-2 hover:bg-gray-50 border-b border-gray-100">
+                    <label class="text-sm font-medium text-gray-700 flex flex-wrap items-center gap-1">
+                        <span>${student.student_name}</span>
                         ${usernameHtml}
                     </label>
                     <input type="number" step="any" min="0" max="${maxGrade}" 
-                           class="grade-input w-full p-2 border rounded"
+                           class="grade-input w-full p-2 border border-gray-300 rounded focus:ring-indigo-500 focus:border-indigo-500"
                            data-student-id="${student.student_id}"
-                           value="${val}" ${disabled}>
-                    <div class="flex items-center">
-                        <input type="checkbox" class="absent-checkbox mr-2"
+                           value="${val}" ${disabled} dir="ltr">
+                    <div class="flex items-center gap-2">
+                        <input type="checkbox" class="absent-checkbox rounded text-indigo-600 focus:ring-indigo-500"
                                data-student-id="${student.student_id}"
                                ${isAbsent ? 'checked' : ''} ${isReadOnly ? 'disabled' : ''}>
-                        <span class="text-sm">Absent</span>
+                        <span class="text-sm text-gray-700">${msgAbsent}</span>
                     </div>
                 </div>
             `;
@@ -481,18 +476,17 @@ document.addEventListener('DOMContentLoaded', () => {
         e.preventDefault();
         
         if (!CONFIG.canEdit) {
-            showNotification("Action non autorisée.", 'error');
+            showNotification(msgUnauthorized, 'error');
             return;
         }
 
         const max = parseFloat(evalMaxGradeInput.value);
         if (isNaN(max) || max <= 0) {
-            showNotification("Veuillez entrer un 'Noté sur' valide.", "error");
+            showNotification(msgInvalidMaxGrade, "error");
             evalMaxGradeInput.focus();
             return;
         }
 
-        // Validation
         const grades = [];
         let hasError = false;
         studentGradesListContainer.querySelectorAll('.grade-input').forEach(input => {
@@ -517,7 +511,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
 
         if (hasError) {
-            showNotification("Certaines notes dépassent le maximum.", 'error');
+            showNotification(msgGradesExceedMax, 'error');
             return;
         }
 
@@ -538,11 +532,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
         if (result.success) {
             closeModal(evaluationModal);
-            // Rafraîchir l'onglet actif pour voir les nouvelles données
             const contextKey = `${payload.class_id}-${payload.ts_id}`;
             const termBtn = document.querySelector(`.term-tab-${contextKey}[data-term-id="${payload.term_id}"]`);
             if (termBtn) {
-                handleTermChange(termBtn); // Appel direct de la fonction
+                handleTermChange(termBtn); 
             }
         }
     }
@@ -555,8 +548,8 @@ document.addEventListener('DOMContentLoaded', () => {
         
         const termButton = container.querySelector(`.term-tab-${contextKey}.border-b-2`);
 
-        document.getElementById('generic-confirm-title').textContent = "Supprimer l'évaluation";
-        document.getElementById('generic-confirm-message').innerHTML = `Êtes-vous sûr de vouloir supprimer <strong>${evalName}</strong> ?<br>Toutes les notes associées seront perdues.`;
+        document.getElementById('generic-confirm-title').textContent = msgDeleteEvalTitle;
+        document.getElementById('generic-confirm-message').innerHTML = msgDeleteEvalBody.replace('{name}', evalName);
 
         STATE.onConfirmCallback = async () => {
             const result = await apiFetch(CONFIG.urls.manageEval, {
@@ -575,7 +568,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- 8. INITIALISATION & DÉLÉGATION ---
 
     parseInitialData();
-    // Initialise les permissions au chargement
+    
     document.querySelectorAll('#subject-class-container [data-context-key]').forEach(c => {
         const key = c.dataset.contextKey;
         if(STATE.taughtClassesData[key]) updateBlockPermissions(key, STATE.taughtClassesData[key].current_term_id);
@@ -587,7 +580,6 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // Écouteur global pour les événements dynamiques
     document.body.addEventListener('click', (e) => {
         
         const termBtn = e.target.closest('button[data-action="change-term"]');
@@ -636,7 +628,6 @@ document.addEventListener('DOMContentLoaded', () => {
             handleDeleteEvaluation(deleteBtn);
         }
 
-        // Checkbox Absent
         if (e.target.matches('.absent-checkbox')) {
             const input = e.target.closest('.grid').querySelector('.grade-input');
             input.disabled = e.target.checked;
@@ -644,7 +635,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    // Formulaire & Modales
     if (evaluationForm) evaluationForm.addEventListener('submit', handleEvaluationFormSubmit);
     if (evaluationModalCancelBtn) evaluationModalCancelBtn.addEventListener('click', () => closeModal(evaluationModal));
     if (genericConfirmCancelBtn) genericConfirmCancelBtn.addEventListener('click', () => closeModal(genericConfirmModal));

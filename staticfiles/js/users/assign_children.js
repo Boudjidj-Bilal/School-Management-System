@@ -1,9 +1,6 @@
 /**
  * assign_children.js
  * Gère l'interaction utilisateur sur la page d'attribution Parent-Enfant.
- * VERSION SÉCURISÉE & ROBUSTE :
- * - Lit les données JSON depuis les balises <script type="application/json"> générées par Django.
- * - Évite les erreurs de syntaxe JSON dues aux guillemets simples Python.
  */
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -18,18 +15,34 @@ document.addEventListener('DOMContentLoaded', () => {
     let toggleUrl = '';
     const csrfToken = csrfInput ? csrfInput.value : '';
 
-    // A. Récupération de l'URL API
+    // --- Traductions ---
+    let msgUnlink = "Délier";
+    let msgLink = "Lier";
+    let msgNoLinked = "Aucun enfant n'est attribué à ce parent.";
+    let msgNoAvailable = "Tous les étudiants ont été attribués à ce parent ou sont déjà liés.";
+    let msgMissingUrl = "Erreur de configuration : URL API manquante.";
+    let msgProcessing = "Action en cours...";
+    let msgErrorAction = "Erreur lors de l'action";
+    let msgErrorNetwork = "Erreur de connexion au serveur.";
+
+    // A. Récupération de l'URL API et des traductions
     if (container) {
         toggleUrl = container.getAttribute('data-toggle-url');
+        msgUnlink = container.dataset.msgUnlink || msgUnlink;
+        msgLink = container.dataset.msgLink || msgLink;
+        msgNoLinked = container.dataset.msgNoLinked || msgNoLinked;
+        msgNoAvailable = container.dataset.msgNoAvailable || msgNoAvailable;
+        msgMissingUrl = container.dataset.msgMissingUrl || msgMissingUrl;
+        msgProcessing = container.dataset.msgProcessing || msgProcessing;
+        msgErrorAction = container.dataset.msgErrorAction || msgErrorAction;
+        msgErrorNetwork = container.dataset.msgErrorNetwork || msgErrorNetwork;
     }
 
     // B. Récupération des données JSON via json_script
-    // Cette méthode est beaucoup plus fiable que les data-attributes pour les objets complexes
     try {
         const linksElement = document.getElementById('links-data-json');
         if (linksElement) {
             linksData = JSON.parse(linksElement.textContent);
-            // Si la donnée a été passée comme une string JSON depuis la vue, on parse une seconde fois
             if (typeof linksData === 'string') {
                 linksData = JSON.parse(linksData);
             }
@@ -42,7 +55,6 @@ document.addEventListener('DOMContentLoaded', () => {
         const studentsElement = document.getElementById('students-data-json');
         if (studentsElement) {
             studentsData = JSON.parse(studentsElement.textContent);
-            // Idem, double parse si nécessaire
             if (typeof studentsData === 'string') {
                 studentsData = JSON.parse(studentsData);
             }
@@ -60,28 +72,21 @@ document.addEventListener('DOMContentLoaded', () => {
     const availableStudentsList = document.getElementById('available-students-list');
     const actionMessage = document.getElementById('action-message');
 
-    // --- État de l'application ---
     let currentParentId = null;
 
-    /**
-     * Recherche un étudiant par son ID dans la liste complète.
-     */
     function findStudent(studentId) {
         return studentsData.find(student => String(student.id) == String(studentId));
     }
 
-    /**
-     * Crée un élément LI pour un étudiant avec le bouton d'action approprié.
-     */
     function createStudentElement(student, type) {
         const li = document.createElement('li');
         li.dataset.studentId = student.id; 
         
-        li.className = `student-item p-3 rounded-lg shadow-sm cursor-pointer transition-colors duration-200 
-                        flex items-center justify-between border`;
+        li.className = `student-item p-3 rounded-lg shadow-sm cursor-pointer transition-colors duration-200 flex items-center justify-between border`;
         
         const nameSpan = document.createElement('span');
         nameSpan.textContent = `${student.username}`;
+        nameSpan.setAttribute('dir', 'ltr'); // Force LTR sur l'username
 
         const button = document.createElement('button');
         button.className = `text-xs font-semibold px-3 py-1 rounded-full whitespace-nowrap`;
@@ -89,12 +94,14 @@ document.addEventListener('DOMContentLoaded', () => {
         if (type === 'linked') {
             li.classList.add('bg-red-100', 'hover:bg-red-200', 'border-red-300');
             nameSpan.classList.add('text-red-800', 'font-medium');
-            button.innerHTML = '<i class="fas fa-unlink mr-1"></i> Délier';
+            // MODIFICATION RTL : mr-1 devient me-1 + texte traduit
+            button.innerHTML = `<i class="fas fa-unlink me-1"></i> ${msgUnlink}`;
             button.classList.add('bg-red-300', 'text-red-900', 'hover:bg-red-400');
         } else {
             li.classList.add('bg-green-100', 'hover:bg-green-200', 'border-green-300');
             nameSpan.classList.add('text-green-800', 'font-medium');
-            button.innerHTML = '<i class="fas fa-link mr-1"></i> Lier';
+            // MODIFICATION RTL : mr-1 devient me-1 + texte traduit
+            button.innerHTML = `<i class="fas fa-link me-1"></i> ${msgLink}`;
             button.classList.add('bg-green-300', 'text-green-900', 'hover:bg-green-400');
         }
 
@@ -111,9 +118,6 @@ document.addEventListener('DOMContentLoaded', () => {
         return li;
     }
 
-    /**
-     * Met à jour les listes des enfants liés et disponibles.
-     */
     function updateStudentLists(parentId) {
         linkedStudentsList.innerHTML = '';
         availableStudentsList.innerHTML = '';
@@ -124,7 +128,6 @@ document.addEventListener('DOMContentLoaded', () => {
         let hasLinked = false;
         let hasAvailable = false;
 
-        // 1. Liste des enfants liés
         linkedIds.forEach(studentId => {
             const student = findStudent(studentId);
             if (student) {
@@ -133,7 +136,6 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
 
-        // 2. Liste des enfants disponibles
         studentsData.forEach(student => {
             if (!linkedIds.includes(String(student.id))) {
                 availableStudentsList.appendChild(createStudentElement(student, 'available'));
@@ -142,16 +144,13 @@ document.addEventListener('DOMContentLoaded', () => {
         });
 
         if (!hasLinked) {
-            linkedStudentsList.innerHTML = '<p class="text-red-500 italic" id="no-linked-students">Aucun enfant n\'est attribué à ce parent.</p>';
+            linkedStudentsList.innerHTML = `<p class="text-red-500 italic" id="no-linked-students">${msgNoLinked}</p>`;
         }
         if (!hasAvailable) {
-            availableStudentsList.innerHTML = '<p class="text-green-500 italic" id="no-available-students">Tous les étudiants ont été attribués à ce parent ou sont déjà liés.</p>';
+            availableStudentsList.innerHTML = `<p class="text-green-500 italic" id="no-available-students">${msgNoAvailable}</p>`;
         }
     }
 
-    /**
-     * Gère la sélection d'un parent.
-     */
     function handleParentSelection(selectedLi) {
         assignmentSection.classList.add('hidden');
         detailsSection.classList.remove('hidden');
@@ -169,18 +168,15 @@ document.addEventListener('DOMContentLoaded', () => {
         updateStudentLists(currentParentId);
     }
 
-    /**
-     * Envoie la requête API et met à jour l'état local.
-     */
     async function toggleAssignment(parentId, studentId, action, element) {
         
         if (!toggleUrl) {
-            actionMessage.textContent = "Erreur de configuration : URL API manquante.";
+            actionMessage.textContent = msgMissingUrl;
             actionMessage.className = 'mt-6 text-sm text-center font-medium text-red-600';
             return;
         }
 
-        actionMessage.textContent = "Action en cours...";
+        actionMessage.textContent = msgProcessing;
         actionMessage.className = 'mt-6 text-sm text-center font-medium text-gray-500';
         
         element.style.opacity = 0.5;
@@ -222,13 +218,13 @@ document.addEventListener('DOMContentLoaded', () => {
                 actionMessage.className = 'mt-6 text-sm text-center font-medium text-green-600';
 
             } else {
-                actionMessage.textContent = data.message || `Erreur lors de l'action ${action}.`;
+                actionMessage.textContent = data.message || `${msgErrorAction} ${action}.`;
                 actionMessage.className = 'mt-6 text-sm text-center font-medium text-red-600';
             }
 
         } catch (error) {
             console.error("Erreur API:", error);
-            actionMessage.textContent = "Erreur de connexion au serveur.";
+            actionMessage.textContent = msgErrorNetwork;
             actionMessage.className = 'mt-6 text-sm text-center font-medium text-red-600';
         } finally {
             if (element && element.parentNode) {
@@ -238,7 +234,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // --- Écouteurs d'événements ---
     if (parentList) {
         parentList.addEventListener('click', (event) => {
             const li = event.target.closest('.parent-item');
@@ -246,7 +241,6 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // Initialisation
     const firstParentLi = parentList ? parentList.querySelector('.parent-item') : null;
     if (firstParentLi) handleParentSelection(firstParentLi);
 });

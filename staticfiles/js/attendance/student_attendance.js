@@ -25,10 +25,7 @@ document.addEventListener('DOMContentLoaded', function() {
             });
             
             // 2. Activer visuellement le bouton cliqué
-            // Classes "Inactives" à retirer
             this.classList.remove('border-transparent', 'text-gray-500', 'hover:text-gray-700', 'hover:border-gray-300');
-            
-            // Classes "Actives" à ajouter
             this.classList.add('border-indigo-500', 'text-indigo-600');
             
             // 3. Masquer tous les contenus

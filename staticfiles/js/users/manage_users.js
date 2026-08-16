@@ -1,5 +1,7 @@
 document.addEventListener('DOMContentLoaded', function() {
     const userForm = document.getElementById('user-form');
+    if (!userForm) return;
+
     const createBtn = document.getElementById('create-btn');
     const userLinks = document.querySelectorAll('.user-link');
     const formTitle = document.getElementById('form-title');
@@ -9,14 +11,13 @@ document.addEventListener('DOMContentLoaded', function() {
     const firstNameInput = document.getElementById('first_name');
     const lastNameInput = document.getElementById('last_name');
     const emailInput = document.getElementById('email');
+    const phoneNumberInput = document.getElementById('phone_number');
     const passwordField = document.getElementById('password-field');
     const passwordInput = document.getElementById('password');
     const staffTypeField = document.getElementById('staff-type-field');
     const addressInput = document.getElementById('address');
     const genderInput = document.getElementById('gender');
     const birthDateInput = document.getElementById('birth_date');
-    
-    // Champ pour le numéro national
     const nationalNumberInput = document.getElementById('national_number');
 
     const formUserAvatar = document.getElementById('form-user-avatar');
@@ -29,35 +30,47 @@ document.addEventListener('DOMContentLoaded', function() {
     const modalCancelBtn = document.getElementById('modal-cancel-btn');
     const cancelBtn = document.getElementById('cancel-btn');
 
-    const userType = userTypeInput.value;
+    const userType = userTypeInput ? userTypeInput.value : '';
     const userSchoolId = userForm.getAttribute('data-school-id');
 
+    // --- Récupération des traductions ---
+    const msgCreateTitle = userForm.dataset.msgCreateTitle || "Créer un nouvel utilisateur";
+    const msgCreateBtn = userForm.dataset.msgCreateBtn || "Créer";
+    const msgEditTitle = userForm.dataset.msgEditTitle || "Modifier un utilisateur";
+    const msgEditBtn = userForm.dataset.msgEditBtn || "Mettre à jour";
+    const msgDeactivateConfirm = userForm.dataset.msgDeactivateConfirm || "Êtes-vous sûr de vouloir désactiver l'utilisateur";
+    const msgActivateConfirm = userForm.dataset.msgActivateConfirm || "Êtes-vous sûr de vouloir activer l'utilisateur";
+    const msgErrorPrefix = userForm.dataset.msgErrorPrefix || "Erreur :";
+    const msgErrorGeneral = userForm.dataset.msgErrorGeneral || "Une erreur est survenue lors de l'opération.";
+
     function showCreateMode() {
-        formTitle.textContent = 'Créer un nouvel utilisateur';
-        submitBtn.innerHTML = '<i class="fas fa-plus-circle mr-2"></i> Créer';
+        formTitle.textContent = msgCreateTitle;
+        // Remplacement de mr-2 par me-2 pour l'icône en RTL
+        submitBtn.innerHTML = `<i class="fas fa-plus-circle me-2"></i> ${msgCreateBtn}`;
         userIdInput.value = '';
         userForm.reset();
         passwordField.style.display = 'none';
         
-        cancelBtn.style.display = 'none'; // Hide cancel button in create mode
+        cancelBtn.style.display = 'none'; 
 
         formUserAvatar.classList.add('hidden');
         formUserAvatar.src = '';
         formUserInitials.classList.remove('hidden');
         formUserInitials.innerHTML = '<i class="fas fa-user"></i>';
 
-        if (userType === 'staff') {
-            staffTypeField.style.display = 'block';
-        } else if (userType === 'parent') {
-            staffTypeField.style.display = 'none';
-        } else {
-            staffTypeField.style.display = 'none';
+        if (staffTypeField) {
+            if (userType === 'staff') {
+                staffTypeField.style.display = 'block';
+            } else {
+                staffTypeField.style.display = 'none';
+            }
         }
     }
 
     function showEditMode(user) {
-        formTitle.textContent = 'Modifier un utilisateur';
-        submitBtn.innerHTML = '<i class="fas fa-edit mr-2"></i> Mettre à jour';
+        formTitle.textContent = msgEditTitle;
+        // Remplacement de mr-2 par me-2 pour l'icône en RTL
+        submitBtn.innerHTML = `<i class="fas fa-edit me-2"></i> ${msgEditBtn}`;
         userIdInput.value = user.id;
         firstNameInput.value = user.firstName;
         lastNameInput.value = user.lastName;
@@ -66,41 +79,42 @@ document.addEventListener('DOMContentLoaded', function() {
         genderInput.value = user.gender;
         birthDateInput.value = user.birthDate;
 
-        // Remplissage du numéro national s'il existe (Uniquement pour les élèves)
         if (nationalNumberInput) {
             nationalNumberInput.value = user.nationalNumber || '';
         }
+        if (user.phoneNumber !== "None"){
+            phoneNumberInput.value = user.phoneNumber;
+        } else {
+            phoneNumberInput.value = '';
+        }
 
-        // Gestion de l'affichage Photo vs Initiales
         if (user.profilePictureUrl && user.profilePictureUrl !== 'None' && user.profilePictureUrl !== '') {
-            // Cas 1 : Il y a une photo
             formUserAvatar.src = user.profilePictureUrl;
             formUserAvatar.classList.remove('hidden');
             formUserInitials.classList.add('hidden');
         } else {
-            // Cas 2 : Pas de photo, on affiche l'initiale du prénom
             formUserAvatar.classList.add('hidden');
             formUserInitials.classList.remove('hidden');
-            // On met la première lettre du prénom en majuscule
             const initial = user.firstName ? user.firstName.charAt(0).toUpperCase() : '?';
             formUserInitials.innerHTML = `<span class="text-3xl">${initial}</span>`;
         }
 
         passwordField.style.display = 'block';
         passwordInput.required = false;
-        cancelBtn.style.display = 'block'; // Show cancel button in edit mode
+        cancelBtn.style.display = 'block'; 
 
-        if (user.staffType) {
-            staffTypeField.style.display = 'block';
-            document.getElementById('staff_type').value = user.staffType;
-        } else {
-            staffTypeField.style.display = 'none';
+        if (staffTypeField) {
+            if (user.staffType) {
+                staffTypeField.style.display = 'block';
+                document.getElementById('staff_type').value = user.staffType;
+            } else {
+                staffTypeField.style.display = 'none';
+            }
         }
-
     }
 
-    createBtn.addEventListener('click', showCreateMode);
-    cancelBtn.addEventListener('click', showCreateMode);
+    if (createBtn) createBtn.addEventListener('click', showCreateMode);
+    if (cancelBtn) cancelBtn.addEventListener('click', showCreateMode);
 
     userLinks.forEach(link => {
         link.addEventListener('click', function(e) {
@@ -110,14 +124,15 @@ document.addEventListener('DOMContentLoaded', function() {
                 firstName: this.getAttribute('data-first-name'),
                 lastName: this.getAttribute('data-last-name'),
                 email: this.getAttribute('data-email'),
+                phoneNumber: this.getAttribute('data-phone-number'),
                 staffType: this.getAttribute('data-staff-type'),
                 address: this.getAttribute('data-address'),
                 gender: this.getAttribute('data-gender'),
                 birthDate: this.getAttribute('data-birth-date'),
                 profilePictureUrl: this.getAttribute('data-profile-picture-url'),
-                // Extraction du numéro national de l'attribut data
                 nationalNumber: this.getAttribute('data-national-number')
             };
+
             showEditMode(user);
         });
     });
@@ -147,12 +162,12 @@ document.addEventListener('DOMContentLoaded', function() {
                 showCustomMessage(data.message);
                 window.location.reload();
             } else {
-                showCustomMessage('Erreur: ' + data.message);
+                showCustomMessage(`${msgErrorPrefix} ${data.message}`);
             }
         })
         .catch(error => {
             console.error('Erreur :', error);
-            showCustomMessage('Une erreur est survenue lors de l\'opération.');
+            showCustomMessage(msgErrorGeneral);
         });
     });
 
@@ -165,10 +180,10 @@ document.addEventListener('DOMContentLoaded', function() {
             let message = '';
             let confirmBtnClass = '';
             if (action === 'deactivate') {
-                message = `Êtes-vous sûr de vouloir désactiver l'utilisateur "${userName}" ?`;
+                message = `${msgDeactivateConfirm} "${userName}" ?`;
                 confirmBtnClass = 'bg-red-600 hover:bg-red-700';
             } else {
-                message = `Êtes-vous sûr de vouloir activer l'utilisateur "${userName}" ?`;
+                message = `${msgActivateConfirm} "${userName}" ?`;
                 confirmBtnClass = 'bg-green-600 hover:bg-green-700';
             }
 
@@ -199,7 +214,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 })
                 .catch(error => {
                     console.error('Erreur:', error);
-                    showCustomMessage('Une erreur est survenue lors de l\'opération.');
+                    showCustomMessage(msgErrorGeneral);
                 });
             };
 
@@ -212,6 +227,7 @@ document.addEventListener('DOMContentLoaded', function() {
     function showCustomMessage(message) {
       const messageBox = document.createElement('div');
       messageBox.textContent = message;
+      // Le positionnement au centre (left: 50%, translate -50%) fonctionne identiquement en RTL/LTR
       messageBox.style.cssText = `
         position: fixed;
         top: 20%;
@@ -231,6 +247,5 @@ document.addEventListener('DOMContentLoaded', function() {
       setTimeout(() => messageBox.remove(), 3000);
     }
     
-    // Call the function on page load to initialize the form correctly
     showCreateMode();
 });

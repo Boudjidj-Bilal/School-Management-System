@@ -4,9 +4,19 @@ document.addEventListener('DOMContentLoaded', function() {
     const sidebar = document.getElementById('sidebar-wrapper');
     const overlay = document.getElementById('sidebar-overlay');
     
+    // On détecte si on est en Arabe (RTL) ou en Français (LTR)
+    const isRTL = document.documentElement.dir === 'rtl';
+    
+    // En RTL, on cache le menu vers la droite (translate-x-full)
+    // En LTR, on cache le menu vers la gauche (-translate-x-full)
+    const hideClass = isRTL ? 'translate-x-full' : '-translate-x-full';
+    
     function openSidebar() {
         if (!sidebar || !overlay) return;
-        sidebar.classList.remove('-translate-x-full');
+        
+        // On retire la classe de masquage
+        sidebar.classList.remove(hideClass);
+        
         overlay.classList.remove('hidden');
         setTimeout(() => { overlay.classList.remove('opacity-0'); }, 10);
         document.body.style.overflow = 'hidden';
@@ -14,7 +24,10 @@ document.addEventListener('DOMContentLoaded', function() {
 
     function closeSidebar() {
         if (!sidebar || !overlay) return;
-        sidebar.classList.add('-translate-x-full');
+        
+        // On remet la classe de masquage
+        sidebar.classList.add(hideClass);
+        
         overlay.classList.add('opacity-0');
         setTimeout(() => { overlay.classList.add('hidden'); }, 300);
         document.body.style.overflow = '';

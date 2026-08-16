@@ -1,24 +1,35 @@
 /**
  * Logique JavaScript pour la gestion des matières (CRUD via AJAX)
- * VERSION SÉCURISÉE (CSP Compliant)
- * * Ce script ne dépend PLUS de variables globales.
- * Il récupère les URLs depuis les attributs data-* du DOM 
- * et le CSRF Token depuis le formulaire.
+ * VERSION SÉCURISÉE (CSP Compliant) et MULTILINGUE
  */
 
 document.addEventListener('DOMContentLoaded', () => {
     
     // --- Éléments du DOM ---
     const subjectForm = document.getElementById('subject-form');
-    // Récupération du conteneur principal qui porte les URLs
     const subjectsContainer = document.getElementById('subjects-container'); 
     
-    // Récupération sécurisée des variables depuis le DOM
+    // Récupération sécurisée des variables et URLS
     const saveSubjectUrl = subjectsContainer.getAttribute('data-save-url');
     const toggleStatusUrl = subjectsContainer.getAttribute('data-toggle-url');
-    // Récupération du token CSRF directement depuis l'input généré par Django
     const csrfTokenInput = document.querySelector('[name=csrfmiddlewaretoken]');
     const csrfToken = csrfTokenInput ? csrfTokenInput.value : '';
+
+    // Traductions dynamiques depuis le HTML
+    const msgCreate = subjectsContainer.getAttribute('data-msg-create');
+    const msgEdit = subjectsContainer.getAttribute('data-msg-edit');
+    const msgSaving = subjectsContainer.getAttribute('data-msg-saving');
+    const msgSave = subjectsContainer.getAttribute('data-msg-save');
+    const msgUpdate = subjectsContainer.getAttribute('data-msg-update');
+    const msgColorSelected = subjectsContainer.getAttribute('data-msg-color-selected');
+    const msgErrorNetwork = subjectsContainer.getAttribute('data-msg-error-network');
+    const msgConfirmActivation = subjectsContainer.getAttribute('data-msg-confirm-activation');
+    const msgConfirmDeactivation = subjectsContainer.getAttribute('data-msg-confirm-deactivation');
+    const msgAskActivate = subjectsContainer.getAttribute('data-msg-ask-activate');
+    const msgAskDeactivate = subjectsContainer.getAttribute('data-msg-ask-deactivate');
+    const msgBtnActivate = subjectsContainer.getAttribute('data-msg-btn-activate');
+    const msgBtnDeactivate = subjectsContainer.getAttribute('data-msg-btn-deactivate');
+    const msgErrorAction = subjectsContainer.getAttribute('data-msg-error-action');
 
     const subjectNameInput = document.getElementById('subject-name');
     const subjectColorInput = document.getElementById('subject-color');
@@ -40,11 +51,6 @@ document.addEventListener('DOMContentLoaded', () => {
     
     // --- Fonctions Utilitaires ---
 
-    /**
-     * Affiche un message de succès ou d'erreur au-dessus du formulaire.
-     * @param {string} message - Le message à afficher.
-     * @param {boolean} isSuccess - True pour succès, False pour erreur.
-     */
     function displayMessage(message, isSuccess) {
         formMessage.innerHTML = message;
         formMessage.classList.remove('hidden', 'bg-red-100', 'text-red-700', 'bg-green-100', 'text-green-700');
@@ -55,55 +61,46 @@ document.addEventListener('DOMContentLoaded', () => {
             formMessage.classList.add('bg-red-100', 'text-red-700');
         }
         
-        // Cacher après 5 secondes
         setTimeout(() => {
             formMessage.classList.add('hidden');
         }, 5000);
     }
     
-    /**
-     * Réinitialise le formulaire en mode "Création".
-     */
     function resetForm() {
-        formTitle.textContent = 'Créer une nouvelle matière';
+        formTitle.textContent = msgCreate;
         subjectForm.reset();
         subjectForm.removeAttribute('data-subject-id'); 
-        submitBtn.innerHTML = '<i class="fas fa-save mr-2"></i> Sauvegarder';
+        submitBtn.innerHTML = `<i class="fas fa-save"></i> <span>${msgSave}</span>`;
         colorPreview.textContent = '';
         subjectNameInput.focus();
     }
     
     // --- Événements du Formulaire et de la Liste ---
 
-    // 1. Boutons Annuler / Créer
     cancelBtn.addEventListener('click', resetForm);
     createBtn.addEventListener('click', resetForm);
 
-    // 2. Aperçu de la couleur et mise à jour du bouton
     subjectColorInput.addEventListener('change', () => {
         const selectedOption = subjectColorInput.options[subjectColorInput.selectedIndex];
         const colorValue = selectedOption.value.toLowerCase();
-        // Vérification de sécurité si selectedOption existe
         const colorLabel = selectedOption ? selectedOption.textContent.split('(')[0].trim() : ''; 
         
-        // Supprimer toutes les classes de couleur existantes avant d'ajouter la nouvelle
-        colorPreview.className = 'text-sm mt-2 font-medium';
+        colorPreview.className = 'text-sm mt-2 font-medium flex items-center gap-2';
         
         if (colorValue) {
-            colorPreview.innerHTML = `Couleur sélectionnée : <span class="px-2 py-0.5 rounded-full text-white font-medium bg-${colorValue}-500 text-xs">${colorLabel}</span>`;
+            colorPreview.innerHTML = `${msgColorSelected} <span class="px-2 py-0.5 rounded-full text-white font-medium bg-${colorValue}-500 text-xs">${colorLabel}</span>`;
         } else {
             colorPreview.textContent = '';
         }
     });
 
-
-    // 3. Soumission du Formulaire (Création / Modification)
     subjectForm.addEventListener('submit', async (e) => {
         e.preventDefault();
         
         submitBtn.disabled = true;
         const originalText = submitBtn.innerHTML;
-        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> Sauvegarde...';
+        // On remplace par l'icône de chargement, toujours avec le système de gap de Flexbox
+        submitBtn.innerHTML = `<i class="fas fa-spinner fa-spin"></i> <span>${msgSaving}</span>`;
 
         const subjectId = subjectForm.getAttribute('data-subject-id');
         const name = subjectNameInput.value.trim();
@@ -116,12 +113,11 @@ document.addEventListener('DOMContentLoaded', () => {
         };
 
         try {
-            // Utilisation de la variable locale saveSubjectUrl
             const response = await fetch(saveSubjectUrl, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    'X-CSRFToken': csrfToken, // Utilisation du token récupéré
+                    'X-CSRFToken': csrfToken,
                 },
                 body: JSON.stringify(payload)
             });
@@ -136,19 +132,17 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         } catch (error) {
             console.error('Erreur AJAX:', error);
-            displayMessage(`Erreur de connexion : Impossible de contacter le serveur.`, false);
+            displayMessage(msgErrorNetwork, false);
         } finally {
             submitBtn.disabled = false;
             submitBtn.innerHTML = originalText;
         }
     });
 
-    // 4. Logique d'Édition (Pré-remplissage du formulaire)
     subjectList.addEventListener('click', (e) => {
         const item = e.target.closest('.subject-link');
         
         if (item) {
-            // Empêche l'édition si on clique sur le bouton toggle
             if (e.target.closest('.toggle-status-btn')) {
                 return;
             }
@@ -157,24 +151,20 @@ document.addEventListener('DOMContentLoaded', () => {
             const name = item.dataset.name;
             const color = item.dataset.color;
 
-            // 1. Mise à jour du formulaire
-            formTitle.textContent = `Modifier la matière : ${name}`;
+            formTitle.textContent = `${msgEdit} ${name}`;
             subjectNameInput.value = name;
             subjectColorInput.value = color;
             subjectForm.setAttribute('data-subject-id', subjectId);
-            submitBtn.innerHTML = '<i class="fas fa-edit mr-2"></i> Modifier';
+            submitBtn.innerHTML = `<i class="fas fa-edit"></i> <span>${msgUpdate}</span>`;
 
-            // Déclenchez l'événement 'change' pour mettre à jour l'aperçu couleur
             const changeEvent = new Event('change');
             subjectColorInput.dispatchEvent(changeEvent);
 
-            // 2. Scroll vers le formulaire
             subjectForm.scrollIntoView({ behavior: 'smooth', block: 'start' });
             subjectNameInput.focus();
         }
     });
     
-    // 5. Logique d'activation / désactivation via Modal
     subjectList.addEventListener('click', (e) => {
         const toggleButton = e.target.closest('.toggle-status-btn');
 
@@ -183,13 +173,10 @@ document.addEventListener('DOMContentLoaded', () => {
             const isCurrentlyActive = toggleButton.dataset.action === 'deactivate'; 
             const subjectName = toggleButton.closest('li').querySelector('.subject-name').textContent;
             
-            const action = isCurrentlyActive ? 'désactiver' : 'activer';
-
-            // Préparation de la modal
-            modalTitle.textContent = `Confirmer la ${action}ation`;
-            modalMessage.innerHTML = `Voulez-vous vraiment <strong>${action}</strong> la matière <strong>"${subjectName}"</strong> ?`;
+            modalTitle.textContent = isCurrentlyActive ? msgConfirmDeactivation : msgConfirmActivation;
+            modalMessage.innerHTML = `${isCurrentlyActive ? msgAskDeactivate : msgAskActivate} <strong>"${subjectName}"</strong> ?`;
             
-            modalConfirmBtn.textContent = action.charAt(0).toUpperCase() + action.slice(1);
+            modalConfirmBtn.textContent = isCurrentlyActive ? msgBtnDeactivate : msgBtnActivate;
             
             modalConfirmBtn.classList.toggle('bg-red-600', isCurrentlyActive);
             modalConfirmBtn.classList.toggle('hover:bg-red-700', isCurrentlyActive);
@@ -198,7 +185,6 @@ document.addEventListener('DOMContentLoaded', () => {
             
             modal.classList.remove('hidden');
 
-            // Clonage pour reset des event listeners
             modalConfirmBtn.replaceWith(modalConfirmBtn.cloneNode(true));
             modalCancelBtn.replaceWith(modalCancelBtn.cloneNode(true));
             
@@ -206,7 +192,6 @@ document.addEventListener('DOMContentLoaded', () => {
             const newModalCancelBtn = document.getElementById('modal-cancel-btn');
 
 
-            // Nouvelle fonction de confirmation
             const confirmHandler = async () => {
                 modal.classList.add('hidden');
                 toggleButton.disabled = true;
@@ -216,12 +201,11 @@ document.addEventListener('DOMContentLoaded', () => {
                 };
                 
                 try {
-                    // Utilisation de la variable locale toggleStatusUrl
                     const response = await fetch(toggleStatusUrl, {
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json',
-                            'X-CSRFToken': csrfToken, // Utilisation du token récupéré
+                            'X-CSRFToken': csrfToken,
                         },
                         body: JSON.stringify(payload)
                     });
@@ -236,7 +220,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     }
                 } catch (error) {
                     console.error('Erreur AJAX:', error);
-                    displayMessage(`Erreur de connexion : Impossible d'effectuer la ${action}ation.`, false);
+                    displayMessage(msgErrorAction, false);
                 } finally {
                     toggleButton.disabled = false;
                 }

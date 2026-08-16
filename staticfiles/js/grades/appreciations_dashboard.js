@@ -1,6 +1,6 @@
 // ====================================================================
 // LOGIQUE JAVASCRIPT POUR LES APPRÉCIATIONS (appreciations_dashboard.js)
-// VERSION SÉCURISÉE (CSP Compliant)
+// VERSION SÉCURISÉE (CSP Compliant) & MULTILINGUE
 // ====================================================================
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -13,6 +13,22 @@ document.addEventListener('DOMContentLoaded', () => {
         console.error("Erreur : Conteneur #appreciations-dashboard-container introuvable.");
         return;
     }
+
+    // Récupération des traductions dynamiques (via dataset du conteneur HTML)
+    const msgServerErr = container.getAttribute('data-msg-server-error') || 'Erreur serveur ({status})';
+    const msgNetworkErr = container.getAttribute('data-msg-network-error') || 'Erreur de connexion réseau.';
+    const msgTrimsterClosed = container.getAttribute('data-msg-term-closed') || 'Trimestre clos';
+    const msgViewMode = container.getAttribute('data-msg-view-mode') || 'Mode Consultation';
+    const msgSaving = container.getAttribute('data-msg-saving') || 'Enregistrement...';
+    const msgNoStudents = container.getAttribute('data-msg-no-students') || 'Aucun élève trouvé.';
+    const msgMention = container.getAttribute('data-msg-mention') || 'Mention';
+    const msgNoMention = container.getAttribute('data-msg-no-mention') || '-- Aucune --';
+    const msgGlobalAppreciation = container.getAttribute('data-msg-global-appreciation') || 'Appréciation Globale';
+    const msgPlaceholderAppr = container.getAttribute('data-msg-placeholder-appr') || 'Appréciation...';
+    const msgUnauthorized = container.getAttribute('data-msg-unauthorized') || 'Action non autorisée (Mode Lecture Seule).';
+    const msgSuccessSave = container.getAttribute('data-msg-success-save') || 'Enregistré avec succès !';
+    const msgSavedLabel = container.getAttribute('data-msg-saved-label') || 'Enregistré';
+    const msgErrorLabel = container.getAttribute('data-msg-error-label') || 'Erreur';
 
     // Configuration centralisée récupérée depuis le DOM
     const CONFIG = {
@@ -27,7 +43,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // État global local
     const STATE = {
-        // Stocke les données actuelles pour chaque bloc (clé: contextKey)
         blocksData: {} 
     };
 
@@ -46,17 +61,16 @@ document.addEventListener('DOMContentLoaded', () => {
         const icon = type === 'success' ? 'fa-check-circle' : (type === 'error' ? 'fa-times-circle' : 'fa-info-circle');
 
         const notificationDiv = document.createElement('div');
-        notificationDiv.className = `p-4 rounded-xl border shadow-md ${colorMap[type]} flex items-center transition-all duration-300 opacity-0 transform -translate-y-2 mb-4`;
-        notificationDiv.innerHTML = `<i class="fas ${icon} mr-3 text-lg"></i><p class="font-semibold">${message}</p>`;
+        // MODIFICATION : flex items-center gap-3, suppression de mr-3
+        notificationDiv.className = `p-4 rounded-xl border shadow-md ${colorMap[type]} flex items-center gap-3 transition-all duration-300 opacity-0 transform -translate-y-2 mb-4`;
+        notificationDiv.innerHTML = `<i class="fas ${icon} text-lg"></i><p class="font-semibold">${message}</p>`;
 
         notificationArea.prepend(notificationDiv);
         
-        // Animation d'entrée
         requestAnimationFrame(() => {
             notificationDiv.classList.remove('opacity-0', '-translate-y-2');
         });
 
-        // Disparition automatique
         setTimeout(() => {
             notificationDiv.classList.add('opacity-0', '-translate-y-2');
             notificationDiv.addEventListener('transitionend', () => notificationDiv.remove());
@@ -75,13 +89,13 @@ document.addEventListener('DOMContentLoaded', () => {
             });
             const json = await response.json();
             if (!response.ok) {
-                showNotification(json.message || `Erreur serveur (${response.status})`, 'error');
+                showNotification(json.message || msgServerErr.replace('{status}', response.status), 'error');
                 return { success: false, ...json };
             }
             return json;
         } catch (error) {
             console.error("Erreur API:", error);
-            showNotification("Erreur de connexion réseau.", 'error');
+            showNotification(msgNetworkErr, 'error');
             return { success: false };
         }
     }
@@ -96,23 +110,17 @@ document.addEventListener('DOMContentLoaded', () => {
             
             const rawData = JSON.parse(scriptTag.textContent);
             
-            // On aplatit la structure pour faciliter l'accès par clé unique
-            // 1. Données "Mes Matières"
             if (rawData.taught_classes_list) {
                 rawData.taught_classes_list.forEach(item => {
                     STATE.blocksData[item.key] = item;
                 });
             }
-            // 2. Données "Prof Principal"
             if (rawData.main_classes_data) {
                 Object.entries(rawData.main_classes_data).forEach(([key, item]) => {
                     STATE.blocksData[key] = item; 
                 });
             }
             
-            console.log("Données Appréciations chargées.");
-            
-            // Initialise l'UI pour chaque bloc
             initializeUI();
 
         } catch (e) {
@@ -141,9 +149,6 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    /**
-     * Active ou désactive les champs d'un bloc.
-     */
     function updateBlockReadOnlyState(blockElement, isReadOnly) {
         const inputs = blockElement.querySelectorAll('textarea, select, button[type="submit"]');
         const statusDiv = blockElement.querySelector('.save-status');
@@ -157,11 +162,11 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
 
-        // Feedback visuel
         if (isReadOnly && statusDiv) {
-            const message = CONFIG.canEdit ? '<i class="fas fa-lock mr-1"></i> Trimestre clos' : '<i class="fas fa-eye mr-1"></i> Mode Consultation ';
+            const message = CONFIG.canEdit ? `<i class="fas fa-lock"></i> <span>${msgTrimsterClosed}</span>` : `<i class="fas fa-eye"></i> <span>${msgViewMode}</span>`;
             
-            statusDiv.innerHTML = `<span class="text-gray-500">${message}</span>`;
+            // MODIFICATION : flex gap-1
+            statusDiv.innerHTML = `<span class="flex items-center gap-1 text-gray-500">${message}</span>`;
             statusDiv.classList.remove('opacity-0');
             
             const submitBtn = blockElement.querySelector('button[type="submit"]');
@@ -186,18 +191,16 @@ document.addEventListener('DOMContentLoaded', () => {
         const contextKey = button.dataset.contextKey;
         const termId = parseInt(button.dataset.termId);
         const block = button.closest('.appreciation-block');
-        const type = block.dataset.type; // 'main' ou 'subject'
+        const type = block.dataset.type; 
         const classId = block.dataset.classId;
         const tsId = block.dataset.tsId || null;
 
-        // 1. UI Tabs
         block.querySelectorAll('.term-tab').forEach(btn => {
             btn.className = 'term-tab px-3 py-1 text-sm font-medium rounded-t-md transition-colors duration-150 text-gray-500 hover:bg-white hover:text-gray-700';
         });
         const activeColorClass = (type === 'main') ? 'text-indigo-700 border-yellow-200' : 'text-teal-700 border-gray-200';
         button.className = `term-tab px-3 py-1 text-sm font-medium rounded-t-md transition-colors duration-150 bg-white border-t border-l border-r font-bold shadow-sm ${activeColorClass}`;
 
-        // 2. Appel API
         const result = await apiFetch(CONFIG.urls.getTermData, {
             term_id: termId,
             class_id: classId,
@@ -206,19 +209,14 @@ document.addEventListener('DOMContentLoaded', () => {
         });
 
         if (result.success) {
-            // Met à jour l'état local
             STATE.blocksData[contextKey].students_data = result.data.students_data;
             STATE.blocksData[contextKey].current_term_id = termId;
 
-            // Vérifie si ce trimestre est "finished"
             const termInfo = STATE.blocksData[contextKey].available_terms.find(t => t.id == termId);
             const isFinished = termInfo ? termInfo.finished : true;
             const isReadOnly = !CONFIG.canEdit || isFinished;
 
-            // 3. Rendu du DOM
             renderStudentList(block, result.data.students_data, type === 'main', STATE.blocksData[contextKey].mentions_choices, isReadOnly);
-            
-            // 4. Mise à jour lecture seule
             updateBlockReadOnlyState(block, isReadOnly);
         }
     }
@@ -228,7 +226,7 @@ document.addEventListener('DOMContentLoaded', () => {
         container.innerHTML = '';
 
         if (studentsData.length === 0) {
-            container.innerHTML = '<p class="text-gray-500 italic text-center py-4">Aucun élève trouvé.</p>';
+            container.innerHTML = `<p class="text-gray-500 italic text-center py-4">${msgNoStudents}</p>`;
             return;
         }
 
@@ -239,9 +237,8 @@ document.addEventListener('DOMContentLoaded', () => {
         studentsData.forEach(student => {
             let mentionHtml = '';
             
-            // Si Global, on ajoute le selecteur de mention
             if (isGlobal) {
-                let optionsHtml = '<option value="">-- Aucune --</option>';
+                let optionsHtml = `<option value="">${msgNoMention}</option>`;
                 if (mentionsChoices) {
                     mentionsChoices.forEach(([code, label]) => {
                         const selected = (student.mention === code) ? 'selected' : '';
@@ -251,7 +248,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 
                 mentionHtml = `
                     <div class="mt-2">
-                        <label class="block text-xs font-semibold text-gray-500 uppercase mb-1">Mention</label>
+                        <label class="block text-xs font-semibold text-gray-500 uppercase mb-1">${msgMention}</label>
                         <select name="mention_${student.student_id}" 
                                 class="mention-select w-full text-sm border-gray-300 rounded-md shadow-sm focus:border-${focusColor}-500 focus:ring focus:ring-${focusColor}-200 focus:ring-opacity-50 ${disabledClass}"
                                 ${disabledAttr}>
@@ -261,28 +258,28 @@ document.addEventListener('DOMContentLoaded', () => {
                 `;
             }
     
-            // Affichage du nom d'utilisateur dans la liste de saisie des appréciations
-            const usernameHtml = student.username ? `<span class="text-xs text-gray-400 block sm:inline sm:ml-1">(${student.username})</span>` : '';
+            // Sécurisation LTR pour le nom d'utilisateur
+            const usernameHtml = student.username ? `<span class="text-xs text-gray-400 block sm:inline" dir="ltr">(${student.username})</span>` : '';
     
-            // HTML de l'item
             const itemHtml = `
                 <div class="student-item bg-white p-3 rounded-lg shadow-sm border border-gray-100 flex flex-col md:flex-row gap-4 items-start" data-student-id="${student.student_id}">
                     <div class="md:w-1/4 pt-2">
-                        <span class="font-bold text-gray-800 text-lg md:text-base">
-                            ${student.name}
+                        <span class="font-bold text-gray-800 text-lg md:text-base flex flex-wrap items-center gap-1">
+                            <span>${student.name}</span>
                             ${usernameHtml}
                         </span>
                         ${mentionHtml}
                     </div>
                     <div class="md:w-3/4 relative w-full">
-                        ${isGlobal ? '<label class="block text-xs font-semibold text-gray-500 uppercase mb-1">Appréciation Globale</label>' : ''}
+                        ${isGlobal ? `<label class="block text-xs font-semibold text-gray-500 uppercase mb-1">${msgGlobalAppreciation}</label>` : ''}
                         <textarea name="content_${student.student_id}" 
                                   rows="${isGlobal ? 3 : 2}" 
                                   maxlength="500"
                                   class="appreciation-input w-full text-sm border-gray-300 rounded-md focus:border-${focusColor}-500 focus:ring focus:ring-${focusColor}-200 focus:ring-opacity-50 resize-y ${disabledClass}"
-                                  placeholder="Appréciation..."
+                                  placeholder="${msgPlaceholderAppr}"
                                   ${disabledAttr}>${student.appreciation_content || ''}</textarea>
-                        <div class="text-right text-xs text-gray-400 mt-0.5 char-count">
+                        <!-- MODIFICATION RTL : text-right devient text-end -->
+                        <div class="text-end text-xs text-gray-400 mt-0.5 char-count" dir="ltr">
                             <span class="current">${(student.appreciation_content || '').length}</span>/500
                         </div>
                     </div>
@@ -303,7 +300,7 @@ document.addEventListener('DOMContentLoaded', () => {
         e.preventDefault();
         
         if (!CONFIG.canEdit) {
-            showNotification("Action non autorisée (Mode Lecture Seule).", "error");
+            showNotification(msgUnauthorized, "error");
             return;
         }
 
@@ -317,7 +314,8 @@ document.addEventListener('DOMContentLoaded', () => {
         
         const originalBtnText = saveBtn.innerHTML;
         saveBtn.disabled = true;
-        saveBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Enregistrement...';
+        // MODIFICATION : flex items-center gap-2 pour le spinner
+        saveBtn.innerHTML = `<div class="flex items-center gap-2"><i class="fas fa-spinner fa-spin"></i><span>${msgSaving}</span></div>`;
         statusDiv.innerHTML = '';
         statusDiv.classList.remove('opacity-0');
 
@@ -347,15 +345,17 @@ document.addEventListener('DOMContentLoaded', () => {
         saveBtn.innerHTML = originalBtnText;
 
         if (result.success) {
-            showNotification("Enregistré avec succès !", 'success');
-            statusDiv.innerHTML = '<span class="text-green-600"><i class="fas fa-check mr-1"></i> Enregistré</span>';
+            showNotification(msgSuccessSave, 'success');
+            // MODIFICATION : flex gap-1
+            statusDiv.innerHTML = `<span class="flex items-center gap-1 text-green-600"><i class="fas fa-check"></i> <span>${msgSavedLabel}</span></span>`;
             
             setTimeout(() => {
                 statusDiv.classList.add('opacity-0');
             }, 3000);
             
         } else {
-            statusDiv.innerHTML = '<span class="text-red-600"><i class="fas fa-exclamation-triangle mr-1"></i> Erreur</span>';
+            // MODIFICATION : flex gap-1
+            statusDiv.innerHTML = `<span class="flex items-center gap-1 text-red-600"><i class="fas fa-exclamation-triangle"></i> <span>${msgErrorLabel}</span></span>`;
         }
     }
 
@@ -380,24 +380,20 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- Main Listeners (Délégation) ---
 
-    // Initialisation
     parseInitialData();
 
-    // Clics (Changement de trimestre)
     document.body.addEventListener('click', (e) => {
         if (e.target.closest('button[data-action="change-term"]')) {
             handleTermChange(e);
         }
     });
 
-    // Input (Compteur de caractères)
     document.body.addEventListener('input', (e) => {
         if (e.target.matches('.appreciation-input')) {
             updateCharCount(e.target);
         }
     });
 
-    // Submit (Sauvegarde)
     document.querySelectorAll('.student-list-form').forEach(form => {
         form.addEventListener('submit', handleSaveBlock);
     });

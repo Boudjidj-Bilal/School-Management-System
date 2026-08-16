@@ -1,14 +1,13 @@
 /**
  * class_management.js
  * Gestion des classes (Création, Modification, Suppression)
- * Mode Production Safe
+ * Mode Production Safe, Multilingue & RTL
  */
 
 document.addEventListener('DOMContentLoaded', () => {
 
     // --- 1. Récupération de la Configuration (DOM) ---
     
-    // On récupère le conteneur principal qui porte les données
     const container = document.getElementById('management-container');
     
     if (!container) {
@@ -18,8 +17,15 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Récupération sécurisée des configurations
     const API_URL = container.dataset.apiUrl;
-    // Conversion propre de la chaîne "true"/"false" en booléen JS
     const IS_CREATION_STAPE = container.dataset.isCreationStep === 'true';
+
+    // Récupération des traductions dynamiques (data-attributes)
+    const msgCreateTitle = container.getAttribute('data-msg-create-title') || "Créer une Nouvelle Classe";
+    const msgUpdateTitleFormat = container.getAttribute('data-msg-update-title') || "Modifier la Classe: {name}";
+    const msgBtnCreate = container.getAttribute('data-msg-btn-create') || "Créer la Classe";
+    const msgBtnUpdate = container.getAttribute('data-msg-btn-update') || "Sauvegarder les Modifications";
+    const msgMissingFields = container.getAttribute('data-msg-missing-fields') || "Veuillez sélectionner un niveau et donner un nom à la classe.";
+    const msgNetworkError = container.getAttribute('data-msg-network-error') || "Erreur réseau:";
 
     // Récupération du CSRF Token
     const csrfInput = document.querySelector('[name=csrfmiddlewaretoken]');
@@ -102,12 +108,12 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function resetForm() {
-        if(formTitle) formTitle.textContent = 'Créer une Nouvelle Classe';
+        if(formTitle) formTitle.textContent = msgCreateTitle;
         if(actionInput) actionInput.value = 'create';
         if(classIdInput) classIdInput.value = '';
         if(classNameInput) classNameInput.value = '';
         if(levelIdSelect) levelIdSelect.value = ''; 
-        if(submitButton) submitButton.textContent = 'Créer la Classe';
+        if(submitButton) submitButton.innerHTML = `<i class="fas fa-plus"></i><span>${msgBtnCreate}</span>`;
         if(cancelButton) cancelButton.classList.add('hidden');
         if(formMessage) formMessage.classList.add('hidden'); 
     }
@@ -115,12 +121,12 @@ document.addEventListener('DOMContentLoaded', () => {
     function populateEditForm(id, name, levelId) {
         if (IS_CREATION_STAPE) return;
 
-        if(formTitle) formTitle.textContent = `Modifier la Classe: ${name}`;
+        if(formTitle) formTitle.textContent = msgUpdateTitleFormat.replace('{name}', name);
         if(actionInput) actionInput.value = 'update';
         if(classIdInput) classIdInput.value = id;
         if(classNameInput) classNameInput.value = name;
         if(levelIdSelect) levelIdSelect.value = levelId;
-        if(submitButton) submitButton.textContent = 'Sauvegarder les Modifications';
+        if(submitButton) submitButton.innerHTML = `<i class="fas fa-save"></i><span>${msgBtnUpdate}</span>`;
         if(cancelButton) cancelButton.classList.remove('hidden');
         if(formMessage) formMessage.classList.add('hidden');
 
@@ -132,7 +138,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- 4. Logique CRUD (API) ---
 
     async function performAction(action, payload) {
-        if (IS_CREATION_STAPE && action !== 'create') return; // Sécurité: en création étape, seul create est permis normalement, ou bloqué totalement selon la logique métier
+        if (IS_CREATION_STAPE && action !== 'create') return;
 
         if (action !== 'delete' && submitButton) {
             submitButton.disabled = true;
@@ -161,11 +167,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 displayMessage(data.message || `Erreur: ${response.status}`, false);
             }
         } catch (error) {
-            displayMessage(`Erreur réseau: ${error.message}`, false);
+            displayMessage(`${msgNetworkError} ${error.message}`, false);
             console.error("Erreur action:", error);
         } finally {
             if (submitButton) {
-                // Reste désactivé si on est en "Creation Step" global, sinon réactivé
                 submitButton.disabled = IS_CREATION_STAPE; 
             }
         }
@@ -173,8 +178,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
     async function handleFormSubmit(event) {
         event.preventDefault();
-        // Si IS_CREATION_STAPE est true, cela signifie généralement "Verrouillé" selon ton code HTML précédent (overlay + disabled).
-        // Donc on bloque tout sauf si la logique métier a changé. Je garde la logique "disabled" de ton template.
         if (IS_CREATION_STAPE) return;
 
         const action = actionInput.value;
@@ -183,7 +186,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const levelId = levelIdSelect.value;
 
         if (!className || !levelId) {
-            displayMessage("Veuillez sélectionner un niveau et donner un nom à la classe.", false);
+            displayMessage(msgMissingFields, false);
             return;
         }
 

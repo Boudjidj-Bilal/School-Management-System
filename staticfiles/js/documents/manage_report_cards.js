@@ -1,9 +1,15 @@
 /**
  * Gestion de l'interface des bulletins (Modales, Confirmation).
- * VERSION SÉCURISÉE (CSP Compliant).
+ * VERSION SÉCURISÉE (CSP Compliant) & MULTILINGUE.
  */
 
 document.addEventListener('DOMContentLoaded', () => {
+
+    // --- Récupération des traductions dynamiques ---
+    // (Tu pourras ajouter ces attributs data-msg-* dans la balise body ou le conteneur principal si besoin, 
+    // ou laisser ces valeurs par défaut en dur dans le JS)
+    const container = document.getElementById('message-processing');
+    const msgProcessing = container ? container.getAttribute('data-msg-processing') : 'Traitement...';
 
     // --- Éléments du DOM ---
     const modal = document.getElementById('confirm-modal');
@@ -52,8 +58,8 @@ document.addEventListener('DOMContentLoaded', () => {
     // 4. Action de Confirmation (Soumission)
     if (confirmBtn && form) {
         confirmBtn.addEventListener('click', function() {
-            // Feedback visuel
-            this.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> Traitement...';
+            // Feedback visuel (avec flex et gap-2)
+            this.innerHTML = `<div class="inline-flex items-center gap-2"><i class="fas fa-spinner fa-spin"></i><span>${msgProcessing}</span></div>`;
             this.disabled = true;
             this.classList.add('opacity-50', 'cursor-not-allowed');
             
