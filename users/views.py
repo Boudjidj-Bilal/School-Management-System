@@ -31,6 +31,81 @@ def login(request):
     """
     Rend la page HTML de connexion et gère l'authentification.
     """
+    if request.user.is_authenticated:
+        return redirect('dashboard')
+        
+    if request.method == 'GET':
+        return render(request, 'users/login_page.html')
+    
+    if request.method == 'POST':
+        try:
+            data = json.loads(request.body)
+            username = data.get('username')
+            password = data.get('password')
+
+            user = get_user_by_username(username)
+
+            if not user:
+                return JsonResponse({'success': False, 'message': _("Nom d'utilisateur ou mot de passe incorrect.")})
+
+            user_type = get_user_type(user)
+
+            if not user_type:
+                return JsonResponse({'success': False, 'message': _('Impossible de vous connecter.')})
+
+            # 1. Déterminer l'école 
+            if not user_type == "SuperAdministrator":
+                school = get_user_school(user)                
+                # Erreur : S'il n'y a pas d'école
+                if not school:
+                    return JsonResponse({"success": False, "message": _("Impossible de vous connecter.")}, status=400)
+                
+                # Erreur : Si l'école est inactive
+                if school.is_active == False:
+                    return JsonResponse({"success": False, "message": _("Impossible de vous connecter.")}, status=400)
+
+                # On vérifie si ces utilisateurs on le droit de se connecter :
+                if user_type in ["Teacher", "CPE", "Administrator", "Student", "Parent"]:
+
+                    # On importe ici pour éviter les imports circulaires :
+                    from schools.utils import get_current_school_year 
+
+                    # On récupère l'année en fonction de l'école
+                    year = get_current_school_year(school.id)
+
+                    # S'il n'y a pas d'année, impossible de se connecter pour le moment
+                    if not year:
+                        return JsonResponse({"success": False, "message": _("Impossible de vous connecter pour le moment.")}, status=400)
+
+                    # Si on est à l'étape de creation ou fini d'une année, impossible de se connecter
+                    if year.creation or year.finished:
+                        return JsonResponse({"success": False, "message": _("Impossible de vous connecter pour le moment.")}, status=400)
+                    
+                    # On vérifie si ces utilisateurs on le droit de se connecter :
+                    elif user_type in ["Teacher", "CPE", "Student", "Parent"]:
+                        # Si on est à l'étape d'enregistrement d'une année, impossible de se connecter
+                        if year.registration:
+                            return JsonResponse({"success": False, "message": _("Impossible de vous connecter pour le moment.")}, status=400)
+
+            user_login = login_user(request, username, password)
+
+            if user_login:
+                is_student = (user_type == "Student")
+                # LA GÉOLOCALISATION A ÉTÉ SUPPRIMÉE ICI
+                return JsonResponse({'success': True, 'message': _('Connexion réussie.'), 'is_student': is_student})
+            else:
+                return JsonResponse({'success': False, 'message': _("Nom d'utilisateur ou mot de passe incorrect.")})
+                
+        except json.JSONDecodeError:
+            return JsonResponse({'success': False, 'message': _('Données JSON invalides.')}, status=400)
+        except Exception as e:
+            return JsonResponse({'success': False, 'message': str(e)}, status=500)
+
+
+def login_old(request):
+    """
+    Rend la page HTML de connexion et gère l'authentification.
+    """
 
     if request.user.is_authenticated:
         return redirect('dashboard')
@@ -837,7 +912,7 @@ def toggle_child_assignment_api(request):
                 # Utiliser transaction.atomic pour s'assurer que l'opération est atomique
                 with transaction.atomic():
                     Child.objects.create(parent=parent, student=student)
-                message = _("Lien créé : {student_name} est maintenant un enfant de {parent_name}.").format(student_name=student_name, parent_name=parent_name)
+                message = _('Lien créé : {student_name} est maintenant un enfant de {parent_name}.').format(student_name=student_name, parent_name=parent_name)
                 return JsonResponse({'success': True, 'message': message})
             except IntegrityError:
                 # Gère le cas où le lien existe déjà (unique_together)
@@ -847,7 +922,7 @@ def toggle_child_assignment_api(request):
         elif action == 'unlink':
             try:
                 # Supprime le lien existant
-                deleted_count, _ = Child.objects.filter(parent=parent, student=student).delete()
+                deleted_count, deleted_dict = Child.objects.filter(parent=parent, student=student).delete()
                 
                 if deleted_count > 0:
                     message = _("Lien supprimé : {student_name} n'est plus un enfant de {parent_name}.").format(student_name=student_name, parent_name=parent_name)

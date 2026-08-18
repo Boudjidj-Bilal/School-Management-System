@@ -4,19 +4,90 @@ document.addEventListener('DOMContentLoaded', () => {
     const csrfTokenInput = document.getElementById('csrf-token');
     const CSRF_TOKEN = csrfTokenInput ? csrfTokenInput.value : '';
 
+    // =====================================================================
+    // --- 0. GÉOLOCALISATION POST-CONNEXION (Étudiants uniquement) ---
+    // =====================================================================
+    const urlParams = new URLSearchParams(window.location.search);
+    const configDiv = document.getElementById('dashboard-config');
+    
+    // Vérification du drapeau de connexion et de la présence de la configuration HTML
+    if (urlParams.get('geolocate') === '1' && configDiv) {
+        
+        // Récupération des traductions et de l'URL depuis le HTML
+        const geoUrl = configDiv.getAttribute('data-geo-url');
+        const msgGeoUnsupported = configDiv.getAttribute('data-msg-geo-unsupported');
+        const msgGeoError = configDiv.getAttribute('data-msg-geo-error');
+        const msgGeoFail = configDiv.getAttribute('data-msg-geo-fail');
+
+        // 1. Nettoyage de l'URL (Magie silencieuse) : efface ?geolocate=1 de l'historique
+        const cleanUrl = window.location.protocol + "//" + window.location.host + window.location.pathname;
+        window.history.replaceState({}, document.title, cleanUrl);
+
+        // 2. Lancement de la géolocalisation
+        if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(
+                async (position) => {
+                    const latitude = position.coords.latitude;
+                    const longitude = position.coords.longitude;
+
+                    try {
+                        const response = await fetch(geoUrl, {
+                            method: 'POST',
+                            credentials: 'same-origin', // Autorise le transfert du cookie de session à Django
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'X-CSRFToken': CSRF_TOKEN,
+                            },
+                            body: JSON.stringify({ latitude: latitude, longitude: longitude })
+                        });
+
+                        // Vérifie que le serveur n'a pas planté en renvoyant du HTML (erreur 403, 500, etc.)
+                        const contentType = response.headers.get("content-type");
+                        if (!contentType || !contentType.includes("application/json")) {
+                            throw new Error("Invalid response format (not JSON)");
+                        }
+
+                        const result = await response.json();
+                        
+                        // Les messages de succès ou d'erreur "métier" sont déjà traduits 
+                        // côté Python dans votre vue `api_save_student_location` via _('...')
+                        if (!result.success) {
+                            console.warn(result.message);
+                        }
+                    } catch (error) {
+                        // Utilisation du texte technique traduit depuis le HTML
+                        console.error(`${msgGeoError}`, error);
+                    }
+                },
+                (error) => {
+                    // Utilisation du texte technique traduit depuis le HTML
+                    console.warn(`${msgGeoFail} ${error.code}) :`, error.message);
+                },
+                {
+                    timeout: 10000,
+                    maximumAge: 0,             // Force le recalcul de la position réelle (Ignore le cache Android)
+                    enableHighAccuracy: true   // Force l'utilisation de la puce GPS
+                }
+            );
+        } else {
+            console.warn(msgGeoUnsupported);
+        }
+    }
+
+
+    // =====================================================================
     // --- 1. GESTION SÉLECTEUR D'ÉCOLE (SuperAdmin) ---
+    // =====================================================================
     const schoolSelector = document.getElementById('school-selector');
     if (schoolSelector) {
-        // NOUVEAU : Récupération des traductions depuis les data-attributes du select
-        const msgErrorSchool = schoolSelector.dataset.msgErrorSchool || "Erreur lors du changement d'école :";
-        const msgErrorNetwork = schoolSelector.dataset.msgErrorNetwork || "Erreur de communication avec le serveur.";
+        // Les textes sont bien récupérés dynamiquement depuis les data-attributs du sélecteur HTML
+        const msgErrorSchool = schoolSelector.dataset.msgErrorSchool || "Error:";
+        const msgErrorNetwork = schoolSelector.dataset.msgErrorNetwork || "Network error.";
 
         schoolSelector.addEventListener('change', async (event) => {
             const schoolId = event.target.value;
-            // Récupération de l'URL depuis l'attribut data-url
             const url = schoolSelector.getAttribute('data-url');
             
-            // Feedback visuel : on désactive le select pendant le chargement
             schoolSelector.disabled = true;
             schoolSelector.classList.add('opacity-50', 'cursor-wait');
 
@@ -33,12 +104,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 const result = await response.json();
                 
                 if (result.success) {
-                    // Rechargement pour appliquer le contexte de l'école
                     window.location.reload();
                 } else {
-                    // Utilisation du texte traduit
                     alert(`${msgErrorSchool} ${result.message}`);
-                    // En cas d'erreur, on réactive le select
                     schoolSelector.disabled = false;
                     schoolSelector.classList.remove('opacity-50', 'cursor-wait');
                 }
@@ -51,19 +119,19 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
+    // =====================================================================
     // --- 2. GESTION SÉLECTEUR D'ENFANT (Parent) ---
+    // =====================================================================
     const childSelector = document.getElementById('child-selector');
     if (childSelector) {
-        // NOUVEAU : Récupération des traductions depuis les data-attributes du select
-        const msgErrorChild = childSelector.dataset.msgErrorChild || "Erreur :";
-        const msgErrorNetwork = childSelector.dataset.msgErrorNetwork || "Erreur de communication avec le serveur.";
+        // Les textes sont bien récupérés dynamiquement depuis les data-attributs du sélecteur HTML
+        const msgErrorChild = childSelector.dataset.msgErrorChild || "Error:";
+        const msgErrorNetwork = childSelector.dataset.msgErrorNetwork || "Network error.";
 
         childSelector.addEventListener('change', async (event) => {
             const childId = event.target.value;
-            // Récupération de l'URL depuis l'attribut data-url
             const url = childSelector.getAttribute('data-url');
             
-            // Feedback visuel
             childSelector.disabled = true;
             childSelector.classList.add('opacity-50', 'cursor-wait');
 
@@ -80,12 +148,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 const result = await response.json();
                 
                 if (result.success) {
-                    // Rechargement pour appliquer le contexte de l'enfant
                     window.location.reload();
                 } else {
-                    // Utilisation du texte traduit
                     alert(`${msgErrorChild} ${result.message}`);
-                    // En cas d'erreur, on réactive
                     childSelector.disabled = false;
                     childSelector.classList.remove('opacity-50', 'cursor-wait');
                 }

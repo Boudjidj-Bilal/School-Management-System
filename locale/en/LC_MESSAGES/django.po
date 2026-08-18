@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-08-06 15:54+0200\n"
+"POT-Creation-Date: 2026-08-18 20:08+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -319,7 +319,7 @@ msgstr "Type"
 #: communications/utils.py:21
 #: subjects/templates/subjects/assign_subjects.html:35
 #: users/templates/users/dashboard_page.html:130
-#: users/templates/users/profil.html:65 users/views.py:453
+#: users/templates/users/profil.html:65 users/views.py:528
 msgid "Professeur"
 msgstr "Teacher"
 
@@ -1231,8 +1231,9 @@ msgstr "Unrecognized action."
 
 #: classes/views.py:138 classes/views.py:288 classes/views.py:474
 #: documents/views.py:673 schools/views.py:118 schools/views.py:548
-#: schools/views.py:726 schools/views.py:878 users/views.py:114
-#: users/views.py:308 users/views.py:963 users/views.py:1067
+#: schools/views.py:726 schools/views.py:878 users/views.py:100
+#: users/views.py:189 users/views.py:383 users/views.py:1038
+#: users/views.py:1142
 msgid "Données JSON invalides."
 msgstr "Invalid JSON data."
 
@@ -1446,11 +1447,11 @@ msgid "Statut professeur mis à jour: {status_text}."
 msgstr "Teacher status updated: {status_text}."
 
 #: classes/views.py:842 schools/views.py:277 subjects/views.py:398
-#: users/views.py:869
+#: users/views.py:944
 msgid "Requête invalide (JSON non valide)."
 msgstr "Invalid request (invalid JSON)."
 
-#: classes/views.py:844 subjects/views.py:400 users/views.py:872
+#: classes/views.py:844 subjects/views.py:400 users/views.py:947
 #, python-brace-format
 msgid "Erreur interne du serveur: {error}"
 msgstr "Internal server error: {error}"
@@ -1501,10 +1502,6 @@ msgstr "Submission by {student} for {title}"
 #, python-brace-format
 msgid "Fichier de rendu pour {submission}"
 msgstr "Submission file for {submission}"
-
-#: communications/models.py:170
-msgid "unique_conversation"
-msgstr "unique_conversation"
 
 #: communications/models.py:177
 msgid "Un utilisateur ne peut pas discuter avec lui-même."
@@ -1619,8 +1616,8 @@ msgstr "{count} recipient(s) selected"
 
 #: communications/templates/communications/dashboard_announcements.html:53
 #: communications/templates/communications/dashboard_announcements.html:90
-#: templates/sidemenu.html:178 templates/sidemenu.html:220
-#: templates/sidemenu.html:269 templates/sidemenu.html:309
+#: templates/sidemenu.html:176 templates/sidemenu.html:218
+#: templates/sidemenu.html:267 templates/sidemenu.html:307
 msgid "Annonces"
 msgstr "Announcements"
 
@@ -1733,8 +1730,8 @@ msgid "Envoyer"
 msgstr "Send"
 
 #: communications/templates/communications/dashboard_communication.html:4
-#: templates/sidemenu.html:168 templates/sidemenu.html:214
-#: templates/sidemenu.html:263 templates/sidemenu.html:285
+#: templates/sidemenu.html:166 templates/sidemenu.html:212
+#: templates/sidemenu.html:261 templates/sidemenu.html:283
 #: users/templates/users/dashboard_page.html:158
 msgid "Messagerie"
 msgstr "Messaging"
@@ -1949,11 +1946,11 @@ msgid "Envoyer mon rendu"
 msgstr "Submit my work"
 
 #: communications/utils.py:20 users/templates/users/profil.html:68
-#: users/views.py:452
+#: users/views.py:527
 msgid "Proviseur"
 msgstr "Principal / Headmaster"
 
-#: communications/utils.py:22 templates/sidemenu.html:75 users/views.py:454
+#: communications/utils.py:22 templates/sidemenu.html:73 users/views.py:529
 msgid "CPE"
 msgstr "CPE (Education Advisor)"
 
@@ -5127,7 +5124,7 @@ msgid "Erreur de connexion : Impossible d’effectuer l’action."
 msgstr "Connection error: Unable to perform the action."
 
 #: subjects/templates/subjects/manage_subjects.html:29
-#: templates/sidemenu.html:111
+#: templates/sidemenu.html:109
 msgid "Matières"
 msgstr "Subjects"
 
@@ -5291,7 +5288,7 @@ msgstr ""
 msgid "Lien créé : {name} enseignera {subject}."
 msgstr "Link created: {name} will teach {subject}."
 
-#: subjects/views.py:360 users/views.py:844
+#: subjects/views.py:360 users/views.py:919
 msgid "Le lien existe déjà."
 msgstr "The link already exists."
 
@@ -5304,12 +5301,12 @@ msgstr "Link removed: {teacher_full_name} will no longer teach {subject}."
 msgid "Le lien n'existe pas."
 msgstr "The link does not exist."
 
-#: subjects/views.py:392 users/views.py:859
+#: subjects/views.py:392 users/views.py:934
 #, python-brace-format
 msgid "Erreur lors de la suppression: {error}"
 msgstr "Error during deletion: {error}"
 
-#: subjects/views.py:395 users/views.py:862
+#: subjects/views.py:395 users/views.py:937
 msgid "Action non reconnue. Utilisez \"link\" ou \"unlink\"."
 msgstr "Unrecognized action. Use \"link\" or \"unlink\"."
 
@@ -5391,99 +5388,99 @@ msgstr "Edit school"
 msgid "Établissement"
 msgstr "Institution"
 
-#: templates/sidemenu.html:52
+#: templates/sidemenu.html:51
 msgid "Statistiques"
 msgstr "Statistics"
 
-#: templates/sidemenu.html:59 users/templates/users/manage_users.html:4
+#: templates/sidemenu.html:57 users/templates/users/manage_users.html:4
 msgid "Gestion des utilisateurs"
 msgstr "User Management"
 
-#: templates/sidemenu.html:64
+#: templates/sidemenu.html:62
 msgid "Proviseurs"
 msgstr "Principals"
 
-#: templates/sidemenu.html:71
+#: templates/sidemenu.html:69
 msgid "Professeurs"
 msgstr "Teachers"
 
-#: templates/sidemenu.html:79
+#: templates/sidemenu.html:77
 msgid "Administrateurs"
 msgstr "Administrators"
 
-#: templates/sidemenu.html:86 users/templates/users/assign_children.html:23
+#: templates/sidemenu.html:84 users/templates/users/assign_children.html:23
 #: users/templates/users/manage_users.html:15
 msgid "Parents"
 msgstr "Parents"
 
-#: templates/sidemenu.html:90 users/templates/users/manage_users.html:13
+#: templates/sidemenu.html:88 users/templates/users/manage_users.html:13
 msgid "Étudiants"
 msgstr "Students"
 
-#: templates/sidemenu.html:94
+#: templates/sidemenu.html:92
 msgid "Enfants"
 msgstr "Children"
 
-#: templates/sidemenu.html:96
+#: templates/sidemenu.html:94
 msgid "Gestion de l'école"
 msgstr "School Management"
 
-#: templates/sidemenu.html:105
+#: templates/sidemenu.html:103
 msgid "Années"
 msgstr "Years"
 
-#: templates/sidemenu.html:117
+#: templates/sidemenu.html:115
 msgid "Attribution Profs"
 msgstr "Teacher Assignments"
 
-#: templates/sidemenu.html:123
+#: templates/sidemenu.html:121
 msgid "Salles de Classe"
 msgstr "Classrooms"
 
-#: templates/sidemenu.html:129
+#: templates/sidemenu.html:127
 msgid "Exceptions Calendrier"
 msgstr "Calendar Exceptions"
 
-#: templates/sidemenu.html:135
+#: templates/sidemenu.html:133
 msgid "Niveaux Scolaires"
 msgstr "School Levels"
 
-#: templates/sidemenu.html:141
+#: templates/sidemenu.html:139
 msgid "Découpage de l'année"
 msgstr "Year Breakdown"
 
-#: templates/sidemenu.html:150
+#: templates/sidemenu.html:148
 msgid "Gestion des classes"
 msgstr "Class Management"
 
-#: templates/sidemenu.html:159 templates/sidemenu.html:208
-#: templates/sidemenu.html:257 templates/sidemenu.html:303
+#: templates/sidemenu.html:157 templates/sidemenu.html:206
+#: templates/sidemenu.html:255 templates/sidemenu.html:301
 msgid "Absences & Retards"
 msgstr "Absences & Lateness"
 
-#: templates/sidemenu.html:188 templates/sidemenu.html:251
-#: templates/sidemenu.html:297
+#: templates/sidemenu.html:186 templates/sidemenu.html:249
+#: templates/sidemenu.html:295
 msgid "Notes"
 msgstr "Grades"
 
-#: templates/sidemenu.html:195 templates/sidemenu.html:244
-#: templates/sidemenu.html:291
+#: templates/sidemenu.html:193 templates/sidemenu.html:242
+#: templates/sidemenu.html:289
 msgid "Planning"
 msgstr "Schedule"
 
-#: templates/sidemenu.html:202
+#: templates/sidemenu.html:200
 msgid "Appréciations"
 msgstr "Appreciations"
 
-#: templates/sidemenu.html:225
+#: templates/sidemenu.html:223
 msgid "Bulletins"
 msgstr "Report Cards"
 
-#: templates/sidemenu.html:233
+#: templates/sidemenu.html:231
 msgid "Dépôt Documents"
 msgstr "Document Upload"
 
-#: templates/sidemenu.html:275 templates/sidemenu.html:315
+#: templates/sidemenu.html:273 templates/sidemenu.html:313
 msgid "Documents"
 msgstr "Documents"
 
@@ -5751,6 +5748,18 @@ msgstr "Global Export (All Schools)"
 msgid "Données complètes système"
 msgstr "Complete system data"
 
+#: users/templates/users/dashboard_page.html:445
+msgid "La géolocalisation n’est pas supportée par ce navigateur."
+msgstr "Geolocation is not supported by this browser."
+
+#: users/templates/users/dashboard_page.html:446
+msgid "Erreur réseau/serveur lors de l’envoi GPS :"
+msgstr "Network/server error while sending GPS:"
+
+#: users/templates/users/dashboard_page.html:447
+msgid "Échec de la géolocalisation (Code"
+msgstr "Geolocation failed (Code"
+
 #: users/templates/users/manage_users.html:73
 msgid "Gérer les notes"
 msgstr "Manage grades"
@@ -5930,7 +5939,7 @@ msgstr "Unable to update photo."
 msgid "Super Admin"
 msgstr "Super Admin"
 
-#: users/templates/users/profil.html:70 users/views.py:455
+#: users/templates/users/profil.html:70 users/views.py:530
 msgid "Administrateur"
 msgstr "Administrator"
 
@@ -5946,7 +5955,7 @@ msgstr "Security"
 msgid "Mettre à jour votre mot de passe."
 msgstr "Update your password."
 
-#: users/templates/users/profil.html:127 users/views.py:939
+#: users/templates/users/profil.html:127 users/views.py:1014
 msgid "Les nouveaux mots de passe ne correspondent pas."
 msgstr "The new passwords do not match."
 
@@ -6286,7 +6295,7 @@ msgid "Cet utilisateur est déjà lié à un parent."
 msgstr "This user is already linked to a parent."
 
 #: users/utils.py:1016 users/utils.py:1067 users/utils.py:1086
-#: users/utils.py:1148 users/views.py:865
+#: users/utils.py:1148 users/views.py:940
 msgid "Parent non trouvé."
 msgstr "Parent not found."
 
@@ -6362,202 +6371,207 @@ msgstr "The password is valid."
 msgid "Adresse inconnue"
 msgstr "Unknown address"
 
-#: users/views.py:50 users/views.py:111
+#: users/views.py:49 users/views.py:97 users/views.py:125 users/views.py:186
 msgid "Nom d'utilisateur ou mot de passe incorrect."
 msgstr "Incorrect username or password."
 
-#: users/views.py:55 users/views.py:63 users/views.py:67
+#: users/views.py:54 users/views.py:61 users/views.py:65 users/views.py:130
+#: users/views.py:138 users/views.py:142
 msgid "Impossible de vous connecter."
 msgstr "Unable to log you in."
 
-#: users/views.py:80 users/views.py:84 users/views.py:91
+#: users/views.py:78 users/views.py:82 users/views.py:88 users/views.py:155
+#: users/views.py:159 users/views.py:166
 msgid "Impossible de vous connecter pour le moment."
 msgstr "Unable to log you in at the moment."
 
-#: users/views.py:109
+#: users/views.py:95 users/views.py:184
 msgid "Connexion réussie."
 msgstr "Login successful."
 
-#: users/views.py:301
+#: users/views.py:376
 msgid "Un lien de réinitialisation a été envoyé à votre adresse e-mail."
 msgstr "A reset link has been sent to your email address."
 
-#: users/views.py:303
+#: users/views.py:378
 msgid "Erreur lors de l’envoi de l'e-mail."
 msgstr "Error while sending the email."
 
-#: users/views.py:305
+#: users/views.py:380
 msgid "Nom d'utilisateur invalide."
 msgstr "Invalid username."
 
-#: users/views.py:342 users/views.py:381
+#: users/views.py:417 users/views.py:456
 msgid "Le lien de réinitialisation est invalide ou a expiré."
 msgstr "The reset link is invalid or has expired."
 
-#: users/views.py:516
+#: users/views.py:591
 msgid "L'utilisateur est introuvable."
 msgstr "User not found."
 
-#: users/views.py:561
+#: users/views.py:636
 msgid ""
 "Impossible de modifier le statut d'un utilisateur lorsque l'année est en "
 "cours de déroulement."
 msgstr "Unable to modify a user's status when the year is ongoing."
 
-#: users/views.py:565
+#: users/views.py:640
 msgid "L'utilisateur a bien été modifié."
 msgstr "The user has been successfully modified."
 
-#: users/views.py:572
+#: users/views.py:647
 msgid "Veuillez compléter le formulaire."
 msgstr "Please fill out the form."
 
-#: users/views.py:577
+#: users/views.py:652
 msgid "L'adresse email existe déjà."
 msgstr "The email address already exists."
 
-#: users/views.py:592
+#: users/views.py:667
 msgid "L'école est introuvale."
 msgstr "The school is not found."
 
-#: users/views.py:641
+#: users/views.py:716
 msgid "L'utilisateur a bien été crée."
 msgstr "The user has been successfully created."
 
-#: users/views.py:644
+#: users/views.py:719
 #, python-brace-format
 msgid "Integrity error: {error}"
 msgstr "Integrity error: {error}"
 
-#: users/views.py:646 users/views.py:671
+#: users/views.py:721 users/views.py:746
 #, python-brace-format
 msgid "An error occurred: {error}"
 msgstr "An error occurred: {error}"
 
-#: users/views.py:657
+#: users/views.py:732
 msgid "School ID is required."
 msgstr "School ID is required."
 
-#: users/views.py:664
+#: users/views.py:739
 msgid "School selected successfully."
 msgstr "School selected successfully."
 
-#: users/views.py:666
+#: users/views.py:741
 msgid "School not found."
 msgstr "School not found."
 
-#: users/views.py:668 users/views.py:706
+#: users/views.py:743 users/views.py:781
 msgid "Permission denied."
 msgstr "Permission denied."
 
-#: users/views.py:699
+#: users/views.py:774
 msgid "Vous ne pouvez pas modifier le statut d'un autre proviseur."
 msgstr "You cannot modify another principal's status."
 
-#: users/views.py:703
+#: users/views.py:778
 msgid "Vous ne pouvez pas modifier le statut d'un membre du personnel."
 msgstr "You cannot modify a staff member's status."
 
-#: users/views.py:711
+#: users/views.py:786
 msgid "Utilisateur activé avec succès."
 msgstr "User activated successfully."
 
-#: users/views.py:714
+#: users/views.py:789
 msgid "Utilisateur désactivé avec succès."
 msgstr "User deactivated successfully."
 
-#: users/views.py:716
+#: users/views.py:791
 msgid "Action invalide."
 msgstr "Invalid action."
 
-#: users/views.py:722
+#: users/views.py:797
 #, python-brace-format
 msgid "Une erreur est survenue: {error}"
 msgstr "An error occurred: {error}"
 
-#: users/views.py:823
+#: users/views.py:898
 msgid "Données manquantes (parent_id, student_id, action)."
 msgstr "Missing data (parent_id, student_id, action)."
 
-#: users/views.py:840
+#: users/views.py:915
 #, python-brace-format
 msgid "Lien créé : {student_name} est maintenant un enfant de {parent_name}."
 msgstr "Link created: {student_name} is now a child of {parent_name}."
 
-#: users/views.py:853
+#: users/views.py:928
 #, python-brace-format
 msgid "Lien supprimé : {student_name} n'est plus un enfant de {parent_name}."
 msgstr "Link removed: {student_name} is no longer a child of {parent_name}."
 
-#: users/views.py:856
+#: users/views.py:931
 msgid "Le lien n'existe pas, aucune suppression effectuée."
 msgstr "The link does not exist, no deletion performed."
 
-#: users/views.py:867
+#: users/views.py:942
 msgid "Étudiant non trouvé."
 msgstr "Student not found."
 
-#: users/views.py:895
+#: users/views.py:970
 msgid "Cet enfant n'est pas lié à votre compte."
 msgstr "This child is not linked to your account."
 
-#: users/views.py:936
+#: users/views.py:1011
 msgid "Tous les champs sont obligatoires."
 msgstr "All fields are mandatory."
 
-#: users/views.py:950
+#: users/views.py:1025
 msgid "Votre mot de passe actuel est incorrect."
 msgstr "Your current password is incorrect."
 
-#: users/views.py:960
+#: users/views.py:1035
 msgid "Votre mot de passe a été modifié avec succès."
 msgstr "Your password has been changed successfully."
 
-#: users/views.py:966
+#: users/views.py:1041
 msgid "Une erreur serveur est survenue."
 msgstr "A server error occurred."
 
-#: users/views.py:990
+#: users/views.py:1065
 msgid "Aucun fichier reçu."
 msgstr "No file received."
 
-#: users/views.py:996
+#: users/views.py:1071
 msgid "Le fichier doit être une image."
 msgstr "The file must be an image."
 
-#: users/views.py:1009
+#: users/views.py:1084
 msgid "Photo mise à jour avec succès."
 msgstr "Photo updated successfully."
 
-#: users/views.py:1014
+#: users/views.py:1089
 #, python-brace-format
 msgid "Erreur serveur : {error}"
 msgstr "Server error: {error}"
 
-#: users/views.py:1029
+#: users/views.py:1104
 msgid "Photo supprimée."
 msgstr "Photo deleted."
 
-#: users/views.py:1033
+#: users/views.py:1108
 #, python-brace-format
 msgid "Erreur lors de la suppression : {error}"
 msgstr "Error during deletion: {error}"
 
-#: users/views.py:1050
+#: users/views.py:1125
 msgid "Coordonnées manquantes."
 msgstr "Missing coordinates."
 
-#: users/views.py:1056
+#: users/views.py:1131
 msgid "Utilisateur non autorisé."
 msgstr "Unauthorized user."
 
-#: users/views.py:1062
+#: users/views.py:1137
 msgid "Position enregistrée avec succès."
 msgstr "Position saved successfully."
 
-#: users/views.py:1064
+#: users/views.py:1139
 msgid "Erreur lors de la géolocalisation."
 msgstr "Error during geolocation."
+
+#~ msgid "unique_conversation"
+#~ msgstr "unique_conversation"
 
 #~ msgid "Aucun enfant n\""
 #~ msgstr "No child n\""

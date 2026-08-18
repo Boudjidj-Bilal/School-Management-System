@@ -26,31 +26,8 @@ document.addEventListener('DOMContentLoaded', () => {
         const username = usernameInput.value;
         const password = passwordInput.value;
         const csrfToken = document.querySelector('input[name="csrfmiddlewaretoken"]').value;
-        
-        let latitude = null;
-        let longitude = null;
 
-        if (navigator.geolocation) {
-            await new Promise((resolve) => {
-                navigator.geolocation.getCurrentPosition(
-                    (position) => {
-                        latitude = position.coords.latitude;
-                        longitude = position.coords.longitude;
-                        console.log("GPS récupéré avec succès :", latitude, longitude);
-                        resolve();
-                    },
-                    (error) => {
-                        console.warn("Échec de la géolocalisation (Code " + error.code + ") :", error.message);
-                        resolve();
-                    },
-                    { 
-                        timeout: 10000,          // 10 secondes max
-                        maximumAge: Infinity,    // Accepte la position en cache mémorisée par le navigateur
-                        enableHighAccuracy: false // Plus rapide et moins strict en local
-                    }
-                );
-            });
-        }
+        // LA GÉOLOCALISATION A ÉTÉ ENTIÈREMENT SUPPRIMÉE D'ICI
 
         try {
             const response = await fetch(loginUrl, { 
@@ -61,22 +38,27 @@ document.addEventListener('DOMContentLoaded', () => {
                 },
                 body: JSON.stringify({ 
                     username: username, 
-                    password: password, 
-                    latitude: latitude, 
-                    longitude: longitude 
+                    password: password 
+                    // latitude et longitude retirés
                 })
             });
 
             const data = await response.json();
 
             if (response.ok && data.success) {
-                // Succès : Affichage du message traduit par le backend Python
                 messageBox.textContent = data.message;
                 messageBox.classList.remove('text-red-600');
                 messageBox.classList.add('text-green-600');
                 
-                const targetUrl = data.redirect_url || successUrl;
-                window.location.href = targetUrl;
+                let targetUrl = data.redirect_url || successUrl;
+                const urlObj = new URL(targetUrl, window.location.origin);
+                
+                // On n'ajoute le drapeau QUE si c'est un étudiant
+                if (data.is_student) {
+                    urlObj.searchParams.set('geolocate', '1');
+                }
+                
+                window.location.href = urlObj.toString();
 
             } else {
                 // Erreur métier : Utilisation du message envoyé par Python ou message d'erreur par défaut
