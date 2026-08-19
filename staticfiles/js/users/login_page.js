@@ -53,11 +53,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 let targetUrl = data.redirect_url || successUrl;
                 const urlObj = new URL(targetUrl, window.location.origin);
                 
-                // On n'ajoute le drapeau QUE si c'est un étudiant
-                if (data.is_student) {
-                    urlObj.searchParams.set('geolocate', '1');
-                }
-                
                 window.location.href = urlObj.toString();
 
             } else {

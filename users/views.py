@@ -1,4 +1,5 @@
 from django.shortcuts import render, redirect, get_object_or_404
+from django.urls import reverse
 
 from django.http import JsonResponse
 
@@ -90,98 +91,20 @@ def login(request):
             user_login = login_user(request, username, password)
 
             if user_login:
-                is_student = (user_type == "Student")
-                # LA GÉOLOCALISATION A ÉTÉ SUPPRIMÉE ICI
-                return JsonResponse({'success': True, 'message': _('Connexion réussie.'), 'is_student': is_student})
-            else:
-                return JsonResponse({'success': False, 'message': _("Nom d'utilisateur ou mot de passe incorrect.")})
-                
-        except json.JSONDecodeError:
-            return JsonResponse({'success': False, 'message': _('Données JSON invalides.')}, status=400)
-        except Exception as e:
-            return JsonResponse({'success': False, 'message': str(e)}, status=500)
 
-
-def login_old(request):
-    """
-    Rend la page HTML de connexion et gère l'authentification.
-    """
-
-    if request.user.is_authenticated:
-        return redirect('dashboard')
-        
-    if request.method == 'GET':
-        return render(request, 'users/login_page.html')
-    
-    if request.method == 'POST':
-        try:
-            data = json.loads(request.body)
-            username = data.get('username')
-            password = data.get('password')
-
-            user = get_user_by_username(username)
-
-            if not user:
-                return JsonResponse({'success': False, 'message': _("Nom d'utilisateur ou mot de passe incorrect.")})
-
-            user_type = get_user_type(user)
-
-            if not user_type:
-                return JsonResponse({'success': False, 'message': _('Impossible de vous connecter.')})
-
-
-            # 1. Déterminer l'école 
-            if not user_type == "SuperAdministrator":
-                school = get_user_school(user)                
-                # Erreur : S'il n'y a pas d'école
-                if not school:
-                    return JsonResponse({"success": False, "message": _("Impossible de vous connecter.")}, status=400)
-                
-                # Erreur : Si l'école est inactive
-                if school.is_active == False:
-                    return JsonResponse({"success": False, "message": _("Impossible de vous connecter.")}, status=400)
-
-                # On vérifie si ces utilisateurs on le droit de se connecter :
-                if user_type in ["Teacher", "CPE", "Administrator", "Student", "Parent"]:
-
-                    # On importe ici pour éviter les imports circulaires :
-                    from schools.utils import get_current_school_year 
-
-                    # On récupère l'année en fonction de l'école
-                    year = get_current_school_year(school.id)
-
-                    # S'il n'y a pas d'année, impossible de se connecter pour le moment
-                    if not year:
-                        return JsonResponse({"success": False, "message": _("Impossible de vous connecter pour le moment.")}, status=400)
-
-                    # Si on est à l'étape de creation ou fini d'une année, impossible de se connecter
-                    if year.creation or year.finished:
-                        return JsonResponse({"success": False, "message": _("Impossible de vous connecter pour le moment.")}, status=400)
-                    
-                    # On vérifie si ces utilisateurs on le droit de se connecter :
-                    elif user_type in ["Teacher", "CPE", "Student", "Parent"]:
-
-                        # Si on est à l'étape d'enregistrement d'une année, impossible de se connecter
-                        if year.registration:
-                            return JsonResponse({"success": False, "message": _("Impossible de vous connecter pour le moment.")}, status=400)
-
-            user_login = login_user(request, username, password)
-
-            if user_login:
-                # Si c'est un étudiant, on récupère les coordonnées envoyées par le JSON
+                # --- Redirection Intelligente ---
+                # Si l'utilisateur est un étudiant, on le renvoie vers la demande de géolocalisation
                 if user_type == "Student":
-                    latitude = data.get('latitude')
-                    longitude = data.get('longitude')
-                    
-                    print(f"DEBUG - Coordonnées reçues pour l'étudiant {username} : Lat={latitude}, Lon={longitude}")
-                    
-                    if latitude is not None and longitude is not None:
-                        # On appelle directement notre fonction de service
-                        update_student_location(user_login.student_user, latitude, longitude)
-                    else:
-                        print("DEBUG - Coordonnées absentes ou refusées par l'utilisateur.")
-                
-                return JsonResponse({'success': True, 'message': _('Connexion réussie.')})
+                    target_url = reverse('student_location_prompt')
+                # Sinon (Prof, Parent, etc.), il va directement à son tableau de bord
+                else:
+                    target_url = reverse('dashboard')
+
+                return JsonResponse({
+                    'success': True, 
+                    'message': _('Connexion réussie.'),
+                    'redirect_url': target_url
+                })
             else:
                 return JsonResponse({'success': False, 'message': _("Nom d'utilisateur ou mot de passe incorrect.")})
                 
@@ -189,6 +112,27 @@ def login_old(request):
             return JsonResponse({'success': False, 'message': _('Données JSON invalides.')}, status=400)
         except Exception as e:
             return JsonResponse({'success': False, 'message': str(e)}, status=500)
+
+@login_required(login_url='login')
+def student_location_prompt(request):
+    """
+    Page intermédiaire post-connexion pour les étudiants uniquement.
+    Leur demande d'activer la géolocalisation avant d'aller sur le dashboard.
+    """
+    user = request.user
+    user_type = get_user_type(user)
+    
+    # Sécurité : Si un parent ou un prof atterrit ici par erreur, 
+    # on le redirige immédiatement vers son vrai tableau de bord.
+    if user_type != "Student":
+        return redirect('dashboard')
+    
+    # On passe l'URL du dashboard au template pour le bouton "Ignorer" ou la redirection finale
+    context = {
+        'dashboard_url': reverse('dashboard')
+    }
+    
+    return render(request, 'users/student_location_prompt.html', context)
 
 def logout(request):
     """
@@ -1136,7 +1080,7 @@ def api_save_student_location(request):
         if success:
             return JsonResponse({'success': True, 'message': _('Position enregistrée avec succès.')})
         else:
-            return JsonResponse({'success': False, 'message': _('Erreur lors de la géolocalisation.')}, status=500)
+            return JsonResponse({'success': False, 'message': _('Erreur lors de la géolocalisation. Veuillez réessayer.')}, status=500)
 
     except json.JSONDecodeError:
         return JsonResponse({'success': False, 'message': _('Données JSON invalides.')}, status=400)

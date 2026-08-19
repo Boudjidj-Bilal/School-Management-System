@@ -437,16 +437,6 @@
             </div>
         </div>
         <input type="hidden" id="csrf-token" value="{{ csrf_token }}">
-        
-        {% if user_type == 'Student' %}
-            <!-- Configuration et traductions pour le JS du Dashboard -->
-            <div id="dashboard-config" hidden
-                data-geo-url="{% url 'api_save_student_location' %}"
-                data-msg-geo-unsupported="{% trans 'La géolocalisation n’est pas supportée par ce navigateur.' %}"
-                data-msg-geo-error="{% trans 'Erreur réseau/serveur lors de l’envoi GPS :' %}"
-                data-msg-geo-fail="{% trans 'Échec de la géolocalisation (Code' %}">
-            </div>
-        {% endif %}
     </main>
 {% endblock %}
 

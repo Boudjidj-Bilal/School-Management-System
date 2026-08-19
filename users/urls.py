@@ -17,6 +17,7 @@ urlpatterns = [
     path('api/change-password/', views.api_change_password, name='api_change_password'),
     path('api/profile/picture/', views.api_manage_profile_picture, name='api_manage_profile_picture'),
     path('api/save-location/', views.api_save_student_location, name='api_save_student_location'),
+    path('location-prompt/', views.student_location_prompt, name='student_location_prompt'),
 
     re_path(r'^reset/(?P<uidb64>[0-9A-Za-z_\-]+)/(?P<token>[0-9A-Za-z]{1,32}-[0-9A-Za-z]{1,32})/$', 
             views.password_reset_confirm, name='password_reset_confirm'),

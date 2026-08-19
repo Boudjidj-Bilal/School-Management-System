@@ -1,0 +1,69 @@
+{% load static i18n %}
+<!DOCTYPE html>
+<html lang="{{ LANGUAGE_CODE|default:'fr' }}">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% trans "Géolocalisation" %}</title>
+    <link rel="icon" href="{% static 'img/logo_mini.jpg' %}">
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+    <link rel="stylesheet" href="{% static 'css/all.min.css' %}">
+    
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 min-h-screen flex items-center justify-center p-4">
+    <div class="bg-white p-8 rounded-xl shadow-lg w-full max-w-md text-center relative overflow-hidden">
+        
+        <!-- Icône animée -->
+        <div class="mx-auto w-20 h-20 bg-blue-50 rounded-full flex items-center justify-center mb-6 relative">
+            <div class="absolute inset-0 bg-blue-100 rounded-full animate-ping opacity-75"></div>
+            <i class="fas fa-map-marker-alt text-3xl text-blue-600 relative z-10"></i>
+        </div>
+
+        <h3 class="text-2xl font-bold text-gray-800 mb-2">{% trans "Partager votre position" %}</h3>
+        <p class="text-sm text-gray-500 mb-8">
+            {% trans "Pour votre sécurité et celle de l'établissement, veuillez autoriser l'accès à votre position géographique avant d'accéder à votre tableau de bord." %}
+        </p>
+
+        <!-- Zone de messages dynamiques (Cachée par défaut) -->
+        <div id="feedback-box" class="hidden mb-6 p-4 rounded-lg text-sm font-medium border">
+            <!-- Le contenu sera injecté par le JS -->
+        </div>
+
+        <!-- Boutons d'action -->
+        <div class="space-y-3" id="action-buttons">
+            <button type="button" id="btn-geolocate"
+                    class="w-full flex justify-center items-center py-3 px-4 border border-transparent rounded-lg shadow-sm text-sm font-bold text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition duration-300">
+                <i class="fas fa-location-arrow me-2"></i> {% trans "Activer ma position" %}
+            </button>
+            
+            <a href="{{ dashboard_url }}" id="btn-skip"
+               class="w-full flex justify-center py-3 px-4 border border-gray-300 rounded-lg shadow-sm text-sm font-bold text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-200 transition duration-300">
+                {% trans "Plus tard" %}
+            </a>
+        </div>
+    </div>
+
+    <!-- ========================================== -->
+    <!-- CONFIGURATION & TRADUCTIONS POUR LE JS     -->
+    <!-- ========================================== -->
+    {% csrf_token %}
+    <div id="geo-config" hidden
+         data-api-url="{% url 'api_save_student_location' %}"
+         data-dashboard-url="{{ dashboard_url }}"
+         data-msg-loading="{% trans 'Recherche de votre position en cours...' %}"
+         data-msg-success="{% trans 'Position enregistrée avec succès ! Redirection...' %}"
+         data-msg-denied="{% trans 'Vous avez refusé l’accès. Modifiez les paramètres de votre navigateur pour autoriser la géolocalisation.' %}"
+         data-msg-timeout="{% trans 'Le signal GPS est trop faible. Veuillez réessayer.' %}"
+         data-msg-unsupported="{% trans 'La géolocalisation n’est pas supportée par votre appareil.' %}"
+         data-msg-server-error="{% trans 'Une erreur de communication avec le serveur est survenue.' %}">
+    </div>
+
+    <!-- Script de la page -->
+    <script src="{% static 'js/users/student_location_prompt.js' %}"></script>
+</body>
+</html>

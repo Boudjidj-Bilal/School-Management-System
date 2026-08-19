@@ -10,7 +10,7 @@ from django.contrib.auth import authenticate, login, logout, update_session_auth
 import string
 import secrets
 from django.core.serializers.json import DjangoJSONEncoder
-from django.utils.translation import gettext_lazy as _
+from django.utils.translation import get_language, gettext_lazy as _
 
 
 # Gestion des emails automatique :
@@ -1397,6 +1397,9 @@ def get_address_from_coordinates(latitude, longitude):
     avec une protection anti-saturation (Rate Limiting : 1 req / seconde max).
     """
     global _last_nominatim_call
+
+    # On récupère la langue actuelle de l'utilisateur sur Django (ex: 'fr', 'ar', 'en')
+    current_lang = get_language() or 'fr'
     
     url = "https://nominatim.openstreetmap.org/reverse"
     params = {
@@ -1404,7 +1407,8 @@ def get_address_from_coordinates(latitude, longitude):
         'lat': latitude,
         'lon': longitude,
         'zoom': 18,
-        'addressdetails': 1
+        'addressdetails': 1,
+        'accept-language': current_lang  # On demande à Nominatim de traduire/translittérer
     }
     headers = {
         'User-Agent': 'Theranotes-tsr/1.0 (mytheranotes@outlook.com)'
@@ -1417,7 +1421,7 @@ def get_address_from_coordinates(latitude, longitude):
             time.sleep(1.0 - elapsed)
         
         try:
-            response = requests.get(url, params=params, headers=headers, timeout=5)
+            response = requests.get(url, params=params, headers=headers, timeout=10)
             _last_nominatim_call = time.time()
             
             if response.status_code == 200:
@@ -1445,8 +1449,8 @@ def get_address_from_coordinates(latitude, longitude):
                     'city': town,
                     'country': country
                 }
-        except requests.RequestException:
-            pass
+        except requests.RequestException as e:
+            print(e)
             
         return None
 

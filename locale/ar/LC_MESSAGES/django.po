@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-08-18 20:07+0200\n"
+"POT-Creation-Date: 2026-08-19 16:44+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -320,7 +320,7 @@ msgstr "النوع"
 #: communications/utils.py:21
 #: subjects/templates/subjects/assign_subjects.html:35
 #: users/templates/users/dashboard_page.html:130
-#: users/templates/users/profil.html:65 users/views.py:528
+#: users/templates/users/profil.html:65 users/views.py:472
 msgid "Professeur"
 msgstr "أستاذ"
 
@@ -1231,9 +1231,8 @@ msgstr "إجراء غير معروف."
 
 #: classes/views.py:138 classes/views.py:288 classes/views.py:474
 #: documents/views.py:673 schools/views.py:118 schools/views.py:548
-#: schools/views.py:726 schools/views.py:878 users/views.py:100
-#: users/views.py:189 users/views.py:383 users/views.py:1038
-#: users/views.py:1142
+#: schools/views.py:726 schools/views.py:878 users/views.py:112
+#: users/views.py:327 users/views.py:982 users/views.py:1086
 msgid "Données JSON invalides."
 msgstr "بيانات JSON غير صالحة."
 
@@ -1447,11 +1446,11 @@ msgid "Statut professeur mis à jour: {status_text}."
 msgstr "تم تحديث حالة الأستاذ: {status_text}."
 
 #: classes/views.py:842 schools/views.py:277 subjects/views.py:398
-#: users/views.py:944
+#: users/views.py:888
 msgid "Requête invalide (JSON non valide)."
 msgstr "طلب غير صالح (JSON غير صالح)."
 
-#: classes/views.py:844 subjects/views.py:400 users/views.py:947
+#: classes/views.py:844 subjects/views.py:400 users/views.py:891
 #, python-brace-format
 msgid "Erreur interne du serveur: {error}"
 msgstr "خطأ داخلي في الخادم: {error}"
@@ -1950,11 +1949,11 @@ msgid "Envoyer mon rendu"
 msgstr "إرسال عملي المسلم"
 
 #: communications/utils.py:20 users/templates/users/profil.html:68
-#: users/views.py:527
+#: users/views.py:471
 msgid "Proviseur"
 msgstr "المدير"
 
-#: communications/utils.py:22 templates/sidemenu.html:73 users/views.py:529
+#: communications/utils.py:22 templates/sidemenu.html:73 users/views.py:473
 msgid "CPE"
 msgstr "مستشار التربية (CPE)"
 
@@ -5270,7 +5269,7 @@ msgstr "فشل الاتساق: الأستاذ والمادة لا ينتميان
 msgid "Lien créé : {name} enseignera {subject}."
 msgstr "تم إنشاء الرابط: {name} سيدرس {subject}."
 
-#: subjects/views.py:360 users/views.py:919
+#: subjects/views.py:360 users/views.py:863
 msgid "Le lien existe déjà."
 msgstr "الرابط موجود مسبقاً."
 
@@ -5283,12 +5282,12 @@ msgstr "تم حذف الرابط: لن يقوم {teacher_full_name} بتدريس
 msgid "Le lien n'existe pas."
 msgstr "الرابط غير موجود."
 
-#: subjects/views.py:392 users/views.py:934
+#: subjects/views.py:392 users/views.py:878
 #, python-brace-format
 msgid "Erreur lors de la suppression: {error}"
 msgstr "خطأ أثناء الحذف: {error}"
 
-#: subjects/views.py:395 users/views.py:937
+#: subjects/views.py:395 users/views.py:881
 msgid "Action non reconnue. Utilisez \"link\" ou \"unlink\"."
 msgstr "إجراء غير معروف. استخدم \"link\" أو \"unlink\"."
 
@@ -5729,18 +5728,6 @@ msgstr "تصدير شامل (جميع المدارس)"
 msgid "Données complètes système"
 msgstr "بيانات النظام الكاملة"
 
-#: users/templates/users/dashboard_page.html:445
-msgid "La géolocalisation n’est pas supportée par ce navigateur."
-msgstr "تحديد الموقع الجغرافي غير مدعوم في هذا المتصفح."
-
-#: users/templates/users/dashboard_page.html:446
-msgid "Erreur réseau/serveur lors de l’envoi GPS :"
-msgstr "خطأ في الشبكة/الخادم أثناء إرسال إحداثيات GPS :"
-
-#: users/templates/users/dashboard_page.html:447
-msgid "Échec de la géolocalisation (Code"
-msgstr "فشل تحديد الموقع الجغرافي (رمز"
-
 #: users/templates/users/manage_users.html:73
 msgid "Gérer les notes"
 msgstr "إدارة العلامات"
@@ -5921,7 +5908,7 @@ msgstr "تعذر تحديث الصورة."
 msgid "Super Admin"
 msgstr "مشرف رئيسي"
 
-#: users/templates/users/profil.html:70 users/views.py:530
+#: users/templates/users/profil.html:70 users/views.py:474
 msgid "Administrateur"
 msgstr "مشرف"
 
@@ -5937,7 +5924,7 @@ msgstr "الأمان"
 msgid "Mettre à jour votre mot de passe."
 msgstr "تحديث كلمة المرور الخاصة بك."
 
-#: users/templates/users/profil.html:127 users/views.py:1014
+#: users/templates/users/profil.html:127 users/views.py:958
 msgid "Les nouveaux mots de passe ne correspondent pas."
 msgstr "كلمات المرور الجديدة غير متطابقة."
 
@@ -6008,6 +5995,57 @@ msgstr "هل أنت متأكد من رغبتك في حذف صورتك الحال
 #: users/templates/users/profil.html:251
 msgid "Impossible de supprimer la photo."
 msgstr "تعذر حذف الصورة."
+
+#: users/templates/users/student_location_prompt.html:7
+msgid "Géolocalisation"
+msgstr "تحديد الموقع الجغرافي"
+
+#: users/templates/users/student_location_prompt.html:27
+msgid "Partager votre position"
+msgstr "مشاركة موقعك"
+
+#: users/templates/users/student_location_prompt.html:29
+msgid ""
+"Pour votre sécurité et celle de l'établissement, veuillez autoriser l'accès "
+"à votre position géographique avant d'accéder à votre tableau de bord."
+msgstr ""
+"من أجل سلامتك وسلامة المؤسسة، يرجى السماح بالوصول إلى موقعك الجغرافي قبل "
+"الدخول إلى لوحة التحكم الخاصة بك."
+
+#: users/templates/users/student_location_prompt.html:41
+msgid "Activer ma position"
+msgstr "تفعيل موقعي"
+
+#: users/templates/users/student_location_prompt.html:46
+msgid "Plus tard"
+msgstr "لاحقاً"
+
+#: users/templates/users/student_location_prompt.html:58
+msgid "Recherche de votre position en cours..."
+msgstr "جاري البحث عن موقعك..."
+
+#: users/templates/users/student_location_prompt.html:59
+msgid "Position enregistrée avec succès ! Redirection..."
+msgstr "تم تسجيل الموقع بنجاح! جاري التوجيه..."
+
+#: users/templates/users/student_location_prompt.html:60
+msgid ""
+"Vous avez refusé l’accès. Modifiez les paramètres de votre navigateur pour "
+"autoriser la géolocalisation."
+msgstr ""
+"لقد رفضت الوصول. يرجى تغيير إعدادات المتصفح للسماح بتحديد الموقع الجغرافي."
+
+#: users/templates/users/student_location_prompt.html:61
+msgid "Le signal GPS est trop faible. Veuillez réessayer."
+msgstr "إشارة GPS ضعيفة جداً. يرجى المحاولة مرة أخرى."
+
+#: users/templates/users/student_location_prompt.html:62
+msgid "La géolocalisation n’est pas supportée par votre appareil."
+msgstr "تحديد الموقع الجغرافي غير مدعوم في جهازك."
+
+#: users/templates/users/student_location_prompt.html:63
+msgid "Une erreur de communication avec le serveur est survenue."
+msgstr "خطأ في الاتصال بالخادم."
 
 #: users/utils.py:54
 msgid "Le nom d'utilisateur est requis."
@@ -6275,7 +6313,7 @@ msgid "Cet utilisateur est déjà lié à un parent."
 msgstr "هذا المستخدم مرتبط بالفعل بولي أمر."
 
 #: users/utils.py:1016 users/utils.py:1067 users/utils.py:1086
-#: users/utils.py:1148 users/views.py:940
+#: users/utils.py:1148 users/views.py:884
 msgid "Parent non trouvé."
 msgstr "ولي الأمر غير موجود."
 
@@ -6346,208 +6384,212 @@ msgstr ""
 msgid "Le mot de passe est valide."
 msgstr "كلمة المرور صالحة."
 
-#: users/utils.py:1441
+#: users/utils.py:1445
 msgid "Adresse inconnue"
 msgstr "عنوان مجهول"
 
-#: users/views.py:49 users/views.py:97 users/views.py:125 users/views.py:186
+#: users/views.py:50 users/views.py:109
 msgid "Nom d'utilisateur ou mot de passe incorrect."
 msgstr "اسم المستخدم أو كلمة المرور غير صحيحة."
 
-#: users/views.py:54 users/views.py:61 users/views.py:65 users/views.py:130
-#: users/views.py:138 users/views.py:142
+#: users/views.py:55 users/views.py:62 users/views.py:66
 msgid "Impossible de vous connecter."
 msgstr "تعذر تسجيل دخولك."
 
-#: users/views.py:78 users/views.py:82 users/views.py:88 users/views.py:155
-#: users/views.py:159 users/views.py:166
+#: users/views.py:79 users/views.py:83 users/views.py:89
 msgid "Impossible de vous connecter pour le moment."
 msgstr "تعذر تسجيل دخولك في الوقت الحالي."
 
-#: users/views.py:95 users/views.py:184
+#: users/views.py:105
 msgid "Connexion réussie."
 msgstr "تم تسجيل الدخول بنجاح."
 
-#: users/views.py:376
+#: users/views.py:320
 msgid "Un lien de réinitialisation a été envoyé à votre adresse e-mail."
 msgstr "تم إرسال رابط إعادة التعيين إلى عنوان بريدك الإلكتروني."
 
-#: users/views.py:378
+#: users/views.py:322
 msgid "Erreur lors de l’envoi de l'e-mail."
 msgstr "خطأ أثناء إرسال البريد الإلكتروني."
 
-#: users/views.py:380
+#: users/views.py:324
 msgid "Nom d'utilisateur invalide."
 msgstr "اسم المستخدم غير صالح."
 
-#: users/views.py:417 users/views.py:456
+#: users/views.py:361 users/views.py:400
 msgid "Le lien de réinitialisation est invalide ou a expiré."
 msgstr "رابط إعادة التعيين غير صالح أو انتهت صلاحيته."
 
-#: users/views.py:591
+#: users/views.py:535
 msgid "L'utilisateur est introuvable."
 msgstr "المستخدم غير موجود."
 
-#: users/views.py:636
+#: users/views.py:580
 msgid ""
 "Impossible de modifier le statut d'un utilisateur lorsque l'année est en "
 "cours de déroulement."
 msgstr "تعذر تعديل حالة المستخدم عندما تكون السنة في مرحلة السير العادي."
 
-#: users/views.py:640
+#: users/views.py:584
 msgid "L'utilisateur a bien été modifié."
 msgstr "تم تعديل المستخدم بنجاح."
 
-#: users/views.py:647
+#: users/views.py:591
 msgid "Veuillez compléter le formulaire."
 msgstr "يرجى إتمام النموذج."
 
-#: users/views.py:652
+#: users/views.py:596
 msgid "L'adresse email existe déjà."
 msgstr "عنوان البريد الإلكتروني موجود مسبقاً."
 
-#: users/views.py:667
+#: users/views.py:611
 msgid "L'école est introuvale."
 msgstr "المدرسة غير موجودة."
 
-#: users/views.py:716
+#: users/views.py:660
 msgid "L'utilisateur a bien été crée."
 msgstr "تم إنشاء المستخدم بنجاح."
 
-#: users/views.py:719
+#: users/views.py:663
 #, python-brace-format
 msgid "Integrity error: {error}"
 msgstr "خطأ في السلامة: {error}"
 
-#: users/views.py:721 users/views.py:746
+#: users/views.py:665 users/views.py:690
 #, python-brace-format
 msgid "An error occurred: {error}"
 msgstr "حدث خطأ ما: {error}"
 
-#: users/views.py:732
+#: users/views.py:676
 msgid "School ID is required."
 msgstr "معرف المدرسة مطلوب."
 
-#: users/views.py:739
+#: users/views.py:683
 msgid "School selected successfully."
 msgstr "تم تحديد المدرسة بنجاح."
 
-#: users/views.py:741
+#: users/views.py:685
 msgid "School not found."
 msgstr "المدرسة غير موجودة."
 
-#: users/views.py:743 users/views.py:781
+#: users/views.py:687 users/views.py:725
 msgid "Permission denied."
 msgstr "تم رفض الإذن."
 
-#: users/views.py:774
+#: users/views.py:718
 msgid "Vous ne pouvez pas modifier le statut d'un autre proviseur."
 msgstr "لا يمكنك تعديل حالة مدير آخر."
 
-#: users/views.py:778
+#: users/views.py:722
 msgid "Vous ne pouvez pas modifier le statut d'un membre du personnel."
 msgstr "لا يمكنك تعديل حالة أحد أعضاء الطاقم."
 
-#: users/views.py:786
+#: users/views.py:730
 msgid "Utilisateur activé avec succès."
 msgstr "تم تفعيل المستخدم بنجاح."
 
-#: users/views.py:789
+#: users/views.py:733
 msgid "Utilisateur désactivé avec succès."
 msgstr "تم تعطيل المستخدم بنجاح."
 
-#: users/views.py:791
+#: users/views.py:735
 msgid "Action invalide."
 msgstr "إجراء غير صالح."
 
-#: users/views.py:797
+#: users/views.py:741
 #, python-brace-format
 msgid "Une erreur est survenue: {error}"
 msgstr "حدث خطأ ما: {error}"
 
-#: users/views.py:898
+#: users/views.py:842
 msgid "Données manquantes (parent_id, student_id, action)."
 msgstr "بيانات مفقودة (parent_id, student_id, action)."
 
-#: users/views.py:915
+#: users/views.py:859
 #, python-brace-format
 msgid "Lien créé : {student_name} est maintenant un enfant de {parent_name}."
 msgstr "تم إنشاء الرابط : {student_name} أصبح الآن طفلاً لـ {parent_name}."
 
-#: users/views.py:928
+#: users/views.py:872
 #, python-brace-format
 msgid "Lien supprimé : {student_name} n'est plus un enfant de {parent_name}."
 msgstr "تم حذف الرابط : {student_name} لم يعد طفلاً لـ {parent_name}."
 
-#: users/views.py:931
+#: users/views.py:875
 msgid "Le lien n'existe pas, aucune suppression effectuée."
 msgstr "الرابط غير موجود، لم يتم إجراء أي حذف."
 
-#: users/views.py:942
+#: users/views.py:886
 msgid "Étudiant non trouvé."
 msgstr "الطالب غير موجود."
 
-#: users/views.py:970
+#: users/views.py:914
 msgid "Cet enfant n'est pas lié à votre compte."
 msgstr "هذا الطفل غير مرتبط بحسابك."
 
-#: users/views.py:1011
+#: users/views.py:955
 msgid "Tous les champs sont obligatoires."
 msgstr "جميع الحقول إزامية."
 
-#: users/views.py:1025
+#: users/views.py:969
 msgid "Votre mot de passe actuel est incorrect."
 msgstr "كلمة المرور الحالية غير صحيحة."
 
-#: users/views.py:1035
+#: users/views.py:979
 msgid "Votre mot de passe a été modifié avec succès."
 msgstr "تم تعديل كلمة المرور الخاصة بك بنجاح."
 
-#: users/views.py:1041
+#: users/views.py:985
 msgid "Une erreur serveur est survenue."
 msgstr "حدث خطأ في الخادم."
 
-#: users/views.py:1065
+#: users/views.py:1009
 msgid "Aucun fichier reçu."
 msgstr "لم يتم استلام أي ملف."
 
-#: users/views.py:1071
+#: users/views.py:1015
 msgid "Le fichier doit être une image."
 msgstr "يجب أن يكون الملف صورة."
 
-#: users/views.py:1084
+#: users/views.py:1028
 msgid "Photo mise à jour avec succès."
 msgstr "تم تحديث الصورة بنجاح."
 
-#: users/views.py:1089
+#: users/views.py:1033
 #, python-brace-format
 msgid "Erreur serveur : {error}"
 msgstr "خطأ في الخادم : {error}"
 
-#: users/views.py:1104
+#: users/views.py:1048
 msgid "Photo supprimée."
 msgstr "تم حذف الصورة."
 
-#: users/views.py:1108
+#: users/views.py:1052
 #, python-brace-format
 msgid "Erreur lors de la suppression : {error}"
 msgstr "خطأ أثناء الحذف : {error}"
 
-#: users/views.py:1125
+#: users/views.py:1069
 msgid "Coordonnées manquantes."
 msgstr "الإحداثيات مفقودة."
 
-#: users/views.py:1131
+#: users/views.py:1075
 msgid "Utilisateur non autorisé."
 msgstr "مستخدم غير مصرح به."
 
-#: users/views.py:1137
+#: users/views.py:1081
 msgid "Position enregistrée avec succès."
 msgstr "تم حفظ الموقع بنجاح."
 
-#: users/views.py:1139
-msgid "Erreur lors de la géolocalisation."
-msgstr "خطأ أثناء تحديد الموقع الجغرافي."
+#: users/views.py:1083
+msgid "Erreur lors de la géolocalisation. Veuillez réessayer."
+msgstr "خطأ أثناء تحديد الموقع الجغرافي. يرجى المحاولة مرة أخرى."
+
+#~ msgid "Erreur réseau/serveur lors de l’envoi GPS :"
+#~ msgstr "خطأ في الشبكة/الخادم أثناء إرسال إحداثيات GPS :"
+
+#~ msgid "Échec de la géolocalisation (Code"
+#~ msgstr "فشل تحديد الموقع الجغرافي (رمز"
 
 #~ msgid "unique_conversation"
 #~ msgstr "محادثة_فريدة"
