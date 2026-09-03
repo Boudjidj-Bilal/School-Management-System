@@ -14,9 +14,7 @@ from django.utils.translation import get_language, gettext_lazy as _
 
 
 # Gestion des emails automatique :
-from django.core.mail import send_mail
-from ProjectSchool.settings import EMAIL_HOST_USER
-from smtplib import SMTPException
+from django.core.mail import get_connection, EmailMessage
 
 
 from django.contrib.auth.tokens import PasswordResetTokenGenerator
@@ -247,30 +245,44 @@ def change_user_password(user_id, new_password):
 
 def send_email(subject, message, recipient_list):
     """
-    Envoie un email en utilisant la configuration de Django.
-    Args:
-        subject (str): Le sujet de l'email.
-        message (str): Le corps de l'email.
-        recipient_list (list): Liste des destinataires.
-    Returns:
-        bool: True si l'envoi est réussi, False sinon.
+    Envoie un email individuel à chaque destinataire en utilisant une connexion unique (plus rapide et compatible avec Maileroo).
     """
     try:
+        # S'assurer qu'on a bien une liste
         if isinstance(recipient_list, str):
             recipient_list = [recipient_list]
 
         from_email = settings.DEFAULT_FROM_EMAIL
+        
+        # 1. On ouvre une seule connexion vers Maileroo
+        connection = get_connection()
+        connection.open()
+        
+        emails_envoyes = 0
 
-        send_mail(
-            subject=subject,
-            message=message,
-            from_email=from_email,
-            recipient_list=recipient_list,
-            fail_silently=True,  # On ne veut pas lever d'exception
-        )
-        return True
-    except SMTPException as e:
-        print(_("Erreur d'envoi d'email: {e}").format(e=e))
+        # 2. On boucle pour créer un e-mail INDIVIDUEL par personne
+        for recipient in recipient_list:
+            try:
+                email = EmailMessage(
+                    subject=subject,
+                    body=message,
+                    from_email=from_email,
+                    to=[recipient], # <-- Un seul destinataire à la fois !
+                    connection=connection
+                )
+                email.send(fail_silently=True)
+                emails_envoyes += 1
+            except Exception as e:
+                print(f"Erreur d'envoi pour {recipient}: {e}")
+
+        # 3. On ferme la connexion une fois que tous les e-mails sont partis
+        connection.close()
+
+        # Retourne True si au moins 1 e-mail a été envoyé avec succès
+        return emails_envoyes > 0
+
+    except Exception as e:
+        print(_("Erreur générale d'envoi d'email: {e}").format(e=e))
         return False
     
 def send_email_create_compte(request, email, username, password):
@@ -575,7 +587,6 @@ L'Administration {school}.
         return False
 
     # Envoi
-    print(_("Tentative d'envoi à {len(unique_recipients)} destinataire(s) pour l'étape '{year_stape}'...").format(year_stape=year_stape))
     mail_envoye = send_email(subject, message, unique_recipients)
 
     return mail_envoye

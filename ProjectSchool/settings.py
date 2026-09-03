@@ -57,8 +57,8 @@ SITE_ID = 1
 AUTH_USER_MODEL = "users.User"
 
 
-# Définit la durée de vie maximale d'une session utilisateur à 10 minutes sans activité (600 secondes)
-SESSION_COOKIE_AGE = 600
+# Définit la durée de vie maximale d'une session utilisateur à 30 minutes sans activité (1800 secondes)
+SESSION_COOKIE_AGE = 1800
 
 # Prolonge la session à chaque requête de l'utilisateur,
 # ce qui gère la déconnexion après inactivité.
@@ -366,9 +366,6 @@ CSRF_COOKIE_SAMESITE = "Lax"
 # Configuration spécifique pour nos cookies API
 API_COOKIE_SECURE = not DEBUG
 API_COOKIE_SAMESITE = "Lax" if DEBUG else "None"
-
-# Durée de vie des sessions
-SESSION_COOKIE_AGE = 86400  # 24 heures
 
 LOCALE_PATHS = [
     BASE_DIR / 'locale',
